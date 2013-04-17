@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.cordova.DirectoryManager;
 import org.apache.cordova.FileHelper;
 import org.apache.cordova.api.CallbackContext;
 import org.apache.cordova.api.CordovaPlugin;
@@ -43,6 +44,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.Bitmap.CompressFormat;
+import android.graphics.Rect;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.net.Uri;
@@ -397,19 +399,21 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                             (destType == FILE_URI || destType == NATIVE_URI) && !this.correctOrientation) {
                         this.callbackContext.success(uri.toString());
                     } else {
+                        String uriString = uri.toString();
                         // Get the path to the image. Makes loading so much easier.
-                        String imagePath = FileHelper.getRealPath(uri, this.cordova);
-                        String mimeType = FileHelper.getMimeType(imagePath, this.cordova);
-                        // Log.d(LOG_TAG, "Real path = " + imagePath);
-                        // Log.d(LOG_TAG, "mime type = " + mimeType);
+                        String mimeType = FileHelper.getMimeType(uriString, this.cordova);
                         // If we don't have a valid image so quit.
-                        if (imagePath == null || mimeType == null || 
-                                !(mimeType.equalsIgnoreCase("image/jpeg") || mimeType.equalsIgnoreCase("image/png"))) {
+                        if (!("image/jpeg".equalsIgnoreCase(mimeType) || "image/png".equalsIgnoreCase(mimeType))) {
                         	Log.d(LOG_TAG, "I either have a null image path or bitmap");
                             this.failPicture("Unable to retrieve path to picture!");
                             return;
                         }
-                        Bitmap bitmap = getScaledBitmap(imagePath);
+                        Bitmap bitmap = null;
+                        try {
+                            bitmap = getScaledBitmap(uriString);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                         if (bitmap == null) {
                         	Log.d(LOG_TAG, "I either have a null image path or bitmap");
                             this.failPicture("Unable to create bitmap!");
@@ -417,14 +421,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                         }
 
                         if (this.correctOrientation) {
-                            String[] cols = { MediaStore.Images.Media.ORIENTATION };
-                            Cursor cursor = this.cordova.getActivity().getContentResolver().query(intent.getData(),
-                                    cols, null, null, null);
-                            if (cursor != null) {
-                                cursor.moveToPosition(0);
-                                rotate = cursor.getInt(0);
-                                cursor.close();
-                            }
+                            rotate = getImageOrientation(uri);
                             if (rotate != 0) {
                                 Matrix matrix = new Matrix();
                                 matrix.setRotate(rotate);
@@ -444,15 +441,17 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                                 try {
                                     // Create an ExifHelper to save the exif data that is lost during compression
                                     String resizePath = DirectoryManager.getTempDirectoryPath(this.cordova.getActivity()) + "/resize.jpg";
+                                    // Some content: URIs do not map to file paths (e.g. picasa).
+                                    String realPath = FileHelper.getRealPath(uri, this.cordova);
                                     ExifHelper exif = new ExifHelper();
-                                    try {
-                                        if (this.encodingType == JPEG) {
-                                            exif.createInFile(FileHelper.getRealPath(uri, this.cordova));
+                                    if (realPath != null && this.encodingType == JPEG) {
+                                        try {
+                                            exif.createInFile(realPath);
                                             exif.readExifData();
                                             rotate = exif.getOrientation();
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
                                         }
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
                                     }
 
                                     OutputStream os = new FileOutputStream(resizePath);
@@ -460,7 +459,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                                     os.close();
 
                                     // Restore exif data to file
-                                    if (this.encodingType == JPEG) {
+                                    if (realPath != null && this.encodingType == JPEG) {
                                         exif.createOutFile(resizePath);
                                         exif.writeExifData();
                                     }
@@ -492,6 +491,19 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 this.failPicture("Selection did not complete!");
             }
         }
+    }
+
+    private int getImageOrientation(Uri uri) {
+        String[] cols = { MediaStore.Images.Media.ORIENTATION };
+        Cursor cursor = cordova.getActivity().getContentResolver().query(uri,
+                cols, null, null, null);
+        int rotate = 0;
+        if (cursor != null) {
+            cursor.moveToPosition(0);
+            rotate = cursor.getInt(0);
+            cursor.close();
+        }
+        return rotate;
     }
 
     /**
@@ -564,17 +576,18 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      *
      * @param imagePath
      * @return
+     * @throws IOException 
      */
-    private Bitmap getScaledBitmap(String imagePath) {
+    private Bitmap getScaledBitmap(String imageUrl) throws IOException {
         // If no new width or height were specified return the original bitmap
         if (this.targetWidth <= 0 && this.targetHeight <= 0) {
-            return BitmapFactory.decodeFile(imagePath);
+            return BitmapFactory.decodeStream(FileHelper.getInputStreamFromUriString(imageUrl, cordova));
         }
 
         // figure out the original width and height of the image
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(imagePath, options);
+        BitmapFactory.decodeStream(FileHelper.getInputStreamFromUriString(imageUrl, cordova), null, options);
         
         //CB-2292: WTF? Why is the width null?
         if(options.outWidth == 0 || options.outHeight == 0)
@@ -588,7 +601,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         // Load in the smallest bitmap possible that is closest to the size we want
         options.inJustDecodeBounds = false;
         options.inSampleSize = calculateSampleSize(options.outWidth, options.outHeight, this.targetWidth, this.targetHeight);
-        Bitmap unscaledBitmap = BitmapFactory.decodeFile(imagePath, options);
+        Bitmap unscaledBitmap = BitmapFactory.decodeStream(FileHelper.getInputStreamFromUriString(imageUrl, cordova), null, options);
         if (unscaledBitmap == null) {
             return null;
         }
