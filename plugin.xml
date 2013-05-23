@@ -25,7 +25,7 @@ id="org.apache.cordova.core.CameraLauncher"
     <!-- android -->
     <platform name="android">
         <config-file target="res/xml/config.xml" parent="/*">
-            <feature name="Camera" 
+            <feature name="Camera"> 
                 <param name="android-package" value="org.apache.cordova.core"/>
             </feature>
         </config-file>
