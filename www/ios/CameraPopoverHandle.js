@@ -19,19 +19,16 @@
  *
 */
 
-var Camera = require('org.apache.cordova.core.CameraLauncher.Camera');
+var exec = require('cordova/exec');
 
 /**
- * Encapsulates options for iOS Popover image picker
+ * A handle to an image picker popover.
  */
-var CameraPopoverOptions = function(x,y,width,height,arrowDir){
-    // information of rectangle that popover should be anchored to
-    this.x = x || 0;
-    this.y = y || 32;
-    this.width = width || 320;
-    this.height = height || 480;
-    // The direction of the popover arrow
-    this.arrowDir = arrowDir || Camera.PopoverArrowDirection.ARROW_ANY;
+var CameraPopoverHandle = function() {
+    this.setPosition = function(popoverOptions) {
+        var args = [ popoverOptions ];
+        exec(null, null, "Camera", "repositionPopover", args);
+    };
 };
 
-module.exports = CameraPopoverOptions;
+module.exports = CameraPopoverHandle;

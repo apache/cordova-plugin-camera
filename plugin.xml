@@ -6,25 +6,31 @@ id="org.apache.cordova.core.CameraLauncher"
     version="0.1.0">
     <name>Camera</name>
 
-    <js-module src="www/CameraConstants.js" name="camera">
-        <clobbers target="window.camera" />
-    </js-module>
-
-    <js-module src="www/CameraPopoverOptions.js" name="camera">
-        <clobbers target="window.camera" />
-    </js-module>
-    
     <js-module src="www/Camera.js" name="camera">
         <clobbers target="navigator.camera" />
+    </js-module>
+
+    <js-module src="www/CameraConstants.js" name="Camera">
+        <clobbers target="Camera" />
+    </js-module>
+
+    <js-module src="www/CameraPopoverOptions.js" name="CameraPopoverOptions">
+        <clobbers target="CameraPopoverOptions" />
+    </js-module>
+
+    <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
+        <merges target="CameraPopoverHandle" />
     </js-module>
     
     <!-- android -->
     <platform name="android">
-        <config-file target="res/xml/config.xml" parent="/cordova/plugins">
-            <plugin name="Camera" value="org.apache.cordova.core"/>
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="Camera" 
+                <param name="android-package" value="org.apache.cordova.core"/>
+            </feature>
         </config-file>
 
-        <source-file src="CameraLauncher.java" target-dir="org/apache/cordova/core" />
+        <source-file src="src/android/CameraLauncher.java" target-dir="src/org/apache/cordova/core" />
      </platform>
      
      <!-- ios -->
@@ -34,6 +40,11 @@ id="org.apache.cordova.core.CameraLauncher"
                  <param name="ios-package" value="CDVCamera" /> 
              </feature>
          </config-file>
+
+         <js-module src="www/ios/CameraPopoverHandle.js" name="CameraPopoverHandle">
+            <merges target="CameraPopoverHandle" />
+        </js-module>
+
          <header-file src="src/ios/CDVCamera.h" />
          <source-file src="src/ios/CDVCamera.m" />
          <header-file src="src/ios/CDVJpegHeaderWriter.h" />

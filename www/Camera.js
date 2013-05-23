@@ -21,8 +21,8 @@
 
 var argscheck = require('cordova/argscheck'),
     exec = require('cordova/exec'),
-    Camera = require('org.apache.cordova.core.CameraConstants'),
-    CameraPopoverHandle = require('org.apache.cordova.core.CameraPopoverHandle');
+    Camera = require('org.apache.cordova.core.CameraLauncher.CameraConstants'),
+    CameraPopoverHandle = require('org.apache.cordova.core.CameraLauncher.CameraPopoverHandle');
 
 var cameraExport = {};
 
