@@ -20,7 +20,7 @@
 #import "CDVCamera.h"
 #import "CDVJpegHeaderWriter.h"
 #import <Cordova/NSArray+Comparisons.h>
-#import <CordovaNSData+Base64.h>
+#import <Cordova/NSData+Base64.h>
 #import <Cordova/NSDictionary+Extensions.h>
 #import <ImageIO/CGImageProperties.h>
 #import <AssetsLibrary/ALAssetRepresentation.h>
