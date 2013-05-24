@@ -20,7 +20,7 @@ id="org.apache.cordova.core.CameraLauncher"
 
     <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
         <merges target="CameraPopoverHandle" />
-    </jsr-module>
+    </js-module>
     
     <!-- android -->
     <platform name="android">
