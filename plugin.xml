@@ -7,26 +7,26 @@ id="org.apache.cordova.core.CameraLauncher"
     <name>Camera</name>
 
     <js-module src="www/Camera.js" name="camera">
-        <clobbers target="navigator.camera" />
+        <merges target="navigator.camera" />
     </js-module>
 
     <js-module src="www/CameraConstants.js" name="Camera">
-        <clobbers target="Camera" />
+        <merges target="Camera" />
     </js-module>
 
     <js-module src="www/CameraPopoverOptions.js" name="CameraPopoverOptions">
-        <clobbers target="CameraPopoverOptions" />
+        <merges target="CameraPopoverOptions" />
     </js-module>
 
     <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
         <merges target="CameraPopoverHandle" />
-    </js-module>
+    </jsr-module>
     
     <!-- android -->
     <platform name="android">
         <config-file target="res/xml/config.xml" parent="/*">
-            <feature name="Camera"> 
-                <param name="android-package" value="org.apache.cordova.core"/>
+            <feature name="Camera">
+                <param name="android-package" value="org.apache.cordova.core.CameraLauncher"/>
             </feature>
         </config-file>
 
@@ -37,13 +37,14 @@ id="org.apache.cordova.core.CameraLauncher"
      <platform name="ios">    
          <config-file target="config.xml" parent="/*">
              <feature name="Camera">
-                 <param name="ios-package" value="CDVCamera" /> 
+                 <param name="ios-package" value="CDVCamera" />
              </feature>
          </config-file>
-
+         <!--
          <js-module src="www/ios/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <merges target="CameraPopoverHandle" />
         </js-module>
+        -->
 
          <header-file src="src/ios/CDVCamera.h" />
          <source-file src="src/ios/CDVCamera.m" />
