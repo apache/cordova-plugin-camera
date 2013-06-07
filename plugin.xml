@@ -52,5 +52,16 @@ id="org.apache.cordova.core.CameraLauncher"
  	     <source-file src="src/ios/CDVJpegHeaderWriter.m" />
  	     <header-file src="src/ios/CDVExif.h" />
      </platform>
+
+     <!-- wp7 -->
+    <platform name="wp7">
+        <config-file target="config.xml" parent="/*">
+            <feature name="Camera">
+                <param name="wp-package" value="Camera"/>
+            </feature>
+        </config-file>
+
+        <source-file src="src/wp7/Camera.cs" />
+    </platform>
           
 </plugin>
