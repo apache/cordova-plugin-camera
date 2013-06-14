@@ -10,9 +10,7 @@ id="org.apache.cordova.core.CameraLauncher"
         <clobbers target="Camera" />
     </js-module>
 
-    <js-module src="www/CameraPopoverOptions.js" name="CameraPopoverOptions">
-        <clobbers target="CameraPopoverOptions" />
-    </js-module>
+    <js-module src="www/CameraPopoverOptions.js" name="CameraPopoverOptions"></js-module>
 
     <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
     </js-module>
@@ -40,8 +38,8 @@ id="org.apache.cordova.core.CameraLauncher"
              </feature>
          </config-file>
          
-         <!-- <js-module src="www/ios/CameraPopoverHandle.js" name="CameraPopoverHandle"></js-module>
-        -->
+         <js-module src="www/ios/CameraPopoverHandle.js" name="CameraPopoverHandle"></js-module>
+        
 
          <header-file src="src/ios/CDVCamera.h" />
          <source-file src="src/ios/CDVCamera.m" />
