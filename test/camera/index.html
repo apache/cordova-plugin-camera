@@ -33,8 +33,8 @@
 <script type="text/javascript" charset="utf-8">
 
     var deviceReady = false;
-    var platformId = cordova.require('cordova/platform').id;
-    var CameraPopoverOptions = cordova.require('org.apache.cordova.CameraLauncher.CameraPopoverOptions');
+    var platformId = null;
+    var CameraPopoverOptions = null;
     var pictureUrl = null;
     var fileObj = null;
     var fileEntry = null;
@@ -339,6 +339,8 @@
     function init() {
         document.addEventListener("deviceready", function() {
             deviceReady = true;
+            platformId = cordova.require('cordova/platform').id;
+            CameraPopoverOptions = cordova.require('org.apache.cordova.CameraLauncher.CameraPopoverOptions');
             console.log("Device="+device.platform+" "+device.version);
             createOptionsEl('sourceType', Camera.PictureSourceType, camPictureSourceTypeDefault);
             createOptionsEl('destinationType', Camera.DestinationType, camDestinationTypeDefault);
