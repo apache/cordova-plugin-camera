@@ -51,6 +51,14 @@ id="org.apache.cordova.core.CameraLauncher"
  	     <header-file src="src/ios/CDVExif.h" />
      </platform>
 
+    <!-- blackberry10 -->
+    <platform name="blackberry10">
+        <source-file src="src/blackberry10/index.js" target-dir="Camera" />
+        <config-file target="www/config.xml" parent="/widget">
+            <feature name="Camera" value="Camera"/>
+        </config-file>
+    </platform>
+
      <!-- wp7 -->
     <platform name="wp7">
         <config-file target="config.xml" parent="/*">
