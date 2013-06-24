@@ -73,5 +73,20 @@ id="org.apache.cordova.core.CameraLauncher"
 
         <source-file src="src/wp7/Camera.cs" />
     </platform>
+
+    <!-- wp8 -->
+    <platform name="wp8">
+        <config-file target="config.xml" parent="/*">
+            <feature name="Camera">
+                <param name="wp-package" value="Camera"/>
+            </feature>
+        </config-file>
+
+        <config-file target="Properties/WMAppManifest.xml" parent="/Deployment/App/Capabilities">
+            <Capability Name="ID_CAP_ISV_CAMERA" />
+        </config-file>
+
+        <source-file src="src/wp8/Camera.cs" />
+    </platform>
           
 </plugin>
