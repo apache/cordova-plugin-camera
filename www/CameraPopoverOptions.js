@@ -19,7 +19,7 @@
  *
 */
 
-var Camera = require('org.apache.cordova.core.CameraLauncher.Camera');
+var Camera = require('org.apache.cordova.core.camera.Camera');
 
 /**
  * Encapsulates options for iOS Popover image picker
