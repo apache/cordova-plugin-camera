@@ -11,9 +11,6 @@
 
     <js-module src="www/CameraPopoverOptions.js" name="CameraPopoverOptions"></js-module>
 
-    <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
-    </js-module>
-      
     <js-module src="www/Camera.js" name="camera">
         <clobbers target="navigator.camera" />
     </js-module>
@@ -30,6 +27,10 @@
         </config-file>
 
         <source-file src="src/android/CameraLauncher.java" target-dir="src/org/apache/cordova/core" />
+
+        <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
+        </js-module>
+      
      </platform>
      
      <!-- ios -->
@@ -56,6 +57,9 @@
         <config-file target="www/config.xml" parent="/widget">
             <feature name="Camera" value="Camera"/>
         </config-file>
+
+        <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
+        </js-module>
     </platform>
 
      <!-- wp7 -->
@@ -71,6 +75,9 @@
         </config-file>
 
         <source-file src="src/wp7/Camera.cs" />
+
+        <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
+        </js-module>
     </platform>
 
     <!-- wp8 -->
@@ -86,6 +93,9 @@
         </config-file>
 
         <source-file src="src/wp8/Camera.cs" />
+
+        <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
+        </js-module>
     </platform>
           
 </plugin>
