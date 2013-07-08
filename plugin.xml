@@ -71,7 +71,7 @@ id="org.apache.cordova.core.CameraLauncher"
             <Capability Name="ID_CAP_ISV_CAMERA" />
         </config-file>
 
-        <source-file src="src/wp7/Camera.cs" />
+        <source-file src="src/wp/Camera.cs" />
     </platform>
 
     <!-- wp8 -->
@@ -86,7 +86,7 @@ id="org.apache.cordova.core.CameraLauncher"
             <Capability Name="ID_CAP_ISV_CAMERA" />
         </config-file>
 
-        <source-file src="src/wp8/Camera.cs" />
+        <source-file src="src/wp/Camera.cs" />
     </platform>
           
 </plugin>
