@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
-xmlns:android="http://schemas.android.com/apk/res/android"
-id="org.apache.cordova.core.CameraLauncher"
-    version="0.1.0">
+           id="org.apache.cordova.core.camera"
+      version="0.1.0">
     <name>Camera</name>
    
     <js-module src="www/CameraConstants.js" name="Camera">
@@ -12,9 +11,6 @@ id="org.apache.cordova.core.CameraLauncher"
 
     <js-module src="www/CameraPopoverOptions.js" name="CameraPopoverOptions"></js-module>
 
-    <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
-    </js-module>
-      
     <js-module src="www/Camera.js" name="camera">
         <clobbers target="navigator.camera" />
     </js-module>
@@ -31,6 +27,10 @@ id="org.apache.cordova.core.CameraLauncher"
         </config-file>
 
         <source-file src="src/android/CameraLauncher.java" target-dir="src/org/apache/cordova/core" />
+
+        <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
+        </js-module>
+      
      </platform>
      
      <!-- ios -->
@@ -57,6 +57,9 @@ id="org.apache.cordova.core.CameraLauncher"
         <config-file target="www/config.xml" parent="/widget">
             <feature name="Camera" value="Camera"/>
         </config-file>
+
+        <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
+        </js-module>
     </platform>
 
      <!-- wp7 -->
@@ -72,6 +75,10 @@ id="org.apache.cordova.core.CameraLauncher"
         </config-file>
 
         <source-file src="src/wp/Camera.cs" />
+
+
+        <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
+        </js-module>
     </platform>
 
     <!-- wp8 -->
@@ -87,6 +94,9 @@ id="org.apache.cordova.core.CameraLauncher"
         </config-file>
 
         <source-file src="src/wp/Camera.cs" />
+
+        <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
+        </js-module>
     </platform>
           
 </plugin>
