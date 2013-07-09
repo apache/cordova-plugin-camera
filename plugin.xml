@@ -4,17 +4,19 @@
            id="org.apache.cordova.core.camera"
       version="0.1.0">
     <name>Camera</name>
-   
+
     <js-module src="www/CameraConstants.js" name="Camera">
         <clobbers target="Camera" />
     </js-module>
 
-    <js-module src="www/CameraPopoverOptions.js" name="CameraPopoverOptions"></js-module>
+    <js-module src="www/CameraPopoverOptions.js" name="CameraPopoverOptions">
+        <clobbers target="CameraPopoverOptions" />
+    </js-module>
 
     <js-module src="www/Camera.js" name="camera">
         <clobbers target="navigator.camera" />
     </js-module>
-    
+
     <!-- android -->
     <platform name="android">
         <config-file target="res/xml/config.xml" parent="/*">
@@ -29,6 +31,7 @@
         <source-file src="src/android/CameraLauncher.java" target-dir="src/org/apache/cordova/core" />
 
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
+            <clobbers target="CameraPopoverHandle" />
         </js-module>
       
      </platform>
@@ -41,8 +44,9 @@
              </feature>
          </config-file>
          
-         <js-module src="www/ios/CameraPopoverHandle.js" name="CameraPopoverHandle"></js-module>
-        
+         <js-module src="www/ios/CameraPopoverHandle.js" name="CameraPopoverHandle">
+            <clobbers target="CameraPopoverHandle" />
+         </js-module>
 
          <header-file src="src/ios/CDVCamera.h" />
          <source-file src="src/ios/CDVCamera.m" />
@@ -59,6 +63,7 @@
         </config-file>
 
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
+            <clobbers target="CameraPopoverHandle" />
         </js-module>
     </platform>
 
@@ -78,6 +83,7 @@
 
 
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
+            <clobbers target="CameraPopoverHandle" />
         </js-module>
     </platform>
 
@@ -96,6 +102,7 @@
         <source-file src="src/wp/Camera.cs" />
 
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
+            <clobbers target="CameraPopoverHandle" />
         </js-module>
     </platform>
           
