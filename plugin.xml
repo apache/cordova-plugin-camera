@@ -33,17 +33,17 @@
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />
         </js-module>
-      
+
      </platform>
-     
+
      <!-- ios -->
-     <platform name="ios">    
+     <platform name="ios">
          <config-file target="config.xml" parent="/*">
              <feature name="Camera">
                  <param name="ios-package" value="CDVCamera" />
              </feature>
          </config-file>
-         
+
          <js-module src="www/ios/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />
          </js-module>
@@ -60,6 +60,13 @@
         <source-file src="src/blackberry10/index.js" target-dir="Camera" />
         <config-file target="www/config.xml" parent="/widget">
             <feature name="Camera" value="Camera"/>
+        </config-file>
+        <config-file target="www/config.xml" parent="/widget">
+          <rim:permissions>
+          </rim:permissions>
+        </config-file>
+        <config-file target="www/config.xml" parent="/widget/rim:permissions">
+          <rim:permit>read_geolocation</rim:permit>
         </config-file>
 
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
@@ -105,5 +112,5 @@
             <clobbers target="CameraPopoverHandle" />
         </js-module>
     </platform>
-          
+
 </plugin>
