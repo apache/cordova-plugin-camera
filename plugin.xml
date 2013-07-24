@@ -54,6 +54,7 @@
  	     <source-file src="src/ios/CDVJpegHeaderWriter.m" />
  	     <header-file src="src/ios/CDVExif.h" />
  	     <framework src="ImageIO.framework" weak="true" />
+ 	     <framework src="CoreLocation.framework" />
      </platform>
 
     <!-- blackberry10 -->
