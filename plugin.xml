@@ -57,6 +57,7 @@
  	     <framework src="CoreLocation.framework" />
  	     <framework src="CoreGraphics.framework" />
  	     <framework src="AssetsLibrary.framework" />
+         <framework src="MobileCoreServices.framework" />
      </platform>
 
     <!-- blackberry10 -->
