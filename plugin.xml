@@ -4,6 +4,9 @@
            id="org.apache.cordova.core.camera"
       version="0.1.0">
     <name>Camera</name>
+    <description>Cordova Camera Plugin</description>
+    <license>Apache</license>
+    <keywords>cordova,camera</keywords>
 
 
     <js-module src="www/CameraConstants.js" name="Camera">
