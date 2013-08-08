@@ -303,11 +303,16 @@ static NSSet* org_apache_cordova_validArrowDirections;
             }
 
             NSData* data = nil;
+            // returnedImage is the image that is returned to caller and (optionally) saved to photo album
+            UIImage* returnedImage = (scaledImage == nil ? image : scaledImage);
 
             if (cameraPicker.encodingType == EncodingTypePNG) {
-                data = UIImagePNGRepresentation(scaledImage == nil ? image : scaledImage);
+                data = UIImagePNGRepresentation(returnedImage);
+            } else if ((cameraPicker.allowsEditing==false) && (cameraPicker.targetSize.width <= 0) && (cameraPicker.targetSize.height <= 0) && (cameraPicker.correctOrientation==false)){
+                // use image unedited as requested , don't resize
+                data = UIImageJPEGRepresentation(returnedImage, 1.0);
             } else {
-                data = UIImageJPEGRepresentation(scaledImage == nil ? image : scaledImage, cameraPicker.quality / 100.0f);
+                data = UIImageJPEGRepresentation(returnedImage, cameraPicker.quality / 100.0f);
 
                 NSDictionary *controllerMetadata = [info objectForKey:@"UIImagePickerControllerMediaMetadata"];
                 if (controllerMetadata) {
@@ -323,7 +328,8 @@ static NSSet* org_apache_cordova_validArrowDirections;
             }
             
             if (cameraPicker.saveToPhotoAlbum) {
-                UIImageWriteToSavedPhotosAlbum([UIImage imageWithData:data], nil, nil, nil);
+                ALAssetsLibrary *library = [ALAssetsLibrary new];
+                [library writeImageToSavedPhotosAlbum:returnedImage.CGImage orientation:(ALAssetOrientation)(returnedImage.imageOrientation) completionBlock:nil];
             }
 
             if (cameraPicker.returnType == DestinationTypeFileUri) {
