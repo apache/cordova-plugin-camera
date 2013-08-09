@@ -675,7 +675,8 @@ static NSSet* org_apache_cordova_validArrowDirections;
     }
     
     if (self.pickerController.saveToPhotoAlbum) {
-        UIImageWriteToSavedPhotosAlbum([UIImage imageWithData:[self data]], nil, nil, nil);
+        ALAssetsLibrary *library = [ALAssetsLibrary new];
+        [library writeImageDataToSavedPhotosAlbum:self.data metadata:self.metadata completionBlock:nil];
     }
     
     if (self.pickerController.returnType == DestinationTypeFileUri) {
