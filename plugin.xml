@@ -40,17 +40,17 @@ xmlns:android="http://schemas.android.com/apk/res/android"
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />
         </js-module>
-      
+
      </platform>
-     
+
      <!-- ios -->
-     <platform name="ios">    
+     <platform name="ios">
          <config-file target="config.xml" parent="/*">
              <feature name="Camera">
                  <param name="ios-package" value="CDVCamera" />
              </feature>
          </config-file>
-         
+
          <js-module src="www/ios/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />
          </js-module>
@@ -123,16 +123,20 @@ xmlns:android="http://schemas.android.com/apk/res/android"
     <!-- windows8 -->
     <platform name="windows8">
 
-    <dependency id="org.apache.cordova.core.file" url="https://git-wip-us.apache.org/repos/asf/cordova-plugin-file" commit="master" subdir="/" />
-
+        <dependency id="org.apache.cordova.core.file"
+            url="https://git-wip-us.apache.org/repos/asf/cordova-plugin-file"
+            commit="master" subdir="/" />
+        <config-file target="package.appxmanifest" parent="/Package/Capabilities">
+            <Capability Name="picturesLibrary" />
+            <DeviceCapability Name="webcam" />
+        </config-file>
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />
         </js-module>
-
         <js-module src="src/windows8/CameraProxy.js" name="CameraProxy">
             <merges target="" />
         </js-module>
 
     </platform>
-          
+
 </plugin>
