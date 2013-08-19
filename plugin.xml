@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
-xmlns:android="http://schemas.android.com/apk/res/android"
-           id="org.apache.cordova.core.camera"
-      version="0.1.0">
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    id="org.apache.cordova.core.camera"
+    version="0.2.0">
     <name>Camera</name>
     <description>Cordova Camera Plugin</description>
     <license>Apache 2.0</license>
     <keywords>cordova,camera</keywords>
-
 
     <js-module src="www/CameraConstants.js" name="Camera">
         <clobbers target="Camera" />
@@ -28,14 +27,14 @@ xmlns:android="http://schemas.android.com/apk/res/android"
     <platform name="android">
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="Camera">
-                <param name="android-package" value="org.apache.cordova.core.CameraLauncher"/>
+                <param name="android-package" value="org.apache.cordova.camera.CameraLauncher"/>
             </feature>
         </config-file>
         <config-file target="AndroidManifest.xml" parent="/*">
             <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
         </config-file>
 
-        <source-file src="src/android/CameraLauncher.java" target-dir="src/org/apache/cordova/core" />
+        <source-file src="src/android/CameraLauncher.java" target-dir="src/org/apache/cordova/camera" />
 
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />
