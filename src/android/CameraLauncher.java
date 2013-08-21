@@ -76,7 +76,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private static final String GET_PICTURE = "Get Picture";
     private static final String GET_VIDEO = "Get Video";
     private static final String GET_All = "Get All";
-
+    
     private static final String LOG_TAG = "CameraLauncher";
 
     private int mQuality;                   // Compression quality hint (0-100: 0=low quality & high compression, 100=compress of max quality)
@@ -153,15 +153,26 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 this.targetHeight = -1;
             }
 
-            if (srcType == CAMERA) {
-                this.takePicture(destType, encodingType);
+             try {
+                if (srcType == CAMERA) {
+                    this.takePicture(destType, encodingType);
+                }
+                else if ((srcType == PHOTOLIBRARY) || (srcType == SAVEDPHOTOALBUM)) {
+                    this.getImage(srcType, destType);
+                }
             }
-            else if ((srcType == PHOTOLIBRARY) || (srcType == SAVEDPHOTOALBUM)) {
-                this.getImage(srcType, destType);
+            catch (IllegalArgumentException e)
+            {
+                callbackContext.error("Illegal Argument Exception");
+                PluginResult r = new PluginResult(PluginResult.Status.ERROR);
+                callbackContext.sendPluginResult(r);
+                return true;
             }
+             
             PluginResult r = new PluginResult(PluginResult.Status.NO_RESULT);
             r.setKeepCallback(true);
             callbackContext.sendPluginResult(r);
+            
             return true;
         }
         return false;
