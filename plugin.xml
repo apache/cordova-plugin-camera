@@ -139,5 +139,17 @@
         </js-module>
 
     </platform>
+ 
+    <!-- firefoxos -->
+    <platform name="firefoxos">
+        <config-file target="config.xml" parent="/*">
+            <feature name="Camera">
+                <param name="firefoxos-package" value="Camera" />
+            </feature>
+        </config-file>                                         
+        <js-module src="src/firefoxos/CameraProxy.js" name="CameraProxy">
+            <runs />
+        </js-module>
+    </platform>
 
 </plugin>
