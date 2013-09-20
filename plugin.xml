@@ -23,6 +23,18 @@
         <clobbers target="navigator.camera" />
     </js-module>
 
+    <!-- firefoxos -->
+    <platform name="firefoxos">
+        <config-file target="config.xml" parent="/*">
+            <feature name="Camera">
+                <param name="firefoxos-package" value="Camera" />
+            </feature>
+        </config-file>                                         
+        
+        <js-module src="src/firefoxos/camera.js" name="camera-impl">
+          <runs />
+        </js-module>
+    </platform>
     <!-- android -->
     <platform name="android">
         <config-file target="res/xml/config.xml" parent="/*">
