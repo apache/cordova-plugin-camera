@@ -32,8 +32,8 @@
                 <param name="firefoxos-package" value="Camera" />
             </feature>
         </config-file>                                         
-        
-        <js-module src="src/firefoxos/CameraProxy.js" name="CameraProxy">
+
+        <js-module src="src/firefoxos/camera.js" name="camera-impl">
           <runs />
         </js-module>
     </platform>
