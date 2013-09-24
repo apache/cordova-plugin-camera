@@ -338,4 +338,4 @@ module.exports = {
     }
 };
 
-require("cordova/commandProxy").add("Camera",module.exports);
+require("cordova/windows8/commandProxy").add("Camera",module.exports);
