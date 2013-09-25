@@ -23,3 +23,21 @@
 ### 0.2.1 (Sept 5, 2013)
 * [CB-4656] Don't add line-breaks to base64-encoded images (Fixes type=DataURI)
 * [CB-4432] copyright notice change
+
+### 0.2.3 (Sept 25, 2013)
+* CB-4889 bumping&resetting version
+* CB-4889 forgot index.html
+* CB-4889 renaming core inside cameraProxy
+* [Windows8] commandProxy has moved
+* [Windows8] commandProxy has moved
+* added Camera API for FirefoxOS
+* Rename CHANGELOG.md -> RELEASENOTES.md
+* [CB-4823] Fix XCode 5 camera plugin warnings
+* Fix compiler warnings
+* [CB-4765] Move ExifHelper.java into Camera Plugin
+* [CB-4764] Remove reference to DirectoryManager from CameraLauncher
+* [CB-4763] Use a copy of FileHelper.java within camera-plugin.
+* [CB-4752] Incremented plugin version on dev branch.
+* CB-4633: We really should close cursors.  It's just the right thing to do.
+* No longer causes a stack trace, but it doesn't cause the error to be called.
+* CB-4889 renaming org.apache.cordova.core.camera to org.apache.cordova.camera
