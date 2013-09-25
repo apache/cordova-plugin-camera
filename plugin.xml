@@ -3,7 +3,7 @@
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="org.apache.cordova.camera"
-    version="0.2.1">
+    version="0.2.2-dev">
     <name>Camera</name>
     <description>Cordova Camera Plugin</description>
     <license>Apache 2.0</license>
@@ -35,6 +35,8 @@
         </config-file>
 
         <source-file src="src/android/CameraLauncher.java" target-dir="src/org/apache/cordova/camera" />
+        <source-file src="src/android/FileHelper.java" target-dir="src/org/apache/cordova/camera" />
+        <source-file src="src/android/ExifHelper.java" target-dir="src/org/apache/cordova/camera" />
 
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />
@@ -122,9 +124,7 @@
     <!-- windows8 -->
     <platform name="windows8">
 
-        <dependency id="org.apache.cordova.core.file"
-            url="https://git-wip-us.apache.org/repos/asf/cordova-plugin-file"
-            commit="master" subdir="/" />
+        <dependency id="org.apache.cordova.file" />
         <config-file target="package.appxmanifest" parent="/Package/Capabilities">
             <Capability Name="picturesLibrary" />
             <DeviceCapability Name="webcam" />
@@ -136,6 +136,18 @@
             <merges target="" />
         </js-module>
 
+    </platform>
+ 
+    <!-- firefoxos -->
+    <platform name="firefoxos">
+        <config-file target="config.xml" parent="/*">
+            <feature name="Camera">
+                <param name="firefoxos-package" value="Camera" />
+            </feature>
+        </config-file>                                         
+        <js-module src="src/firefoxos/CameraProxy.js" name="CameraProxy">
+            <runs />
+        </js-module>
     </platform>
 
 </plugin>

@@ -150,9 +150,11 @@ static NSSet* org_apache_cordova_validArrowDirections;
         NSDictionary* options = [command.arguments objectAtIndex:10 withDefault:nil];
         [self displayPopover:options];
     } else {
-        if ([self.viewController respondsToSelector:@selector(presentViewController:::)]) {
+        SEL selector = NSSelectorFromString(@"presentViewController:animated:completion:");
+        if ([self.viewController respondsToSelector:selector]) {
             [self.viewController presentViewController:cameraPicker animated:YES completion:nil];
         } else {
+            // deprecated as of iOS >= 6.0
             [self.viewController presentModalViewController:cameraPicker animated:YES];
         }
     }
