@@ -24,9 +24,9 @@
 
 var cordova = require('cordova'),
     Camera = require('./Camera'),
-    FileEntry = require('org.apache.cordova.core.file.FileEntry'),
-    FileError = require('org.apache.cordova.core.file.FileError'),
-    FileReader = require('org.apache.cordova.core.file.FileReader');
+    FileEntry = require('org.apache.cordova.file.FileEntry'),
+    FileError = require('org.apache.cordova.file.FileError'),
+    FileReader = require('org.apache.cordova.file.FileReader');
 
 module.exports = {
 
