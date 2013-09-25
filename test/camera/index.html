@@ -340,7 +340,7 @@
         document.addEventListener("deviceready", function() {
             deviceReady = true;
             platformId = cordova.require('cordova/platform').id;
-            CameraPopoverOptions = cordova.require('org.apache.cordova.core.camera.CameraPopoverOptions');
+            CameraPopoverOptions = cordova.require('org.apache.cordova.camera.CameraPopoverOptions');
             console.log("Device="+device.platform+" "+device.version);
             createOptionsEl('sourceType', Camera.PictureSourceType, camPictureSourceTypeDefault);
             createOptionsEl('destinationType', Camera.DestinationType, camDestinationTypeDefault);
