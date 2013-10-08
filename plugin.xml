@@ -144,7 +144,10 @@
             <feature name="Camera">
                 <param name="firefoxos-package" value="Camera" />
             </feature>
-        </config-file>                                         
+        </config-file> 
+        <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
+            <clobbers target="CameraPopoverHandle" />
+        </js-module>                                        
         <js-module src="src/firefoxos/CameraProxy.js" name="CameraProxy">
             <runs />
         </js-module>
