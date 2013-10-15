@@ -736,4 +736,21 @@ static NSSet* org_apache_cordova_validArrowDirections;
 @synthesize webView;
 @synthesize popoverSupported;
 
+- (BOOL)prefersStatusBarHidden {
+    return YES;
+}
+
+- (UIViewController*)childViewControllerForStatusBarHidden {
+    return nil;
+}
+    
+- (void)viewWillAppear:(BOOL)animated {
+    SEL sel = NSSelectorFromString(@"setNeedsStatusBarAppearanceUpdate");
+    if ([self respondsToSelector:sel]) {
+        [self performSelector:sel withObject:nil afterDelay:0];
+    }
+    
+    [super viewWillAppear:animated];
+}
+
 @end
