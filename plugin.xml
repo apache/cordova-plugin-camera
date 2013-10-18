@@ -46,6 +46,27 @@
 
      </platform>
 
+    <!-- amazon-fireos -->
+    <platform name="amazon-fireos">
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="Camera">
+                <param name="android-package" value="org.apache.cordova.camera.CameraLauncher"/>
+            </feature>
+        </config-file>
+        <config-file target="AndroidManifest.xml" parent="/*">
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+        </config-file>
+
+        <source-file src="src/android/CameraLauncher.java" target-dir="src/org/apache/cordova/camera" />
+        <source-file src="src/android/FileHelper.java" target-dir="src/org/apache/cordova/camera" />
+        <source-file src="src/android/ExifHelper.java" target-dir="src/org/apache/cordova/camera" />
+
+        <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
+            <clobbers target="CameraPopoverHandle" />
+        </js-module>
+
+     </platform>
+     
      <!-- ios -->
      <platform name="ios">
          <config-file target="config.xml" parent="/*">
