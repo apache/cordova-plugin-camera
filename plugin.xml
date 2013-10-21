@@ -8,6 +8,8 @@
     <description>Cordova Camera Plugin</description>
     <license>Apache 2.0</license>
     <keywords>cordova,camera</keywords>
+    <repo>https://git-wip-us.apache.org/repos/asf/cordova-plugin-camera.git</repo>
+    <issue>https://issues.apache.org/jira/browse/CB/component/12320645</issue>
 
     <js-module src="www/CameraConstants.js" name="Camera">
         <clobbers target="Camera" />
