@@ -41,3 +41,9 @@
 * CB-4633: We really should close cursors.  It's just the right thing to do.
 * No longer causes a stack trace, but it doesn't cause the error to be called.
 * CB-4889 renaming org.apache.cordova.core.camera to org.apache.cordova.camera
+
+ ### 0.2.4 (Oct 28, 2013)
+* CB-5128: added repo + issue tag to plugin.xml for camera plugin
+* CB-4958 - iOS - Camera plugin should not show the status bar
+* [CB-4919] updated plugin.xml for FxOS
+* [CB-4915] Incremented plugin version on dev branch.
