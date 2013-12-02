@@ -67,6 +67,27 @@
 
      </platform>
      
+     <!-- ubuntu -->
+     <platform name="ubuntu">
+         <config-file target="config.xml" parent="/*">
+             <feature name="Camera">
+                 <param policy_group="camera" policy_version="1" />
+             </feature>
+         </config-file>
+         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
+            <clobbers target="CameraPopoverHandle" />
+         </js-module>
+         <header-file src="src/ubuntu/camera.h" />
+         <source-file src="src/ubuntu/camera.cpp" />
+
+         <resource-file src="src/ubuntu/back.png" />
+         <resource-file src="src/ubuntu/CaptureWidget.qml" />
+         <resource-file src="src/ubuntu/shoot.png" />
+         <resource-file src="src/ubuntu/toolbar-left.png" />
+         <resource-file src="src/ubuntu/toolbar-middle.png" />
+         <resource-file src="src/ubuntu/toolbar-right.png" />
+     </platform>
+
      <!-- ios -->
      <platform name="ios">
          <config-file target="config.xml" parent="/*">
