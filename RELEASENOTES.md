@@ -47,3 +47,11 @@
 * CB-4958 - iOS - Camera plugin should not show the status bar
 * [CB-4919] updated plugin.xml for FxOS
 * [CB-4915] Incremented plugin version on dev branch.
+
+### 0.2.5 (Dec 4, 2013)
+* fix camera for firefox os
+* getPicture via web activities
+* [ubuntu] specify policy_group
+* add ubuntu platform
+* 1. User Agent detection now detects AmazonWebView. 2. Change to use amazon-fireos as the platform if user agent string contains 'cordova-amazon-fireos'
+* Added amazon-fireos platform.
