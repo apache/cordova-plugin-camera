@@ -22,6 +22,7 @@
 /*global Windows:true, URL:true */
 
 
+
 var cordova = require('cordova'),
     Camera = require('./Camera'),
     FileEntry = require('org.apache.cordova.file.FileEntry'),
@@ -90,16 +91,23 @@ module.exports = {
                             // The resized file ready for upload
                             var _blob = canvas.msToBlob();
                             var _stream = _blob.msDetachStream();
-                            Windows.Storage.StorageFolder.getFolderFromPathAsync(packageId.path).done(function (storageFolder) {
-                                storageFolder.createFileAsync(tempPhotoFileName, Windows.Storage.CreationCollisionOption.generateUniqueName).done(function (file) {
-                                    file.openAsync(Windows.Storage.FileAccessMode.readWrite).done(function (fileStream) {
-                                        Windows.Storage.Streams.RandomAccessStream.copyAndCloseAsync(_stream, fileStream).done(function () {
-                                            var _imageUrl = URL.createObjectURL(file);
-                                            successCallback(_imageUrl);
-                                        }, function () { errorCallback("Resize picture error."); });
-                                    }, function () { errorCallback("Resize picture error."); });
-                                }, function () { errorCallback("Resize picture error."); });
+
+                            var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
+                            storageFolder.createFileAsync(tempPhotoFileName, Windows.Storage.CreationCollisionOption.generateUniqueName).done(function (file) {
+                                file.openAsync(Windows.Storage.FileAccessMode.readWrite).done(function (fileStream) {
+                                    Windows.Storage.Streams.RandomAccessStream.copyAndCloseAsync(_stream, fileStream).done(function () {
+                                        var _imageUrl = URL.createObjectURL(file);
+                                        successCallback(_imageUrl);
+                                    }, function () {
+                                        errorCallback("Resize picture error.");
+                                    });
+                                }, function () {
+                                    errorCallback("Resize picture error.");
+                                });
+                            }, function () {
+                                errorCallback("Resize picture error.");
                             });
+
                         };
                     };
 
@@ -112,14 +120,13 @@ module.exports = {
                 fileEntry.file(successCB, failCB);
             };
 
-            Windows.Storage.StorageFolder.getFolderFromPathAsync(packageId.path).done(function (storageFolder) {
-                file.copyAsync(storageFolder, file.name, Windows.Storage.NameCollisionOption.replaceExisting).then(function (storageFile) {
-                    success(new FileEntry(storageFile.name, storageFile.path));
-                }, function () {
-                    fail(FileError.INVALID_MODIFICATION_ERR);
-                }, function () {
-                    errorCallback("Folder not access.");
-                });
+            var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
+            file.copyAsync(storageFolder, file.name, Windows.Storage.NameCollisionOption.replaceExisting).then(function (storageFile) {
+                success(new FileEntry(storageFile.name, storageFile.path));
+            }, function () {
+                fail(FileError.INVALID_MODIFICATION_ERR);
+            }, function () {
+                errorCallback("Folder not access.");
             });
 
         };
@@ -165,15 +172,15 @@ module.exports = {
                 fileEntry.file(successCB, failCB);
             };
 
-            Windows.Storage.StorageFolder.getFolderFromPathAsync(packageId.path).done(function (storageFolder) {
-                file.copyAsync(storageFolder, file.name, Windows.Storage.NameCollisionOption.replaceExisting).then(function (storageFile) {
-                    success(new FileEntry(storageFile.name, storageFile.path));
-                }, function () {
-                    fail(FileError.INVALID_MODIFICATION_ERR);
-                }, function () {
-                    errorCallback("Folder not access.");
-                });
+            var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
+            file.copyAsync(storageFolder, file.name, Windows.Storage.NameCollisionOption.replaceExisting).then(function (storageFile) {
+                success(new FileEntry(storageFile.name, "ms-appdata:///local/" + storageFile.name));
+            }, function () {
+                fail(FileError.INVALID_MODIFICATION_ERR);
+            }, function () {
+                errorCallback("Folder not access.");
             });
+
 
         };
 
@@ -182,9 +189,11 @@ module.exports = {
             fileOpenPicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.picturesLibrary;
             if (mediaType == Camera.MediaType.PICTURE) {
                 fileOpenPicker.fileTypeFilter.replaceAll([".png", ".jpg", ".jpeg"]);
-            } else if (mediaType == Camera.MediaType.VIDEO) {
+            }
+            else if (mediaType == Camera.MediaType.VIDEO) {
                 fileOpenPicker.fileTypeFilter.replaceAll([".avi", ".flv", ".asx", ".asf", ".mov", ".mp4", ".mpg", ".rm", ".srt", ".swf", ".wmv", ".vob"]);
-            } else {
+            }
+            else {
                 fileOpenPicker.fileTypeFilter.replaceAll(["*"]);
             }
 
@@ -193,16 +202,16 @@ module.exports = {
                     if (destinationType == Camera.DestinationType.FILE_URI) {
                         if (targetHeight > 0 && targetWidth > 0) {
                             resizeImage(file);
-                        } else {
-                            Windows.Storage.StorageFolder.getFolderFromPathAsync(packageId.path).done(function (storageFolder) {
-                                file.copyAsync(storageFolder, file.name, Windows.Storage.NameCollisionOption.replaceExisting).then(function (storageFile) {
-                                    var _imageUrl = URL.createObjectURL(storageFile);
-                                    successCallback(_imageUrl);
-                                }, function () {
-                                    fail(FileError.INVALID_MODIFICATION_ERR);
-                                }, function () {
-                                    errorCallback("Folder not access.");
-                                });
+                        }
+                        else {
+
+                            var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
+                            file.copyAsync(storageFolder, file.name, Windows.Storage.NameCollisionOption.replaceExisting).then(function (storageFile) {
+                                successCallback(URL.createObjectURL(storageFile));
+                            }, function () {
+                                fail(FileError.INVALID_MODIFICATION_ERR);
+                            }, function () {
+                                errorCallback("Folder not access.");
                             });
 
                         }
@@ -240,18 +249,24 @@ module.exports = {
             } else {
                 cameraCaptureUI.photoSettings.format = Windows.Media.Capture.CameraCaptureUIPhotoFormat.jpeg;
             }
+
             // decide which max pixels should be supported by targetWidth or targetHeight.
             if (targetWidth >= 1280 || targetHeight >= 960) {
                 cameraCaptureUI.photoSettings.maxResolution = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution.large3M;
-            } else if (targetWidth >= 1024 || targetHeight >= 768) {
+            }
+            else if (targetWidth >= 1024 || targetHeight >= 768) {
                 cameraCaptureUI.photoSettings.maxResolution = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution.mediumXga;
-            } else if (targetWidth >= 800 || targetHeight >= 600) {
+            }
+            else if (targetWidth >= 800 || targetHeight >= 600) {
                 cameraCaptureUI.photoSettings.maxResolution = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution.mediumXga;
-            } else if (targetWidth >= 640 || targetHeight >= 480) {
+            }
+            else if (targetWidth >= 640 || targetHeight >= 480) {
                 cameraCaptureUI.photoSettings.maxResolution = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution.smallVga;
-            } else if (targetWidth >= 320 || targetHeight >= 240) {
+            }
+            else if (targetWidth >= 320 || targetHeight >= 240) {
                 cameraCaptureUI.photoSettings.maxResolution = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution.verySmallQvga;
-            } else {
+            }
+            else {
                 cameraCaptureUI.photoSettings.maxResolution = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution.highestAvailable;
             }
 
@@ -263,15 +278,14 @@ module.exports = {
                             if (targetHeight > 0 && targetWidth > 0) {
                                 resizeImage(picture);
                             } else {
-                                Windows.Storage.StorageFolder.getFolderFromPathAsync(packageId.path).done(function (storageFolder) {
-                                    picture.copyAsync(storageFolder, picture.name, Windows.Storage.NameCollisionOption.replaceExisting).then(function (storageFile) {
-                                        var _imageUrl = URL.createObjectURL(storageFile);
-                                        successCallback(_imageUrl);
-                                    }, function () {
-                                        fail(FileError.INVALID_MODIFICATION_ERR);
-                                    }, function () {
-                                        errorCallback("Folder not access.");
-                                    });
+
+                                var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
+                                picture.copyAsync(storageFolder, picture.name, Windows.Storage.NameCollisionOption.replaceExisting).then(function (storageFile) {
+                                    successCallback("ms-appdata:///local/" + storageFile.name);
+                                }, function () {
+                                    fail(FileError.INVALID_MODIFICATION_ERR);
+                                }, function () {
+                                    errorCallback("Folder not access.");
                                 });
                             }
                         } else {
@@ -306,15 +320,14 @@ module.exports = {
                             if (targetHeight > 0 && targetWidth > 0) {
                                 resizeImage(picture);
                             } else {
-                                Windows.Storage.StorageFolder.getFolderFromPathAsync(packageId.path).done(function (storageFolder) {
-                                    picture.copyAsync(storageFolder, picture.name, Windows.Storage.NameCollisionOption.replaceExisting).then(function (storageFile) {
-                                        var _imageUrl = URL.createObjectURL(storageFile);
-                                        successCallback(_imageUrl);
-                                    }, function () {
-                                        fail(FileError.INVALID_MODIFICATION_ERR);
-                                    }, function () {
-                                        errorCallback("Folder not access.");
-                                    });
+
+                                var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
+                                picture.copyAsync(storageFolder, picture.name, Windows.Storage.NameCollisionOption.replaceExisting).then(function (storageFile) {
+                                    successCallback("ms-appdata:///local/" + storageFile.name);
+                                }, function () {
+                                    fail(FileError.INVALID_MODIFICATION_ERR);
+                                }, function () {
+                                    errorCallback("Folder not access.");
                                 });
                             }
                         } else {
