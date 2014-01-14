@@ -273,6 +273,8 @@ Optional parameters to customize the camera settings.
 
 - Ignores the `cameraDirection` parameter.
 
+- Ignores the `mediaType` property of `cameraOptions` as the Windows Phone SDK does not provide a way to choose videos from PHOTOLIBRARY.
+
 
 ## CameraError
 
