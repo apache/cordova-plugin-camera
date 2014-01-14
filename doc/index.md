@@ -266,7 +266,7 @@ Optional parameters to customize the camera settings.
 
 - Ignores the `allowEdit` parameter.
 
-- Ignores the `PictureSourceType` parameter (user choses it in a dialog window)
+- Ignores the `PictureSourceType` parameter (user chooses it in a dialog window)
 
 - Ignores the `encodingType`
 
