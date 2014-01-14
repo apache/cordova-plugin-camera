@@ -32,11 +32,11 @@
                 <param name="firefoxos-package" value="Camera" />
             </feature>
         </config-file>                                         
-
-        <js-module src="src/firefoxos/camera.js" name="camera-impl">
+        
+        <js-module src="src/firefoxos/CameraProxy.js" name="CameraProxy">
           <runs />
         </js-module>
-    </platform>      
+    </platform>  
     
     <!-- android -->
     <platform name="android">
