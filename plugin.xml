@@ -3,7 +3,7 @@
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="org.apache.cordova.camera"
-    version="0.2.5">
+    version="0.2.6-dev">
     <name>Camera</name>
     <description>Cordova Camera Plugin</description>
     <license>Apache 2.0</license>
@@ -130,7 +130,9 @@
         <config-file target="www/config.xml" parent="/widget">
             <feature name="Camera" value="Camera"/>
         </config-file>
-
+        <config-file target="www/config.xml" parent="/widget/rim:permissions">
+          <rim:permit>read_geolocation</rim:permit>
+        </config-file>
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />
         </js-module>
