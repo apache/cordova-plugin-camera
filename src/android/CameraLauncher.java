@@ -34,16 +34,18 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.graphics.Bitmap.CompressFormat;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
@@ -88,6 +90,7 @@ public class CameraLauncher extends CordovaPlugin implements
 	private static final String GET_All = "Get All";
 
 	private static final String LOG_TAG = "CameraLauncher";
+	private static final int CROP_CAMERA = 100;
 
 	private int mQuality; // Compression quality hint (0-100: 0=low quality &
 							// high compression, 100=compress of max quality)
@@ -275,6 +278,7 @@ public class CameraLauncher extends CordovaPlugin implements
 	 */
 	// TODO: Images selected from SDCARD don't display correctly, but from
 	// CAMERA ALBUM do!
+	// TODO: Images from kitkat filechooser not going into crop function
 	public void getImage(int srcType, int returnType, int encodingType) {
 		Intent intent = new Intent();
 		String title = GET_PICTURE;
@@ -283,12 +287,16 @@ public class CameraLauncher extends CordovaPlugin implements
 			if (this.allowEdit) {
 				intent.setAction(Intent.ACTION_PICK);
 				intent.putExtra("crop", "true");
+				if (this.targetHeight == this.targetWidth) {
+					intent.putExtra("aspectX", 1);
+					intent.putExtra("aspectY", 1);
+				}
 				intent.putExtra("outputX", this.targetWidth);
 				intent.putExtra("outputY", this.targetHeight);
 				File photo = createCaptureFile(encodingType);
 				intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT,
 						Uri.fromFile(photo));
-			}else{
+			} else {
 				intent.setAction(Intent.ACTION_GET_CONTENT);
 				intent.addCategory(Intent.CATEGORY_OPENABLE);
 			}
@@ -315,6 +323,40 @@ public class CameraLauncher extends CordovaPlugin implements
 	}
 
 	/**
+	 * Brings up the UI to perform crop on passed image URI
+	 * 
+	 * @param picUri
+	 */
+	private void performCrop(Uri picUri) {
+		try {
+			Intent cropIntent = new Intent("com.android.camera.action.CROP");
+			// indicate image type and Uri
+			cropIntent.setDataAndType(picUri, "image/*");
+			// set crop properties
+			cropIntent.putExtra("crop", "true");
+			if (this.targetHeight == this.targetWidth) {
+				cropIntent.putExtra("aspectX", 1);
+				cropIntent.putExtra("aspectY", 1);
+			}
+			// indicate output X and Y
+			cropIntent.putExtra("outputX", this.targetWidth);
+			cropIntent.putExtra("outputY", this.targetHeight);
+			// retrieve data on return
+			cropIntent.putExtra("return-data", true);
+			// start the activity - we handle returning in onActivityResult
+
+			if (this.cordova != null) {
+				this.cordova.startActivityForResult((CordovaPlugin) this,
+						cropIntent, CROP_CAMERA);
+			}
+		} catch (ActivityNotFoundException anfe) {
+			Log.e(LOG_TAG, "Crop operation not supported on this device");
+			// Send Uri back to JavaScript for viewing image
+			this.callbackContext.success(picUri.toString());
+		}
+	}
+
+	/**
 	 * Called when the camera view exits.
 	 * 
 	 * @param requestCode
@@ -334,7 +376,46 @@ public class CameraLauncher extends CordovaPlugin implements
 		int srcType = (requestCode / 16) - 1;
 		int destType = (requestCode % 16) - 1;
 		int rotate = 0;
+		// if camera crop
+		if (requestCode == CROP_CAMERA) {
+			if (resultCode == Activity.RESULT_OK) {
+				// // get the returned data
+				Bundle extras = intent.getExtras();
+				// get the cropped bitmap
+				Bitmap thePic = extras.getParcelable("data");
 
+				// now save the bitmap to a file
+				OutputStream fOut = null;
+				File temp_file = new File(getTempDirectoryPath(),
+						System.currentTimeMillis() + ".jpg");
+				try {
+					temp_file.createNewFile();
+					fOut = new FileOutputStream(temp_file);
+					thePic.compress(Bitmap.CompressFormat.JPEG, this.mQuality,
+							fOut);
+					fOut.flush();
+					fOut.close();
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
+				// // Send Uri back to JavaScript for viewing image
+				this.callbackContext
+						.success(Uri.fromFile(temp_file).toString());
+
+			}// If cancelled
+			else if (resultCode == Activity.RESULT_CANCELED) {
+				this.failPicture("Camera cancelled.");
+			}
+
+			// If something else
+			else {
+				this.failPicture("Did not complete!");
+			}
+
+		}
 		// If CAMERA
 		if (srcType == CAMERA) {
 			// If image available
@@ -399,7 +480,8 @@ public class CameraLauncher extends CordovaPlugin implements
 							this.failPicture("Error capturing image - no media storage found.");
 						}
 
-						// If all this is true we shouldn't compress the image.
+						// If all this is true we shouldn't compress the
+						// image.
 						if (this.targetHeight == -1 && this.targetWidth == -1
 								&& this.mQuality == 100
 								&& !this.correctOrientation) {
@@ -436,8 +518,12 @@ public class CameraLauncher extends CordovaPlugin implements
 							}
 
 						}
-						// Send Uri back to JavaScript for viewing image
-						this.callbackContext.success(uri.toString());
+						if (this.allowEdit) {
+							performCrop(uri);
+						} else {
+							// Send Uri back to JavaScript for viewing image
+							this.callbackContext.success(uri.toString());
+						}
 					}
 
 					this.cleanup(FILE_URI, this.imageUri, uri, bitmap);
@@ -464,6 +550,12 @@ public class CameraLauncher extends CordovaPlugin implements
 		else if ((srcType == PHOTOLIBRARY) || (srcType == SAVEDPHOTOALBUM)) {
 			if (resultCode == Activity.RESULT_OK) {
 				Uri uri = intent.getData();
+
+				// sometimes uri is getting null
+				if (uri == null) {
+					File photo = createCaptureFile(encodingType);
+					uri = Uri.fromFile(photo);
+				}
 
 				// If you ask for video or all media type you will automatically
 				// get back a file URI
