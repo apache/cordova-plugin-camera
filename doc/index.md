@@ -78,6 +78,7 @@ than `DATA_URL`.
 - Amazon Fire OS
 - Android
 - BlackBerry 10
+- Firefox OS
 - iOS
 - Tizen
 - Windows Phone 7 and 8
@@ -101,6 +102,10 @@ if they go through the "Gallery" app first. Potential workarounds for this issue
 Android uses intents to launch the camera activity on the device to capture
 images, and on phones with low memory, the Cordova activity may be killed.  In this
 scenario, the image may not appear when the Cordova activity is restored.
+
+### Firefox OS Quirks
+
+Camera plugin is currently implemented using [Web Activities](https://hacks.mozilla.org/2013/01/introducing-web-activities/). 
 
 ### iOS Quirks
 
@@ -246,6 +251,26 @@ Optional parameters to customize the camera settings.
 - Ignores the `sourceType` parameter.
 
 - Ignores the `allowEdit` parameter.
+
+- `Camera.MediaType` is not supported.
+
+- Ignores the `correctOrientation` parameter.
+
+- Ignores the `cameraDirection` parameter.
+
+### Firefox OS Quirks
+
+- Ignores the `quality` parameter.
+
+- `Camera.DestinationType` is ignored and equals `1` (image file URI)
+
+- Ignores the `allowEdit` parameter.
+
+- Ignores the `PictureSourceType` parameter (user chooses it in a dialog window)
+
+- Ignores the `encodingType`
+
+- Ignores the `targetWidth` and `targetHeight`
 
 - `Camera.MediaType` is not supported.
 
