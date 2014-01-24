@@ -33,10 +33,11 @@
             </feature>
         </config-file>                                         
         
-        <js-module src="src/firefoxos/camera.js" name="camera-impl">
+        <js-module src="src/firefoxos/CameraProxy.js" name="camera-impl">
           <runs />
         </js-module>
     </platform>
+
     <!-- android -->
     <platform name="android">
         <config-file target="res/xml/config.xml" parent="/*">
@@ -196,19 +197,4 @@
 
     </platform>
  
-    <!-- firefoxos -->
-    <platform name="firefoxos">
-        <config-file target="config.xml" parent="/*">
-            <feature name="Camera">
-                <param name="firefoxos-package" value="Camera" />
-            </feature>
-        </config-file> 
-        <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
-            <clobbers target="CameraPopoverHandle" />
-        </js-module>                                        
-        <js-module src="src/firefoxos/CameraProxy.js" name="CameraProxy">
-            <runs />
-        </js-module>
-    </platform>
-
 </plugin>
