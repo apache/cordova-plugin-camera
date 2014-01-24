@@ -33,7 +33,7 @@
             </feature>
         </config-file>                                         
         
-        <js-module src="src/firefoxos/camera.js" name="camera-impl">
+        <js-module src="src/firefoxos/CameraProxy.js" name="camera-impl">
           <runs />
         </js-module>
     </platform>
