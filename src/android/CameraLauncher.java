@@ -364,6 +364,34 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         bitmap = null;
     }
     
+    private String ouputResizedBitmap(Bitmap bitmap, Uri uri) throws IOException {
+        // Create an ExifHelper to save the exif data that is lost during compression
+        String resizePath = getTempDirectoryPath() + "/resize.jpg";
+        // Some content: URIs do not map to file paths (e.g. picasa).
+        String realPath = FileHelper.getRealPath(uri, this.cordova);
+        ExifHelper exif = new ExifHelper();
+        if (realPath != null && this.encodingType == JPEG) {
+            try {
+                exif.createInFile(realPath);
+                exif.readExifData();
+                rotate = exif.getOrientation();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        OutputStream os = new FileOutputStream(resizePath);
+        bitmap.compress(Bitmap.CompressFormat.JPEG, this.mQuality, os);
+        os.close();
+
+        // Restore exif data to file
+        if (realPath != null && this.encodingType == JPEG) {
+            exif.createOutFile(resizePath);
+            exif.writeExifData();
+        }
+        return resizePath;
+    }
+
     /**
      * Applies all needed transformation to the image received from the gallery.
      *
@@ -428,31 +456,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     // Do we need to scale the returned file
                     if (this.targetHeight > 0 && this.targetWidth > 0) {
                         try {
-                            // Create an ExifHelper to save the exif data that is lost during compression
-                            String resizePath = getTempDirectoryPath() + "/resize.jpg";
-                            // Some content: URIs do not map to file paths (e.g. picasa).
-                            String realPath = FileHelper.getRealPath(uri, this.cordova);
-                            ExifHelper exif = new ExifHelper();
-                            if (realPath != null && this.encodingType == JPEG) {
-                                try {
-                                    exif.createInFile(realPath);
-                                    exif.readExifData();
-                                    rotate = exif.getOrientation();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-
-                            OutputStream os = new FileOutputStream(resizePath);
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, this.mQuality, os);
-                            os.close();
-
-                            // Restore exif data to file
-                            if (realPath != null && this.encodingType == JPEG) {
-                                exif.createOutFile(resizePath);
-                                exif.writeExifData();
-                            }
-
+                        	String resizePath = this.ouputResizedBitmap(bitmap, uri);
                             // The resized image is cached by the app in order to get around this and not have to delete you
                             // application cache I'm adding the current system time to the end of the file url.
                             this.callbackContext.success("file://" + resizePath + "?" + System.currentTimeMillis());
