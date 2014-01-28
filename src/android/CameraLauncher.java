@@ -412,7 +412,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     if (rotate != 0) {
                         Matrix matrix = new Matrix();
                         matrix.setRotate(rotate);
-                        bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+                        try {
+                        	bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+                        } catch (OutOfMemoryError oom) {}
                     }
                 }
 
