@@ -84,6 +84,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private int mediaType;                  // What type of media to retrieve
     private boolean saveToPhotoAlbum;       // Should the picture be saved to the device's photo album
     private boolean correctOrientation;     // Should the pictures orientation be corrected
+    private boolean orientationCorrected;   // Has the picture's orientation been corrected
     //private boolean allowEdit;              // Should we allow the user to crop the image. UNUSED.
 
     public CallbackContext callbackContext;
@@ -364,9 +365,14 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         bitmap = null;
     }
     
-    private String ouputResizedBitmap(Bitmap bitmap, Uri uri) throws IOException {
+    private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         // Create an ExifHelper to save the exif data that is lost during compression
-        String resizePath = getTempDirectoryPath() + "/resize.jpg";
+        String modifiedPath = getTempDirectoryPath() + "/modified.jpg";
+
+        OutputStream os = new FileOutputStream(modifiedPath);
+        bitmap.compress(Bitmap.CompressFormat.JPEG, this.mQuality, os);
+        os.close();
+
         // Some content: URIs do not map to file paths (e.g. picasa).
         String realPath = FileHelper.getRealPath(uri, this.cordova);
         ExifHelper exif = new ExifHelper();
@@ -374,22 +380,16 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             try {
                 exif.createInFile(realPath);
                 exif.readExifData();
-                rotate = exif.getOrientation();
+                if (this.correctOrientation && this.orientationCorrected) {
+                    exif.resetOrientation();
+                }
+                exif.createOutFile(modifiedPath);
+                exif.writeExifData();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-
-        OutputStream os = new FileOutputStream(resizePath);
-        bitmap.compress(Bitmap.CompressFormat.JPEG, this.mQuality, os);
-        os.close();
-
-        // Restore exif data to file
-        if (realPath != null && this.encodingType == JPEG) {
-            exif.createOutFile(resizePath);
-            exif.writeExifData();
-        }
-        return resizePath;
+        return modifiedPath;
     }
 
     /**
@@ -440,7 +440,12 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     if (rotate != 0) {
                         Matrix matrix = new Matrix();
                         matrix.setRotate(rotate);
-                        bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+                        try {
+                            bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+                            this.orientationCorrected = true;
+                        } catch (OutOfMemoryError oom) {
+                            this.orientationCorrected = false;
+                        }
                     }
                 }
 
@@ -451,13 +456,14 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
                 // If sending filename back
                 else if (destType == FILE_URI || destType == NATIVE_URI) {
-                    // Do we need to scale the returned file
-                    if (this.targetHeight > 0 && this.targetWidth > 0) {
+                    // Did we modify the image?
+                    if ( (this.targetHeight > 0 && this.targetWidth > 0) ||
+                            (this.correctOrientation && this.orientationCorrected) ) {
                         try {
-                            String resizePath = this.ouputResizedBitmap(bitmap, uri);
-                            // The resized image is cached by the app in order to get around this and not have to delete you
+                            String modifiedPath = this.ouputModifiedBitmap(bitmap, uri);
+                            // The modified image is cached by the app in order to get around this and not have to delete you
                             // application cache I'm adding the current system time to the end of the file url.
-                            this.callbackContext.success("file://" + resizePath + "?" + System.currentTimeMillis());
+                            this.callbackContext.success("file://" + modifiedPath + "?" + System.currentTimeMillis());
                         } catch (Exception e) {
                             e.printStackTrace();
                             this.failPicture("Error retrieving image.");
@@ -516,7 +522,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         // If retrieving photo from library
         else if ((srcType == PHOTOLIBRARY) || (srcType == SAVEDPHOTOALBUM)) {
             if (resultCode == Activity.RESULT_OK) {
-                this.processResultFromGallery(destType, intent)
+                this.processResultFromGallery(destType, intent);
             }
             else if (resultCode == Activity.RESULT_CANCELED) {
                 this.failPicture("Selection cancelled.");
