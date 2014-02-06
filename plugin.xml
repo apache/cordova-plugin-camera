@@ -3,7 +3,7 @@
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="org.apache.cordova.camera"
-    version="0.2.6">
+    version="0.2.7">
     <name>Camera</name>
     <description>Cordova Camera Plugin</description>
     <license>Apache 2.0</license>
@@ -33,10 +33,11 @@
             </feature>
         </config-file>                                         
         
-        <js-module src="src/firefoxos/camera.js" name="camera-impl">
+        <js-module src="src/firefoxos/CameraProxy.js" name="CameraProxy">
           <runs />
         </js-module>
-    </platform>
+    </platform>  
+    
     <!-- android -->
     <platform name="android">
         <config-file target="res/xml/config.xml" parent="/*">
@@ -131,7 +132,7 @@
             <feature name="Camera" value="Camera"/>
         </config-file>
         <config-file target="www/config.xml" parent="/widget/rim:permissions">
-          <rim:permit>read_geolocation</rim:permit>
+          <rim:permit>access_shared</rim:permit>
         </config-file>
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />
@@ -194,21 +195,6 @@
             <merges target="" />
         </js-module>
 
-    </platform>
- 
-    <!-- firefoxos -->
-    <platform name="firefoxos">
-        <config-file target="config.xml" parent="/*">
-            <feature name="Camera">
-                <param name="firefoxos-package" value="Camera" />
-            </feature>
-        </config-file> 
-        <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
-            <clobbers target="CameraPopoverHandle" />
-        </js-module>                                        
-        <js-module src="src/firefoxos/CameraProxy.js" name="CameraProxy">
-            <runs />
-        </js-module>
     </platform>
 
 </plugin>

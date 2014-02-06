@@ -61,3 +61,10 @@
 * CB-2442 CB-2419 Use Windows.Storage.ApplicationData.current.localFolder, instead of writing to app package.
 * [BlackBerry10] Adding platform level permissions
 * CB-5599 Android: Catch and ignore OutOfMemoryError in getRotatedBitmap()
+
+### 0.2.7 (Feb 05, 2014)
+* CB-4919 firefox os quirks added and supported platforms list is updated
+* getPicture via web activities
+* Documented quirk for CB-5335 + CB-5206 for WP7+8
+* reference the correct firefoxos implementation
+* [BlackBerry10] Add permission to access_shared
