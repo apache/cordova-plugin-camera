@@ -68,10 +68,10 @@ bool Camera::preprocessImage(QString &path) {
 
     const char *type;
     if (convertToPNG) {
-        newImage.setFileTemplate("imgXXXXXX.png");
+        newImage.setFileTemplate(generateLocation("png"));
         type = "png";
     } else {
-        newImage.setFileTemplate("imgXXXXXX.jpg");
+        newImage.setFileTemplate(generateLocation("jpg"));
         type = "jpg";
     }
 
@@ -98,7 +98,7 @@ void Camera::onImageSaved(QString path) {
             cbParams = QString("\"%1\"").arg(content.data());
             image.remove();
         } else {
-            cbParams = CordovaInternal::format(QUrl::fromLocalFile(absolutePath).toString());
+            cbParams = CordovaInternal::format(absolutePath);
         }
     }
 
