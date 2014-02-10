@@ -141,7 +141,7 @@ private static final int CROP_CAMERA = 100;
                     this.takePicture(destType, encodingType);
                 }
                 else if ((srcType == PHOTOLIBRARY) || (srcType == SAVEDPHOTOALBUM)) {
-                    this.getImage(srcType, destType, encodingType);
+                    this.getImage(srcType, destType);
                 }
             }
             catch (IllegalArgumentException e)
