@@ -42,7 +42,6 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.graphics.Bitmap.CompressFormat;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.net.Uri;
@@ -142,7 +141,7 @@ private static final int CROP_CAMERA = 100;
                     this.takePicture(destType, encodingType);
                 }
                 else if ((srcType == PHOTOLIBRARY) || (srcType == SAVEDPHOTOALBUM)) {
-                    this.getImage(srcType, destType);
+                    this.getImage(srcType, destType, encodingType);
                 }
             }
             catch (IllegalArgumentException e)
@@ -243,6 +242,7 @@ private static final int CROP_CAMERA = 100;
      * @param returnType        Set the type of image to return.
      */
     // TODO: Images selected from SDCARD don't display correctly, but from CAMERA ALBUM do!
+    // TODO: Images from kitkat filechooser not going into crop function
     public void getImage(int srcType, int returnType) {
         Intent intent = new Intent();
         String title = GET_PICTURE;
@@ -631,19 +631,8 @@ private static final int CROP_CAMERA = 100;
         } else {
             matrix.setRotate(rotate, (float) bitmap.getWidth() / 2, (float) bitmap.getHeight() / 2);
         }
-
-        try
-        {
-            bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+         bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
             exif.resetOrientation();
-        }
-        catch (OutOfMemoryError oom)
-        {
-            // You can run out of memory if the image is very large:
-            // http://simonmacdonald.blogspot.ca/2012/07/change-to-camera-code-in-phonegap-190.html
-            // If this happens, simply do not rotate the image and return it unmodified.
-            // If you do not catch the OutOfMemoryError, the Android app crashes.
-        }
 
         return bitmap;
     }
