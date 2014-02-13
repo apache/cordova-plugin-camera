@@ -282,7 +282,7 @@ Optional parameters to customize the camera settings.
 
 - Set `quality` below 50 to avoid memory errors on some devices.
 
-- When using `destinationType.FILE_URI`, photos are saved in the application's temporary directory.  You may delete the contents of this directory using the `navigator.fileMgr` APIs if storage space is a concern.
+- When using `destinationType.FILE_URI`, photos are saved in the application's temporary directory. The contents of the application's temporary directory is deleted when the application ends.
 
 ### Tizen Quirks
 
