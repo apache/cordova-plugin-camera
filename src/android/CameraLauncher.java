@@ -534,14 +534,18 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     }
 
     private int getImageOrientation(Uri uri) {
-        String[] cols = { MediaStore.Images.Media.ORIENTATION };
-        Cursor cursor = cordova.getActivity().getContentResolver().query(uri,
-                cols, null, null, null);
         int rotate = 0;
-        if (cursor != null) {
-            cursor.moveToPosition(0);
-            rotate = cursor.getInt(0);
-            cursor.close();
+        String[] cols = { MediaStore.Images.Media.ORIENTATION };
+        try {
+            Cursor cursor = cordova.getActivity().getContentResolver().query(uri,
+                    cols, null, null, null);
+            if (cursor != null) {
+                cursor.moveToPosition(0);
+                rotate = cursor.getInt(0);
+                cursor.close();
+            }
+        } catch (Exception e) {
+            // You can get an IllegalArgumentException if ContentProvider doesn't support querying for orientation.
         }
         return rotate;
     }
