@@ -68,3 +68,6 @@
 * Documented quirk for CB-5335 + CB-5206 for WP7+8
 * reference the correct firefoxos implementation
 * [BlackBerry10] Add permission to access_shared
+
+### 0.2.8 (Feb 26, 2014)
+* CB-1826 Catch OOM on gallery image resize
