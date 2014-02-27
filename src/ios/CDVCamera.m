@@ -155,7 +155,7 @@ static NSSet* org_apache_cordova_validArrowDirections;
             [self.viewController presentViewController:cameraPicker animated:YES completion:nil];
         } else {
             // deprecated as of iOS >= 6.0
-            [self.viewController presentModalViewController:cameraPicker animated:YES];
+            [self.viewController presentViewController:cameraPicker animated:YES completion:nil];
         }
     }
     self.hasPendingOperation = YES;
@@ -266,9 +266,9 @@ static NSSet* org_apache_cordova_validArrowDirections;
         cameraPicker.popoverController = nil;
     } else {
         if ([cameraPicker respondsToSelector:@selector(presentingViewController)]) {
-            [[cameraPicker presentingViewController] dismissModalViewControllerAnimated:YES];
+            [[cameraPicker presentingViewController] dismissViewControllerAnimated:YES completion:nil];
         } else {
-            [[cameraPicker parentViewController] dismissModalViewControllerAnimated:YES];
+            [[cameraPicker parentViewController] dismissViewControllerAnimated:YES completion:nil];
         }
     }
 
@@ -386,9 +386,9 @@ static NSSet* org_apache_cordova_validArrowDirections;
     CDVCameraPicker* cameraPicker = (CDVCameraPicker*)picker;
 
     if ([cameraPicker respondsToSelector:@selector(presentingViewController)]) {
-        [[cameraPicker presentingViewController] dismissModalViewControllerAnimated:YES];
+        [[cameraPicker presentingViewController] dismissViewControllerAnimated:YES completion:nil];
     } else {
-        [[cameraPicker parentViewController] dismissModalViewControllerAnimated:YES];
+        [[cameraPicker parentViewController] dismissViewControllerAnimated:YES completion:nil];
     }
     // popoverControllerDidDismissPopover:(id)popoverController is called if popover is cancelled
 
@@ -735,22 +735,5 @@ static NSSet* org_apache_cordova_validArrowDirections;
 @synthesize cropToSize;
 @synthesize webView;
 @synthesize popoverSupported;
-
-- (BOOL)prefersStatusBarHidden {
-    return YES;
-}
-
-- (UIViewController*)childViewControllerForStatusBarHidden {
-    return nil;
-}
-    
-- (void)viewWillAppear:(BOOL)animated {
-    SEL sel = NSSelectorFromString(@"setNeedsStatusBarAppearanceUpdate");
-    if ([self respondsToSelector:sel]) {
-        [self performSelector:sel withObject:nil afterDelay:0];
-    }
-    
-    [super viewWillAppear:animated];
-}
 
 @end
