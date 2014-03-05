@@ -100,7 +100,7 @@ Rectangle {
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
-                        camera.imageCapture.capture();
+                        camera.imageCapture.captureToLocation(ui.parent.plugin('Camera').generateLocation("jpg"));
                     }
                 }
             }
