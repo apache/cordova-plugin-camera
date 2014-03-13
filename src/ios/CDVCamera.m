@@ -84,7 +84,7 @@ static NSSet* org_apache_cordova_validArrowDirections;
 
     bool hasCamera = [UIImagePickerController isSourceTypeAvailable:sourceType];
     if (!hasCamera) {
-        NSLog(@"Camera.getPicture: source type %ld not available.", sourceType);
+        NSLog(@"Camera.getPicture: source type %lu not available.", (unsigned long)sourceType);
         CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"no camera available"];
         [self.commandDelegate sendPluginResult:result callbackId:callbackId];
         return;
