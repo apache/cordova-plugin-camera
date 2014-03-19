@@ -20,7 +20,7 @@
 # org.apache.cordova.camera
 
 This plugin provides an API for taking pictures and for choosing images from
-the system's image libarary.
+the system's image library.
 
     cordova plugin add org.apache.cordova.camera
 
