@@ -641,7 +641,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
 
         // If retrieving photo from library
         else if ((srcType == PHOTOLIBRARY) || (srcType == SAVEDPHOTOALBUM)) {
-            if (resultCode == Activity.RESULT_OK) {
+            if (resultCode == Activity.RESULT_OK && intent != null) {
                 this.processResultFromGallery(destType, intent);
             }
             else if (resultCode == Activity.RESULT_CANCELED) {
