@@ -277,7 +277,7 @@ static NSSet* org_apache_cordova_validArrowDirections;
     NSString* mediaType = [info objectForKey:UIImagePickerControllerMediaType];
     // IMAGE TYPE
     if ([mediaType isEqualToString:(NSString*)kUTTypeImage]) {
-        if (cameraPicker.returnType == DestinationTypeNativeUri) {
+        if (cameraPicker.returnType == DestinationTypeNativeUri && cameraPicker.sourceType != UIImagePickerControllerSourceTypeCamera) {
             NSString* nativeUri = [(NSURL*)[info objectForKey:UIImagePickerControllerReferenceURL] absoluteString];
             result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:nativeUri];
         } else {
@@ -678,7 +678,29 @@ static NSSet* org_apache_cordova_validArrowDirections;
     
     if (self.pickerController.saveToPhotoAlbum) {
         ALAssetsLibrary *library = [ALAssetsLibrary new];
-        [library writeImageDataToSavedPhotosAlbum:self.data metadata:self.metadata completionBlock:nil];
+        [library writeImageDataToSavedPhotosAlbum:self.data metadata:self.metadata completionBlock:^(NSURL *assetURL, NSError *error) {
+            
+            if (self.pickerController.returnType == DestinationTypeNativeUri) {
+                CDVPluginResult* result;
+                if (error) {
+                    result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[error localizedDescription]];
+                } else {
+                    result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[assetURL absoluteString]];
+                }
+                
+                [self.commandDelegate sendPluginResult:result callbackId:self.pickerController.callbackId];
+                
+                self.hasPendingOperation = NO;
+                self.pickerController = nil;
+                self.data = nil;
+                self.metadata = nil;
+            }
+        }];
+        
+        if (self.pickerController.returnType == DestinationTypeNativeUri) {
+            // JS callback will be handler in the writeImageDataToSavedPhotosAlbum completionBlock
+            return;
+        }
     }
     
     if (self.pickerController.returnType == DestinationTypeFileUri) {
@@ -703,16 +725,15 @@ static NSSet* org_apache_cordova_validArrowDirections;
             result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[[NSURL fileURLWithPath:filePath] absoluteString]];
         }
     }
-    else {
+    else if (self.pickerController.returnType == DestinationTypeDataUrl) {
         result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[self.data base64EncodedString]];
     }
-    if (result) {
-        [self.commandDelegate sendPluginResult:result callbackId:self.pickerController.callbackId];
+    
+    if (!result) {
+        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Invalid options"];
     }
     
-    if (result) {
-        [self.commandDelegate sendPluginResult:result callbackId:self.pickerController.callbackId];
-    }
+    [self.commandDelegate sendPluginResult:result callbackId:self.pickerController.callbackId];
     
     self.hasPendingOperation = NO;
     self.pickerController = nil;
