@@ -33,7 +33,7 @@ base64-encoded `String`, or as the URI for the image file.  The method
 itself returns a `CameraPopoverHandle` object that can be used to
 reposition the file selection popover.
 
-    navigator.camera.getPicture( cameraSuccess, cameraError, [ cameraOptions ] );
+    navigator.camera.getPicture( cameraSuccess, cameraError, cameraOptions );
 
 ### Description
 
