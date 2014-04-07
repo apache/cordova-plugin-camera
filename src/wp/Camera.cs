@@ -113,8 +113,6 @@ namespace WPCordovaClassLib.Cordova.Commands
             [DataMember(IsRequired = false, Name = "correctOrientation")]
             public bool CorrectOrientation { get; set; }
 
-            
-
             /// <summary>
             /// Ignored
             /// </summary>
@@ -177,16 +175,6 @@ namespace WPCordovaClassLib.Cordova.Commands
         }
 
         /// <summary>
-        /// Used to open photo library
-        /// </summary>
-        PhotoChooserTask photoChooserTask;
-
-        /// <summary>
-        /// Used to open camera application
-        /// </summary>
-        CameraCaptureTask cameraTask;
-
-        /// <summary>
         /// Camera options
         /// </summary>
         CameraOptions cameraOptions;
@@ -198,20 +186,17 @@ namespace WPCordovaClassLib.Cordova.Commands
                 string[] args = JSON.JsonHelper.Deserialize<string[]>(options);
                 // ["quality", "destinationType", "sourceType", "targetWidth", "targetHeight", "encodingType",
                 //     "mediaType", "allowEdit", "correctOrientation", "saveToPhotoAlbum" ]
-                this.cameraOptions = new CameraOptions();
-                this.cameraOptions.Quality = int.Parse(args[0]);
-                this.cameraOptions.DestinationType = int.Parse(args[1]);
-                this.cameraOptions.PictureSourceType = int.Parse(args[2]);
-                this.cameraOptions.TargetWidth = int.Parse(args[3]);
-                this.cameraOptions.TargetHeight = int.Parse(args[4]);
-                this.cameraOptions.EncodingType = int.Parse(args[5]);
-                this.cameraOptions.MediaType = int.Parse(args[6]);
-                this.cameraOptions.AllowEdit = bool.Parse(args[7]);
-                this.cameraOptions.CorrectOrientation = bool.Parse(args[8]);
-                this.cameraOptions.SaveToPhotoAlbum = bool.Parse(args[9]);
-                
-                //this.cameraOptions = String.IsNullOrEmpty(options) ?
-                //        new CameraOptions() : JSON.JsonHelper.Deserialize<CameraOptions>(options);
+                cameraOptions = new CameraOptions();
+                cameraOptions.Quality = int.Parse(args[0]);
+                cameraOptions.DestinationType = int.Parse(args[1]);
+                cameraOptions.PictureSourceType = int.Parse(args[2]);
+                cameraOptions.TargetWidth = int.Parse(args[3]);
+                cameraOptions.TargetHeight = int.Parse(args[4]);
+                cameraOptions.EncodingType = int.Parse(args[5]);
+                cameraOptions.MediaType = int.Parse(args[6]);
+                cameraOptions.AllowEdit = bool.Parse(args[7]);
+                cameraOptions.CorrectOrientation = bool.Parse(args[8]);
+                cameraOptions.SaveToPhotoAlbum = bool.Parse(args[9]);
             }
             catch (Exception ex)
             {
@@ -224,28 +209,32 @@ namespace WPCordovaClassLib.Cordova.Commands
 
             if (cameraOptions.PictureSourceType == CAMERA)
             {
-                cameraTask = new CameraCaptureTask();
+                CameraCaptureTask cameraTask = new CameraCaptureTask();
                 cameraTask.Completed += onCameraTaskCompleted;
                 cameraTask.Show();
             }
+            else if ((cameraOptions.PictureSourceType == PHOTOLIBRARY) || (cameraOptions.PictureSourceType == SAVEDPHOTOALBUM))
+            {
+                PhotoChooserTask photoChooserTask = new PhotoChooserTask();
+                photoChooserTask.Completed += onPickerTaskCompleted;
+                photoChooserTask.Show();
+            }
             else
             {
-                if ((cameraOptions.PictureSourceType == PHOTOLIBRARY) || (cameraOptions.PictureSourceType == SAVEDPHOTOALBUM))
-                {
-                    photoChooserTask = new PhotoChooserTask();
-                    photoChooserTask.Completed += onPickerTaskCompleted;
-                    photoChooserTask.Show();
-                }
-                else
-                {
-                    DispatchCommandResult(new PluginResult(PluginResult.Status.NO_RESULT));
-                }
+                DispatchCommandResult(new PluginResult(PluginResult.Status.NO_RESULT));
             }
+
 
         }
 
         public void onCameraTaskCompleted(object sender, PhotoResult e)
         {
+            var task = sender as ChooserBase<PhotoResult>;
+            if (task != null)
+            {
+                task.Completed -= onCameraTaskCompleted;
+            }
+
             if (e.Error != null)
             {
                 DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR));
@@ -289,10 +278,7 @@ namespace WPCordovaClassLib.Cordova.Commands
 
                             // we should return stream position back after saving stream to media library
                             rotImageStream.Seek(0, SeekOrigin.Begin);
-
-                            WriteableBitmap image = PictureDecoder.DecodeJpeg(rotImageStream);
-
-                            imagePathOrContent = this.SaveImageToLocalStorage(image, Path.GetFileName(e.OriginalFileName));
+                            imagePathOrContent = this.SaveImageToLocalStorage(rotImageStream, Path.GetFileName(e.OriginalFileName));
 
 
                         }
@@ -329,6 +315,12 @@ namespace WPCordovaClassLib.Cordova.Commands
 
         public void onPickerTaskCompleted(object sender, PhotoResult e)
         {
+            var task = sender as ChooserBase<PhotoResult>;
+            if (task != null)
+            {
+                task.Completed -= onCameraTaskCompleted;
+            }
+
             if (e.Error != null)
             {
                 DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR));
@@ -344,8 +336,7 @@ namespace WPCordovaClassLib.Cordova.Commands
 
                         if (cameraOptions.DestinationType == FILE_URI)
                         {
-                            WriteableBitmap image = PictureDecoder.DecodeJpeg(e.ChosenPhoto);
-                            imagePathOrContent = this.SaveImageToLocalStorage(image, Path.GetFileName(e.OriginalFileName));
+                            imagePathOrContent = this.SaveImageToLocalStorage(e.ChosenPhoto, Path.GetFileName(e.OriginalFileName));
                         }
                         else if (cameraOptions.DestinationType == DATA_URL)
                         {
@@ -385,23 +376,29 @@ namespace WPCordovaClassLib.Cordova.Commands
         /// <returns>Base64 representation of the image</returns>
         private string GetImageContent(Stream stream)
         {
-            int streamLength = (int)stream.Length;
-            byte[] fileData = new byte[streamLength + 1];
-            stream.Read(fileData, 0, streamLength);
+            byte[] imageContent = null;
 
-            //use photo's actual width & height if user doesn't provide width & height
-            if (cameraOptions.TargetWidth < 0 && cameraOptions.TargetHeight < 0)
+            try
             {
-                stream.Close();
-                return Convert.ToBase64String(fileData);
+                //use photo's actual width & height if user doesn't provide width & height
+                if (cameraOptions.TargetWidth < 0 && cameraOptions.TargetHeight < 0)
+                {
+                    int streamLength = (int)stream.Length;
+                    imageContent = new byte[streamLength + 1];
+                    stream.Read(imageContent, 0, streamLength);
+                }
+                else
+                {
+                    // resize photo
+                    imageContent = ResizePhoto(stream);
+                }
             }
-            else
+            finally
             {
-                // resize photo
-                byte[] resizedFile = ResizePhoto(stream, fileData);
-                stream.Close();
-                return Convert.ToBase64String(resizedFile);
+                stream.Dispose();
             }
+
+            return Convert.ToBase64String(imageContent);
         }
 
         /// <summary>
@@ -410,33 +407,71 @@ namespace WPCordovaClassLib.Cordova.Commands
         /// <param name="stream">Image stream</param>
         /// <param name="fileData">File data</param>
         /// <returns>resized image</returns>
-        private byte[] ResizePhoto(Stream stream, byte[] fileData)
+        private byte[] ResizePhoto(Stream stream)
         {
-            int streamLength = (int)stream.Length;
-            int intResult = 0;
-
+            //output
             byte[] resizedFile;
 
-            stream.Read(fileData, 0, streamLength);
-
             BitmapImage objBitmap = new BitmapImage();
-            MemoryStream objBitmapStream = new MemoryStream(fileData);
-            MemoryStream objBitmapStreamResized = new MemoryStream();
-            WriteableBitmap objWB;
             objBitmap.SetSource(stream);
-            objWB = new WriteableBitmap(objBitmap);
+            objBitmap.CreateOptions = BitmapCreateOptions.None;
 
-            // resize the photo with user defined TargetWidth & TargetHeight
-            Extensions.SaveJpeg(objWB, objBitmapStreamResized, cameraOptions.TargetWidth, cameraOptions.TargetHeight, 0, cameraOptions.Quality);
+            WriteableBitmap objWB = new WriteableBitmap(objBitmap);
+            objBitmap.UriSource = null;
 
-            //Convert the resized stream to a byte array. 
-            streamLength = (int)objBitmapStreamResized.Length;
-            resizedFile = new Byte[streamLength]; //-1 
-            objBitmapStreamResized.Position = 0;
-            //for some reason we have to set Position to zero, but we don't have to earlier when we get the bytes from the chosen photo... 
-            intResult = objBitmapStreamResized.Read(resizedFile, 0, streamLength);
+            //Keep proportionally
+            double ratio = Math.Min((double)cameraOptions.TargetWidth / objWB.PixelWidth, (double)cameraOptions.TargetHeight / objWB.PixelHeight);
+            int width = Convert.ToInt32(ratio * objWB.PixelWidth);
+            int height = Convert.ToInt32(ratio * objWB.PixelHeight);
+
+            //Hold the result stream
+            using (MemoryStream objBitmapStreamResized = new MemoryStream())
+            {
+
+                try
+                {
+                    // resize the photo with user defined TargetWidth & TargetHeight
+                    Extensions.SaveJpeg(objWB, objBitmapStreamResized, width, height, 0, cameraOptions.Quality);
+                }
+                finally
+                {
+                    //Dispose bitmaps immediately, they are memory expensive
+                    DisposeImage(objBitmap);
+                    DisposeImage(objWB);
+                    GC.Collect();
+                }
+
+                //Convert the resized stream to a byte array. 
+                int streamLength = (int)objBitmapStreamResized.Length;
+                resizedFile = new Byte[streamLength]; //-1 
+                objBitmapStreamResized.Position = 0;
+
+                //for some reason we have to set Position to zero, but we don't have to earlier when we get the bytes from the chosen photo... 
+                objBitmapStreamResized.Read(resizedFile, 0, streamLength);
+            }
 
             return resizedFile;
+        }
+
+        /// <summary>
+        /// Util: Dispose a bitmap resource
+        /// </summary>
+        /// <param name="image">BitmapSource subclass to dispose</param>
+        private void DisposeImage(BitmapSource image)
+        {
+            if (image != null)
+            {
+                try
+                {
+                    using (var ms = new MemoryStream(new byte[] { 0x0 }))
+                    {
+                        image.SetSource(ms);
+                    }
+                }
+                catch (Exception)
+                {
+                }
+            }
         }
 
         /// <summary>
@@ -444,17 +479,15 @@ namespace WPCordovaClassLib.Cordova.Commands
         /// </summary>
         /// <param name="imageFileName">image file name</param>
         /// <returns>Image path</returns>
-        private string SaveImageToLocalStorage(WriteableBitmap image, string imageFileName)
+        private string SaveImageToLocalStorage(Stream stream, string imageFileName)
         {
 
-            if (image == null)
+            if (stream == null)
             {
                 throw new ArgumentNullException("imageBytes");
             }
             try
             {
-
-
                 var isoFile = IsolatedStorageFile.GetUserStoreForApplication();
 
                 if (!isoFile.DirectoryExists(isoFolder))
@@ -464,16 +497,41 @@ namespace WPCordovaClassLib.Cordova.Commands
 
                 string filePath = System.IO.Path.Combine("///" + isoFolder + "/", imageFileName);
 
-                using (var stream = isoFile.CreateFile(filePath))
+                using (IsolatedStorageFileStream outputStream = isoFile.CreateFile(filePath))
                 {
-                    // resize image if Height and Width defined via options 
-                    if (cameraOptions.TargetHeight > 0 && cameraOptions.TargetWidth > 0)
+                    BitmapImage objBitmap = new BitmapImage();
+                    objBitmap.SetSource(stream);
+                    objBitmap.CreateOptions = BitmapCreateOptions.None;
+
+                    WriteableBitmap objWB = new WriteableBitmap(objBitmap);
+                    objBitmap.UriSource = null;
+
+                    try
                     {
-                        image.SaveJpeg(stream, cameraOptions.TargetWidth, cameraOptions.TargetHeight, 0, cameraOptions.Quality);
+
+                        //use photo's actual width & height if user doesn't provide width & height
+                        if (cameraOptions.TargetWidth < 0 && cameraOptions.TargetHeight < 0)
+                        {
+                            objWB.SaveJpeg(outputStream, objWB.PixelWidth, objWB.PixelHeight, 0, cameraOptions.Quality);
+                        }
+                        else
+                        {
+                            //Resize
+                            //Keep proportionally
+                            double ratio = Math.Min((double)cameraOptions.TargetWidth / objWB.PixelWidth, (double)cameraOptions.TargetHeight / objWB.PixelHeight);
+                            int width = Convert.ToInt32(ratio * objWB.PixelWidth);
+                            int height = Convert.ToInt32(ratio * objWB.PixelHeight);
+
+                            // resize the photo with user defined TargetWidth & TargetHeight
+                            objWB.SaveJpeg(outputStream, width, height, 0, cameraOptions.Quality);
+                        }
                     }
-                    else
+                    finally
                     {
-                        image.SaveJpeg(stream, image.PixelWidth, image.PixelHeight, 0, cameraOptions.Quality);
+                        //Dispose bitmaps immediately, they are memory expensive
+                        DisposeImage(objBitmap);
+                        DisposeImage(objWB);
+                        GC.Collect();
                     }
                 }
 
@@ -483,6 +541,10 @@ namespace WPCordovaClassLib.Cordova.Commands
             {
                 //TODO: log or do something else
                 throw;
+            }
+            finally
+            {
+                stream.Dispose();
             }
         }
 
