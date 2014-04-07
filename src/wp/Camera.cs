@@ -200,7 +200,7 @@ namespace WPCordovaClassLib.Cordova.Commands
             }
             catch (Exception ex)
             {
-                this.DispatchCommandResult(new PluginResult(PluginResult.Status.JSON_EXCEPTION, ex.Message));
+                DispatchCommandResult(new PluginResult(PluginResult.Status.JSON_EXCEPTION, ex.Message));
                 return;
             }
 
@@ -222,6 +222,95 @@ namespace WPCordovaClassLib.Cordova.Commands
             else
             {
                 DispatchCommandResult(new PluginResult(PluginResult.Status.NO_RESULT));
+            }
+
+
+        }
+
+        public void onTaskCompleted(object sender, PhotoResult e)
+        {
+            var task = sender as ChooserBase<PhotoResult>;
+            if (task != null)
+            {
+                task.Completed -= onCameraTaskCompleted;
+            }
+
+            if (e.Error != null)
+            {
+                DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR));
+                return;
+            }
+
+            switch (e.TaskResult)
+            {
+                case TaskResult.OK:
+                    try
+                    {
+                        string imagePathOrContent = string.Empty;
+                        if (cameraOptions.DestinationType == FILE_URI)
+                        {
+                            // Save image in media library
+                            if (cameraOptions.SaveToPhotoAlbum)
+                            {
+                                MediaLibrary library = new MediaLibrary();
+                                Picture pict = library.SavePicture(e.OriginalFileName, e.ChosenPhoto); // to save to photo-roll ...
+                            }
+
+                            /*
+                                                 int orient = ImageExifHelper.getImageOrientationFromStream(e.ChosenPhoto);
+                    int newAngle = 0;
+                    switch (orient)
+                    {
+                        case ImageExifOrientation.LandscapeLeft:
+                            newAngle = 90;
+                            break;
+                        case ImageExifOrientation.PortraitUpsideDown:
+                            newAngle = 180;
+                            break;
+                        case ImageExifOrientation.LandscapeRight:
+                            newAngle = 270;
+                            break;
+                        case ImageExifOrientation.Portrait:
+                        default: break; // 0 default already set
+                    }
+
+                    Stream rotImageStream = ImageExifHelper.RotateStream(e.ChosenPhoto, newAngle);
+
+                    // we should reset stream position after saving stream to media library
+                    rotImageStream.Seek(0, SeekOrigin.Begin);
+                    imagePathOrContent = SaveImageToLocalStorage(rotImageStream, Path.GetFileName(e.OriginalFileName));
+
+                             */
+                              
+                             
+                            imagePathOrContent = SaveImageToLocalStorage(e.ChosenPhoto, Path.GetFileName(e.OriginalFileName));
+                        }
+                        else if (cameraOptions.DestinationType == DATA_URL)
+                        {
+                            imagePathOrContent = GetImageContent(e.ChosenPhoto);
+                        }
+                        else
+                        {
+                            // TODO: shouldn't this happen before we launch the camera-picker?
+                            DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR, "Incorrect option: destinationType"));
+                            return;
+                        }
+                        DispatchCommandResult(new PluginResult(PluginResult.Status.OK, imagePathOrContent));
+
+                    }
+                    catch (Exception)
+                    {
+                        DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR, "Error retrieving image."));
+                    }
+                    break;
+
+                case TaskResult.Cancel:
+                    DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR, "Selection cancelled."));
+                    break;
+
+                default:
+                    DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR, "Selection did not complete!"));
+                    break;
             }
 
 
@@ -278,13 +367,13 @@ namespace WPCordovaClassLib.Cordova.Commands
 
                             // we should return stream position back after saving stream to media library
                             rotImageStream.Seek(0, SeekOrigin.Begin);
-                            imagePathOrContent = this.SaveImageToLocalStorage(rotImageStream, Path.GetFileName(e.OriginalFileName));
+                            imagePathOrContent = SaveImageToLocalStorage(rotImageStream, Path.GetFileName(e.OriginalFileName));
 
 
                         }
                         else if (cameraOptions.DestinationType == DATA_URL)
                         {
-                            imagePathOrContent = this.GetImageContent(e.ChosenPhoto);
+                            imagePathOrContent = GetImageContent(e.ChosenPhoto);
                         }
                         else
                         {
@@ -336,11 +425,11 @@ namespace WPCordovaClassLib.Cordova.Commands
 
                         if (cameraOptions.DestinationType == FILE_URI)
                         {
-                            imagePathOrContent = this.SaveImageToLocalStorage(e.ChosenPhoto, Path.GetFileName(e.OriginalFileName));
+                            imagePathOrContent = SaveImageToLocalStorage(e.ChosenPhoto, Path.GetFileName(e.OriginalFileName));
                         }
                         else if (cameraOptions.DestinationType == DATA_URL)
                         {
-                            imagePathOrContent = this.GetImageContent(e.ChosenPhoto);
+                            imagePathOrContent = GetImageContent(e.ChosenPhoto);
 
                         }
                         else
