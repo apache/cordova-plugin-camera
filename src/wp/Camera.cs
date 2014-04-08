@@ -262,7 +262,7 @@ namespace WPCordovaClassLib.Cordova.Commands
                         }
 
                         int orient = ImageExifHelper.getImageOrientationFromStream(e.ChosenPhoto);
-                        int newAngle = 270;
+                        int newAngle = 0;
                         switch (orient)
                         {
                             case ImageExifOrientation.LandscapeLeft:
