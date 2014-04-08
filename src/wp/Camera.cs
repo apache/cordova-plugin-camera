@@ -197,6 +197,16 @@ namespace WPCordovaClassLib.Cordova.Commands
                 cameraOptions.AllowEdit = bool.Parse(args[7]);
                 cameraOptions.CorrectOrientation = bool.Parse(args[8]);
                 cameraOptions.SaveToPhotoAlbum = bool.Parse(args[9]);
+
+                // a very large number will force the other value to be the bound
+                if (cameraOptions.TargetWidth > -1 && cameraOptions.TargetHeight == -1)
+                {
+                    cameraOptions.TargetHeight = 100000;   
+                }
+                else if (cameraOptions.TargetHeight > -1 && cameraOptions.TargetWidth == -1)
+                {
+                    cameraOptions.TargetWidth = 100000;
+                }
             }
             catch (Exception ex)
             {
