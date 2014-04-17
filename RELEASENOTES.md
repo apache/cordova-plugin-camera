@@ -71,3 +71,12 @@
 
 ### 0.2.8 (Feb 26, 2014)
 * CB-1826 Catch OOM on gallery image resize
+
+### 0.2.9 (Apr 17, 2014)
+* CB-6460: Update license headers
+* CB-6422: [windows8] use cordova/exec/proxy
+* [WP8] When only targetWidth or targetHeight is provided, use it as the only bound
+* CB-4027, CB-5102, CB-2737, CB-2387: [WP] Fix camera issues, cropping, memory leaks
+* CB-6212: [iOS] fix warnings compiled under arm64 64-bit
+* [BlackBerry10] Add rim xml namespaces declaration
+* Add NOTICE file
