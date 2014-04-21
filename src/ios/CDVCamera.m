@@ -677,10 +677,12 @@ static NSSet* org_apache_cordova_validArrowDirections;
     }
     
     if (self.pickerController.saveToPhotoAlbum) {
+    	CDVCamera* __weak weakSelf = self;  // play it safe to avoid retain cycles
         ALAssetsLibrary *library = [ALAssetsLibrary new];
+        
         [library writeImageDataToSavedPhotosAlbum:self.data metadata:self.metadata completionBlock:^(NSURL *assetURL, NSError *error) {
             
-            if (self.pickerController.returnType == DestinationTypeNativeUri) {
+            if (weakSelf.pickerController.returnType == DestinationTypeNativeUri) {
                 CDVPluginResult* result;
                 if (error) {
                     result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[error localizedDescription]];
@@ -688,12 +690,12 @@ static NSSet* org_apache_cordova_validArrowDirections;
                     result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[assetURL absoluteString]];
                 }
                 
-                [self.commandDelegate sendPluginResult:result callbackId:self.pickerController.callbackId];
+                [weakSelf.commandDelegate sendPluginResult:result callbackId:weakSelf.pickerController.callbackId];
                 
-                self.hasPendingOperation = NO;
-                self.pickerController = nil;
-                self.data = nil;
-                self.metadata = nil;
+                weakSelf.hasPendingOperation = NO;
+                weakSelf.pickerController = nil;
+                weakSelf.data = nil;
+                weakSelf.metadata = nil;
             }
         }];
         
