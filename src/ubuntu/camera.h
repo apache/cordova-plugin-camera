@@ -54,6 +54,16 @@ public slots:
 
     void onImageSaved(QString path);
 
+    QString generateLocation(const QString &extension) {
+        int i = 1;
+        for (;;++i) {
+            QString path = QString("%1/.local/share/%2/persistent/%3.%4").arg(QDir::homePath())
+                .arg(QCoreApplication::applicationName()).arg(i).arg(extension);
+
+            if (!QFileInfo(path).exists())
+                return path;
+        }
+    }
 private:
     bool preprocessImage(QString &path);
 
