@@ -343,18 +343,8 @@ namespace WPCordovaClassLib.Cordova.Commands
 
             try
             {
-                //use photo's actual width & height if user doesn't provide width & height
-                if (cameraOptions.TargetWidth < 0 && cameraOptions.TargetHeight < 0)
-                {
-                    int streamLength = (int)stream.Length;
-                    imageContent = new byte[streamLength + 1];
-                    stream.Read(imageContent, 0, streamLength);
-                }
-                else
-                {
-                    // resize photo
-                    imageContent = ResizePhoto(stream);
-                }
+                // Resize photo and convert to JPEG
+                imageContent = ResizePhoto(stream);
             }
             finally
             {
@@ -368,7 +358,6 @@ namespace WPCordovaClassLib.Cordova.Commands
         /// Resize image
         /// </summary>
         /// <param name="stream">Image stream</param>
-        /// <param name="fileData">File data</param>
         /// <returns>resized image</returns>
         private byte[] ResizePhoto(Stream stream)
         {
@@ -382,10 +371,22 @@ namespace WPCordovaClassLib.Cordova.Commands
             WriteableBitmap objWB = new WriteableBitmap(objBitmap);
             objBitmap.UriSource = null;
 
-            //Keep proportionally
-            double ratio = Math.Min((double)cameraOptions.TargetWidth / objWB.PixelWidth, (double)cameraOptions.TargetHeight / objWB.PixelHeight);
-            int width = Convert.ToInt32(ratio * objWB.PixelWidth);
-            int height = Convert.ToInt32(ratio * objWB.PixelHeight);
+            // Calculate resultant image size
+            int width, height;
+            if (cameraOptions.TargetWidth >= 0 && cameraOptions.TargetHeight >= 0)
+            {
+                // Keep proportionally
+                double ratio = Math.Min(
+                    (double)cameraOptions.TargetWidth / objWB.PixelWidth,
+                    (double)cameraOptions.TargetHeight / objWB.PixelHeight);
+                width = Convert.ToInt32(ratio * objWB.PixelWidth);
+                height = Convert.ToInt32(ratio * objWB.PixelHeight);
+            }
+            else
+            {
+                width = objWB.PixelWidth;
+                height = objWB.PixelHeight;
+            }
 
             //Hold the result stream
             using (MemoryStream objBitmapStreamResized = new MemoryStream())
