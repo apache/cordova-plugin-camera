@@ -206,7 +206,7 @@ Optional parameters to customize the camera settings.
             PICTURE: 0,    // allow selection of still pictures only. DEFAULT. Will return format specified via DestinationType
             VIDEO: 1,      // allow selection of video only, WILL ALWAYS RETURN FILE_URI
             ALLMEDIA : 2   // allow selection from all media types
-};
+        };
 
 - __correctOrientation__: Rotate the image to correct for the orientation of the device during capture. _(Boolean)_
 
