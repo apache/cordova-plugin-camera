@@ -394,7 +394,7 @@ static NSSet* org_apache_cordova_validArrowDirections;
     // popoverControllerDidDismissPopover:(id)popoverController is called if popover is cancelled
 
     CDVPluginResult* result;
-    if ([ALAssetsLibrary authorizationStatus] == ALAuthorizationStatusAuthorized) {
+    if (picker.sourceType == UIImagePickerControllerSourceTypeCamera || [ALAssetsLibrary authorizationStatus] == ALAuthorizationStatusAuthorized) {
         result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"no image selected"];   // error callback expects string ATM
     } else {
         result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"has no access to assets"];   // error callback expects string ATM
