@@ -133,55 +133,34 @@ module.exports = {
 
         // because of asynchronous method, so let the successCallback be called in it.
         var resizeImageBase64 = function (file) {
-            var imgObj = new Image();
-            var success = function (fileEntry) {
-                var successCB = function (filePhoto) {
-                    var fileType = file.contentType,
-                        reader = new FileReader();
-                    reader.onloadend = function () {
-                        var image = new Image();
-                        image.src = reader.result;
 
-                        image.onload = function () {
-                            var imageWidth = targetWidth,
-                                imageHeight = targetHeight;
-                            var canvas = document.createElement('canvas');
+            Windows.Storage.FileIO.readBufferAsync(file).done( function(buffer) {
+                var strBase64 = Windows.Security.Cryptography.CryptographicBuffer.encodeToBase64String(buffer);
+                var imageData = "data:" + file.contentType + ";base64," + strBase64;
 
-                            canvas.width = imageWidth;
-                            canvas.height = imageHeight;
+                var image = new Image();
+                image.src = imageData;
 
-                            var ctx = canvas.getContext("2d");
-                            ctx.drawImage(this, 0, 0, imageWidth, imageHeight);
+                image.onload = function() {
+                    var imageWidth = targetWidth,
+                        imageHeight = targetHeight;
+                    var canvas = document.createElement('canvas');
 
-                            // The resized file ready for upload
-                            var finalFile = canvas.toDataURL(fileType);
+                    canvas.width = imageWidth;
+                    canvas.height = imageHeight;
 
-                            // Remove the prefix such as "data:" + contentType + ";base64," , in order to meet the Cordova API.
-                            var arr = finalFile.split(",");
-                            var newStr = finalFile.substr(arr[0].length + 1);
-                            successCallback(newStr);
-                        };
-                    };
+                    var ctx = canvas.getContext("2d");
+                    ctx.drawImage(this, 0, 0, imageWidth, imageHeight);
 
-                    reader.readAsDataURL(filePhoto);
+                    // The resized file ready for upload
+                    var finalFile = canvas.toDataURL(file.contentType);
 
+                    // Remove the prefix such as "data:" + contentType + ";base64," , in order to meet the Cordova API.
+                    var arr = finalFile.split(",");
+                    var newStr = finalFile.substr(arr[0].length + 1);
+                    successCallback(newStr);
                 };
-                var failCB = function () {
-                    errorCallback("File not found.");
-                };
-                fileEntry.file(successCB, failCB);
-            };
-
-            var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
-            file.copyAsync(storageFolder, file.name, Windows.Storage.NameCollisionOption.replaceExisting).then(function (storageFile) {
-                success(new FileEntry(storageFile.name, "ms-appdata:///local/" + storageFile.name));
-            }, function () {
-                fail(FileError.INVALID_MODIFICATION_ERR);
-            }, function () {
-                errorCallback("Folder not access.");
             });
-
-
         };
 
         if (sourceType != Camera.PictureSourceType.CAMERA) {
