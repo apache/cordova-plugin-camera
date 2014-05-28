@@ -19,7 +19,7 @@
 
 # org.apache.cordova.camera
 
-Ce plugin fournit une API pour la prise de photos et de choisir des images de libarary image du système.
+Ce plugin fournit une API pour la prise de photos et de choisir des images de la bibliothèque d'images du système.
 
     cordova plugin add org.apache.cordova.camera
     
@@ -72,23 +72,17 @@ Amazon Fire OS utilise des intentions pour lancer l'activité de l'appareil phot
 
 ### Spécificités Android
 
-*4.4 Android uniquement*: 4.4 Android a présenté un nouveau [Cadre d'accès de stockage][2] qui rend plus facile pour les utilisateurs de parcourir et ouvrir des documents dans l'ensemble de leurs fournisseurs de stockage de document préféré. Cordova n'a pas encore été entièrement intégré à ce nouveau cadre d'accès de stockage. Pour cette raison, la `getPicture()` méthode ne retournera pas correctement photos lorsque l'utilisateur sélectionne des dossiers "Récent", "Drive", "Images" ou "Stockage externe" lorsque le `destinationType` est `FILE_URI` . Toutefois, l'utilisateur sera en mesure de sélectionner correctement toutes les images si elles passent par l'application de la « Galerie » tout d'abord. Les solutions possibles à ce problème sont documentées sur [cette question de StackOverflow][3]. S'il vous plaît voir [CB-5398][4] pour suivre cette question.
-
- [2]: https://developer.android.com/guide/topics/providers/document-provider.html
- [3]: http://stackoverflow.com/questions/19834842/android-gallery-on-kitkat-returns-different-uri-for-intent-action-get-content/20177611
- [4]: https://issues.apache.org/jira/browse/CB-5398
-
-Android utilise des objets de type Intends pour lancer l'activité de l'appareil photo sur le périphérique pour capturer des images. Sur les téléphones avec peu de mémoire, l'activité de Cordova peut être tuée. Dans ce scénario, l'image peut ne pas apparaître lorsque l'activité de Cordova est restaurée.
+Android utilise des intentions pour lancer l'activité de l'appareil photo sur l'appareil pour capturer des images et sur les téléphones avec peu de mémoire, l'activité de Cordova peut être tuée. Dans ce scénario, l'image peut ne pas apparaître lorsque l'activité de Cordova est restaurée.
 
 ### Firefox OS Quirks
 
-Appareil photo plugin est actuellement mis en œuvre à l'aide [d'Activités sur le Web][5].
+Appareil photo plugin est actuellement mis en œuvre à l'aide [d'Activités sur le Web][2].
 
- [5]: https://hacks.mozilla.org/2013/01/introducing-web-activities/
+ [2]: https://hacks.mozilla.org/2013/01/introducing-web-activities/
 
 ### iOS Quirks
 
-L'inclusion d'un `alert()` JavaScript dans une des fonctions callback peut causer des problèmes. Encapsuler l'alerte dans un `setTimeout()` pour permettre au sélecteur d'images iOS de se fermer entièrement avant que l'alerte s'affiche :
+Y compris un JavaScript `alert()` dans les deux le rappel fonctions peuvent causer des problèmes. Envelopper l'alerte dans un `setTimeout()` pour permettre le sélecteur d'image iOS ou kangourou pour fermer entièrement avant que l'alerte s'affiche :
 
     setTimeout(function() {/ / votre code ici!}, 0) ;
     
@@ -99,11 +93,11 @@ Invoquant l'application native caméra alors que l'appareil est connecté via Zu
 
 ### Spécificités Tizen
 
-Tizen prend uniquement en charge un `destinationType` de `Camera.DestinationType.FILE_URI` et un `sourceType` de `Camera.PictureSourceType.PHOTOLIBRARY`.
+Paciarelli prend uniquement en charge un `destinationType` de `Camera.DestinationType.FILE_URI` et un `sourceType` de`Camera.PictureSourceType.PHOTOLIBRARY`.
 
 ### Exemple
 
-Prendre une photo, puis l'extraire comme une image codée en base64 :
+Prendre une photo, puis extrayez-la comme une image codée en base64 :
 
     navigator.camera.getPicture(onSuccess, onFail, { quality: 50,
         destinationType: Camera.DestinationType.DATA_URL
@@ -136,7 +130,7 @@ Prendre une photo et récupérer l'emplacement du fichier de l'image :
 
 ## CameraOptions
 
-Paramètres optionnels de personnalisation des réglages de l'appareil photo.
+Paramètres optionnels pour personnaliser les réglages de l'appareil.
 
     { quality : 75,
       destinationType : Camera.DestinationType.DATA_URL,
@@ -187,10 +181,11 @@ Paramètres optionnels de personnalisation des réglages de l'appareil photo.
 
 *   **mediaType**: définit le type de média à choisir. Ne fonctionne que quand `PictureSourceType` vaut `PHOTOLIBRARY` ou `SAVEDPHOTOALBUM` . Définie dans `nagivator.camera.MediaType` *(nombre)* 
     
-        Camera.MediaType = {photo: 0, / / permettre la sélection de photos seulement. PAR DÉFAUT. Retourne le format spécifié via DestinationType VIDEO: 1, / / autoriser la sélection de la vidéo seulement, RETOURNERA TOUJOURS FILE_URI ALLMEDIA: 2 // permet la sélection de tous les types de médias
+        Camera.MediaType = {photo: 0, / / permettre la sélection de photos seulement. PAR DÉFAUT. Will return format specified via DestinationType
+            VIDEO: 1,      // allow selection of video only, WILL ALWAYS RETURN FILE_URI
+            ALLMEDIA : 2   // allow selection from all media types
+        };
         
-    
-    };
 
 *   **correctOrientation**: faire pivoter l'image afin de corriger l'orientation de l'appareil lors de la capture. *(Booléen)*
 
@@ -277,7 +272,7 @@ Paramètres optionnels de personnalisation des réglages de l'appareil photo.
 
 ## CameraError
 
-Fonction callback onError qui fournit un message d'erreur.
+fonction de rappel onError qui fournit un message d'erreur.
 
     function(message) {
         // Show a helpful message
@@ -290,7 +285,7 @@ Fonction callback onError qui fournit un message d'erreur.
 
 ## cameraSuccess
 
-Fonction de callback onSuccess qui fournit les données de l'image.
+fonction de rappel onSuccess qui fournit les données d'image.
 
     function(imageData) {
         // Do something with the image
@@ -325,7 +320,7 @@ Un handle vers la boîte de dialogue de kangourou créé par`navigator.camera.ge
 
 ### setPosition
 
-Définit la position de la boite de dialogue.
+Définir la position de la kangourou.
 
 **Paramètres**:
 
@@ -348,7 +343,7 @@ Définit la position de la boite de dialogue.
 
 ## CameraPopoverOptions
 
-Paramètres, uniquement supportés par iOS, spécifiant l'emplacement d'accroche et la direction de la flèche de la boite de dialogue liée à la sélection d'images dans la bibliothèque et les albums sur iPad.
+iOS uniquement les paramètres qui spécifient la direction ancre élément emplacement et de la flèche de la kangourou lors de la sélection des images de la bibliothèque de l'iPad ou l'album.
 
     { x : 0, y :  32, width : 320, height : 480, arrowDir : Camera.PopoverArrowDirection.ARROW_ANY };
     
@@ -374,18 +369,18 @@ Paramètres, uniquement supportés par iOS, spécifiant l'emplacement d'accroche
             };
         
 
-Notez que la taille de la boite de dialogue peut varier afin de permettre l'ajustement de la direction de la flèche et de l'orientation de l'écran. Assurez-vous de tenir compte des changements d'orientation lors de la spécification de l'emplacement d'élément d'accroche.
+Notez que la taille de la kangourou peut changer pour s'adapter à la direction de la flèche et l'orientation de l'écran. Assurez-vous que tenir compte des changements d'orientation lors de la spécification de l'emplacement d'élément d'ancrage.
 
 ## Navigator.Camera.Cleanup
 
-Supprime les photos intermédiaires prises par la caméra sur le support de stockage temporaire.
+Supprime les intermédiaires photos prises par la caméra de stockage temporaire.
 
     navigator.camera.cleanup( cameraSuccess, cameraError );
     
 
 ### Description
 
-Supprime les fichiers d'image intermédiaire qui sont conservés dans le support de stockage temporaire après l'appel à `camera.getPicture`. S'applique uniquement lorsque la valeur de `Camera.sourceType` est égale à `Camera.PictureSourceType.CAMERA` et `Camera.destinationType` est égale à `Camera.DestinationType.FILE_URI`.
+Supprime les intermédiaires les fichiers image qui sont gardées en dépôt temporaire après avoir appelé `camera.getPicture` . S'applique uniquement lorsque la valeur de `Camera.sourceType` est égale à `Camera.PictureSourceType.CAMERA` et le `Camera.destinationType` est égal à`Camera.DestinationType.FILE_URI`.
 
 ### Plates-formes prises en charge
 

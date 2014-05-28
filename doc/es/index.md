@@ -19,7 +19,7 @@
 
 # org.apache.cordova.camera
 
-Este plugin proporciona una API para tomar fotografías y por elegir imágenes de libarary imagen del sistema.
+Este plugin proporciona una API para tomar fotografías y por elegir imágenes de biblioteca de imágenes del sistema.
 
     cordova plugin add org.apache.cordova.camera
     
@@ -72,19 +72,13 @@ Amazon fuego OS utiliza los intentos para poner en marcha la actividad de la cá
 
 ### Rarezas Android
 
-*4.4 Android sólo*: 4.4 Android introdujo un nuevo [Marco de acceso de almacenamiento de información][2] que facilita a los usuarios a navegar y abrir documentos a través de sus proveedores de almacenamiento recomendado: documento. Córdoba no ha todavía estado plenamente integrado con este nuevo marco de almacenamiento de acceso. Debido a esto, el `getPicture()` método no correctamente devolverá fotos cuando el usuario selecciona de las carpetas "Reciente", "Drive", "Imágenes" o "Almacenamiento externo" cuando el `destinationType` es `FILE_URI` . Sin embargo, el usuario será capaz de seleccionar correctamente las fotos si van primero a través de la aplicación "Galería". Posibles soluciones para este problema se encuentran documentadas en [esta cuestión StackOverflow][3]. Por favor vea [CB-5398][4] para rastrear este tema.
-
- [2]: https://developer.android.com/guide/topics/providers/document-provider.html
- [3]: http://stackoverflow.com/questions/19834842/android-gallery-on-kitkat-returns-different-uri-for-intent-action-get-content/20177611
- [4]: https://issues.apache.org/jira/browse/CB-5398
-
 Android utiliza los intentos para iniciar la actividad de la cámara del dispositivo para capturar imágenes, y en los teléfonos con poca memoria, puede matar la actividad Cordova. En este escenario, la imagen no aparezca cuando se restaura la actividad Cordova.
 
 ### Firefox OS rarezas
 
-Cámara plugin actualmente se implementa mediante [Actividades Web][5].
+Cámara plugin actualmente se implementa mediante [Actividades Web][2].
 
- [5]: https://hacks.mozilla.org/2013/01/introducing-web-activities/
+ [2]: https://hacks.mozilla.org/2013/01/introducing-web-activities/
 
 ### iOS rarezas
 
@@ -170,10 +164,11 @@ Parámetros opcionales para personalizar la configuración de la cámara.
 
 *   **mediaType**: definir el tipo de medios para seleccionar. Sólo funciona cuando `PictureSourceType` es `PHOTOLIBRARY` o `SAVEDPHOTOALBUM` . Definido en `nagivator.camera.MediaType` *(número)* 
     
-        Camera.MediaType = {imagen: 0, / / permiten la selección de imágenes fijas solamente. DE FORMA PREDETERMINADA. Devolverá el formato especificado mediante DestinationType VIDEO: 1, / / permiten la selección de vídeo sólo, siempre será devolver FILE_URI las ALLMEDIA: 2 / / permitir la selección de todos los tipos de medios de comunicación
+        Camera.MediaType = {imagen: 0, / / permiten la selección de imágenes fijas solamente. DE FORMA PREDETERMINADA. Will return format specified via DestinationType
+            VIDEO: 1,      // allow selection of video only, WILL ALWAYS RETURN FILE_URI
+            ALLMEDIA : 2   // allow selection from all media types
+        };
         
-    
-    };
 
 *   **correctOrientation**: rotar la imagen para corregir la orientación del dispositivo durante la captura. *(Booleano)*
 
@@ -331,7 +326,7 @@ Establecer la posición de la popover.
 
 ## CameraPopoverOptions
 
-Sólo iOS parámetros que especifican la dirección ancla elemento ubicación y flecha del popover al seleccionar imágenes de biblioteca un iPad o un álbum.
+Sólo iOS parámetros que especifican la dirección ancla elemento ubicación y la flecha de la popover al seleccionar imágenes de biblioteca o álbum de un iPad.
 
     {x: 0, y: 32, ancho: 320, altura: 480, arrowDir: Camera.PopoverArrowDirection.ARROW_ANY};
     
