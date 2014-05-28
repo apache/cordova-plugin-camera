@@ -19,7 +19,7 @@
 
 # org.apache.cordova.camera
 
-This plugin provides an API for taking pictures and for choosing images from the system's image library.
+このプラグインは写真を撮るため、システムのイメージ ライブラリからイメージを選択するために API を提供します。
 
     cordova plugin add org.apache.cordova.camera
     
@@ -60,35 +60,29 @@ This plugin provides an API for taking pictures and for choosing images from the
 *   アマゾン火 OS
 *   アンドロイド
 *   ブラックベリー 10
-*   Firefox OS
+*   Firefox の OS
 *   iOS
 *   Tizen
 *   Windows Phone 7 と 8
 *   Windows 8
 
-### Amazon Fire OS Quirks
+### アマゾン火 OS 癖
 
-Amazon Fire OS uses intents to launch the camera activity on the device to capture images, and on phones with low memory, the Cordova activity may be killed. このシナリオでは、コルドバの活動が復元されるとき、画像が表示されません。
+アマゾン火 OS イメージをキャプチャするデバイス上のカメラの活動を開始する意図を使用して、メモリの少ない携帯電話、コルドバ活動が殺されるかもしれない。 このシナリオでは、コルドバの活動が復元されるとき、画像が表示されません。
 
 ### Android の癖
 
-*Android 4.4 only*: Android 4.4 introduced a new [Storage Access Framework][2] that makes it easier for users to browse and open documents across all of their preferred document storage providers. Cordova has not yet been fully integrated with this new Storage Access Framework. Because of this, the `getPicture()` method will not correctly return pictures when the user selects from the "Recent", "Drive", "Images", or "External Storage" folders when the `destinationType` is `FILE_URI`. However, the user will be able to correctly select any pictures if they go through the "Gallery" app first. Potential workarounds for this issue are documented on [this StackOverflow question][3]. Please see [CB-5398][4] to track this issue.
+アンドロイド、イメージをキャプチャするデバイス上でカメラのアクティビティを開始する意図を使用し、メモリの少ない携帯電話、コルドバ活動が殺されるかもしれない。 このシナリオではコルドバ活動が復元されると、イメージが表示されません。
 
- [2]: https://developer.android.com/guide/topics/providers/document-provider.html
- [3]: http://stackoverflow.com/questions/19834842/android-gallery-on-kitkat-returns-different-uri-for-intent-action-get-content/20177611
- [4]: https://issues.apache.org/jira/browse/CB-5398
+### Firefox OS 癖
 
-アンドロイド、イメージをキャプチャするデバイス上でカメラのアクティビティを開始する意図を使用し、メモリの少ない携帯電話、コルドバ活動が殺されるかもしれない。 In this scenario, the image may not appear when the Cordova activity is restored.
+カメラのプラグインは現在、 [Web アクティビティ][2]を使用して実装されていた.
 
-### Firefox OS Quirks
-
-Camera plugin is currently implemented using [Web Activities][5].
-
- [5]: https://hacks.mozilla.org/2013/01/introducing-web-activities/
+ [2]: https://hacks.mozilla.org/2013/01/introducing-web-activities/
 
 ### iOS の癖
 
-JavaScript を含む `alert()` 関数コールバックのいずれかの問題を引き起こすことができます。 内でアラートのラップ、 `setTimeout()` iOS イメージ ピッカーまたはが完全に終了するまで、警告が表示されますポップ オーバーを許可します。
+JavaScript を含む `alert()` 関数コールバックのいずれかの問題を引き起こすことができます。 内でアラートのラップ、 `setTimeout()` iOS イメージ ピッカーまたは完全が終了するまで、警告が表示されますポップ オーバーを許可します。
 
     setTimeout(function() {//ここにあなたのことを行います ！}, 0);
     
@@ -145,19 +139,19 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 
 *   **品質**： 0-100、100 がファイルの圧縮から損失なしで通常のフル解像度の範囲で表される、保存されたイメージの品質。 *(数)*（カメラの解像度についての情報が利用できないことに注意してください)。
 
-*   **destinationType**: Choose the format of the return value. Defined in `navigator.camera.DestinationType` *(Number)*
+*   **destinationType**: 戻り値の形式を選択します。定義されている `navigator.camera.DestinationType` *（番号）*
     
         Camera.DestinationType = {DATA_URL: 0、/base64 エンコード文字列 FILE_URI としてイメージを返す/: 1、//画像ファイル URI NATIVE_URI を返す： 2//戻り画像ネイティブ URI (例えば、資産ライブラリ://iOS またはコンテンツに：//アンドロイド)};
         
 
-*   **sourceType**: Set the source of the picture. Defined in `navigator.camera.PictureSourceType` *(Number)*
+*   **sourceType**: 画像のソースを設定します。定義されている `navigator.camera.PictureSourceType` *（番号）*
     
         Camera.PictureSourceType = {フォト ライブラリ: 0, カメラ: 1、SAVEDPHOTOALBUM: 2};
         
 
 *   **allowEdit**: 単純な選択の前に画像の編集を許可します。*(ブール値)*
 
-*   **encodingType**: Choose the returned image file's encoding. Defined in `navigator.camera.EncodingType` *(Number)*
+*   **encodingType**: 返されるイメージ ファイルのエンコーディングを選択します。定義されている `navigator.camera.EncodingType` *（番号）*
     
         Camera.EncodingType = {JPEG: 0//戻る JPEG PNG イメージをエンコード: 1/返す PNG イメージをエンコードされた/};
         
@@ -168,10 +162,11 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 
 *   **mediaType**： から選択するメディアの種類を設定します。 場合にのみ働きます `PictureSourceType` は `PHOTOLIBRARY` または `SAVEDPHOTOALBUM` 。 定義されている `nagivator.camera.MediaType` *（番号）* 
     
-        Camera.MediaType = {画像： 0//静止画のみを選択できます。 既定値です。 DestinationType ビデオを介して指定された形式が返されます: 1、/のみ、常に戻る FILE_URI ALLMEDIA のビデオの選択を許可する/: 2//すべてのメディア タイプからの選択を許可
+        Camera.MediaType = {画像： 0//静止画のみを選択できます。 既定値です。 Will return format specified via DestinationType
+            VIDEO: 1,      // allow selection of video only, WILL ALWAYS RETURN FILE_URI
+            ALLMEDIA : 2   // allow selection from all media types
+        };
         
-    
-    };
 
 *   **correctOrientation**: キャプチャ中に、デバイスの向きを修正する画像を回転させます。*(ブール値)*
 
@@ -179,12 +174,12 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 
 *   **popoverOptions**: iPad のポップ オーバーの場所を指定する iOS のみのオプションです。定義されています。`CameraPopoverOptions`.
 
-*   **cameraDirection**: Choose the camera to use (front- or back-facing). Defined in `navigator.camera.Direction` *(Number)*
+*   **cameraDirection**： （前面または背面側） を使用するカメラを選択します。定義されている `navigator.camera.Direction` *（番号）*
     
         Camera.Direction = {戻る: 0、//後ろ向きカメラ前部を使用: 1/フロントに面したカメラを使用して/};
         
 
-### Amazon Fire OSQuirks
+### アマゾン火 OSQuirks
 
 *   任意 `cameraDirection` 背面写真で結果の値します。
 
@@ -214,19 +209,19 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 
 *   無視、 `cameraDirection` パラメーター。
 
-### Firefox OS Quirks
+### Firefox OS 癖
 
 *   無視、 `quality` パラメーター。
 
-*   `Camera.DestinationType` is ignored and equals `1` (image file URI)
+*   `Camera.DestinationType`無視され、等しい `1` (イメージ ファイル URI)
 
 *   無視、 `allowEdit` パラメーター。
 
-*   Ignores the `PictureSourceType` parameter (user chooses it in a dialog window)
+*   無視、 `PictureSourceType` パラメーター (ユーザーが選択ダイアログ ウィンドウに)
 
-*   Ignores the `encodingType`
+*   無視します、`encodingType`
 
-*   Ignores the `targetWidth` and `targetHeight`
+*   無視、 `targetWidth` と`targetHeight`
 
 *   `Camera.MediaType`サポートされていません。
 
@@ -254,7 +249,7 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 
 *   無視、 `cameraDirection` パラメーター。
 
-*   Ignores the `mediaType` property of `cameraOptions` as the Windows Phone SDK does not provide a way to choose videos from PHOTOLIBRARY.
+*   無視、 `mediaType` のプロパティ `cameraOptions` として Windows Phone SDK には、フォト ライブラリからビデオを選択する方法は行いません。
 
 ## CameraError
 
@@ -294,7 +289,7 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 
 ## CameraPopoverHandle
 
-A handle to the popover dialog created by `navigator.camera.getPicture`.
+によって作成されたポップオーバーパン ダイアログへのハンドル`navigator.camera.getPicture`.
 
 ### メソッド
 
