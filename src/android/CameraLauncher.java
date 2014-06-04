@@ -380,14 +380,19 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         else if (destType == FILE_URI || destType == NATIVE_URI) {
             if (this.saveToPhotoAlbum) {
                 Uri inputUri = getUriFromMediaStore();
-                //Just because we have a media URI doesn't mean we have a real file, we need to make it
-                uri = Uri.fromFile(new File(FileHelper.getRealPath(inputUri, this.cordova)));
+                try {
+                    //Just because we have a media URI doesn't mean we have a real file, we need to make it
+                    uri = Uri.fromFile(new File(FileHelper.getRealPath(inputUri, this.cordova)));
+                } catch (NullPointerException e) {
+                    uri = null;
+                }
             } else {
                 uri = Uri.fromFile(new File(getTempDirectoryPath(), System.currentTimeMillis() + ".jpg"));
             }
 
             if (uri == null) {
                 this.failPicture("Error capturing image - no media storage found.");
+                return;
             }
 
             // If all this is true we shouldn't compress the image.
