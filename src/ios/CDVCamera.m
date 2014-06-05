@@ -82,7 +82,7 @@ static NSSet* org_apache_cordova_validArrowDirections;
     NSString* callbackId = command.callbackId;
     NSArray* arguments = command.arguments;
 
-    self.hasPendingOperation = NO;
+    self.hasPendingOperation = YES;
 
     NSString* sourceTypeString = [arguments objectAtIndex:2];
     UIImagePickerControllerSourceType sourceType = UIImagePickerControllerSourceTypeCamera; // default
@@ -161,7 +161,7 @@ static NSSet* org_apache_cordova_validArrowDirections;
     } else {
         [self.viewController presentViewController:cameraPicker animated:YES completion:nil];
     }
-    self.hasPendingOperation = YES;
+    self.hasPendingOperation = NO;
 }
 
 - (void)repositionPopover:(CDVInvokedUrlCommand*)command
