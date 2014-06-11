@@ -291,6 +291,9 @@ Optional parameters to customize the camera settings.
 
 - Ignores the `cameraDirection` parameter.
 
+- Ignores the `saveToPhotoAlbum` parameter.  IMPORTANT: All images taken with the wp7/8 cordova camera API are always copied to the phone's camera roll.  Depending on the user's settings, this could also mean the image is auto-uploaded to their OneDrive.  This could potentially mean the image is available to a wider audience than your app intended.  If this a blocker for your application, you will need to implement the CameraCaptureTask as documented on msdn : [http://msdn.microsoft.com/en-us/library/windowsphone/develop/hh394006.aspx](http://msdn.microsoft.com/en-us/library/windowsphone/develop/hh394006.aspx)
+You may also comment or up-vote the related issue in the [issue tracker](https://issues.apache.org/jira/browse/CB-2083)
+
 - Ignores the `mediaType` property of `cameraOptions` as the Windows Phone SDK does not provide a way to choose videos from PHOTOLIBRARY.
 
 

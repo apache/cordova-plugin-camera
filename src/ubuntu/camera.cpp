@@ -38,7 +38,7 @@ function createObject() {                                               \
         component.statusChanged.connect(finishCreation);                \
 }                                                                       \
 function finishCreation() {                                             \
-    CordovaWrapper.object = component.createObject(root,                \
+    CordovaWrapper.global.cameraPluginWidget = component.createObject(root, \
         {root: root, cordova: cordova});                                \
 }                                                                       \
 createObject()";
@@ -68,18 +68,15 @@ bool Camera::preprocessImage(QString &path) {
 
     const char *type;
     if (convertToPNG) {
-        newImage.setFileTemplate("imgXXXXXX.png");
+        path = generateLocation("png");
         type = "png";
     } else {
-        newImage.setFileTemplate("imgXXXXXX.jpg");
+        path = generateLocation("jpg");
         type = "jpg";
     }
 
-    newImage.open();
-    newImage.setAutoRemove(false);
-    image.save(newImage.fileName(), type, quality);
+    image.save(path, type, quality);
 
-    path = newImage.fileName();
     oldImage.remove();
 
     return true;
@@ -98,7 +95,7 @@ void Camera::onImageSaved(QString path) {
             cbParams = QString("\"%1\"").arg(content.data());
             image.remove();
         } else {
-            cbParams = CordovaInternal::format(QUrl::fromLocalFile(absolutePath).toString());
+            cbParams = CordovaInternal::format(QString("file://localhost") + absolutePath);
         }
     }
 
@@ -136,7 +133,7 @@ void Camera::takePicture(int scId, int ecId, int quality, int destinationType, i
 }
 
 void Camera::cancel() {
-    m_cordova->execQML("CordovaWrapper.object.destroy()");
+    m_cordova->execQML("CordovaWrapper.global.cameraPluginWidget.destroy()");
     this->cb(_lastEcId, "canceled");
 
     _lastEcId = _lastScId = 0;
