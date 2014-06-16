@@ -22,12 +22,8 @@
 /*global Windows:true, URL:true */
 
 
-
-var cordova = require('cordova'),
-    Camera = require('./Camera'),
-    FileEntry = require('org.apache.cordova.file.FileEntry'),
-    FileError = require('org.apache.cordova.file.FileError'),
-    FileReader = require('org.apache.cordova.file.FileReader');
+    var cordova = require('cordova'),
+        Camera = require('./Camera');
 
 module.exports = {
 
@@ -53,13 +49,6 @@ module.exports = {
         var destinationType = args[1];
         var mediaType = args[6];
         var saveToPhotoAlbum = args[9];
-
-        var pkg = Windows.ApplicationModel.Package.current;
-        var packageId = pkg.installedLocation;
-
-        var fail = function (fileError) {
-            errorCallback("FileError, code:" + fileError.code);
-        };
 
         // resize method :)
         var resizeImage = function (file) {
@@ -164,9 +153,7 @@ module.exports = {
                             file.copyAsync(storageFolder, file.name, Windows.Storage.NameCollisionOption.replaceExisting).then(function (storageFile) {
                                 successCallback(URL.createObjectURL(storageFile));
                             }, function () {
-                                fail(FileError.INVALID_MODIFICATION_ERR);
-                            }, function () {
-                                errorCallback("Folder not access.");
+                                errorCallback("Can't access localStorage folder.");
                             });
 
                         }
@@ -228,7 +215,7 @@ module.exports = {
             cameraCaptureUI.captureFileAsync(Windows.Media.Capture.CameraCaptureUIMode.photo).then(function (picture) {
                 if (picture) {
                     // save to photo album successCallback
-                    var success = function (fileEntry) {
+                    var success = function () {
                         if (destinationType == Camera.DestinationType.FILE_URI) {
                             if (targetHeight > 0 && targetWidth > 0) {
                                 resizeImage(picture);
@@ -238,9 +225,7 @@ module.exports = {
                                 picture.copyAsync(storageFolder, picture.name, Windows.Storage.NameCollisionOption.replaceExisting).then(function (storageFile) {
                                     successCallback("ms-appdata:///local/" + storageFile.name);
                                 }, function () {
-                                    fail(FileError.INVALID_MODIFICATION_ERR);
-                                }, function () {
-                                    errorCallback("Folder not access.");
+                                    errorCallback("Can't access localStorage folder.");
                                 });
                             }
                         } else {
@@ -263,7 +248,7 @@ module.exports = {
                     if (saveToPhotoAlbum) {
                         Windows.Storage.StorageFile.getFileFromPathAsync(picture.path).then(function (storageFile) {
                             storageFile.copyAsync(Windows.Storage.KnownFolders.picturesLibrary, picture.name, Windows.Storage.NameCollisionOption.generateUniqueName).then(function (storageFile) {
-                                success(storageFile);
+                                success();
                             }, function () {
                                 fail();
                             });
@@ -280,9 +265,7 @@ module.exports = {
                                 picture.copyAsync(storageFolder, picture.name, Windows.Storage.NameCollisionOption.replaceExisting).then(function (storageFile) {
                                     successCallback("ms-appdata:///local/" + storageFile.name);
                                 }, function () {
-                                    fail(FileError.INVALID_MODIFICATION_ERR);
-                                }, function () {
-                                    errorCallback("Folder not access.");
+                                    errorCallback("Can't access localStorage folder.");
                                 });
                             }
                         } else {
