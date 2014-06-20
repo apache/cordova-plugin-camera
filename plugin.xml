@@ -205,7 +205,6 @@
     <!-- windows8 -->
     <platform name="windows8">
 
-        <dependency id="org.apache.cordova.file" />
         <config-file target="package.appxmanifest" parent="/Package/Capabilities">
             <Capability Name="picturesLibrary" />
             <DeviceCapability Name="webcam" />
