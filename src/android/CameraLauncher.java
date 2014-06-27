@@ -58,44 +58,44 @@ import android.util.Log;
  */
 public class CameraLauncher extends CordovaPlugin implements MediaScannerConnectionClient {
 
-    private static final int DATA_URL = 0;              // Return base64 encoded string
-    private static final int FILE_URI = 1;              // Return file uri (content://media/external/images/media/2 for Android)
-    private static final int NATIVE_URI = 2;                    // On Android, this is the same as FILE_URI
+    protected static final int DATA_URL = 0;              // Return base64 encoded string
+    protected static final int FILE_URI = 1;              // Return file uri (content://media/external/images/media/2 for Android)
+    protected static final int NATIVE_URI = 2;                    // On Android, this is the same as FILE_URI
 
-    private static final int PHOTOLIBRARY = 0;          // Choose image from picture library (same as SAVEDPHOTOALBUM for Android)
-    private static final int CAMERA = 1;                // Take picture from camera
-    private static final int SAVEDPHOTOALBUM = 2;       // Choose image from picture library (same as PHOTOLIBRARY for Android)
+    protected static final int PHOTOLIBRARY = 0;          // Choose image from picture library (same as SAVEDPHOTOALBUM for Android)
+    protected static final int CAMERA = 1;                // Take picture from camera
+    protected static final int SAVEDPHOTOALBUM = 2;       // Choose image from picture library (same as PHOTOLIBRARY for Android)
 
-    private static final int PICTURE = 0;               // allow selection of still pictures only. DEFAULT. Will return format specified via DestinationType
-    private static final int VIDEO = 1;                 // allow selection of video only, ONLY RETURNS URL
-    private static final int ALLMEDIA = 2;              // allow selection from all media types
+    protected static final int PICTURE = 0;               // allow selection of still pictures only. DEFAULT. Will return format specified via DestinationType
+    protected static final int VIDEO = 1;                 // allow selection of video only, ONLY RETURNS URL
+    protected static final int ALLMEDIA = 2;              // allow selection from all media types
 
-    private static final int JPEG = 0;                  // Take a picture of type JPEG
-    private static final int PNG = 1;                   // Take a picture of type PNG
-    private static final String GET_PICTURE = "Get Picture";
-    private static final String GET_VIDEO = "Get Video";
-    private static final String GET_All = "Get All";
+    protected static final int JPEG = 0;                  // Take a picture of type JPEG
+    protected static final int PNG = 1;                   // Take a picture of type PNG
+    protected static final String GET_PICTURE = "Get Picture";
+    protected static final String GET_VIDEO = "Get Video";
+    protected static final String GET_All = "Get All";
     
-    private static final String LOG_TAG = "CameraLauncher";
-    private static final int CROP_CAMERA = 100;
+    protected static final String LOG_TAG = "CameraLauncher";
+    protected static final int CROP_CAMERA = 100;
 
-    private int mQuality;                   // Compression quality hint (0-100: 0=low quality & high compression, 100=compress of max quality)
-    private int targetWidth;                // desired width of the image
-    private int targetHeight;               // desired height of the image
-    private Uri imageUri;                   // Uri of captured image
-    private int encodingType;               // Type of encoding to use
-    private int mediaType;                  // What type of media to retrieve
-    private boolean saveToPhotoAlbum;       // Should the picture be saved to the device's photo album
-    private boolean correctOrientation;     // Should the pictures orientation be corrected
-    private boolean orientationCorrected;   // Has the picture's orientation been corrected
-    private boolean allowEdit;              // Should we allow the user to crop the image.
+    protected int mQuality;                   // Compression quality hint (0-100: 0=low quality & high compression, 100=compress of max quality)
+    protected int targetWidth;                // desired width of the image
+    protected int targetHeight;               // desired height of the image
+    protected Uri imageUri;                   // Uri of captured image
+    protected int encodingType;               // Type of encoding to use
+    protected int mediaType;                  // What type of media to retrieve
+    protected boolean saveToPhotoAlbum;       // Should the picture be saved to the device's photo album
+    protected boolean correctOrientation;     // Should the pictures orientation be corrected
+    protected boolean orientationCorrected;   // Has the picture's orientation been corrected
+    protected boolean allowEdit;              // Should we allow the user to crop the image.
 
     public CallbackContext callbackContext;
-    private int numPics;
+    protected int numPics;
 
-    private MediaScannerConnection conn;    // Used to update gallery app with newly-written files
-    private Uri scanMe;                     // Uri of image to be added to content store
-    private Uri croppedUri;
+    protected MediaScannerConnection conn;    // Used to update gallery app with newly-written files
+    protected Uri scanMe;                     // Uri of image to be added to content store
+    protected Uri croppedUri;
 
     /**
      * Executes the request and returns PluginResult.
@@ -167,7 +167,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     // LOCAL METHODS
     //--------------------------------------------------------------------------
 
-    private String getTempDirectoryPath() {
+    protected String getTempDirectoryPath() {
         File cache = null;
 
         // SD Card Mounted
@@ -224,7 +224,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @param encodingType of the image to be taken
      * @return a File object pointing to the temporary picture
      */
-    private File createCaptureFile(int encodingType) {
+    protected File createCaptureFile(int encodingType) {
         File photo = null;
         if (encodingType == JPEG) {
             photo = new File(getTempDirectoryPath(), ".Pic.jpg");
@@ -296,7 +296,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
    * 
    * @param picUri
    */
-  private void performCrop(Uri picUri) {
+  protected void performCrop(Uri picUri) {
     try {
       Intent cropIntent = new Intent("com.android.camera.action.CROP");
       // indicate image type and Uri
@@ -335,7 +335,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @param destType          In which form should we return the image
      * @param intent            An Intent, which can return result data to the caller (various data can be attached to Intent "extras").
      */
-    private void processResultFromCamera(int destType, Intent intent) throws IOException {
+    protected void processResultFromCamera(int destType, Intent intent) throws IOException {
         int rotate = 0;
 
         // Create an ExifHelper to save the exif data that is lost during compression
@@ -433,8 +433,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         this.cleanup(FILE_URI, this.imageUri, uri, bitmap);
         bitmap = null;
     }
-
-private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
+    
+    protected String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         // Create an ExifHelper to save the exif data that is lost during compression
         String modifiedPath = getTempDirectoryPath() + "/modified.jpg";
 
@@ -467,7 +467,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
      * @param destType          In which form should we return the image
      * @param intent            An Intent, which can return result data to the caller (various data can be attached to Intent "extras").
      */
-    private void processResultFromGallery(int destType, Intent intent) {
+    protected void processResultFromGallery(int destType, Intent intent) {
         Uri uri = intent.getData();
         if (uri == null) {
             if (croppedUri != null) {
@@ -653,7 +653,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         }
     }
 
-    private int getImageOrientation(Uri uri) {
+    protected int getImageOrientation(Uri uri) {
         int rotate = 0;
         String[] cols = { MediaStore.Images.Media.ORIENTATION };
         try {
@@ -678,7 +678,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
      * @param bitmap
      * @return rotated bitmap
      */
-    private Bitmap getRotatedBitmap(int rotate, Bitmap bitmap, ExifHelper exif) {
+    protected Bitmap getRotatedBitmap(int rotate, Bitmap bitmap, ExifHelper exif) {
         Matrix matrix = new Matrix();
         if (rotate == 180) {
             matrix.setRotate(rotate);
@@ -710,7 +710,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
      * @throws FileNotFoundException
      * @throws IOException
      */
-    private void writeUncompressedImage(Uri uri) throws FileNotFoundException,
+    protected void writeUncompressedImage(Uri uri) throws FileNotFoundException,
             IOException {
         FileInputStream fis = new FileInputStream(FileHelper.stripFileProtocol(imageUri.toString()));
         OutputStream os = this.cordova.getActivity().getContentResolver().openOutputStream(uri);
@@ -729,7 +729,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
      *
      * @return uri
      */
-    private Uri getUriFromMediaStore() {
+    protected Uri getUriFromMediaStore() {
         ContentValues values = new ContentValues();
         values.put(android.provider.MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
         Uri uri;
@@ -754,7 +754,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
      * @return
      * @throws IOException 
      */
-    private Bitmap getScaledBitmap(String imageUrl) throws IOException {
+    protected Bitmap getScaledBitmap(String imageUrl) throws IOException {
         // If no new width or height were specified return the original bitmap
         if (this.targetWidth <= 0 && this.targetHeight <= 0) {
             return BitmapFactory.decodeStream(FileHelper.getInputStreamFromUriString(imageUrl, cordova));
@@ -858,7 +858,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
      *
      * @return a cursor
      */
-    private Cursor queryImgDB(Uri contentStore) {
+    protected Cursor queryImgDB(Uri contentStore) {
         return this.cordova.getActivity().getContentResolver().query(
                 contentStore,
                 new String[] { MediaStore.Images.Media._ID },
@@ -871,7 +871,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
      * Cleans up after picture taking. Checking for duplicates and that kind of stuff.
      * @param newImage
      */
-    private void cleanup(int imageType, Uri oldImage, Uri newImage, Bitmap bitmap) {
+    protected void cleanup(int imageType, Uri oldImage, Uri newImage, Bitmap bitmap) {
         if (bitmap != null) {
             bitmap.recycle();
         }
@@ -895,7 +895,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
      *
      * @param type FILE_URI or DATA_URL
      */
-    private void checkForDuplicateImage(int type) {
+    protected void checkForDuplicateImage(int type) {
         int diff = 1;
         Uri contentStore = whichContentStore();
         Cursor cursor = queryImgDB(contentStore);
@@ -922,7 +922,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
      * Determine if we are storing the images in internal or external storage
      * @return Uri
      */
-    private Uri whichContentStore() {
+    protected Uri whichContentStore() {
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             return android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
         } else {
@@ -962,7 +962,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         this.callbackContext.error(err);
     }
 
-    private void scanForGallery(Uri newImage) {
+    protected void scanForGallery(Uri newImage) {
         this.scanMe = newImage;
         if(this.conn != null) {
             this.conn.disconnect();
