@@ -425,14 +425,14 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     exif.writeExifData();
                 }
                 if (this.allowEdit) {
-          performCrop(uri);
-        } else {
-          // Send Uri back to JavaScript for viewing image
-          this.callbackContext.success(uri.toString());
-        }
+                    performCrop(uri);
+                } else {
+                    // Send Uri back to JavaScript for viewing image
+                    this.callbackContext.success(uri.toString());
+                }
             }
-            // Send Uri back to JavaScript for viewing image
-            this.callbackContext.success(uri.toString());
+        } else {
+            throw new IllegalStateException();
         }
 
         this.cleanup(FILE_URI, this.imageUri, uri, bitmap);
