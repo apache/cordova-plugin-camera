@@ -241,8 +241,6 @@ Optional parameters to customize the camera settings.
 
 - Ignores the `quality` parameter.
 
-- Ignores the `sourceType` parameter.
-
 - Ignores the `allowEdit` parameter.
 
 - `Camera.MediaType` is not supported.
