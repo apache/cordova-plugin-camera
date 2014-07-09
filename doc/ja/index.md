@@ -199,8 +199,6 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 
 *   無視、 `quality` パラメーター。
 
-*   無視、 `sourceType` パラメーター。
-
 *   無視、 `allowEdit` パラメーター。
 
 *   `Camera.MediaType`サポートされていません。

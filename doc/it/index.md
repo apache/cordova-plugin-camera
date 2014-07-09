@@ -199,8 +199,6 @@ Parametri opzionali per personalizzare le impostazioni della fotocamera.
 
 *   Ignora il `quality` parametro.
 
-*   Ignora il `sourceType` parametro.
-
 *   Ignora il `allowEdit` parametro.
 
 *   `Camera.MediaType`non è supportato.

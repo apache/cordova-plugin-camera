@@ -199,8 +199,6 @@ Tizen만 지원 한 `destinationType` 의 `Camera.DestinationType.FILE_URI` 와 
 
 *   무시는 `quality` 매개 변수.
 
-*   무시는 `sourceType` 매개 변수.
-
 *   무시는 `allowEdit` 매개 변수.
 
 *   `Camera.MediaType`지원 되지 않습니다.

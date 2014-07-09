@@ -224,8 +224,6 @@ Parámetros opcionales para personalizar la configuración de la cámara.
 
 *   Ignora el `quality` parámetro.
 
-*   Ignora el `sourceType` parámetro.
-
 *   Ignora el `allowEdit` parámetro.
 
 *   `Camera.MediaType`No se admite.

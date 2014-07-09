@@ -199,8 +199,6 @@ Tizen 僅支援 `destinationType` 的 `Camera.DestinationType.FILE_URI` 和 `sou
 
 *   忽略 `quality` 參數。
 
-*   忽略 `sourceType` 參數。
-
 *   忽略 `allowEdit` 參數。
 
 *   `Camera.MediaType`不受支援。

@@ -219,15 +219,13 @@ Tizen поддерживает только `destinationType` из `Camera.Desti
 
 *   Игнорирует `quality` параметр.
 
-*   Игнорирует `sourceType` параметр.
-
 *   Игнорирует `allowEdit` параметр.
 
-*   `Camera.MediaType`не поддерживается.
+*   `Camera.MediaType` не поддерживается.
 
-*   Игнорирует `correctOrientation` параметр.
+*   Игнорирует параметр `correctOrientation`.
 
-*   Игнорирует `cameraDirection` параметр.
+*   Игнорирует параметр `cameraDirection`.
 
 ### Firefox OS причуды
 

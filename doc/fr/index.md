@@ -218,15 +218,13 @@ Paramètres optionnels pour personnaliser les réglages de l'appareil.
 
 *   Ignore le paramètre `quality`.
 
-*   Ignore le paramètre `sourceType`.
+*   Ignore le paramètre `allowEdit`.
 
-*   Ignore la `allowEdit` paramètre.
+*   `Camera.MediaType`n'est pas pris en charge.
 
-*   `Camera.MediaType` n'est pas pris en charge.
+*   Ignore la `correctOrientation` paramètre.
 
-*   Ignore le paramètre `correctOrientation`.
-
-*   Ignore le paramètre `cameraDirection`.
+*   Ignore la `cameraDirection` paramètre.
 
 ### Firefox OS Quirks
 

@@ -199,8 +199,6 @@ Optionale Parameter die Kameraeinstellungen anpassen.
 
 *   Ignoriert die `quality` Parameter.
 
-*   Ignoriert die `sourceType` Parameter.
-
 *   Ignoriert die `allowEdit` Parameter.
 
 *   `Camera.MediaType`wird nicht unterstützt.
