@@ -386,6 +386,8 @@ static NSSet* org_apache_cordova_validArrowDirections;
     }
     
     [self.commandDelegate sendPluginResult:result callbackId:cameraPicker.callbackId];
+    
+    [[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation:UIStatusBarAnimationNone];
 
     self.hasPendingOperation = NO;
     self.pickerController = nil;
