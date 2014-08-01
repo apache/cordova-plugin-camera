@@ -218,7 +218,7 @@ Paramètres optionnels pour personnaliser les réglages de l'appareil.
 
 *   Ignore le paramètre `quality`.
 
-*   Ignore le paramètre `allowEdit`.
+*   Ignore la `allowEdit` paramètre.
 
 *   `Camera.MediaType`n'est pas pris en charge.
 
