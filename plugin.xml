@@ -56,7 +56,7 @@
           <runs />
         </js-module>
     </platform>  
-    
+
     <!-- android -->
     <platform name="android">
         <config-file target="res/xml/config.xml" parent="/*">
@@ -153,10 +153,12 @@
         </config-file>
         <config-file target="www/config.xml" parent="/widget/rim:permissions">
           <rim:permit>access_shared</rim:permit>
+          <rim:permit>use_camera</rim:permit>
         </config-file>
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />
         </js-module>
+        <asset src="www/blackberry10/assets" target="chrome" />
     </platform>
 
      <!-- wp7 -->
