@@ -85,7 +85,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     var pageStartTime = +new Date();
 
     //default camera options
-    var camQualityDefault = ['quality value', 50];
+    var camQualityDefault = ['50', 50];
     var camDestinationTypeDefault = ['FILE_URI', 1];
     var camPictureSourceTypeDefault = ['CAMERA', 1];
     var camAllowEditDefault = ['allowEdit', false];
