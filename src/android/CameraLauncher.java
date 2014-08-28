@@ -345,6 +345,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 exif.createInFile(getTempDirectoryPath() + "/.Pic.jpg");
                 exif.readExifData();
                 rotate = exif.getOrientation();
+            } else if (this.encodingType == PNG) {
+                exif.createInFile(getTempDirectoryPath() + "/.Pic.png");
+                exif.readExifData();
+                rotate = exif.getOrientation();
             }
         } catch (IOException e) {
             e.printStackTrace();
