@@ -218,4 +218,17 @@
 
     </platform>
 
+    <!-- browser -->
+    <platform name="browser">
+        <config-file target="config.xml" parent="/*">
+            <feature name="Camera">
+                <param name="browser-package" value="Camera" />
+            </feature>
+        </config-file>
+
+        <js-module src="src/browser/CameraProxy.js" name="CameraProxy">
+            <runs />
+        </js-module>
+    </platform>
+
 </plugin>
