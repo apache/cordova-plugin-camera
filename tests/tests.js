@@ -429,7 +429,16 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             '</p><div id="remove"></div>' +
             'Expected result: Remove image from library.<br>Status box will show "FileEntry.remove success:["OK"]';
 
-    contentEl.innerHTML = info_div + options_div + getpicture_div + test_procedure + inputs_div + actions_div;
+    // We need to wrap this code due to Windows security restrictions
+    // see http://msdn.microsoft.com/en-us/library/windows/apps/hh465380.aspx#differences for details
+    if (MSApp && MSApp.execUnsafeLocalFunction) {
+        MSApp.execUnsafeLocalFunction(function() {
+            contentEl.innerHTML = info_div + options_div + getpicture_div + test_procedure + inputs_div + actions_div;
+        });
+    } else {
+        contentEl.innerHTML = info_div + options_div + getpicture_div + test_procedure + inputs_div + actions_div;
+    }
+
     var elements = document.getElementsByClassName("testInputTag");
     var listener = function (e) {
         testInputTag(e.target);
