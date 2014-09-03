@@ -315,6 +315,9 @@ static NSSet* org_apache_cordova_validArrowDirections;
                     NSMutableDictionary *EXIFDictionary = [[controllerMetadata objectForKey:(NSString *)kCGImagePropertyExifDictionary]mutableCopy];
                     if (EXIFDictionary)	[self.metadata setObject:EXIFDictionary forKey:(NSString *)kCGImagePropertyExifDictionary];
                     
+                    if (IsAtLeastiOSVersion(@"8.0")) {
+                        [[self locationManager] performSelector:NSSelectorFromString(@"requestWhenInUseAuthorization") withObject:nil afterDelay:0];
+                    }
                     [[self locationManager] startUpdatingLocation];
                     return;
                 }
