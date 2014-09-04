@@ -78,6 +78,7 @@ than `DATA_URL`.
 - Amazon Fire OS
 - Android
 - BlackBerry 10
+- Browser
 - Firefox OS
 - iOS
 - Tizen
@@ -95,6 +96,10 @@ scenario, the image may not appear when the cordova activity is restored.
 Android uses intents to launch the camera activity on the device to capture
 images, and on phones with low memory, the Cordova activity may be killed.  In this
 scenario, the image may not appear when the Cordova activity is restored.
+
+### Browser Quirks
+
+Can only return photos as base64-encoded image.
 
 ### Firefox OS Quirks
 
