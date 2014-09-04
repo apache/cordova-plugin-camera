@@ -57,6 +57,7 @@ typedef NSUInteger CDVMediaType;
 @property (assign) bool cropToSize;
 @property (strong) UIView* webView;
 @property (assign) BOOL popoverSupported;
+@property (assign) BOOL usesGeolocation;
 
 @end
 
