@@ -241,10 +241,28 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     function copyImage() {
         var onFileSystemReceived = function (fileSystem) {
             var destDirEntry = fileSystem.root;
+            var origName = fileEntry.name;
 
             // Test FileEntry API here.
             fileEntry.copyTo(destDirEntry, 'copied_file.png', logCallback('FileEntry.copyTo', true), logCallback('FileEntry.copyTo', false));
             fileEntry.moveTo(destDirEntry, 'moved_file.png', logCallback('FileEntry.moveTo', true), logCallback('FileEntry.moveTo', false));
+
+            //cleanup
+            //rename moved file back to original name so other tests can reference image
+            resolveLocalFileSystemURI(destDirEntry.nativeURL+'moved_file.png', function(fileEntry) {
+                fileEntry.moveTo(destDirEntry, origName, logCallback('FileEntry.moveTo', true), logCallback('FileEntry.moveTo', false));
+                console.log('Cleanup: successfully renamed file back to original name');
+            }, function () {
+                console.log('Cleanup: failed to rename file back to original name');
+            });
+
+            //remove copied file
+            resolveLocalFileSystemURI(destDirEntry.nativeURL+'copied_file.png', function(fileEntry) {
+                fileEntry.remove(logCallback('FileEntry.remove', true), logCallback('FileEntry.remove', false));
+                console.log('Cleanup: successfully removed copied file');
+            }, function () {
+                console.log('Cleanup: failed to remove copied file');
+            });
         };
 
         window.requestFileSystem(LocalFileSystem.TEMPORARY, 0, onFileSystemReceived, null);
