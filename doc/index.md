@@ -85,6 +85,13 @@ than `DATA_URL`.
 - Windows Phone 7 and 8
 - Windows 8
 
+### Preferences (iOS)
+
+-  __CameraUsesGeolocation__ (boolean, defaults to false). For capturing JPEGs, set to true to get geolocation data in the EXIF header. This will trigger a request for geolocation permissions if set to true.
+
+        <preference name="CameraUsesGeolocation" value="false" />
+
+
 ### Amazon Fire OS Quirks
 
 Amazon Fire OS uses intents to launch the camera activity on the device to capture
@@ -226,7 +233,7 @@ Optional parameters to customize the camera settings.
             FRONT : 1      // Use the front-facing camera
         };
 
-### Amazon Fire OSQuirks
+### Amazon Fire OS Quirks
 
 - Any `cameraDirection` value results in a back-facing photo.
 

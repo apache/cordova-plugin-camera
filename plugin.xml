@@ -126,6 +126,7 @@
              <feature name="Camera">
                  <param name="ios-package" value="CDVCamera" />
              </feature>
+             <preference name="CameraUsesGeolocation" value="false" />
          </config-file>
 
          <js-module src="www/ios/CameraPopoverHandle.js" name="CameraPopoverHandle">
