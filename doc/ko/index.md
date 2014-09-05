@@ -66,6 +66,13 @@
 *   Windows Phone 7과 8
 *   윈도우 8
 
+### 환경 설정 (iOS)
+
+*   **CameraUsesGeolocation** (boolean, 기본값: false)입니다. 캡처 Jpeg, EXIF 헤더에 지리적 데이터를 true로 설정 합니다. 이 경우 위치 정보 사용 권한에 대 한 요청을 일으킬 것 이다 true로 설정 합니다.
+    
+        <preference name="CameraUsesGeolocation" value="false" />
+        
+
 ### 아마존 화재 OS 단점
 
 아마존 화재 OS 의도 사용 하 여 이미지 캡처 장치에서 카메라 활동을 시작 하 고 낮은 메모리와 휴대 전화에 코르 도우 바 활동 살해 수 있습니다. 코르도바 활동 복원 되 면이 시나리오에서는 이미지가 나타나지 않을 수 있습니다.
@@ -141,28 +148,40 @@ Tizen만 지원 한 `destinationType` 의 `Camera.DestinationType.FILE_URI` 와 
 
 *   **destinationType**: 반환 값의 형식을 선택 합니다. 기본값은 FILE_URI입니다. 에 정의 된 `navigator.camera.DestinationType` *(수)*
     
-        Camera.DestinationType = {DATA_URL: 0, / / base64 인코딩된 문자열로 FILE_URI 이미지를 반환: 1, / / 이미지 파일 URI NATIVE_URI 반환: 2 / / 반환 이미지 기본 URI (예를 들어, 자산 라이브러리: / / iOS 또는 콘텐츠: / / 안 드 로이드에)};
+        Camera.DestinationType = {
+            DATA_URL : 0,      // Return image as base64-encoded string
+            FILE_URI : 1,      // Return image file URI
+            NATIVE_URI : 2     // Return image native URI (e.g., assets-library:// on iOS or content:// on Android)
+        };
         
 
 *   **sourceType**: 그림의 소스를 설정 합니다. 기본값은 카메라입니다. 에 정의 된 `navigator.camera.PictureSourceType` *(수)*
     
-        Camera.PictureSourceType = {PHOTOLIBRARY: 0, 카메라: 1, SAVEDPHOTOALBUM: 2};
+        Camera.PictureSourceType = {
+            PHOTOLIBRARY : 0,
+            CAMERA : 1,
+            SAVEDPHOTOALBUM : 2
+        };
         
 
 *   **allowEdit**: 선택 하기 전에 이미지의 간단한 편집을 허용 합니다. *(부울)*
 
 *   **encodingType**: 반환 된 이미지 파일의 인코딩을 선택 합니다. 기본값은 JPEG입니다. 에 정의 된 `navigator.camera.EncodingType` *(수)*
     
-        Camera.EncodingType = {JPEG: 0, / / 반환 JPEG로 인코딩된 PNG 이미지: 1 / 반환 PNG 이미지 인코딩 /};
+        Camera.EncodingType = {
+            JPEG : 0,               // Return JPEG encoded image
+            PNG : 1                 // Return PNG encoded image
+        };
         
 
 *   **targetWidth**: 스케일 이미지를 픽셀 너비. **TargetHeight**와 함께 사용 해야 합니다. 가로 세로 비율이 일정 하 게 유지 합니다. *(수)*
 
 *   **targetHeight**: 스케일 이미지를 픽셀 단위로 높이. **TargetWidth**와 함께 사용 해야 합니다. 가로 세로 비율이 일정 하 게 유지 합니다. *(수)*
 
-*   **mediaType**:에서 선택 미디어 유형을 설정 합니다. 때에 작동 `PictureSourceType` 는 `PHOTOLIBRARY` 또는 `SAVEDPHOTOALBUM` . 에 정의 된 `nagivator.camera.MediaType` *(수)* 
+*   **mediaType**:에서 선택 미디어 유형을 설정 합니다. 때에 작동 `PictureSourceType` 는 `PHOTOLIBRARY` 또는 `SAVEDPHOTOALBUM` . 에 정의 된 `nagivator.camera.MediaType` *(수)*
     
-        Camera.MediaType = {그림: 0, / / 아직 사진만의 선택을 허용 합니다. 기본입니다. Will return format specified via DestinationType
+        Camera.MediaType = {
+            PICTURE: 0,    // allow selection of still pictures only. 기본입니다. Will return format specified via DestinationType
             VIDEO: 1,      // allow selection of video only, WILL ALWAYS RETURN FILE_URI
             ALLMEDIA : 2   // allow selection from all media types
         };
@@ -176,10 +195,13 @@ Tizen만 지원 한 `destinationType` 의 `Camera.DestinationType.FILE_URI` 와 
 
 *   **cameraDirection**: (앞 이나 뒤로-연결)를 사용 하 여 카메라를 선택 하십시오. 기본값은 다시. 에 정의 된 `navigator.camera.Direction` *(수)*
     
-        Camera.Direction = {다시: 0, / / 앞 뒤 방향 카메라를 사용: 1 / 전면을 향하는 카메라를 사용 하 여 /};
+        Camera.Direction = {
+            BACK : 0,      // Use the back-facing camera
+            FRONT : 1      // Use the front-facing camera
+        };
         
 
-### 아마존 화재 OSQuirks
+### 아마존 화재 OS 단점
 
 *   어떤 `cameraDirection` 다시 연결 사진에 결과 값.
 
@@ -341,9 +363,15 @@ iOS 전용 매개 변수 iPad의 보관 함 또는 앨범에서 이미지를 선
 
 *   **높이**: 높이 (픽셀)는 popover 앵커는 화면 요소. *(수)*
 
-*   **arrowDir**: 방향 화살표는 popover 가리켜야 합니다. 에 정의 된 `Camera.PopoverArrowDirection` *(수)* 
+*   **arrowDir**: 방향 화살표는 popover 가리켜야 합니다. 에 정의 된 `Camera.PopoverArrowDirection` *(수)*
     
-            Camera.PopoverArrowDirection = {ARROW_UP: 1, / / iOS UIPopoverArrowDirection 상수 ARROW_DOWN 일치: 2, ARROW_LEFT: 4, ARROW_RIGHT: 8, ARROW_ANY: 15};
+            Camera.PopoverArrowDirection = {
+                ARROW_UP : 1,        // matches iOS UIPopoverArrowDirection constants
+                ARROW_DOWN : 2,
+                ARROW_LEFT : 4,
+                ARROW_RIGHT : 8,
+                ARROW_ANY : 15
+            };
         
 
 참고는 popover의 크기 조정 화살표 방향 및 화면 방향 변경 될 수 있습니다. 앵커 요소 위치를 지정 하는 경우 방향 변경에 대 한 계정에 있는지 확인 합니다.
