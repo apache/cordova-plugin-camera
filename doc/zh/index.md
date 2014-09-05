@@ -66,6 +66,13 @@
 *   Windows Phone 7 和 8
 *   Windows 8
 
+### 首選項 （iOS）
+
+*   **CameraUsesGeolocation**（布林值，預設值為 false）。 用於捕獲 jpeg 檔，設置為 true，以在 EXIF 頭資訊中獲取地理定位資料。 這將觸發請求的地理位置的許可權，如果設置為 true。
+    
+        <preference name="CameraUsesGeolocation" value="false" />
+        
+
 ### 亞馬遜火 OS 怪癖
 
 亞馬遜火 OS 使用意向啟動捕獲圖像，在設備上的相機活動和與低記憶體手機，科爾多瓦活動可能被殺。 在此方案中，可能不會顯示圖像還原科爾多瓦活動時。
@@ -137,49 +144,64 @@ Tizen 僅支援 `destinationType` 的 `Camera.DestinationType.FILE_URI` 和 `sou
 
 ### 選項
 
-*   **品質**： 保存的圖像，表示為一系列的 0-100，在 100 哪裡通常全解析度而不會丟失檔的壓縮品質。 預設值為 50。 *（人數）*（請注意相機的解析度有關的資訊是不可用）。
+*   **品質**： 保存的圖像，表示為範圍 0-100，100，是通常全解析度，無損失從檔案壓縮的品質。 預設值為 50。 *（人數）*（請注意相機的解析度有關的資訊是不可用）。
 
 *   **可**： 選擇傳回值的格式。預設值是 FILE_URI。定義在 `navigator.camera.DestinationType` *（人數）*
     
-        Camera.DestinationType = {DATA_URL： 0，/ / 返回圖像作為 base64 編碼字串 FILE_URI： 1，/ / 返回影像檔的 URI NATIVE_URI： 2 / / 返回圖像本機 URI (例如，資產庫： / / 在 iOS 或內容上： / / 在 Android 上)} ；
+        Camera.DestinationType = {
+            DATA_URL : 0,      // Return image as base64-encoded string
+            FILE_URI : 1,      // Return image file URI
+            NATIVE_URI : 2     // Return image native URI (e.g., assets-library:// on iOS or content:// on Android)
+        };
         
 
 *   **時**： 設置圖片的來源。預設值是觀景窗。定義在 `navigator.camera.PictureSourceType` *（人數）*
     
-        Camera.PictureSourceType = {PHOTOLIBRARY: 0，相機： 1，SAVEDPHOTOALBUM: 2} ；
+        Camera.PictureSourceType = {
+            PHOTOLIBRARY : 0,
+            CAMERA : 1,
+            SAVEDPHOTOALBUM : 2
+        };
         
 
-*   **allowEdit**： 允許簡單編輯的選擇面前的形象。*（布林）*
+*   **allowEdit**： 允許簡單編輯前選擇圖像。*（布林）*
 
 *   **encodingType**： 選擇返回的影像檔的編碼。預設值為 JPEG。定義在 `navigator.camera.EncodingType` *（人數）*
     
-        Camera.EncodingType = {JPEG: 0，/ / 返回 JPEG 編碼的 PNG 圖像： 1 / / 返回 PNG 編碼的圖像} ；
+        Camera.EncodingType = {
+            JPEG : 0,               // Return JPEG encoded image
+            PNG : 1                 // Return PNG encoded image
+        };
         
 
-*   **targetWidth**： 以圖元為單位的尺度圖像的寬度。必須與**targetHeight**一起使用。縱橫比保持不變。*（人數）*
+*   **targetWidth**： 向尺度圖像的圖元寬度。必須用**targetHeight**。縱橫比保持不變。*（人數）*
 
-*   **targetHeight**： 以圖元為單位的尺度圖像的高度。必須與**targetWidth**一起使用。縱橫比保持不變。*（人數）*
+*   **targetHeight**： 以圖元為單位向尺度圖像的高度。必須用**targetWidth**。縱橫比保持不變。*（人數）*
 
-*   **媒體類型**： 設置要從選擇媒體的類型。 時才起作用 `PictureSourceType` 是 `PHOTOLIBRARY` 或 `SAVEDPHOTOALBUM` 。 定義在 `nagivator.camera.MediaType` *（人數）* 
+*   **媒體類型**： 設置的媒體，從選擇類型。 時才起作用 `PictureSourceType` 是 `PHOTOLIBRARY` 或 `SAVEDPHOTOALBUM` 。 定義在 `nagivator.camera.MediaType` *（人數）*
     
-        Camera.MediaType = {圖片: 0，/ / 允許只仍然圖片的選擇。 預設情況。 Will return format specified via DestinationType
+        Camera.MediaType = {
+            PICTURE: 0,    // allow selection of still pictures only. 預設情況。 Will return format specified via DestinationType
             VIDEO: 1,      // allow selection of video only, WILL ALWAYS RETURN FILE_URI
             ALLMEDIA : 2   // allow selection from all media types
         };
         
 
-*   **correctOrientation**： 旋轉圖像，期間擷取裝置的方向的正確。*（布林）*
+*   **correctOrientation**： 旋轉圖像，該設備時捕獲的定向的正確。*（布林）*
 
 *   **saveToPhotoAlbum**： 將圖像保存到相冊在設備上捕獲後。*（布林）*
 
-*   **popoverOptions**： 僅限 iOS 在 iPad 中指定彈出位置的選項。在中定義`CameraPopoverOptions`.
+*   **popoverOptions**： 只有 iOS 在 iPad 中指定氣泡框位置的選項。在中定義`CameraPopoverOptions`.
 
 *   **cameraDirection**： 選擇相機以使用 （前面或後面-面向）。預設值是背。定義在 `navigator.camera.Direction` *（人數）*
     
-        Camera.Direction = {回: 0，/ / 使用前面後面攝像頭： 1 / / 使用前置攝像頭} ；
+        Camera.Direction = {
+            BACK : 0,      // Use the back-facing camera
+            FRONT : 1      // Use the front-facing camera
+        };
         
 
-### 亞馬遜火 OSQuirks
+### 亞馬遜火 OS 怪癖
 
 *   任何 `cameraDirection` 值回朝的照片中的結果。
 
@@ -189,13 +211,13 @@ Tizen 僅支援 `destinationType` 的 `Camera.DestinationType.FILE_URI` 和 `sou
 
 ### Android 的怪癖
 
-*   任何 `cameraDirection` 值回朝的照片中的結果。
+*   任何 `cameraDirection` 值結果在背面的照片。
 
 *   忽略 `allowEdit` 參數。
 
-*   `Camera.PictureSourceType.PHOTOLIBRARY`和 `Camera.PictureSourceType.SAVEDPHOTOALBUM` 都顯示相同的相冊。
+*   `Camera.PictureSourceType.PHOTOLIBRARY`和 `Camera.PictureSourceType.SAVEDPHOTOALBUM` 都顯示相同的寫真集。
 
-### 黑莓 10 怪癖
+### 黑莓 10 的怪癖
 
 *   忽略 `quality` 參數。
 
@@ -219,7 +241,7 @@ Tizen 僅支援 `destinationType` 的 `Camera.DestinationType.FILE_URI` 和 `sou
 
 *   忽略`encodingType`
 
-*   忽略 `targetWidth` 和`targetHeight`
+*   忽略了 `targetWidth` 和`targetHeight`
 
 *   `Camera.MediaType`不受支援。
 
@@ -237,9 +259,9 @@ Tizen 僅支援 `destinationType` 的 `Camera.DestinationType.FILE_URI` 和 `sou
 
 *   不支援的選項
 
-*   始終返回一個檔的 URI
+*   總是返回一個檔的 URI
 
-### Windows Phone 7 和 8 怪癖
+### Windows Phone 7 和 8 的怪癖
 
 *   忽略 `allowEdit` 參數。
 
@@ -278,7 +300,7 @@ onSuccess 提供的圖像資料的回呼函數。
 
 ### 參數
 
-*   **把圖像資料**： Base64 編碼的圖像資料，*或*影像檔的 URI，取決於 `cameraOptions` 生效。*（字串）*
+*   **圖像資料**： Base64 編碼進行編碼的圖像資料，*或*影像檔的 URI，取決於 `cameraOptions` 效果。*（字串）*
 
 ### 示例
 
@@ -296,7 +318,7 @@ onSuccess 提供的圖像資料的回呼函數。
 
 ### 方法
 
-*   **setPosition**: 設置彈出的位置。
+*   **setPosition**： 設置氣泡框的位置。
 
 ### 支援的平臺
 
@@ -334,17 +356,23 @@ iOS 僅指定彈出的錨元素的位置和箭頭方向，從 iPad 的庫或專�
 
 ### CameraPopoverOptions
 
-*   **x**： 圖元的 x 座標上的錨定彈出螢幕元素。*（人數）*
+*   **x**： x 螢幕元素到其錨定氣泡框上的圖元座標。*（人數）*
 
-*   **y**： 到其錨定彈出螢幕元素的 y 圖元座標。*（人數）*
+*   **y**： 螢幕元素到其錨定氣泡框上的 y 圖元座標。*（人數）*
 
-*   **寬度**： 寬度以圖元為單位），到其錨定彈出螢幕元素。*（人數）*
+*   **寬度**： 寬度以圖元為單位），到其錨定氣泡框上的螢幕元素。*（人數）*
 
-*   **高度**： 高度以圖元為單位），到其錨定彈出螢幕元素。*（人數）*
+*   **高度**： 高度以圖元為單位），到其錨定氣泡框上的螢幕元素。*（人數）*
 
-*   **arrowDir**： 上彈出的箭頭應指向的方向。定義在 `Camera.PopoverArrowDirection` *（人數）* 
+*   **arrowDir**： 氣泡框上的箭頭應指向的方向。定義在 `Camera.PopoverArrowDirection` *（人數）*
     
-            Camera.PopoverArrowDirection = {ARROW_UP: 1，/ / 匹配 iOS UIPopoverArrowDirection 常量 ARROW_DOWN： 2，ARROW_LEFT： 4，ARROW_RIGHT： 8，ARROW_ANY： 15} ；
+            Camera.PopoverArrowDirection = {
+                ARROW_UP : 1,        // matches iOS UIPopoverArrowDirection constants
+                ARROW_DOWN : 2,
+                ARROW_LEFT : 4,
+                ARROW_RIGHT : 8,
+                ARROW_ANY : 15
+            };
         
 
 請注意彈出的大小可能會更改箭頭的方向和螢幕的方向調整。 請確保帳戶方向更改時指定的錨點的元素位置。
@@ -356,7 +384,7 @@ iOS 僅指定彈出的錨元素的位置和箭頭方向，從 iPad 的庫或專�
     navigator.camera.cleanup( cameraSuccess, cameraError );
     
 
-### 說明
+### 描述
 
 刪除中間打完電話後保留在臨時存儲的影像檔 `camera.getPicture` 。 適用時，才的價值 `Camera.sourceType` 等於 `Camera.PictureSourceType.CAMERA` 和 `Camera.destinationType` 等於`Camera.DestinationType.FILE_URI`.
 

@@ -66,6 +66,13 @@
 *   Windows Phone 7 と 8
 *   Windows 8
 
+### 環境設定 （iOS）
+
+*   **CameraUsesGeolocation**(ブール値、デフォルトは false)。 Jpeg 画像をキャプチャするため EXIF ヘッダーで地理位置情報データを取得する場合は true に設定します。 これは、場合地理位置情報のアクセス許可に対する要求をトリガーする true に設定します。
+    
+        <preference name="CameraUsesGeolocation" value="false" />
+        
+
 ### アマゾン火 OS 癖
 
 アマゾン火 OS イメージをキャプチャするデバイス上のカメラの活動を開始する意図を使用して、メモリの少ない携帯電話、コルドバ活動が殺されるかもしれない。 このシナリオでは、コルドバの活動が復元されるとき、画像が表示されません。
@@ -141,28 +148,40 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 
 *   **destinationType**: 戻り値の形式を選択します。既定値は FILE_URI です。定義されている `navigator.camera.DestinationType` *（番号）*
     
-        Camera.DestinationType = {DATA_URL: 0、/base64 エンコード文字列 FILE_URI としてイメージを返す/: 1、//画像ファイル URI NATIVE_URI を返す： 2//戻り画像ネイティブ URI (例えば、資産ライブラリ://iOS またはコンテンツに：//アンドロイド)};
+        Camera.DestinationType = {
+            DATA_URL : 0,      // Return image as base64-encoded string
+            FILE_URI : 1,      // Return image file URI
+            NATIVE_URI : 2     // Return image native URI (e.g., assets-library:// on iOS or content:// on Android)
+        };
         
 
 *   **sourceType**: 画像のソースを設定します。既定値は、カメラです。定義されている `navigator.camera.PictureSourceType` *（番号）*
     
-        Camera.PictureSourceType = {フォト ライブラリ: 0, カメラ: 1、SAVEDPHOTOALBUM: 2};
+        Camera.PictureSourceType = {
+            PHOTOLIBRARY : 0,
+            CAMERA : 1,
+            SAVEDPHOTOALBUM : 2
+        };
         
 
 *   **allowEdit**: 単純な選択の前に画像の編集を許可します。*(ブール値)*
 
 *   **encodingType**: 返されるイメージ ファイルのエンコーディングを選択します。デフォルトは JPEG です。定義されている `navigator.camera.EncodingType` *（番号）*
     
-        Camera.EncodingType = {JPEG: 0//戻る JPEG PNG イメージをエンコード: 1/返す PNG イメージをエンコードされた/};
+        Camera.EncodingType = {
+            JPEG : 0,               // Return JPEG encoded image
+            PNG : 1                 // Return PNG encoded image
+        };
         
 
 *   **targetWidth**: スケール イメージにピクセル単位の幅。**TargetHeight**を使用する必要があります。縦横比は変わりません。*(数)*
 
 *   **targetHeight**: スケール イメージにピクセル単位の高さ。**TargetWidth**を使用する必要があります。縦横比は変わりません。*(数)*
 
-*   **mediaType**： から選択するメディアの種類を設定します。 場合にのみ働きます `PictureSourceType` は `PHOTOLIBRARY` または `SAVEDPHOTOALBUM` 。 定義されている `nagivator.camera.MediaType` *（番号）* 
+*   **mediaType**： から選択するメディアの種類を設定します。 場合にのみ働きます `PictureSourceType` は `PHOTOLIBRARY` または `SAVEDPHOTOALBUM` 。 定義されている `nagivator.camera.MediaType` *（番号）*
     
-        Camera.MediaType = {画像： 0//静止画のみを選択できます。 既定値です。 Will return format specified via DestinationType
+        Camera.MediaType = {
+            PICTURE: 0,    // allow selection of still pictures only. 既定値です。 Will return format specified via DestinationType
             VIDEO: 1,      // allow selection of video only, WILL ALWAYS RETURN FILE_URI
             ALLMEDIA : 2   // allow selection from all media types
         };
@@ -176,10 +195,13 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 
 *   **cameraDirection**： （前面または背面側） を使用するカメラを選択します。既定値は戻るです。定義されている `navigator.camera.Direction` *（番号）*
     
-        Camera.Direction = {戻る: 0、//後ろ向きカメラ前部を使用: 1/フロントに面したカメラを使用して/};
+        Camera.Direction = {
+            BACK : 0,      // Use the back-facing camera
+            FRONT : 1      // Use the front-facing camera
+        };
         
 
-### アマゾン火 OSQuirks
+### アマゾン火 OS 癖
 
 *   任意 `cameraDirection` 背面写真で結果の値します。
 
@@ -341,9 +363,15 @@ iOS だけ指定パラメーターをポップ オーバーのアンカー要素
 
 *   **高さ**: ポップ オーバーのアンカーになる上の画面要素のピクセル単位の高さ。*(数)*
 
-*   **arrowDir**: 方向のポップ オーバーで矢印をポイントする必要があります。定義されている `Camera.PopoverArrowDirection` *（番号）* 
+*   **arrowDir**: 方向のポップ オーバーで矢印をポイントする必要があります。定義されている `Camera.PopoverArrowDirection` *（番号）*
     
-            Camera.PopoverArrowDirection = {ARROW_UP: 1、/iOS UIPopoverArrowDirection 定数 ARROW_DOWN と一致する/: 2、ARROW_LEFT： 4、ARROW_RIGHT： 8、ARROW_ANY: 15};
+            Camera.PopoverArrowDirection = {
+                ARROW_UP : 1,        // matches iOS UIPopoverArrowDirection constants
+                ARROW_DOWN : 2,
+                ARROW_LEFT : 4,
+                ARROW_RIGHT : 8,
+                ARROW_ANY : 15
+            };
         
 
 矢印の方向と、画面の向きを調整するポップ オーバーのサイズを変更可能性がありますに注意してください。 アンカー要素の位置を指定するときの方向の変化を考慮することを確認します。

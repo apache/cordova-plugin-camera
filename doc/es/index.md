@@ -66,6 +66,13 @@ Puedes hacer lo que quieras con la imagen codificada o URI, por ejemplo:
 *   Windows Phone 7 y 8
 *   Windows 8
 
+### Preferencias (iOS)
+
+*   **CameraUsesGeolocation** (booleano, el valor predeterminado de false). Para la captura de imágenes JPEG, establecido en true para obtener datos de geolocalización en la cabecera EXIF. Esto activará la solicitud de permisos de geolocalización si establecido en true.
+    
+        <preference name="CameraUsesGeolocation" value="false" />
+        
+
 ### Amazon fuego OS rarezas
 
 Amazon fuego OS utiliza los intentos para poner en marcha la actividad de la cámara del dispositivo para capturar imágenes y en teléfonos con poca memoria, puede matar la actividad Cordova. En este escenario, la imagen no aparezca cuando se restaura la actividad cordova.
@@ -181,7 +188,7 @@ Parámetros opcionales para personalizar la configuración de la cámara.
 
 *   **targetHeight**: altura en píxeles a escala de la imagen. Debe usarse con **targetWidth**. Proporción se mantiene constante. *(Número)*
 
-*   **mediaType**: definir el tipo de medios para seleccionar. Sólo funciona cuando `PictureSourceType` es `PHOTOLIBRARY` o `SAVEDPHOTOALBUM` . Definido en `nagivator.camera.MediaType` *(número)* 
+*   **mediaType**: definir el tipo de medios para seleccionar. Sólo funciona cuando `PictureSourceType` es `PHOTOLIBRARY` o `SAVEDPHOTOALBUM` . Definido en `nagivator.camera.MediaType` *(número)*
     
         Camera.MediaType = {
             PICTURE: 0,    // allow selection of still pictures only. DE FORMA PREDETERMINADA. Will return format specified via DestinationType
@@ -204,7 +211,7 @@ Parámetros opcionales para personalizar la configuración de la cámara.
         };
         
 
-### Amazon fuego OSQuirks
+### Amazon fuego OS rarezas
 
 *   Cualquier `cameraDirection` valor resultados en una foto orientada hacia atrás.
 
@@ -240,7 +247,7 @@ Parámetros opcionales para personalizar la configuración de la cámara.
 
 *   Ignora el `allowEdit` parámetro.
 
-*   Ignora el `PictureSourceType` parámetro (usuario elige en una ventana de diálogo)
+*   Ignora el `PictureSourceType` parámetro (el usuario lo elige en una ventana de diálogo)
 
 *   Ignora el`encodingType`
 
@@ -371,7 +378,7 @@ Sólo iOS parámetros que especifican la dirección ancla elemento ubicación y 
 
 *   **altura**: alto, en píxeles, del elemento sobre el que anclar el popover pantalla. *(Número)*
 
-*   **arrowDir**: dirección de la flecha en el popover debe apuntar. Definido en `Camera.PopoverArrowDirection` *(número)* 
+*   **arrowDir**: dirección de la flecha en el popover debe apuntar. Definido en `Camera.PopoverArrowDirection` *(número)*
     
             Camera.PopoverArrowDirection = {
                 ARROW_UP : 1,        // matches iOS UIPopoverArrowDirection constants

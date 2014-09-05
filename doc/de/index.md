@@ -66,6 +66,13 @@ Sie können tun, was Sie wollen, mit dem codierten Bildes oder URI, zum Beispiel
 *   Windows Phone 7 und 8
 *   Windows 8
 
+### "Einstellungen" (iOS)
+
+*   **CameraUsesGeolocation** (Boolean, Standardwert ist False). Zur Erfassung von JPEGs, auf true festgelegt, um Geolocation-Daten im EXIF-Header zu erhalten. Dies löst einen Antrag auf Geolocation-Berechtigungen, wenn auf True festgelegt.
+    
+        <preference name="CameraUsesGeolocation" value="false" />
+        
+
 ### Amazon Fire OS Macken
 
 Amazon Fire OS verwendet Absichten zum Starten von der Kamera-Aktivität auf dem Gerät, um Bilder zu erfassen und auf Handys mit wenig Speicher, Cordova Tätigkeit getötet werden kann. In diesem Szenario kann das Bild nicht angezeigt, wenn die Aktivität von Cordova wiederhergestellt wird.
@@ -141,28 +148,40 @@ Optionale Parameter die Kameraeinstellungen anpassen.
 
 *   **DestinationType**: Wählen Sie das Format des Rückgabewerts. Der Standardwert ist FILE_URI. Im Sinne `navigator.camera.DestinationType` *(Anzahl)*
     
-        Camera.DestinationType = {DATA_URL: 0, / / Return Bild als base64-codierte Zeichenfolge FILE_URI: 1, / / Return Image-Datei-URI NATIVE_URI: 2 / / Return image native URI (z. B. Ressourcen-Bibliothek: / / auf iOS oder Inhalte: / / auf Android)};
+        Camera.DestinationType = {
+            DATA_URL : 0,      // Return image as base64-encoded string
+            FILE_URI : 1,      // Return image file URI
+            NATIVE_URI : 2     // Return image native URI (e.g., assets-library:// on iOS or content:// on Android)
+        };
         
 
 *   **SourceType**: Legen Sie die Quelle des Bildes. Der Standardwert ist die Kamera. Im Sinne `navigator.camera.PictureSourceType` *(Anzahl)*
     
-        Camera.PictureSourceType = {Fotothek: 0, Kamera: 1, SAVEDPHOTOALBUM: 2};
+        Camera.PictureSourceType = {
+            PHOTOLIBRARY : 0,
+            CAMERA : 1,
+            SAVEDPHOTOALBUM : 2
+        };
         
 
 *   **AllowEdit**: einfache Bearbeitung des Bildes vor Auswahl zu ermöglichen. *(Boolesch)*
 
 *   **EncodingType**: die zurückgegebene Image-Datei ist Codierung auswählen. Standardwert ist JPEG. Im Sinne `navigator.camera.EncodingType` *(Anzahl)*
     
-        Camera.EncodingType = {JPEG: 0, / / Return JPEG-codierte Bild PNG: 1 / / Return PNG codiertes Bild};
+        Camera.EncodingType = {
+            JPEG : 0,               // Return JPEG encoded image
+            PNG : 1                 // Return PNG encoded image
+        };
         
 
 *   **TargetWidth**: Breite in Pixel zum Bild skalieren. Muss mit **TargetHeight**verwendet werden. Seitenverhältnis bleibt konstant. *(Anzahl)*
 
 *   **TargetHeight**: Höhe in Pixel zum Bild skalieren. Muss mit **TargetWidth**verwendet werden. Seitenverhältnis bleibt konstant. *(Anzahl)*
 
-*   **MediaType**: Legen Sie den Typ der Medien zur Auswahl. Funktioniert nur, wenn `PictureSourceType` ist `PHOTOLIBRARY` oder `SAVEDPHOTOALBUM` . Im Sinne `nagivator.camera.MediaType` *(Anzahl)* 
+*   **MediaType**: Legen Sie den Typ der Medien zur Auswahl. Funktioniert nur, wenn `PictureSourceType` ist `PHOTOLIBRARY` oder `SAVEDPHOTOALBUM` . Im Sinne `nagivator.camera.MediaType` *(Anzahl)*
     
-        Camera.MediaType = {Bild: 0, / / Auswahl der Standbilder nur ermöglichen. STANDARD. Will return format specified via DestinationType
+        Camera.MediaType = {
+            PICTURE: 0,    // allow selection of still pictures only. STANDARD. Will return format specified via DestinationType
             VIDEO: 1,      // allow selection of video only, WILL ALWAYS RETURN FILE_URI
             ALLMEDIA : 2   // allow selection from all media types
         };
@@ -176,10 +195,13 @@ Optionale Parameter die Kameraeinstellungen anpassen.
 
 *   **CameraDirection**: Wählen Sie die Kamera (vorn oder hinten-gerichtete) verwenden. Der Standardwert ist zurück. Im Sinne `navigator.camera.Direction` *(Anzahl)*
     
-        Camera.Direction = {zurück: 0, / / die hinten gerichteter Kamera vorne verwenden: 1 / / die nach vorn gerichtete Kamera verwenden};
+        Camera.Direction = {
+            BACK : 0,      // Use the back-facing camera
+            FRONT : 1      // Use the front-facing camera
+        };
         
 
-### Amazon Fire OSQuirks
+### Amazon Fire OS Macken
 
 *   `cameraDirection`Ergebnisse in einem hinten gerichteter Foto Wert.
 
@@ -341,9 +363,15 @@ nur iOS-Parametern, die Anker-Element Lage und Pfeil Richtung der Popover angebe
 
 *   **Höhe**: Höhe in Pixeln, das Bildschirmelement auf dem der Popover zu verankern. *(Anzahl)*
 
-*   **ArrowDir**: Richtung der Pfeil auf der Popover zeigen sollte. Im Sinne `Camera.PopoverArrowDirection` *(Anzahl)* 
+*   **ArrowDir**: Richtung der Pfeil auf der Popover zeigen sollte. Im Sinne `Camera.PopoverArrowDirection` *(Anzahl)*
     
-            Camera.PopoverArrowDirection = {ARROW_UP: 1, / / entspricht iOS UIPopoverArrowDirection Konstanten ARROW_DOWN: 2, ARROW_LEFT: 4, ARROW_RIGHT: 8, ARROW_ANY: 15};
+            Camera.PopoverArrowDirection = {
+                ARROW_UP : 1,        // matches iOS UIPopoverArrowDirection constants
+                ARROW_DOWN : 2,
+                ARROW_LEFT : 4,
+                ARROW_RIGHT : 8,
+                ARROW_ANY : 15
+            };
         
 
 Beachten Sie, dass die Größe der Popover ändern kann, um die Richtung des Pfeils und Ausrichtung des Bildschirms anzupassen. Achten Sie darauf, um Orientierung zu berücksichtigen, wenn Sie den Anker-Element-Speicherort angeben.
