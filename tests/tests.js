@@ -431,7 +431,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
 
     // We need to wrap this code due to Windows security restrictions
     // see http://msdn.microsoft.com/en-us/library/windows/apps/hh465380.aspx#differences for details
-    if (MSApp && MSApp.execUnsafeLocalFunction) {
+    if (window.MSApp && window.MSApp.execUnsafeLocalFunction) {
         MSApp.execUnsafeLocalFunction(function() {
             contentEl.innerHTML = info_div + options_div + getpicture_div + test_procedure + inputs_div + actions_div;
         });
