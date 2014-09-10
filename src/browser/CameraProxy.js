@@ -21,7 +21,7 @@
 
 function takePicture(success, error, opts) {
     if (opts && opts[2] === 1) {
-        capture(success);
+        capture(success, error);
     } else {
         var input = document.createElement('input');
         input.type = 'file';
@@ -34,7 +34,9 @@ function takePicture(success, error, opts) {
             reader.onload = function(readerEvent) {
                 input.parentNode.removeChild(input);
 
-                return success(readerEvent.target.result.replace('data:image/png;base64,', ''));
+                var imageData = readerEvent.target.result;
+
+                return success(imageData.substr(imageData.indexOf(',') + 1));
             }
 
             reader.readAsDataURL(inputEvent.target.files[0]);
@@ -44,7 +46,7 @@ function takePicture(success, error, opts) {
     }
 }
 
-function capture(success) {
+function capture(success, errorCallback) {
     var localMediaStream;
 
     var video = document.createElement('video');
@@ -71,9 +73,6 @@ function capture(success) {
         return success(imageData);
     }
 
-    document.body.appendChild(video);
-    document.body.appendChild(button);
-
     navigator.getUserMedia = navigator.getUserMedia ||
                              navigator.webkitGetUserMedia ||
                              navigator.mozGetUserMedia ||
@@ -83,10 +82,9 @@ function capture(success) {
         localMediaStream = stream;
         video.src = window.URL.createObjectURL(localMediaStream);
         video.play();
-    }
 
-    var errorCallback = function(e) {
-        console.log('Error: ' + e);
+        document.body.appendChild(video);
+        document.body.appendChild(button);
     }
 
     if (navigator.getUserMedia) {
