@@ -141,12 +141,12 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     function getPictureWin(data) {
         setPicture(data);
         // TODO: Fix resolveLocalFileSystemURI to work with native-uri.
-        if (pictureUrl.indexOf('file:') == 0 || pictureUrl.indexOf('content:') == 0) {
+        if (pictureUrl.indexOf('file:') == 0 || pictureUrl.indexOf('content:') == 0 || pictureUrl.indexOf('ms-appdata:') === 0) {
             resolveLocalFileSystemURI(data, function (e) {
                 fileEntry = e;
                 logCallback('resolveLocalFileSystemURI()', true)(e.toURL());
             }, logCallback('resolveLocalFileSystemURI()', false));
-        } else if (pictureUrl.indexOf('data:image/jpeg;base64' == 0)) {
+        } else if (pictureUrl.indexOf('data:image/jpeg;base64') == 0) {
             // do nothing
         } else {
             var path = pictureUrl.replace(/^file:\/\/(localhost)?/, '').replace(/%20/g, ' ');
