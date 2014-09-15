@@ -60,6 +60,7 @@ Vous pouvez faire ce que vous voulez avec l'image encodée ou l'URI, par exemple
 *   Amazon Fire OS
 *   Android
 *   BlackBerry 10
+*   Navigateur
 *   Firefox OS
 *   iOS
 *   Paciarelli
@@ -80,6 +81,10 @@ Amazon Fire OS utilise des intentions pour lancer l'activité de l'appareil phot
 ### Quirks Android
 
 Android utilise des intentions pour lancer l'activité de l'appareil photo sur l'appareil pour capturer des images et sur les téléphones avec peu de mémoire, l'activité de Cordova peut être tuée. Dans ce scénario, l'image peut ne pas apparaître lorsque l'activité de Cordova est restaurée.
+
+### Bizarreries navigateur
+
+Peut retourner uniquement les photos comme image codée en base64.
 
 ### Firefox OS Quirks
 

@@ -60,6 +60,7 @@ Sie können tun, was Sie wollen, mit dem codierten Bildes oder URI, zum Beispiel
 *   Amazon Fire OS
 *   Android
 *   BlackBerry 10
+*   Browser
 *   Firefox OS
 *   iOS
 *   Tizen
@@ -80,6 +81,10 @@ Amazon Fire OS verwendet Absichten zum Starten von der Kamera-Aktivität auf dem
 ### Android Macken
 
 Android verwendet Absichten zum Starten von der Kamera-Aktivität auf dem Gerät, um Bilder zu erfassen und auf Handys mit wenig Speicher, Cordova Tätigkeit getötet werden kann. In diesem Szenario kann das Bild nicht angezeigt, wenn die Aktivität von Cordova wiederhergestellt wird.
+
+### Browser-Eigenheiten
+
+Fotos können nur als base64-codierte Bild zurückgeben werden.
 
 ### Firefox OS Macken
 

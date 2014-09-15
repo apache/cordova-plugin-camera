@@ -60,6 +60,7 @@ Puedes hacer lo que quieras con la imagen codificada o URI, por ejemplo:
 *   Amazon fuego OS
 *   Android
 *   BlackBerry 10
+*   Explorador
 *   Firefox OS
 *   iOS
 *   Tizen
@@ -80,6 +81,10 @@ Amazon fuego OS utiliza los intentos para poner en marcha la actividad de la cá
 ### Rarezas Android
 
 Android utiliza los intentos para iniciar la actividad de la cámara del dispositivo para capturar imágenes, y en los teléfonos con poca memoria, puede matar la actividad Cordova. En este escenario, la imagen no aparezca cuando se restaura la actividad Cordova.
+
+### Navegador rarezas
+
+Sólo puede devolver fotos como imagen codificada en base64.
 
 ### Firefox OS rarezas
 

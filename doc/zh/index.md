@@ -60,9 +60,10 @@
 *   亞馬遜火 OS
 *   Android 系統
 *   黑莓 10
-*   火狐瀏覽器作業系統
+*   瀏覽器
+*   火狐瀏覽器的作業系統
 *   iOS
-*   Tizen
+*   泰
 *   Windows Phone 7 和 8
 *   Windows 8
 
@@ -81,30 +82,34 @@
 
 Android 使用意向啟動捕獲圖像，在設備上的相機活動和與低記憶體手機，科爾多瓦活動可能被殺。 在此方案中，可能不會顯示圖像還原科爾多瓦活動時。
 
+### 瀏覽器的怪癖
+
+可以只返回照片作為 base64 編碼的圖像。
+
 ### 火狐瀏覽器作業系統的怪癖
 
-目前使用[Web 活動][2]實現相機外掛程式.
+觀景窗外掛程式目前實施使用[Web 活動][2].
 
  [2]: https://hacks.mozilla.org/2013/01/introducing-web-activities/
 
 ### iOS 的怪癖
 
-包括 JavaScript `alert()` 中任一回檔的函數可能會導致問題。 換行內的警報 `setTimeout()` ，允許 iOS 圖像選取器或彈出要完全關閉之前警報將顯示：
+包括 JavaScript `alert()` 在任何回呼函數可能會導致問題。 包裝內的警報 `setTimeout()` 允許 iOS 圖像選取器或氣泡框以完全關閉之前，警報將顯示：
 
     setTimeout(function() {/ / 做你的事!}，0) ；
     
 
 ### Windows Phone 7 的怪癖
 
-調用本機攝像頭應用程式，同時通過 Zune 連接設備不工作，並觸發錯誤回檔。
+調用本機攝像頭應用程式，而通過 Zune 所連接的設備不能工作，並且觸發錯誤回檔。
 
-### Tizen 怪癖
+### 泰怪癖
 
-Tizen 僅支援 `destinationType` 的 `Camera.DestinationType.FILE_URI` 和 `sourceType` 的`Camera.PictureSourceType.PHOTOLIBRARY`.
+泰僅支援 `destinationType` 的 `Camera.DestinationType.FILE_URI` 和 `sourceType` 的`Camera.PictureSourceType.PHOTOLIBRARY`.
 
 ### 示例
 
-拍一張照片，並檢索它為 base64 編碼的圖像：
+拍一張照片，並檢索它作為一個 base64 編碼的圖像：
 
     navigator.camera.getPicture(onSuccess, onFail, { quality: 50,
         destinationType: Camera.DestinationType.DATA_URL
@@ -255,7 +260,7 @@ Tizen 僅支援 `destinationType` 的 `Camera.DestinationType.FILE_URI` 和 `sou
 
 *   當使用 `destinationType.FILE_URI` ，照片都保存在應用程式的臨時目錄。應用程式結束時，將刪除該應用程式的臨時目錄中的內容。
 
-### Tizen 怪癖
+### 泰怪癖
 
 *   不支援的選項
 
@@ -278,7 +283,7 @@ Tizen 僅支援 `destinationType` 的 `Camera.DestinationType.FILE_URI` 和 `sou
 
 ## CameraError
 
-onError 回呼函數的函數提供了一條錯誤訊息。
+onError 的回呼函數提供了一條錯誤訊息。
 
     function(message) {
         // Show a helpful message
@@ -291,7 +296,7 @@ onError 回呼函數的函數提供了一條錯誤訊息。
 
 ## cameraSuccess
 
-onSuccess 提供的圖像資料的回呼函數。
+提供的圖像資料的 onSuccess 回呼函數。
 
     function(imageData) {
         // Do something with the image
@@ -314,7 +319,7 @@ onSuccess 提供的圖像資料的回呼函數。
 
 ## CameraPopoverHandle
 
-由創建的彈出對話方塊的控制碼`navigator.camera.getPicture`.
+由創建的氣泡框對話方塊的控制碼`navigator.camera.getPicture`.
 
 ### 方法
 
@@ -326,7 +331,7 @@ onSuccess 提供的圖像資料的回呼函數。
 
 ### setPosition
 
-設置彈出的位置。
+設置氣泡框的位置。
 
 **參數**：
 
@@ -349,7 +354,7 @@ onSuccess 提供的圖像資料的回呼函數。
 
 ## CameraPopoverOptions
 
-iOS 僅指定彈出的錨元素的位置和箭頭方向，從 iPad 的庫或專輯選擇圖像時的參數。
+iOS 僅指定氣泡框的錨元素的位置和箭頭方向，從 iPad 庫或專輯選擇圖像時的參數。
 
     {x: 0，y： 32，寬度： 320，高度： 480，arrowDir： Camera.PopoverArrowDirection.ARROW_ANY} ；
     
@@ -375,18 +380,18 @@ iOS 僅指定彈出的錨元素的位置和箭頭方向，從 iPad 的庫或專�
             };
         
 
-請注意彈出的大小可能會更改箭頭的方向和螢幕的方向調整。 請確保帳戶方向更改時指定的錨點的元素位置。
+請注意氣泡框的大小可能會更改箭頭的方向和螢幕的方向進行調整。 請確保帳戶方向更改時指定錨元素位置。
 
 ## navigator.camera.cleanup
 
-刪除中間由從臨時存儲相機所拍攝的照片。
+刪除中間從臨時存儲攝像機所拍攝的照片。
 
     navigator.camera.cleanup( cameraSuccess, cameraError );
     
 
 ### 描述
 
-刪除中間打完電話後保留在臨時存儲的影像檔 `camera.getPicture` 。 適用時，才的價值 `Camera.sourceType` 等於 `Camera.PictureSourceType.CAMERA` 和 `Camera.destinationType` 等於`Camera.DestinationType.FILE_URI`.
+刪除中間打完電話後保留在臨時存儲中的影像檔 `camera.getPicture` 。 只有當適用的價值 `Camera.sourceType` 等於 `Camera.PictureSourceType.CAMERA` 和 `Camera.destinationType` 等於`Camera.DestinationType.FILE_URI`.
 
 ### 支援的平臺
 

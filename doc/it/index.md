@@ -60,6 +60,7 @@ Si può fare quello che vuoi con l'immagine codificata o URI, ad esempio:
 *   Amazon fuoco OS
 *   Android
 *   BlackBerry 10
+*   Browser
 *   Firefox OS
 *   iOS
 *   Tizen
@@ -80,6 +81,10 @@ Amazon fuoco OS utilizza intenti a lanciare l'attività della fotocamera sul dis
 ### Stranezze Android
 
 Android utilizza intenti a lanciare l'attività della fotocamera sul dispositivo per catturare immagini e sui telefoni con poca memoria, l'attività di Cordova può essere ucciso. In questo scenario, l'immagine potrebbe non apparire quando viene ripristinata l'attività di Cordova.
+
+### Stranezze browser
+
+Può restituire solo la foto come immagine con codifica base64.
 
 ### Firefox OS stranezze
 
