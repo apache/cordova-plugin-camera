@@ -532,6 +532,10 @@ static NSSet* org_apache_cordova_validArrowDirections;
         scaledSize = CGSizeMake(MIN(width * scaleFactor, targetWidth), MIN(height * scaleFactor, targetHeight));
     }
 
+    // If the pixels are floats, it causes a white line in iOS8 and probably other versions too
+    scaledSize.width = (int)scaledSize.width;
+    scaledSize.height = (int)scaledSize.height;
+    
     UIGraphicsBeginImageContext(scaledSize); // this will resize
 
     [sourceImage drawInRect:CGRectMake(0, 0, scaledSize.width, scaledSize.height)];
