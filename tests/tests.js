@@ -135,7 +135,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     }
 
     function onGetPictureError(e) {
-        log('Error getting picture: ' + e.code);
+        log('Error getting picture: ' + (e.code || e));
     }
 
     function getPictureWin(data) {
