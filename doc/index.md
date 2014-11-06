@@ -19,8 +19,15 @@
 
 # org.apache.cordova.camera
 
-This plugin provides an API for taking pictures and for choosing images from
+This plugin defines a global `navigator.camera` object, which provides an API for taking pictures and for choosing images from
 the system's image library.
+
+Although the object is attached to the global scoped `navigator`, it is not available until after the `deviceready` event.
+
+    document.addEventListener("deviceready", onDeviceReady, false);
+    function onDeviceReady() {
+        console.log(navigator.camera);
+    }
 
 ## Installation
 
