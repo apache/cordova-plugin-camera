@@ -22,8 +22,9 @@
 This plugin provides an API for taking pictures and for choosing images from
 the system's image library.
 
-    cordova plugin add org.apache.cordova.camera
+## Installation
 
+    cordova plugin add org.apache.cordova.camera
 
 ## navigator.camera.getPicture
 
