@@ -25,10 +25,9 @@
 #include <cplugin.h>
 
 #include <QtCore>
-#include <QQuickView>
-#include <QCamera>
-#include <QtMultimediaWidgets/QCameraViewfinder>
-#include <QCameraImageCapture>
+#include <QtGlobal>
+#include <QtQuick>
+#include <QtMultimedia>
 
 class Camera: public CPlugin {
     Q_OBJECT
@@ -52,7 +51,7 @@ public slots:
                      int/*mediaType*/, bool/*allowEdit*/, bool/*correctOrientation*/, bool/*saveToPhotoAlbum*/, const QVariantMap &popoverOptions, int cameraDirection);
     void cancel();
 
-    void onImageSaved(QString path);
+    void onImageSaved(const QString &path);
 
     QString generateLocation(const QString &extension) {
         int i = 1;
@@ -65,7 +64,7 @@ public slots:
         }
     }
 private:
-    bool preprocessImage(QString &path);
+    QString preprocessImage(const QString &path);
 
     int _lastScId;
     int _lastEcId;
