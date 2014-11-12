@@ -122,7 +122,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             this.mediaType = PICTURE;
             this.mQuality = 80;
 
-            // [quality, destinationType, sourceType, targetWidth, targetHeight, encodingType,
+            // ARGS : [quality, destinationType, sourceType, targetWidth, targetHeight, encodingType,
             // mediaType, allowEdit, correctOrientation, saveToPhotoAlbum, popoverOptions, cameraDirection]
             this.mQuality = args.getInt(0);
             destType = args.getInt(1);
@@ -211,8 +211,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         // Save the number of images currently on disk for later
         this.numPics = queryImgDB(whichContentStore()).getCount();
 
-//        LOG.e(LOG_TAG, "MIAOUUUU " + frontFacing);
-        
         // Display camera
 
         if (this.cordova != null) {
