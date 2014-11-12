@@ -331,7 +331,7 @@ public class CapturePictureActivity extends Activity {
 						+ displayRotation);
 				this.camera.setDisplayOrientation(displayRotation);
 
-				int rotate = Math.abs(-cameraRotationOffset - degrees) % 360;
+				int rotate = Math.abs(cameraRotationOffset + (cameraRotationOffset > 180 ? 1 : -1) * degrees) % 360;
 				Log.v(TAG, "screenshot rotation: " + cameraRotationOffset + " / " + degrees + " = "
 						+ displayRotation);
 
