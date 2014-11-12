@@ -73,7 +73,8 @@
 		<config-file target="AndroidManifest.xml" parent="/manifest/application">
 			<activity
 				android:name="org.apache.cordova.camera.CapturePictureActivity"
-				android:label="CapturePictureActivity" >
+				android:label="CapturePictureActivity"
+				android:configChanges="keyboardHidden|orientation|screenSize">
 			</activity>
         </config-file>
 

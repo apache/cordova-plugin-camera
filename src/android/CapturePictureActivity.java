@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 
-import fr.idcapture.R;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
@@ -13,11 +12,14 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Bitmap.CompressFormat;
+import android.graphics.Matrix;
 import android.hardware.Camera;
+import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera.PictureCallback;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -46,13 +48,14 @@ public class CapturePictureActivity extends Activity {
 	private byte[] captureImageData;
 	private boolean takingPicture;
 	private boolean saveRequested;
-	
+
 	private CompressFormat compressFormat;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_NOSENSOR);
+		
+		Log.v(TAG, "create picture taker");
 
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
@@ -60,13 +63,14 @@ public class CapturePictureActivity extends Activity {
 		isFrontCam = extras.getBoolean(EXTRA_FRONT_FACING_CAMERA);
 		outputUri = (Uri) extras.getParcelable(EXTRA_OUTPUT);
 		compressFormat = CompressFormat.valueOf(extras.getString(EXTRA_COMPRESS_FORMAT));
-
+		
 		super.onCreate(savedInstanceState);
 
 		RelativeLayout layout = new RelativeLayout(this);
 		addContentView(layout, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
-		cameraPreview = new CameraPreview(this, resolveCamera());
+		cameraPreview = new CameraPreview(this);
+		resolveCamera();
 		cameraPreview.setOnClickListener(new OnClickListener() {
 
 			@Override
@@ -82,6 +86,7 @@ public class CapturePictureActivity extends Activity {
 					captureImageData = null;
 					takingPicture = true;
 					saveRequested = false;
+					cameraPreview.started = false;
 					cameraPreview.camera.takePicture(null, new PictureCallback() {
 
 						@Override
@@ -115,7 +120,8 @@ public class CapturePictureActivity extends Activity {
 		p.bottomMargin = 10;
 
 		switchButton = new ImageView(this);
-		switchButton.setImageDrawable(getResources().getDrawable(R.drawable.switch_camera));
+        int switchResId = getResources().getIdentifier("switch_camera", "drawable", getApplicationContext().getPackageName());
+		switchButton.setImageDrawable(getResources().getDrawable(switchResId));
 		switchButton.setLayoutParams(p);
 		switchButton.setOnClickListener(new OnClickListener() {
 
@@ -125,7 +131,7 @@ public class CapturePictureActivity extends Activity {
 
 				isFrontCam = !isFrontCam;
 				cameraPreview.release();
-				cameraPreview.setCamera(resolveCamera());
+				resolveCamera();
 				cameraPreview.startPreview();
 			}
 		});
@@ -138,7 +144,8 @@ public class CapturePictureActivity extends Activity {
 		p.bottomMargin = 20;
 
 		okButton = new ImageView(this);
-		okButton.setImageDrawable(getResources().getDrawable(R.drawable.tick));
+		int okResId = getResources().getIdentifier("tick", "drawable", getApplicationContext().getPackageName());
+		okButton.setImageDrawable(getResources().getDrawable(okResId));
 		okButton.setLayoutParams(p);
 		okButton.setVisibility(View.GONE);
 		okButton.setOnClickListener(new OnClickListener() {
@@ -157,6 +164,8 @@ public class CapturePictureActivity extends Activity {
 			}
 		});
 		layout.addView(okButton);
+
+		cameraPreview.startPreview();
 	}
 
 	private void saveCaptureData() {
@@ -164,8 +173,12 @@ public class CapturePictureActivity extends Activity {
 			Log.d(TAG, "saving capture data to " + outputUri);
 			OutputStream out = getContentResolver().openOutputStream(outputUri);
 			try {
+				Matrix matrix = new Matrix();
+				// matrix.postRotate(isLandscape() ? -180 : -90);
+
 				Bitmap image = BitmapFactory.decodeByteArray(captureImageData, 0, captureImageData.length);
-				image.compress(compressFormat, 50, out);
+				Bitmap rotated = Bitmap.createBitmap(image, 0, 0, image.getWidth(), image.getHeight(), matrix, true);
+				rotated.compress(compressFormat, 50, out);
 				out.flush();
 				out.close();
 				Log.d(TAG, "captured image saved");
@@ -190,7 +203,7 @@ public class CapturePictureActivity extends Activity {
 		return getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
 	}
 
-	private Camera resolveCamera() {
+	private void resolveCamera() {
 		Camera camera = null;
 		if (Integer.valueOf(android.os.Build.VERSION.SDK) >= 9) {
 
@@ -200,26 +213,25 @@ public class CapturePictureActivity extends Activity {
 				boolean isFacingFrontCamera = camInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT;
 				Log.i(TAG, i + ": " + isFacingFrontCamera);
 				if (isFacingFrontCamera == isFrontCam) {
-					camera = Camera.open(i);
-					break;
+					cameraPreview.setCamera(Camera.open(i), camInfo.orientation);
+					return;
 				}
 			}
 		}
 
 		if (camera == null) {
-			camera = Camera.open();
+			cameraPreview.setCamera(Camera.open(), 0);
 		}
-
-		return camera;
 	}
 
 	private class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
 		private SurfaceHolder mHolder;
 		private Camera camera;
+		private int cameraRotationOffset;
+		private boolean started;
 
-		public CameraPreview(Context context, Camera camera) {
+		public CameraPreview(Context context) {
 			super(context);
-			setCamera(camera);
 
 			// Install a SurfaceHolder.Callback so we get notified when the
 			// underlying surface is created and destroyed.
@@ -237,52 +249,49 @@ public class CapturePictureActivity extends Activity {
 			}
 		}
 
-		public void setCamera(Camera camera) {
+		public void setCamera(Camera camera, int orientation) {
 			if (this.camera != null) {
 				release();
 			}
 
 			this.camera = camera;
-			this.camera.setDisplayOrientation(isLandscape() ? 180 : 90);
+			this.cameraRotationOffset = orientation;
 		}
 
 		public void surfaceCreated(SurfaceHolder holder) {
-			// The Surface has been created, now tell the camera where to draw
-			// the preview.
-			startPreview();
+			if (started) {
+				startPreview();
+			}
 		}
 
 		public void surfaceDestroyed(SurfaceHolder holder) {
-			// empty. Take care of releasing the Camera preview in your
-			// activity.
 		}
 
 		public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
-			// If your preview can change or rotate, take care of those events
-			// here.
-			// Make sure to stop the preview before resizing or reformatting it.
-
 			if (mHolder.getSurface() == null) {
 				// preview surface does not exist
 				return;
 			}
 
-			// stop preview before making changes
-			try {
-				camera.stopPreview();
-			} catch (Exception e) {
-				// ignore: tried to stop a non-existent preview
+			if (started) {
+				// stop preview before making changes
+				try {
+					camera.stopPreview();
+				} catch (Exception e) {
+					// ignore: tried to stop a non-existent preview
+				}
+
+				// set preview size and make any resize, rotate or
+				// reformatting changes here
+
+				// start preview with new settings
+				startPreview();
 			}
-
-			// set preview size and make any resize, rotate or
-			// reformatting changes here
-
-			// start preview with new settings
-			startPreview();
 		}
 
 		public void startPreview() {
 			try {
+
 				Camera.Parameters parameters = camera.getParameters();
 				List<Camera.Size> previewSizes = parameters.getSupportedPreviewSizes();
 				Camera.Size previewSize = null;
@@ -301,11 +310,41 @@ public class CapturePictureActivity extends Activity {
 					}
 				}
 
+				int rotation = getWindowManager().getDefaultDisplay().getRotation();
+				int degrees = 0;
+				switch (rotation) {
+				case Surface.ROTATION_0:
+					degrees = 0;
+					break; // Natural orientation
+				case Surface.ROTATION_90:
+					degrees = 90;
+					break; // Landscape left
+				case Surface.ROTATION_180:
+					degrees = 180;
+					break;// Upside down
+				case Surface.ROTATION_270:
+					degrees = 270;
+					break;// Landscape right
+				}
+				int displayRotation = Math.abs(degrees - 90);
+				Log.v(TAG, "rotation cam / phone = displayRotation: " + cameraRotationOffset + " / " + degrees + " = "
+						+ displayRotation);
+				this.camera.setDisplayOrientation(displayRotation);
+
+				int rotate = Math.abs(-cameraRotationOffset - degrees) % 360;
+				Log.v(TAG, "screenshot rotation: " + cameraRotationOffset + " / " + degrees + " = "
+						+ displayRotation);
+
 				Log.v(TAG, "preview size: " + previewSize.width + " / " + previewSize.height);
 				parameters.setPreviewSize(previewSize.width, previewSize.height);
+				parameters.setRotation(rotate);
 				camera.setParameters(parameters);
 				camera.setPreviewDisplay(mHolder);
 				camera.startPreview();
+
+				Log.d(TAG, "preview started");
+
+				started = true;
 			} catch (IOException e) {
 				Log.d(TAG, "Error setting camera preview: " + e.getMessage());
 			}
