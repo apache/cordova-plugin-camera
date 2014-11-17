@@ -1,20 +1,18 @@
 package org.apache.cordova.camera;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.pm.ActivityInfo;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Bitmap.CompressFormat;
-import android.graphics.Matrix;
+import android.graphics.BitmapFactory;
 import android.hardware.Camera;
-import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera.PictureCallback;
 import android.net.Uri;
 import android.os.Bundle;
@@ -32,13 +30,14 @@ import android.widget.RelativeLayout;
 
 public class CapturePictureActivity extends Activity {
 
+	private static final String IS_FRONT_FACING_CAM_PREF_NAME = "isFrontFacingCam";
 	public static final String EXTRA_COMPRESS_FORMAT = "CapturePictureActivity.EXTRA_COMPRESS_FORMAT";
 	public static final String EXTRA_FRONT_FACING_CAMERA = "CapturePictureActivity.EXTRA_FRONT_FACING_CAMERA";
 	public static final String EXTRA_OUTPUT = "CapturePictureActivity.EXTRA_OUTPUT";
 
-	final static String TAG = "CapturePictureActivity";
+	public final static String TAG = "CapturePictureActivity";
 
-	private boolean isFrontCam;
+	private boolean isFrontFacingCam;
 	private Uri outputUri;
 
 	private CameraPreview cameraPreview;
@@ -51,19 +50,34 @@ public class CapturePictureActivity extends Activity {
 
 	private CompressFormat compressFormat;
 
+	private SharedPreferences prefs;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		
-		Log.v(TAG, "create picture taker");
+
+		Log.i(TAG, "create picture taker");
 
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
+		prefs = getPreferences(MODE_PRIVATE);
+
 		Bundle extras = getIntent().getExtras();
-		isFrontCam = extras.getBoolean(EXTRA_FRONT_FACING_CAMERA);
+		if (extras.containsKey(EXTRA_FRONT_FACING_CAMERA)) {
+			isFrontFacingCam = extras.getBoolean(EXTRA_FRONT_FACING_CAMERA);
+			Log.v(TAG, "forcing camera from parameter - front face: " + isFrontFacingCam);
+		} else {
+			isFrontFacingCam = prefs.getBoolean(IS_FRONT_FACING_CAM_PREF_NAME, false);
+			Log.v(TAG, "restoring camera from prefs - front face: " + isFrontFacingCam);
+		}
+
 		outputUri = (Uri) extras.getParcelable(EXTRA_OUTPUT);
-		compressFormat = CompressFormat.valueOf(extras.getString(EXTRA_COMPRESS_FORMAT));
-		
+		if (extras.getString(EXTRA_COMPRESS_FORMAT) != null) {
+			compressFormat = CompressFormat.valueOf(extras.getString(EXTRA_COMPRESS_FORMAT));
+		} else {
+			compressFormat = CompressFormat.PNG;
+		}
+
 		super.onCreate(savedInstanceState);
 
 		RelativeLayout layout = new RelativeLayout(this);
@@ -120,7 +134,8 @@ public class CapturePictureActivity extends Activity {
 		p.bottomMargin = 10;
 
 		switchButton = new ImageView(this);
-        int switchResId = getResources().getIdentifier("switch_camera", "drawable", getApplicationContext().getPackageName());
+		int switchResId = getResources().getIdentifier("switch_camera", "drawable",
+				getApplicationContext().getPackageName());
 		switchButton.setImageDrawable(getResources().getDrawable(switchResId));
 		switchButton.setLayoutParams(p);
 		switchButton.setOnClickListener(new OnClickListener() {
@@ -129,7 +144,12 @@ public class CapturePictureActivity extends Activity {
 			public void onClick(View v) {
 				Log.i(TAG, "switch camera");
 
-				isFrontCam = !isFrontCam;
+				isFrontFacingCam = !isFrontFacingCam;
+				Editor editor = prefs.edit();
+				editor.putBoolean(IS_FRONT_FACING_CAM_PREF_NAME, isFrontFacingCam);
+				editor.apply();
+				editor.commit();
+				
 				cameraPreview.release();
 				resolveCamera();
 				cameraPreview.startPreview();
@@ -173,12 +193,8 @@ public class CapturePictureActivity extends Activity {
 			Log.d(TAG, "saving capture data to " + outputUri);
 			OutputStream out = getContentResolver().openOutputStream(outputUri);
 			try {
-				Matrix matrix = new Matrix();
-				// matrix.postRotate(isLandscape() ? -180 : -90);
-
 				Bitmap image = BitmapFactory.decodeByteArray(captureImageData, 0, captureImageData.length);
-				Bitmap rotated = Bitmap.createBitmap(image, 0, 0, image.getWidth(), image.getHeight(), matrix, true);
-				rotated.compress(compressFormat, 50, out);
+				image.compress(compressFormat, 50, out);
 				out.flush();
 				out.close();
 				Log.d(TAG, "captured image saved");
@@ -187,7 +203,6 @@ public class CapturePictureActivity extends Activity {
 			} finally {
 			}
 		} catch (IOException e) {
-			// Log.e(TAG, "cannot write image", e);
 			throw new RuntimeException("cannot save captured image", e);
 		}
 	}
@@ -212,7 +227,7 @@ public class CapturePictureActivity extends Activity {
 				Camera.getCameraInfo(i, camInfo);
 				boolean isFacingFrontCamera = camInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT;
 				Log.i(TAG, i + ": " + isFacingFrontCamera);
-				if (isFacingFrontCamera == isFrontCam) {
+				if (isFacingFrontCamera == isFrontFacingCam) {
 					cameraPreview.setCamera(Camera.open(i), camInfo.orientation);
 					return;
 				}
@@ -265,6 +280,8 @@ public class CapturePictureActivity extends Activity {
 		}
 
 		public void surfaceDestroyed(SurfaceHolder holder) {
+			// empty. Take care of releasing the Camera preview in your
+			// activity.
 		}
 
 		public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
@@ -273,7 +290,9 @@ public class CapturePictureActivity extends Activity {
 				return;
 			}
 
+			Log.i(TAG, "preview surface changed");
 			if (started) {
+				Log.i(TAG, "restarting preview");
 				// stop preview before making changes
 				try {
 					camera.stopPreview();
@@ -291,6 +310,7 @@ public class CapturePictureActivity extends Activity {
 
 		public void startPreview() {
 			try {
+				Log.i(TAG, "starting preview: " + started);
 
 				Camera.Parameters parameters = camera.getParameters();
 				List<Camera.Size> previewSizes = parameters.getSupportedPreviewSizes();
@@ -326,17 +346,34 @@ public class CapturePictureActivity extends Activity {
 					degrees = 270;
 					break;// Landscape right
 				}
-				int displayRotation = Math.abs(degrees - 90);
+				int displayRotation;
+				if (isFrontFacingCam) {
+					displayRotation = (cameraRotationOffset + degrees) % 360;
+					displayRotation = (360 - displayRotation) % 360; // compensate
+																		// the
+																		// mirror
+				} else { // back-facing
+					displayRotation = (cameraRotationOffset - degrees + 360) % 360;
+				}
+
 				Log.v(TAG, "rotation cam / phone = displayRotation: " + cameraRotationOffset + " / " + degrees + " = "
 						+ displayRotation);
+
 				this.camera.setDisplayOrientation(displayRotation);
 
-				int rotate = Math.abs(cameraRotationOffset + (cameraRotationOffset > 180 ? 1 : -1) * degrees) % 360;
-				Log.v(TAG, "screenshot rotation: " + cameraRotationOffset + " / " + degrees + " = "
-						+ displayRotation);
+				int rotate;
+				if (isFrontFacingCam) {
+					rotate = (360 + cameraRotationOffset + degrees) % 360;
+				} else {
+					rotate = (360 + cameraRotationOffset - degrees) % 360;
+				}
+
+				Log.v(TAG, "screenshot rotation: " + cameraRotationOffset + " / " + degrees + " = " + rotate);
 
 				Log.v(TAG, "preview size: " + previewSize.width + " / " + previewSize.height);
 				parameters.setPreviewSize(previewSize.width, previewSize.height);
+				// parameters.setRotation((360 + (isFrontFacingCam ? 1 : -1) *
+				// degrees) % 360);
 				parameters.setRotation(rotate);
 				camera.setParameters(parameters);
 				camera.setPreviewDisplay(mHolder);
