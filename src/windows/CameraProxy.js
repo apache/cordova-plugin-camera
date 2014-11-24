@@ -369,16 +369,16 @@ module.exports = {
                 }
 
                 // decide which max pixels should be supported by targetWidth or targetHeight.
-                if (targetWidth >= 1280 || targetHeight >= 960) {
-                    cameraCaptureUI.photoSettings.maxResolution = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution.large3M;
-                } else if (targetWidth >= 1024 || targetHeight >= 768) {
-                    cameraCaptureUI.photoSettings.maxResolution = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution.mediumXga;
-                } else if (targetWidth >= 800 || targetHeight >= 600) {
-                    cameraCaptureUI.photoSettings.maxResolution = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution.mediumXga;
-                } else if (targetWidth >= 640 || targetHeight >= 480) {
-                    cameraCaptureUI.photoSettings.maxResolution = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution.smallVga;
-                } else if (targetWidth >= 320 || targetHeight >= 240) {
+                if (targetWidth <= 320 || targetHeight <= 240) {
                     cameraCaptureUI.photoSettings.maxResolution = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution.verySmallQvga;
+                } else if (targetWidth <= 640 || targetHeight <= 480) {
+                    cameraCaptureUI.photoSettings.maxResolution = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution.smallVga;
+                } else if (targetWidth <= 1024 || targetHeight <= 768) {
+                    cameraCaptureUI.photoSettings.maxResolution = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution.mediumXga;
+                } else if (targetWidth <= 1920 || targetHeight <= 1080) {
+                    cameraCaptureUI.photoSettings.maxResolution = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution.large3M;
+                } else if (targetWidth <= 2592 || targetHeight <= 1944) {
+                    cameraCaptureUI.photoSettings.maxResolution = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution.veryLarge5M;
                 } else {
                     cameraCaptureUI.photoSettings.maxResolution = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution.highestAvailable;
                 }
