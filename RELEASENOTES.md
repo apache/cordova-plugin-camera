@@ -150,3 +150,11 @@
 
 ### 0.3.3 (Oct 03, 2014)
 * CB-7600 Adds informative message to error callback in manual test.
+
+### 0.3.4 (Dec 02, 2014)
+* CB-7977 Mention `deviceready` in plugin docs
+* CB-7979 Each plugin doc should have a ## Installation section
+* Fix memory leak of image data in `imagePickerControllerReturnImageResult`
+* Pass uri to crop instead of pulling the low resolution image out of the intent return (close #43)
+* Add orientation support for PNG to Android (closes #45)
+* CB-7700 cordova-plugin-camera documentation translation: cordova-plugin-camera
