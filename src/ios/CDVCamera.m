@@ -310,8 +310,8 @@ static NSSet* org_apache_cordova_validArrowDirections;
             if (cameraPicker.encodingType == EncodingTypePNG) {
                 data = UIImagePNGRepresentation(returnedImage);
             } else if ((cameraPicker.allowsEditing==false) && (cameraPicker.targetSize.width <= 0) && (cameraPicker.targetSize.height <= 0) && (cameraPicker.correctOrientation==false)){
-                // use image unedited as requested , don't resize
-                data = UIImageJPEGRepresentation(returnedImage, 1.0);
+                // use image unedited as requested , don't resize but respect quality option
+                data = UIImageJPEGRepresentation(returnedImage, cameraPicker.quality / 100.0f);
             } else {
                 data = UIImageJPEGRepresentation(returnedImage, cameraPicker.quality / 100.0f);
                 
