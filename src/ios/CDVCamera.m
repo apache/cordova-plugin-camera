@@ -355,7 +355,8 @@ static NSSet* org_apache_cordova_validArrowDirections;
     switch (options.destinationType) {
         case DestinationTypeNativeUri:
         {
-            NSString* nativeUri = [(NSURL*)[info objectForKey:UIImagePickerControllerReferenceURL] absoluteString];
+            NSURL* url = (NSURL*)[info objectForKey:UIImagePickerControllerReferenceURL];
+            NSString* nativeUri = [[self urlTransformer:url] absoluteString];
             result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:nativeUri];
             saveToPhotoAlbum = NO;
         }
