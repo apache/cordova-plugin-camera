@@ -30,6 +30,7 @@
 #import <ImageIO/CGImageProperties.h>
 #import <ImageIO/CGImageDestination.h>
 #import <MobileCoreServices/UTCoreTypes.h>
+#import <objc/message.h>
 
 #define CDV_PHOTO_PREFIX @"cdv_photo_"
 
@@ -83,6 +84,24 @@ static NSSet* org_apache_cordova_validArrowDirections;
 }
 
 @synthesize hasPendingOperation, pickerController, locationManager;
+
+- (NSURL*) urlTransformer:(NSURL*)url
+{
+    NSURL* urlToTransform = url;
+    
+    // for backwards compatibility - we check if this property is there
+    SEL sel = NSSelectorFromString(@"urlTransformer");
+    if ([self.commandDelegate respondsToSelector:sel]) {
+        // grab the block from the commandDelegate
+        NSURL* (^urlTransformer)(NSURL*) = ((id(*)(id, SEL))objc_msgSend)(self.commandDelegate, sel);
+        // if block is not null, we call it
+        if (urlTransformer) {
+            urlToTransform = urlTransformer(url);
+        }
+    }
+    
+    return urlToTransform;
+}
 
 - (BOOL)usesGeolocation
 {
@@ -336,7 +355,8 @@ static NSSet* org_apache_cordova_validArrowDirections;
     switch (options.destinationType) {
         case DestinationTypeNativeUri:
         {
-            NSString* nativeUri = [(NSURL*)[info objectForKey:UIImagePickerControllerReferenceURL] absoluteString];
+            NSURL* url = (NSURL*)[info objectForKey:UIImagePickerControllerReferenceURL];
+            NSString* nativeUri = [[self urlTransformer:url] absoluteString];
             result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:nativeUri];
             saveToPhotoAlbum = NO;
         }
@@ -355,7 +375,7 @@ static NSSet* org_apache_cordova_validArrowDirections;
                 if (![data writeToFile:filePath options:NSAtomicWrite error:&err]) {
                     result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
                 } else {
-                    result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[[NSURL fileURLWithPath:filePath] absoluteString]];
+                    result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[[self urlTransformer:[NSURL fileURLWithPath:filePath]] absoluteString]];
                 }
             }
         }
@@ -562,7 +582,7 @@ static NSSet* org_apache_cordova_validArrowDirections;
                 result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
             }
             else {
-                result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[[NSURL fileURLWithPath:filePath] absoluteString]];
+                result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[[self urlTransformer:[NSURL fileURLWithPath:filePath]] absoluteString]];
             }
         }
             break;
