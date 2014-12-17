@@ -19,9 +19,9 @@
 		304870071A40DDAC0065C233 /* AssetsLibrary.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 304870061A40DDAC0065C233 /* AssetsLibrary.framework */; };
 		304870091A40DDB90065C233 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 304870081A40DDB90065C233 /* CoreLocation.framework */; };
 		3048700B1A40DDF30065C233 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3048700A1A40DDF30065C233 /* ImageIO.framework */; };
+		308F59B11A4228730031A4D4 /* libCordova.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E9F519019DA0F8300DA31AC /* libCordova.a */; };
 		7E9F51B119DA114400DA31AC /* CameraTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E9F51B019DA114400DA31AC /* CameraTest.m */; };
 		7E9F51B919DA1B1600DA31AC /* libCDVCameraLib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E9F519519DA102000DA31AC /* libCDVCameraLib.a */; };
-		7E9F51BA19DA1B2000DA31AC /* libCordova.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E9F519019DA0F8300DA31AC /* libCordova.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,13 +45,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 7E9F519419DA102000DA31AC;
 			remoteInfo = CDVCameraLib;
-		};
-		7E9F51AE19DA10E100DA31AC /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 7E9F518B19DA0F8300DA31AC /* CordovaLib.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = D2AAC07D0554694100DB518D;
-			remoteInfo = CordovaLib;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -94,6 +87,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				308F59B11A4228730031A4D4 /* libCordova.a in Frameworks */,
 				304870011A40DD620065C233 /* CoreGraphics.framework in Frameworks */,
 				30486FED1A40DC3B0065C233 /* Foundation.framework in Frameworks */,
 				30486FEB1A40DC350065C233 /* UIKit.framework in Frameworks */,
@@ -110,7 +104,6 @@
 				304870051A40DD9A0065C233 /* MobileCoreServices.framework in Frameworks */,
 				304870031A40DD8C0065C233 /* UIKit.framework in Frameworks */,
 				304870021A40DD860065C233 /* CoreGraphics.framework in Frameworks */,
-				7E9F51BA19DA1B2000DA31AC /* libCordova.a in Frameworks */,
 				7E9F51B919DA1B1600DA31AC /* libCDVCameraLib.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -133,7 +126,7 @@
 			path = ../../../src/ios;
 			sourceTree = "<group>";
 		};
-		7E9F517119DA09CE00DA31AC = {
+		308F59B01A4227A60031A4D4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				3048700A1A40DDF30065C233 /* ImageIO.framework */,
@@ -141,10 +134,18 @@
 				304870061A40DDAC0065C233 /* AssetsLibrary.framework */,
 				304870041A40DD9A0065C233 /* MobileCoreServices.framework */,
 				30486FFE1A40DD180065C233 /* CoreGraphics.framework */,
-				30486FF11A40DCC70065C233 /* CDVCameraLib */,
 				30486FEC1A40DC3A0065C233 /* Foundation.framework */,
 				30486FEA1A40DC350065C233 /* UIKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		7E9F517119DA09CE00DA31AC = {
+			isa = PBXGroup;
+			children = (
 				7E9F518B19DA0F8300DA31AC /* CordovaLib.xcodeproj */,
+				308F59B01A4227A60031A4D4 /* Frameworks */,
+				30486FF11A40DCC70065C233 /* CDVCameraLib */,
 				7E9F51A019DA102000DA31AC /* CDVCameraLibTests */,
 				7E9F517D19DA0A0A00DA31AC /* Products */,
 			);
@@ -216,7 +217,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				7E9F51AF19DA10E100DA31AC /* PBXTargetDependency */,
 				7E9F51AD19DA10DE00DA31AC /* PBXTargetDependency */,
 			);
 			name = CDVCameraLibTests;
@@ -315,11 +315,6 @@
 			isa = PBXTargetDependency;
 			target = 7E9F519419DA102000DA31AC /* CDVCameraLib */;
 			targetProxy = 7E9F51AC19DA10DE00DA31AC /* PBXContainerItemProxy */;
-		};
-		7E9F51AF19DA10E100DA31AC /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = CordovaLib;
-			targetProxy = 7E9F51AE19DA10E100DA31AC /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -470,6 +465,13 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-framework",
+					XCTest,
+					"-all_load",
+					"-ObjC",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 			};
@@ -510,6 +512,13 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-framework",
+					XCTest,
+					"-all_load",
+					"-ObjC",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
