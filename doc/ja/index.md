@@ -19,19 +19,19 @@
 
 # org.apache.cordova.camera
 
-このプラグインは写真を撮るため、システムのイメージ ライブラリからイメージを選択するために API を提供します。
+このプラグインを使用して、写真撮影と画像の取得 ( システムの画像ライブラリー内から ) を行います。
 
     cordova plugin add org.apache.cordova.camera
     
 
 ## navigator.camera.getPicture
 
-カメラを使用して写真を取るか、デバイスの画像ギャラリーから写真を取得します。 イメージは base64 エンコードとして成功時のコールバックに渡される `String` 、またはイメージ ファイルの URI。 メソッド自体を返します、 `CameraPopoverHandle` オブジェクト ファイル選択ポップ オーバーの位置を変更するために使用することができます。
+デバイス内臓カメラでの写真撮影、または、デバイスの画像ギャラリー内の画像検索を行います。 取得した画像は、Base64 の`文字列`形式で、または、画像ファイルの URI 形式で、成功時のコールバック関数に渡されます。 このメソッドは、`CameraPopoverHandle`オブジェクトを返します。このオブジェクトを使用して、ファイル選択用のポップオーバー ( popover ) の位置を変更します。
 
     navigator.camera.getPicture( cameraSuccess, cameraError, cameraOptions );
     
 
-### 説明
+### 解説
 
 `camera.getPicture`関数はデバイスのデフォルトのカメラ アプリケーションの写真をスナップするユーザーことができますを開きます。 既定では、この現象が発生したときに `Camera.sourceType` に等しい `Camera.PictureSourceType.CAMERA` 。 ユーザーは写真をスナップ、カメラ アプリケーションを閉じるし、アプリケーションが復元されます。
 
@@ -144,12 +144,20 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 
 カメラの設定をカスタマイズするオプションのパラメーター。
 
-    {品質： 75、destinationType: Camera.DestinationType.DATA_URL、sourceType: Camera.PictureSourceType.CAMERA、allowEdit: true の場合、encodingType: Camera.EncodingType.JPEG、targetWidth: 100、targetHeight: 100、popoverOptions： CameraPopoverOptions、saveToPhotoAlbum: false};
+    { quality : 75,
+      destinationType : Camera.DestinationType.DATA_URL,
+      sourceType : Camera.PictureSourceType.CAMERA,
+      allowEdit : true,
+      encodingType: Camera.EncodingType.JPEG,
+      targetWidth: 100,
+      targetHeight: 100,
+      popoverOptions: CameraPopoverOptions,
+      saveToPhotoAlbum: false };
     
 
 ### オプション
 
-*   **品質**： 0-100、100 がファイルの圧縮から損失なしで通常のフル解像度の範囲で表される、保存されたイメージの品質。 既定値は 50 です。 *(数)*（カメラの解像度についての情報が利用できないことに注意してください)。
+*   **quality**： 0-100、100 がファイルの圧縮から損失なしで通常のフル解像度の範囲で表される、保存されたイメージの品質。 既定値は 50 です。 *(数)*（カメラの解像度についての情報が利用できないことに注意してください)。
 
 *   **destinationType**: 戻り値の形式を選択します。既定値は FILE_URI です。定義されている `navigator.camera.DestinationType` *（番号）*
     
@@ -186,7 +194,7 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 *   **mediaType**： から選択するメディアの種類を設定します。 場合にのみ働きます `PictureSourceType` は `PHOTOLIBRARY` または `SAVEDPHOTOALBUM` 。 定義されている `nagivator.camera.MediaType` *（番号）*
     
         Camera.MediaType = {
-            PICTURE: 0,    // allow selection of still pictures only. 既定値です。 Will return format specified via DestinationType
+            PICTURE: 0,    // allow selection of still pictures only. DEFAULT. Will return format specified via DestinationType
             VIDEO: 1,      // allow selection of video only, WILL ALWAYS RETURN FILE_URI
             ALLMEDIA : 2   // allow selection from all media types
         };
@@ -291,7 +299,7 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 
 ### パラメーター
 
-*   **メッセージ**: メッセージは、デバイスのネイティブ コードによって提供されます。*(文字列)*
+*   **message**: メッセージは、デバイスのネイティブ コードによって提供されます。*(文字列)*
 
 ## cameraSuccess
 
@@ -355,7 +363,12 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 
 iOS だけ指定パラメーターをポップ オーバーのアンカー要素の場所および矢印方向計算されたライブラリまたはアルバムから画像を選択するとき。
 
-    {x: 0, y: 32、幅： 320、高さ： 480、arrowDir: Camera.PopoverArrowDirection.ARROW_ANY};
+    { x : 0,
+      y :  32,
+      width : 320,
+      height : 480,
+      arrowDir : Camera.PopoverArrowDirection.ARROW_ANY
+    };
     
 
 ### CameraPopoverOptions
@@ -364,9 +377,9 @@ iOS だけ指定パラメーターをポップ オーバーのアンカー要素
 
 *   **y**: y ピクセル座標の画面要素にポップ オーバーのアンカーになります。*(数)*
 
-*   **幅**: ポップ オーバーのアンカーになる上の画面要素のピクセル単位の幅。*(数)*
+*   **width**: ポップ オーバーのアンカーになる上の画面要素のピクセル単位の幅。*(数)*
 
-*   **高さ**: ポップ オーバーのアンカーになる上の画面要素のピクセル単位の高さ。*(数)*
+*   **height**: ポップ オーバーのアンカーになる上の画面要素のピクセル単位の高さ。*(数)*
 
 *   **arrowDir**: 方向のポップ オーバーで矢印をポイントする必要があります。定義されている `Camera.PopoverArrowDirection` *（番号）*
     
