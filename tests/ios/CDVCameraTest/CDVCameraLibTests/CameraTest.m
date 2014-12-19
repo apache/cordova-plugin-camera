@@ -211,16 +211,162 @@
     }
 }
 
+- (UIImage*) createImage:(CGRect)rect orientation:(UIImageOrientation)imageOrientation {
+    UIGraphicsBeginImageContext(rect.size);
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    
+    CGContextSetFillColorWithColor(context, [[UIColor greenColor] CGColor]);
+    CGContextFillRect(context, rect);
+    
+    CGImageRef result = CGBitmapContextCreateImage(UIGraphicsGetCurrentContext());
+    UIImage* image = [UIImage imageWithCGImage:result scale:1.0f orientation:imageOrientation];
+    
+    UIGraphicsEndImageContext();
+    
+    return image;
+}
+
 - (void) testImageScaleCropForSize {
     
+    UIImage *sourceImagePortrait, *sourceImageLandscape, *targetImage;
+    CGSize targetSize = CGSizeZero;
+    
+    sourceImagePortrait = [self createImage:CGRectMake(0, 0, 2448, 3264) orientation:UIImageOrientationUp];
+    sourceImageLandscape = [self createImage:CGRectMake(0, 0, 3264, 2448) orientation:UIImageOrientationUp];
+    
+    // test 640x480
+    
+    targetSize = CGSizeMake(640, 480);
+
+    targetImage = [sourceImagePortrait imageByScalingAndCroppingForSize:targetSize];
+    XCTAssertEqual(targetImage.size.width, targetSize.width);
+    XCTAssertEqual(targetImage.size.height, targetSize.height);
+
+    targetImage = [sourceImageLandscape imageByScalingAndCroppingForSize:targetSize];
+    XCTAssertEqual(targetImage.size.width, targetSize.width);
+    XCTAssertEqual(targetImage.size.height, targetSize.height);
+
+
+    // test 800x600
+    
+    targetSize = CGSizeMake(800, 600);
+    
+    targetImage = [sourceImagePortrait imageByScalingAndCroppingForSize:targetSize];
+    XCTAssertEqual(targetImage.size.width, targetSize.width);
+    XCTAssertEqual(targetImage.size.height, targetSize.height);
+    
+    targetImage = [sourceImageLandscape imageByScalingAndCroppingForSize:targetSize];
+    XCTAssertEqual(targetImage.size.width, targetSize.width);
+    XCTAssertEqual(targetImage.size.height, targetSize.height);
+    
+    // test 1024x768
+    
+    targetSize = CGSizeMake(1024, 768);
+    
+    targetImage = [sourceImagePortrait imageByScalingAndCroppingForSize:targetSize];
+    XCTAssertEqual(targetImage.size.width, targetSize.width);
+    XCTAssertEqual(targetImage.size.height, targetSize.height);
+
+    targetImage = [sourceImageLandscape imageByScalingAndCroppingForSize:targetSize];
+    XCTAssertEqual(targetImage.size.width, targetSize.width);
+    XCTAssertEqual(targetImage.size.height, targetSize.height);
 }
 
 - (void) testImageScaleNoCropForSize {
+    UIImage *sourceImagePortrait, *sourceImageLandscape, *targetImage;
+    CGSize targetSize = CGSizeZero;
     
+    sourceImagePortrait = [self createImage:CGRectMake(0, 0, 2448, 3264) orientation:UIImageOrientationUp];
+    sourceImageLandscape = [self createImage:CGRectMake(0, 0, 3264, 2448) orientation:UIImageOrientationUp];
+    
+    // test 640x480
+    
+    targetSize = CGSizeMake(640, 480);
+    
+    targetImage = [sourceImagePortrait imageByScalingNotCroppingForSize:targetSize];
+    XCTAssertEqual(targetImage.size.width, targetSize.width);
+    XCTAssertEqual(targetImage.size.height, targetSize.height);
+    
+    targetImage = [sourceImageLandscape imageByScalingNotCroppingForSize:targetSize];
+    XCTAssertEqual(targetImage.size.width, targetSize.width);
+    XCTAssertEqual(targetImage.size.height, targetSize.height);
+    
+    
+    // test 800x600
+    
+    targetSize = CGSizeMake(800, 600);
+    
+    targetImage = [sourceImagePortrait imageByScalingNotCroppingForSize:targetSize];
+    XCTAssertEqual(targetImage.size.width, targetSize.width);
+    XCTAssertEqual(targetImage.size.height, targetSize.height);
+    
+    targetImage = [sourceImageLandscape imageByScalingNotCroppingForSize:targetSize];
+    XCTAssertEqual(targetImage.size.width, targetSize.width);
+    XCTAssertEqual(targetImage.size.height, targetSize.height);
+    
+    // test 1024x768
+    
+    targetSize = CGSizeMake(1024, 768);
+    
+    targetImage = [sourceImagePortrait imageByScalingNotCroppingForSize:targetSize];
+    XCTAssertEqual(targetImage.size.width, targetSize.width);
+    XCTAssertEqual(targetImage.size.height, targetSize.height);
+    
+    targetImage = [sourceImageLandscape imageByScalingNotCroppingForSize:targetSize];
+    XCTAssertEqual(targetImage.size.width, targetSize.width);
+    XCTAssertEqual(targetImage.size.height, targetSize.height);
 }
 
 - (void) testImageCorrectedForOrientation {
+    UIImage *sourceImagePortrait, *sourceImageLandscape, *targetImage;
+    CGSize targetSize = CGSizeZero;
     
+    sourceImagePortrait = [self createImage:CGRectMake(0, 0, 2448, 3264) orientation:UIImageOrientationDown];
+    sourceImageLandscape = [self createImage:CGRectMake(0, 0, 3264, 2448) orientation:UIImageOrientationDown];
+    
+    // PORTRAIT - image size should be unchanged
+
+    targetSize = CGSizeMake(2448, 3264);
+    
+    targetImage = [sourceImagePortrait imageCorrectedForCaptureOrientation:UIImageOrientationUp];
+    XCTAssertEqual(targetImage.size.width, targetSize.width);
+    XCTAssertEqual(targetImage.size.height, targetSize.height);
+    XCTAssertEqual(targetImage.imageOrientation, UIImageOrientationUp);
+
+    targetImage = [sourceImagePortrait imageCorrectedForCaptureOrientation:UIImageOrientationDown];
+    XCTAssertEqual(targetImage.size.width, targetSize.width);
+    XCTAssertEqual(targetImage.size.height, targetSize.height);
+    XCTAssertEqual(targetImage.imageOrientation, UIImageOrientationUp);
+
+    targetImage = [sourceImagePortrait imageCorrectedForCaptureOrientation:UIImageOrientationRight];
+    XCTAssertEqual(targetImage.size.width, targetSize.width);
+    XCTAssertEqual(targetImage.size.height, targetSize.height);
+    XCTAssertEqual(targetImage.imageOrientation, UIImageOrientationUp);
+
+    targetImage = [sourceImagePortrait imageCorrectedForCaptureOrientation:UIImageOrientationLeft];
+    XCTAssertEqual(targetImage.size.width, targetSize.width);
+    XCTAssertEqual(targetImage.size.height, targetSize.height);
+    XCTAssertEqual(targetImage.imageOrientation, UIImageOrientationUp);
+
+    // LANDSCAPE - image size should be unchanged
+    
+    targetSize = CGSizeMake(3264, 2448);
+    
+    targetImage = [sourceImageLandscape imageCorrectedForCaptureOrientation:UIImageOrientationUp];
+    XCTAssertEqual(targetImage.size.width, targetSize.width);
+    XCTAssertEqual(targetImage.size.height, targetSize.height);
+
+    targetImage = [sourceImageLandscape imageCorrectedForCaptureOrientation:UIImageOrientationDown];
+    XCTAssertEqual(targetImage.size.width, targetSize.width);
+    XCTAssertEqual(targetImage.size.height, targetSize.height);
+
+    targetImage = [sourceImageLandscape imageCorrectedForCaptureOrientation:UIImageOrientationRight];
+    XCTAssertEqual(targetImage.size.width, targetSize.width);
+    XCTAssertEqual(targetImage.size.height, targetSize.height);
+    
+    targetImage = [sourceImageLandscape imageCorrectedForCaptureOrientation:UIImageOrientationLeft];
+    XCTAssertEqual(targetImage.size.width, targetSize.width);
+    XCTAssertEqual(targetImage.size.height, targetSize.height);
 }
 
 
