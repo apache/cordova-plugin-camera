@@ -370,5 +370,129 @@
 }
 
 
+- (void) testRetrieveImage
+{
+    CDVPictureOptions* pictureOptions = [[CDVPictureOptions alloc] init];
+    NSDictionary *infoDict1, *infoDict2;
+    UIImage* resultImage;
+    
+    UIImage* originalImage = [self createImage:CGRectMake(0, 0, 1024, 768) orientation:UIImageOrientationDown];
+    UIImage* originalCorrectedForOrientation = [originalImage imageCorrectedForCaptureOrientation];
+
+    UIImage* editedImage = [self createImage:CGRectMake(0, 0, 800, 600) orientation:UIImageOrientationDown];
+    UIImage* scaledImageWithCrop = [originalImage imageByScalingAndCroppingForSize:CGSizeMake(640, 480)];
+    UIImage* scaledImageNoCrop = [originalImage imageByScalingNotCroppingForSize:CGSizeMake(640, 480)];
+    
+    infoDict1 = @{
+                  UIImagePickerControllerOriginalImage : originalImage
+                  };
+    
+    infoDict2 = @{
+                   UIImagePickerControllerOriginalImage : originalImage,
+                   UIImagePickerControllerEditedImage : editedImage
+                };
+    
+    // Original with no options
+    
+    pictureOptions.allowsEditing = YES;
+    pictureOptions.targetSize = CGSizeZero;
+    pictureOptions.cropToSize = NO;
+    pictureOptions.correctOrientation = NO;
+    
+    resultImage = [self.plugin retrieveImage:infoDict1 options:pictureOptions];
+    XCTAssertEqualObjects(resultImage, originalImage);
+    
+    // Original with no options
+    
+    pictureOptions.allowsEditing = YES;
+    pictureOptions.targetSize = CGSizeZero;
+    pictureOptions.cropToSize = NO;
+    pictureOptions.correctOrientation = NO;
+    
+    resultImage = [self.plugin retrieveImage:infoDict2 options:pictureOptions];
+    XCTAssertEqualObjects(resultImage, editedImage);
+
+    // Original with corrected orientation
+    
+    pictureOptions.allowsEditing = YES;
+    pictureOptions.targetSize = CGSizeZero;
+    pictureOptions.cropToSize = NO;
+    pictureOptions.correctOrientation = YES;
+    
+    resultImage = [self.plugin retrieveImage:infoDict1 options:pictureOptions];
+    XCTAssertNotEqual(resultImage.imageOrientation, originalImage.imageOrientation);
+    XCTAssertEqual(resultImage.imageOrientation, originalCorrectedForOrientation.imageOrientation);
+    XCTAssertEqual(resultImage.size.width, originalCorrectedForOrientation.size.width);
+    XCTAssertEqual(resultImage.size.height, originalCorrectedForOrientation.size.height);
+
+    // Original with targetSize, no crop
+    
+    pictureOptions.allowsEditing = YES;
+    pictureOptions.targetSize = CGSizeMake(640, 480);
+    pictureOptions.cropToSize = NO;
+    pictureOptions.correctOrientation = NO;
+    
+    resultImage = [self.plugin retrieveImage:infoDict1 options:pictureOptions];
+    XCTAssertEqual(resultImage.size.width, scaledImageNoCrop.size.width);
+    XCTAssertEqual(resultImage.size.height, scaledImageNoCrop.size.height);
+
+    // Original with targetSize, plus crop
+    
+    pictureOptions.allowsEditing = YES;
+    pictureOptions.targetSize = CGSizeMake(640, 480);
+    pictureOptions.cropToSize = YES;
+    pictureOptions.correctOrientation = NO;
+    
+    resultImage = [self.plugin retrieveImage:infoDict1 options:pictureOptions];
+    XCTAssertEqual(resultImage.size.width, scaledImageWithCrop.size.width);
+    XCTAssertEqual(resultImage.size.height, scaledImageWithCrop.size.height);
+}
+
+- (void) testProcessImage
+{
+    CDVPictureOptions* pictureOptions = [[CDVPictureOptions alloc] init];
+    NSData* resultData;
+    
+    UIImage* originalImage = [self createImage:CGRectMake(0, 0, 1024, 768) orientation:UIImageOrientationDown];
+    NSData* originalImageDataPNG = UIImagePNGRepresentation(originalImage);
+    NSData* originalImageDataJPEG = UIImageJPEGRepresentation(originalImage, 1.0);
+    
+    // Original, PNG
+    
+    pictureOptions.allowsEditing = YES;
+    pictureOptions.targetSize = CGSizeZero;
+    pictureOptions.cropToSize = NO;
+    pictureOptions.correctOrientation = NO;
+    pictureOptions.encodingType = EncodingTypePNG;
+    
+    resultData = [self.plugin processImage:originalImage info:@{} options:pictureOptions];
+    XCTAssertEqualObjects([resultData base64EncodedString], [originalImageDataPNG base64EncodedString]);
+
+    // Original, JPEG, full quality
+    
+    pictureOptions.allowsEditing = NO;
+    pictureOptions.targetSize = CGSizeZero;
+    pictureOptions.cropToSize = NO;
+    pictureOptions.correctOrientation = NO;
+    pictureOptions.encodingType = EncodingTypeJPEG;
+    
+    resultData = [self.plugin processImage:originalImage info:@{} options:pictureOptions];
+    XCTAssertEqualObjects([resultData base64EncodedString], [originalImageDataJPEG base64EncodedString]);
+    
+    // Original, JPEG, with quality value
+    
+    pictureOptions.allowsEditing = YES;
+    pictureOptions.targetSize = CGSizeZero;
+    pictureOptions.cropToSize = NO;
+    pictureOptions.correctOrientation = NO;
+    pictureOptions.encodingType = EncodingTypeJPEG;
+    pictureOptions.quality = @(57);
+    
+    NSData* originalImageDataJPEGWithQuality = UIImageJPEGRepresentation(originalImage, [pictureOptions.quality floatValue]/ 100.f);
+    resultData = [self.plugin processImage:originalImage info:@{} options:pictureOptions];
+    XCTAssertEqualObjects([resultData base64EncodedString], [originalImageDataJPEGWithQuality base64EncodedString]);
+    
+    // TODO: usesGeolocation is not tested
+}
 
 @end
