@@ -67,7 +67,7 @@
     args = @[];
     options = [CDVPictureOptions createFromTakePictureArguments:args];
     
-    XCTAssertEqual(options.quality, @(50));
+    XCTAssertEqual([options.quality intValue], 50);
     XCTAssertEqual(options.destinationType, (int)DestinationTypeFileUri);
     XCTAssertEqual(options.sourceType, (int)UIImagePickerControllerSourceTypeCamera);
     XCTAssertEqual(options.targetSize.width, 0);
@@ -101,7 +101,7 @@
              ];
     options = [CDVPictureOptions createFromTakePictureArguments:args];
     
-    XCTAssertEqual(options.quality, @(49));
+    XCTAssertEqual([options.quality intValue], 49);
     XCTAssertEqual(options.destinationType, (int)DestinationTypeDataUrl);
     XCTAssertEqual(options.sourceType, (int)UIImagePickerControllerSourceTypePhotoLibrary);
     XCTAssertEqual(options.targetSize.width, 120);
