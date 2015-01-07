@@ -24,6 +24,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.text.SimpleDateFormat;
@@ -761,16 +762,33 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
      */
     private void writeUncompressedImage(Uri uri) throws FileNotFoundException,
             IOException {
-        FileInputStream fis = new FileInputStream(FileHelper.stripFileProtocol(imageUri.toString()));
-        OutputStream os = this.cordova.getActivity().getContentResolver().openOutputStream(uri);
-        byte[] buffer = new byte[4096];
-        int len;
-        while ((len = fis.read(buffer)) != -1) {
-            os.write(buffer, 0, len);
+        FileInputStream fis = null;
+        OutputStream os = null;
+        try {
+            fis = new FileInputStream(FileHelper.stripFileProtocol(imageUri.toString()));
+            os = this.cordova.getActivity().getContentResolver().openOutputStream(uri);
+            byte[] buffer = new byte[4096];
+            int len;
+            while ((len = fis.read(buffer)) != -1) {
+                os.write(buffer, 0, len);
+            }
+            os.flush();
+        } finally {
+            if (os != null) {
+                try {
+                    os.close();
+                } catch (IOException e) {
+                    LOG.d(LOG_TAG,"Exception while closing output stream.");
+                }
+            }
+            if (fis != null) {
+                try {
+                    fis.close();
+                } catch (IOException e) {
+                    LOG.d(LOG_TAG,"Exception while closing file input stream.");
+                }
+            }
         }
-        os.flush();
-        os.close();
-        fis.close();
     }
 
     /**
@@ -806,13 +824,39 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
     private Bitmap getScaledBitmap(String imageUrl) throws IOException {
         // If no new width or height were specified return the original bitmap
         if (this.targetWidth <= 0 && this.targetHeight <= 0) {
-            return BitmapFactory.decodeStream(FileHelper.getInputStreamFromUriString(imageUrl, cordova));
+            InputStream fileStream = null;
+            Bitmap image = null;
+            try {
+                fileStream = FileHelper.getInputStreamFromUriString(imageUrl, cordova);
+                image = BitmapFactory.decodeStream(fileStream);
+            } finally {
+                if (fileStream != null) {
+                    try {
+                        fileStream.close();
+                    } catch (IOException e) {
+                        LOG.d(LOG_TAG,"Exception while closing file input stream.");
+                    }
+                }
+            }
+            return image;
         }
 
         // figure out the original width and height of the image
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
-        BitmapFactory.decodeStream(FileHelper.getInputStreamFromUriString(imageUrl, cordova), null, options);
+        InputStream fileStream = null;
+        try {
+            fileStream = FileHelper.getInputStreamFromUriString(imageUrl, cordova);
+            BitmapFactory.decodeStream(fileStream, null, options);
+        } finally {
+            if (fileStream != null) {
+                try {
+                    fileStream.close();
+                } catch (IOException e) {
+                    LOG.d(LOG_TAG,"Exception while closing file input stream.");
+                }
+            }
+        }
         
         //CB-2292: WTF? Why is the width null?
         if(options.outWidth == 0 || options.outHeight == 0)
@@ -826,7 +870,19 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         // Load in the smallest bitmap possible that is closest to the size we want
         options.inJustDecodeBounds = false;
         options.inSampleSize = calculateSampleSize(options.outWidth, options.outHeight, this.targetWidth, this.targetHeight);
-        Bitmap unscaledBitmap = BitmapFactory.decodeStream(FileHelper.getInputStreamFromUriString(imageUrl, cordova), null, options);
+        Bitmap unscaledBitmap = null;
+        try {
+            fileStream = FileHelper.getInputStreamFromUriString(imageUrl, cordova);
+            unscaledBitmap = BitmapFactory.decodeStream(fileStream, null, options);
+        } finally {
+            if (fileStream != null) {
+                try {
+                    fileStream.close();
+                } catch (IOException e) {
+                    LOG.d(LOG_TAG,"Exception while closing file input stream.");
+                }
+            }
+        }
         if (unscaledBitmap == null) {
             return null;
         }
