@@ -42,24 +42,24 @@ static NSSet* org_apache_cordova_validArrowDirections;
 {
     CDVPictureOptions* pictureOptions = [[CDVPictureOptions alloc] init];
 
-    pictureOptions.quality = [arguments objectAtIndex:0 withDefault:@(50)];
-    pictureOptions.destinationType = [[arguments objectAtIndex:1 withDefault:@(DestinationTypeFileUri)] unsignedIntegerValue];
-    pictureOptions.sourceType = [[arguments objectAtIndex:2 withDefault:@(UIImagePickerControllerSourceTypeCamera)] unsignedIntegerValue];
+    pictureOptions.quality = [command argumentAtIndex:0 withDefault:@(50)];
+    pictureOptions.destinationType = [[command argumentAtIndex:1 withDefault:@(DestinationTypeFileUri)] unsignedIntegerValue];
+    pictureOptions.sourceType = [[command argumentAtIndex:2 withDefault:@(UIImagePickerControllerSourceTypeCamera)] unsignedIntegerValue];
     
-    NSNumber* targetWidth = [arguments objectAtIndex:3 withDefault:nil];
-    NSNumber* targetHeight = [arguments objectAtIndex:4 withDefault:nil];
+    NSNumber* targetWidth = [command argumentAtIndex:3 withDefault:nil];
+    NSNumber* targetHeight = [command argumentAtIndex:4 withDefault:nil];
     pictureOptions.targetSize = CGSizeMake(0, 0);
     if ((targetWidth != nil) && (targetHeight != nil)) {
         pictureOptions.targetSize = CGSizeMake([targetWidth floatValue], [targetHeight floatValue]);
     }
 
-    pictureOptions.encodingType = [[arguments objectAtIndex:5 withDefault:@(EncodingTypeJPEG)] unsignedIntegerValue];
-    pictureOptions.mediaType = [[arguments objectAtIndex:6 withDefault:@(MediaTypePicture)] unsignedIntegerValue];
-    pictureOptions.allowsEditing = [[arguments objectAtIndex:7 withDefault:@(NO)] boolValue];
-    pictureOptions.correctOrientation = [[arguments objectAtIndex:8 withDefault:@(NO)] boolValue];
-    pictureOptions.saveToPhotoAlbum = [[arguments objectAtIndex:9 withDefault:@(NO)] boolValue];
-    pictureOptions.popoverOptions = [arguments objectAtIndex:10 withDefault:nil];
-    pictureOptions.cameraDirection = [[arguments objectAtIndex:11 withDefault:@(UIImagePickerControllerCameraDeviceRear)] unsignedIntegerValue];
+    pictureOptions.encodingType = [[command argumentAtIndex:5 withDefault:@(EncodingTypeJPEG)] unsignedIntegerValue];
+    pictureOptions.mediaType = [[command argumentAtIndex:6 withDefault:@(MediaTypePicture)] unsignedIntegerValue];
+    pictureOptions.allowsEditing = [[command argumentAtIndex:7 withDefault:@(NO)] boolValue];
+    pictureOptions.correctOrientation = [[command argumentAtIndex:8 withDefault:@(NO)] boolValue];
+    pictureOptions.saveToPhotoAlbum = [[command argumentAtIndex:9 withDefault:@(NO)] boolValue];
+    pictureOptions.popoverOptions = [command argumentAtIndex:10 withDefault:nil];
+    pictureOptions.cameraDirection = [[command argumentAtIndex:11 withDefault:@(UIImagePickerControllerCameraDeviceRear)] unsignedIntegerValue];
     
     pictureOptions.popoverSupported = NO;
     pictureOptions.usesGeolocation = NO;
@@ -168,7 +168,7 @@ static NSSet* org_apache_cordova_validArrowDirections;
 
 - (void)repositionPopover:(CDVInvokedUrlCommand*)command
 {
-    NSDictionary* options = [command.arguments objectAtIndex:0 withDefault:nil];
+    NSDictionary* options = [command argumentAtIndex:0 withDefault:nil];
 
     [self displayPopover:options];
 }
