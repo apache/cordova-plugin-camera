@@ -38,7 +38,7 @@ static NSSet* org_apache_cordova_validArrowDirections;
 
 @implementation CDVPictureOptions
 
-+ (instancetype) createFromTakePictureArguments:(NSArray*)arguments
++ (instancetype) createFromTakePictureArguments:(CDVInvokedUrlCommand*)command
 {
     CDVPictureOptions* pictureOptions = [[CDVPictureOptions alloc] init];
 
@@ -123,7 +123,7 @@ static NSSet* org_apache_cordova_validArrowDirections;
 
     [self.commandDelegate runInBackground:^{
         
-        CDVPictureOptions* pictureOptions = [CDVPictureOptions createFromTakePictureArguments:command.arguments];
+        CDVPictureOptions* pictureOptions = [CDVPictureOptions createFromTakePictureArguments:command];
         pictureOptions.popoverSupported = [self popoverSupported];
         pictureOptions.usesGeolocation = [self usesGeolocation];
         pictureOptions.cropToSize = NO;

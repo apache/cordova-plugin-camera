@@ -60,7 +60,7 @@ typedef NSUInteger CDVMediaType;
 @property (assign) BOOL usesGeolocation;
 @property (assign) BOOL cropToSize;
 
-+ (instancetype) createFromTakePictureArguments:(NSArray*)arguments;
++ (instancetype) createFromTakePictureArguments:(CDVInvokedUrlCommand*)command;
 
 @end
 
