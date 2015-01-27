@@ -36,6 +36,14 @@
 
 static NSSet* org_apache_cordova_validArrowDirections;
 
+static NSString* toBase64(NSData* data) {
+    SEL s1 = NSSelectorFromString(@"cdv_base64EncodedString");
+    SEL s2 = NSSelectorFromString(@"base64EncodedString");
+    SEL realSel = [data respondsToSelector:s1] ? s1 : s2;
+    NSString* (*func)(id, SEL) = (void *)[data methodForSelector:realSel];
+    return func(data, realSel);
+}
+
 @implementation CDVPictureOptions
 
 + (instancetype) createFromTakePictureArguments:(CDVInvokedUrlCommand*)command
@@ -398,7 +406,7 @@ static NSSet* org_apache_cordova_validArrowDirections;
             NSData* data = [self processImage:image info:info options:options];
             
             if (data)  {
-                result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[data base64EncodedString]];
+                result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:toBase64(data)];
             }
         }
             break;
@@ -600,7 +608,7 @@ static NSSet* org_apache_cordova_validArrowDirections;
             break;
         case DestinationTypeDataUrl:
         {
-            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[self.data base64EncodedString]];
+            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:toBase64(self.data)];
         }
             break;
         case DestinationTypeNativeUri:
