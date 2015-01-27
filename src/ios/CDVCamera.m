@@ -173,6 +173,18 @@ static NSSet* org_apache_cordova_validArrowDirections;
     [self displayPopover:options];
 }
 
+- (NSInteger)integerValueForKey:(NSDictionary*)dict key:(NSString*)key defaultValue:(NSInteger)defaultValue
+{
+    NSInteger value = defaultValue;
+
+    NSNumber* val = [self valueForKey:key];  // value is an NSNumber
+
+    if (val != nil) {
+        value = [val integerValue];
+    }
+    return value;
+}
+
 - (void)displayPopover:(NSDictionary*)options
 {
     NSInteger x = 0;
@@ -182,11 +194,11 @@ static NSSet* org_apache_cordova_validArrowDirections;
     UIPopoverArrowDirection arrowDirection = UIPopoverArrowDirectionAny;
 
     if (options) {
-        x = [options integerValueForKey:@"x" defaultValue:0];
-        y = [options integerValueForKey:@"y" defaultValue:32];
-        width = [options integerValueForKey:@"width" defaultValue:320];
-        height = [options integerValueForKey:@"height" defaultValue:480];
-        arrowDirection = [options integerValueForKey:@"arrowDir" defaultValue:UIPopoverArrowDirectionAny];
+        x = [self integerValueForKey:options key:@"x" defaultValue:0];
+        y = [self integerValueForKey:options key:@"y" defaultValue:32];
+        width = [self integerValueForKey:options key:@"width" defaultValue:320];
+        height = [self integerValueForKey:options key:@"height" defaultValue:480];
+        arrowDirection = [self integerValueForKey:options key:@"arrowDir" defaultValue:UIPopoverArrowDirectionAny];
         if (![org_apache_cordova_validArrowDirections containsObject:[NSNumber numberWithUnsignedInteger:arrowDirection]]) {
             arrowDirection = UIPopoverArrowDirectionAny;
         }
