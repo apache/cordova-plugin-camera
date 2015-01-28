@@ -271,21 +271,27 @@ namespace WPCordovaClassLib.Cordova.Commands
                             Picture pict = library.SavePicture(e.OriginalFileName, e.ChosenPhoto); // to save to photo-roll ...
                         }
 
-                        int orient = ImageExifHelper.getImageOrientationFromStream(e.ChosenPhoto);
                         int newAngle = 0;
-                        switch (orient)
-                        {
-                            case ImageExifOrientation.LandscapeLeft:
-                                newAngle = 90;
-                                break;
-                            case ImageExifOrientation.PortraitUpsideDown:
-                                newAngle = 180;
-                                break;
-                            case ImageExifOrientation.LandscapeRight:
-                                newAngle = 270;
-                                break;
-                            case ImageExifOrientation.Portrait:
-                            default: break; // 0 default already set
+                        // There's bug in Windows Phone 8.1 causing Seek on a DssPhotoStream not working properly.
+                        // https://connect.microsoft.com/VisualStudio/feedback/details/783252
+                        // But a mis-oriented file is better than nothing, so try and catch.
+                        try {
+                            int orient = ImageExifHelper.getImageOrientationFromStream(e.ChosenPhoto);
+                            switch (orient) {
+                                case ImageExifOrientation.LandscapeLeft:
+                                    newAngle = 90;
+                                    break;
+                                case ImageExifOrientation.PortraitUpsideDown:
+                                    newAngle = 180;
+                                    break;
+                                case ImageExifOrientation.LandscapeRight:
+                                    newAngle = 270;
+                                    break;
+                                case ImageExifOrientation.Portrait:
+                                default: break; // 0 default already set
+                            }
+                        } catch {
+                            Debug.WriteLine("Error fetching orientation from Exif");
                         }
 
                         if (newAngle != 0)
