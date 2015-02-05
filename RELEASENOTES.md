@@ -158,3 +158,11 @@
 * Pass uri to crop instead of pulling the low resolution image out of the intent return (close #43)
 * Add orientation support for PNG to Android (closes #45)
 * CB-7700 cordova-plugin-camera documentation translation: cordova-plugin-camera
+
+### 0.3.5 (Feb 04, 2015)
+* CB-8351 ios: Stop using now-deprecated [NSData base64EncodedString]
+* CB-8351 ios: Stop using now-deprecated integerValueForKey: class extension
+* CB-8351 ios: Use argumentForIndex rather than NSArray extension
+* CB-8032 ios: Add nativeURL external method support for CDVFileSystem->makeEntryForPath:isDirectory:
+* CB-7938 ios: Added XCTest unit tests project, with stubs (adapted from SplashScreen unit test setup)
+* CB-7937 ios: Re-factor iOS Camera plugin so that it is testable
