@@ -190,7 +190,6 @@ module.exports = {
             }, function () {
                 errorCallback("User didn't choose a file.");
             });
-
         } else {
 
             var CaptureNS = Windows.Media.Capture;
@@ -331,10 +330,49 @@ module.exports = {
                             };
 
                             if (saveToPhotoAlbum) {
-                                capturedFile.copyAsync(Windows.Storage.KnownFolders.picturesLibrary, capturedFile.name, generateUniqueCollisionOption)
-                                .done(function() {
-                                    success(capturedFile);
-                                }, errorCallback);
+                                /*
+                                    Need to add and remove an event listener to catch activation state
+                                    Using FileSavePicker will suspend the app and it's required to catch the pickSaveFileContinuation
+                                    https://msdn.microsoft.com/en-us/library/windows/apps/xaml/dn631755.aspx
+                                */
+                                function cameraActivationHandler(eventArgs) {
+                                    if (eventArgs.kind === Windows.ApplicationModel.Activation.ActivationKind.pickSaveFileContinuation) {
+                                        var file = eventArgs.file;
+                                        if (file) {
+                                            // Prevent updates to the remote version of the file until we're done
+                                            Windows.Storage.CachedFileManager.deferUpdates(file);
+                                            capturedFile.moveAndReplaceAsync(file)
+                                                .then(function() {
+                                                    // Let Windows know that we're finished changing the file so
+                                                    // the other app can update the remote version of the file.
+                                                    return Windows.Storage.CachedFileManager.completeUpdatesAsync(file);
+                                                })
+                                                .done(
+                                                    function(updateStatus) {
+                                                        if (updateStatus === Windows.Storage.Provider.FileUpdateStatus.complete) {
+                                                            success(capturedFile);
+                                                        } else {
+                                                            errorCallback();
+                                                        }
+                                                    }, errorCallback
+                                                );
+                                        } else {
+                                            errorCallback();
+                                        }
+                                        Windows.UI.WebUI.WebUIApplication.removeEventListener("activated", cameraActivationHandler);
+                                    }
+                                }
+
+                                var savePicker = new Windows.Storage.Pickers.FileSavePicker();
+                                savePicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.documentsLibrary;
+                                if (encodingType === Camera.EncodingType.PNG) {
+                                    savePicker.fileTypeChoices.insert("PNG", [".png"]);
+                                } else {
+                                    savePicker.fileTypeChoices.insert("JPEG", [".jpg"]);
+                                }
+                                savePicker.suggestedFileName = fileName;
+                                Windows.UI.WebUI.WebUIApplication.addEventListener("activated", cameraActivationHandler);
+                                savePicker.pickSaveFileAndContinue();
                             } else {
                                 success(capturedFile);
                             }
@@ -417,13 +455,43 @@ module.exports = {
                         };
 
                         if (saveToPhotoAlbum) {
-                            Windows.Storage.StorageFile.getFileFromPathAsync(picture.path).then(function(storageFile) {
-                                storageFile.copyAsync(Windows.Storage.KnownFolders.picturesLibrary, picture.name, Windows.Storage.NameCollisionOption.generateUniqueName).then(function(storageFile) {
-                                    success();
-                                }, function() {
-                                    fail();
+                            var savePicker = new Windows.Storage.Pickers.FileSavePicker();
+
+                            savePicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.documentsLibrary;
+                            if (encodingType === Camera.EncodingType.PNG) {
+                                savePicker.fileTypeChoices.insert("PNG", [".png"]);
+                                savePicker.suggestedFileName = "photo.png";
+                            } else {
+                                savePicker.fileTypeChoices.insert("JPEG", [".jpg"]);
+                                savePicker.suggestedFileName = "photo.jpg";
+                            }
+
+                            savePicker.pickSaveFileAsync()
+                                .then(function(file) {
+                                    if (file) {
+                                        // Prevent updates to the remote version of the file until we're done
+                                        Windows.Storage.CachedFileManager.deferUpdates(file);
+                                        picture.moveAndReplaceAsync(file)
+                                            .then(function() {
+                                                // Let Windows know that we're finished changing the file so
+                                                // the other app can update the remote version of the file.
+                                                return Windows.Storage.CachedFileManager.completeUpdatesAsync(file);
+                                            })
+                                            .done(
+                                                function(updateStatus) {
+                                                    if (updateStatus === Windows.Storage.Provider.FileUpdateStatus.complete) {
+                                                        success();
+                                                    } else {
+                                                        fail();
+                                                    }
+                                                }, function() {
+                                                    fail();
+                                                }
+                                            );
+                                    } else {
+                                        fail();
+                                    }
                                 });
-                            });
                         } else {
                             success();
                         }
