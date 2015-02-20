@@ -185,7 +185,7 @@ static NSString* toBase64(NSData* data) {
 {
     NSInteger value = defaultValue;
 
-    NSNumber* val = [self valueForKey:key];  // value is an NSNumber
+    NSNumber* val = [dict valueForKey:key];  // value is an NSNumber
 
     if (val != nil) {
         value = [val integerValue];
