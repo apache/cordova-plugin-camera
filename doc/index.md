@@ -255,9 +255,11 @@ Optional parameters to customize the camera settings.
 
 - Any `cameraDirection` value results in a back-facing photo.
 
-- Ignores the `allowEdit` parameter.
+- `allowEdit` does not always shop crop function.
 
 - `Camera.PictureSourceType.PHOTOLIBRARY` and `Camera.PictureSourceType.SAVEDPHOTOALBUM` both display the same photo album.
+
+- `onlyGalleries` is an Android only option for when picking images (if true, use only gallery apps to get a photo from)
 
 ### BlackBerry 10 Quirks
 
