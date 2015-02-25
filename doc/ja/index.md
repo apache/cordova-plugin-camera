@@ -27,15 +27,13 @@
     function onDeviceReady() {
         console.log(navigator.camera);
     }
-    
-
-## インストール
 
     cordova plugin add org.apache.cordova.camera
     
 
 ## navigator.camera.getPicture
 
+<<<<<<< HEAD
 カメラを使用して写真を取るか、デバイスの画像ギャラリーから写真を取得します。 イメージが渡されます成功時のコールバックを base64 エンコードされた `文字列`、または、URI としてイメージ ファイル。 メソッド自体はファイル選択ポップ オーバーの位置を変更するために使用できる `CameraPopoverHandle` オブジェクトを返します。
 
     navigator.camera.getPicture( cameraSuccess, cameraError, cameraOptions );
