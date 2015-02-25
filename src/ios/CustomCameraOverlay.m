@@ -67,12 +67,6 @@
 }
 
 
-// Action method.  This is like an event callback in JavaScript.
--(IBAction) takePhotoButtonPressed:(id)sender forEvent:(UIEvent*)event {
-    NSLog(@"You pressed the camera button!");
-}
-
-
 - (UIButton *) triggerButton
 {
     UIButton* _triggerButton = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -91,8 +85,6 @@
 }
 
 - (IBAction) triggerAction:(id)sender {
-    // Call Take Picture
-    NSLog(@"Take Photo tapped!");
     [self takePicture];
 }
 
@@ -114,7 +106,6 @@
 
 - (IBAction) closeAction:(id)sender {
     // Call Take Picture
-    NSLog(@"Closing the camera is not supported! You are trapped!");
     [self.plugin imagePickerControllerDidCancel:self];
 }
 
