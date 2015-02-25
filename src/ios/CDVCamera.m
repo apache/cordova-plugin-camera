@@ -32,6 +32,11 @@
 #import <MobileCoreServices/UTCoreTypes.h>
 #import <objc/message.h>
 
+
+#import "CustomCameraOverlay.h"
+
+
+
 #define CDV_PHOTO_PREFIX @"cdv_photo_"
 
 static NSSet* org_apache_cordova_validArrowDirections;
@@ -125,6 +130,7 @@ static NSString* toBase64(NSData* data) {
 
 - (void)takePicture:(CDVInvokedUrlCommand*)command
 {
+    NSLog(@"takePicture Called...");
     self.hasPendingOperation = YES;
     
     __weak CDVCamera* weakSelf = self;
@@ -151,9 +157,23 @@ static NSString* toBase64(NSData* data) {
             [[weakSelf pickerController] setPickerPopoverController:nil];
         }
         
-        CDVCameraPicker* cameraPicker = [CDVCameraPicker createFromPictureOptions:pictureOptions];
-        weakSelf.pickerController = cameraPicker;
+        //CDVCameraPicker* cameraPicker = [CDVCameraPicker createFromPictureOptions:pictureOptions];
+        CustomCameraOverlay* cameraPicker = [CustomCameraOverlay createFromPictureOptions:pictureOptions];
+        weakSelf.pickerController = (CDVCameraPicker*)cameraPicker;
+        cameraPicker.showsCameraControls = NO;
         
+        //CGRect screenFrame = [[UIScreen mainScreen] bounds];
+        //cameraPicker.view.frame = screenFrame;
+        //cameraPicker.cameraOverlayView = cameraPicker.view;
+        UIView *overlay = [[UIView alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+        overlay.backgroundColor = [UIColor greenColor];
+        overlay.alpha = 0.3;
+        overlay.clipsToBounds = NO;
+
+        cameraPicker.cameraOverlayView = overlay;
+        
+        // Note: weakSelf = CDVCamera. Any object that is set to .delegate must have the
+        // didFinishPickingImage delegate(aka callback) defined
         cameraPicker.delegate = weakSelf;
         cameraPicker.callbackId = command.callbackId;
         // we need to capture this state for memory warnings that dealloc this object
@@ -366,6 +386,7 @@ static NSString* toBase64(NSData* data) {
     return (scaledImage == nil ? image : scaledImage);
 }
 
+// Extracting the image result after the photo has been taken
 - (CDVPluginResult*)resultForImage:(CDVPictureOptions*)options info:(NSDictionary*)info
 {
     CDVPluginResult* result = nil;
@@ -428,6 +449,7 @@ static NSString* toBase64(NSData* data) {
     return [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:moviePath];
 }
 
+// Called when an image has been selected
 - (void)imagePickerController:(UIImagePickerController*)picker didFinishPickingMediaWithInfo:(NSDictionary*)info
 {
     __weak CDVCameraPicker* cameraPicker = (CDVCameraPicker*)picker;
@@ -444,6 +466,8 @@ static NSString* toBase64(NSData* data) {
             result = [self resultForVideo:info];
         }
         
+        // If an image was successfully retrieved after the photo was taken, send
+        // plugin result
         if (result) {
             [weakSelf.commandDelegate sendPluginResult:result callbackId:cameraPicker.callbackId];
             weakSelf.hasPendingOperation = NO;
