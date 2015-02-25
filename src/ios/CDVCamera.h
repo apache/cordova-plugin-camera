@@ -90,6 +90,7 @@ typedef NSUInteger CDVMediaType;
 @property (strong) NSMutableDictionary *metadata;
 @property (strong, nonatomic) CLLocationManager *locationManager;
 @property (strong) NSData* data;
+@property (assign) BOOL inMultiplePicturesMode;
 
 /*
  * getPicture
@@ -102,6 +103,7 @@ typedef NSUInteger CDVMediaType;
  *	quality: integer between 1 and 100
  */
 - (void)takePicture:(CDVInvokedUrlCommand*)command;
+- (void)takeMultiplePictures: (CDVInvokedUrlCommand*)command;
 - (void)cleanup:(CDVInvokedUrlCommand*)command;
 - (void)repositionPopover:(CDVInvokedUrlCommand*)command;
 

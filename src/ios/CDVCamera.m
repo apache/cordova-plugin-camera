@@ -41,6 +41,8 @@
 
 static NSSet* org_apache_cordova_validArrowDirections;
 
+static NSMutableArray* multiplePicturesCache;
+
 static NSString* toBase64(NSData* data) {
     SEL s1 = NSSelectorFromString(@"cdv_base64EncodedString");
     SEL s2 = NSSelectorFromString(@"base64EncodedString");
@@ -130,7 +132,6 @@ static NSString* toBase64(NSData* data) {
 
 - (void)takePicture:(CDVInvokedUrlCommand*)command
 {
-    NSLog(@"takePicture Called...");
     self.hasPendingOperation = YES;
     
     __weak CDVCamera* weakSelf = self;
@@ -158,7 +159,7 @@ static NSString* toBase64(NSData* data) {
         }
         
         //CDVCameraPicker* cameraPicker = [CDVCameraPicker createFromPictureOptions:pictureOptions];
-        CustomCameraOverlay* cameraPicker = [CustomCameraOverlay createFromPictureOptions:pictureOptions];
+        CustomCameraOverlay* cameraPicker = [CustomCameraOverlay createFromPictureOptions:pictureOptions refToPlugin:self];
         weakSelf.pickerController = (CDVCameraPicker*)cameraPicker;
         
         // Note: weakSelf = CDVCamera. Any object that is set to .delegate must have the
@@ -182,6 +183,68 @@ static NSString* toBase64(NSData* data) {
         }
     }];
 }
+
+
+- (void)takeMultiplePictures:(CDVInvokedUrlCommand*)command
+{
+    multiplePicturesCache = [[NSMutableArray alloc] init];
+    self.inMultiplePicturesMode = YES;
+    self.hasPendingOperation = YES;
+    
+    __weak CDVCamera* weakSelf = self;
+    
+    [self.commandDelegate runInBackground:^{
+        
+        CDVPictureOptions* pictureOptions = [CDVPictureOptions createFromTakePictureArguments:command];
+        pictureOptions.popoverSupported = [self popoverSupported];
+        pictureOptions.usesGeolocation = [self usesGeolocation];
+        pictureOptions.cropToSize = NO;
+        
+        BOOL hasCamera = [UIImagePickerController isSourceTypeAvailable:pictureOptions.sourceType];
+        if (!hasCamera) {
+            NSLog(@"Camera.getPicture: source type %lu not available.", (unsigned long)pictureOptions.sourceType);
+            CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"No camera available"];
+            [weakSelf.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+            return;
+        }
+        
+        // If a popover is already open, close it; we only want one at a time.
+        if (([[weakSelf pickerController] pickerPopoverController] != nil) && [[[weakSelf pickerController] pickerPopoverController] isPopoverVisible]) {
+            [[[weakSelf pickerController] pickerPopoverController] dismissPopoverAnimated:YES];
+            [[[weakSelf pickerController] pickerPopoverController] setDelegate:nil];
+            [[weakSelf pickerController] setPickerPopoverController:nil];
+        }
+        
+        CustomCameraOverlay* cameraPicker = [CustomCameraOverlay createFromPictureOptions:pictureOptions refToPlugin:self];
+        weakSelf.pickerController = (CDVCameraPicker*)cameraPicker;
+        
+        // Note: weakSelf = CDVCamera. Any object that is set to .delegate must have the
+        // didFinishPickingImage delegate(aka callback) defined
+        cameraPicker.delegate = weakSelf;
+        cameraPicker.callbackId = command.callbackId;
+        // we need to capture this state for memory warnings that dealloc this object
+        cameraPicker.webView = weakSelf.webView;
+        
+        if ([weakSelf popoverSupported] && (pictureOptions.sourceType != UIImagePickerControllerSourceTypeCamera)) {
+            if (cameraPicker.pickerPopoverController == nil) {
+                cameraPicker.pickerPopoverController = [[NSClassFromString(@"UIPopoverController") alloc] initWithContentViewController:cameraPicker];
+            }
+            [weakSelf displayPopover:pictureOptions.popoverOptions];
+            weakSelf.hasPendingOperation = NO;
+            //multiplePicturesCache = nil;
+            //self.inMultiplePicturesMode = NO;
+            
+        } else {
+            [weakSelf.viewController presentViewController:cameraPicker animated:YES completion:^{
+                weakSelf.hasPendingOperation = NO;
+                //multiplePicturesCache = nil;
+                //self.inMultiplePicturesMode = NO;
+            }];
+        }
+    }];
+}
+
+
 
 - (void)repositionPopover:(CDVInvokedUrlCommand*)command
 {
@@ -470,9 +533,19 @@ static NSString* toBase64(NSData* data) {
         cameraPicker.pickerPopoverController = nil;
         invoke();
     } else {
-        [[cameraPicker presentingViewController] dismissViewControllerAnimated:YES completion:invoke];
+        if (!self.inMultiplePicturesMode) {
+            [[cameraPicker presentingViewController] dismissViewControllerAnimated:YES completion:invoke];
+        } else {
+            // Use resultForImage to save the image to the file system and return a file path
+            CDVPluginResult* pluginResult = [self resultForImage:cameraPicker.pictureOptions info:info];
+            NSString* imagePath = (NSString*)[pluginResult message];
+            [multiplePicturesCache addObject:imagePath];
+        }
     }
 }
+
+
+
 
 // older api calls newer didFinishPickingMediaWithInfo
 - (void)imagePickerController:(UIImagePickerController*)picker didFinishPickingImage:(UIImage*)image editingInfo:(NSDictionary*)editingInfo
@@ -489,12 +562,17 @@ static NSString* toBase64(NSData* data) {
     
     dispatch_block_t invoke = ^ (void) {
         CDVPluginResult* result;
-        if ([ALAssetsLibrary authorizationStatus] == ALAuthorizationStatusAuthorized) {
-            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"no image selected"];
-        } else {
-            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"has no access to assets"];
-        }
         
+        if (self.inMultiplePicturesMode && multiplePicturesCache.count > 0) {
+            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:multiplePicturesCache];
+            multiplePicturesCache = nil;
+        } else {
+            if ([ALAssetsLibrary authorizationStatus] == ALAuthorizationStatusAuthorized) {
+                result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"no image selected"];
+            } else {
+                result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"has no access to assets"];
+            }
+        }
         [weakSelf.commandDelegate sendPluginResult:result callbackId:cameraPicker.callbackId];
         
         weakSelf.hasPendingOperation = NO;

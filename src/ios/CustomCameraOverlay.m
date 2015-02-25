@@ -9,8 +9,11 @@
 #import "CustomCameraOverlay.h"
 #import "CDVCamera.h"
 #import <MobileCoreServices/UTCoreTypes.h>
+#import <AssetsLibrary/AssetsLibrary.h>
 
 @implementation CustomCameraOverlay
+
+@synthesize plugin;
 
 // Entry point method
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
@@ -18,7 +21,7 @@
 }
 
 + (instancetype) createFromPictureOptions:(CDVPictureOptions*)pictureOptions {
-    CustomCameraOverlay* newOverlay = [[CustomCameraOverlay alloc] initWithNibName:@"CustomCameraOverlay" bundle:nil];
+    CustomCameraOverlay* newOverlay = [[CustomCameraOverlay alloc] init];
     newOverlay.pictureOptions = pictureOptions;
     newOverlay.sourceType = pictureOptions.sourceType;
     newOverlay.allowsEditing = pictureOptions.allowsEditing;
@@ -40,9 +43,27 @@
     //newOverlay.view.frame = screenFrame;
     
     newOverlay.showsCameraControls = NO;
-    newOverlay.cameraOverlayView = newOverlay.view;
+    newOverlay.cameraOverlayView = [newOverlay getOverlayView];
     
     return newOverlay;
+}
+
++ (instancetype) createFromPictureOptions:(CDVPictureOptions*)pictureOptions refToPlugin:(CDVCamera*)pluginRef {
+    
+    CustomCameraOverlay* newOverlay = [CustomCameraOverlay createFromPictureOptions:pictureOptions];
+    newOverlay.plugin = pluginRef;
+    return newOverlay;
+}
+
+
+- (UIView*) getOverlayView {
+    UIView *overlay = [[UIView alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    overlay.backgroundColor = [UIColor clearColor];
+    overlay.clipsToBounds = NO;
+
+    [overlay addSubview: [self triggerButton]];
+    [overlay addSubview: [self closeButton]];
+    return overlay;
 }
 
 
@@ -50,50 +71,51 @@
 -(IBAction) takePhotoButtonPressed:(id)sender forEvent:(UIEvent*)event {
     NSLog(@"You pressed the camera button!");
 }
-/*
 
-// Delegate method.  UIImagePickerController will call this method as soon as the image captured above is ready to be processed.  This is also like an event callback in JavaScript.
-/*
--(void) imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info {
+
+- (UIButton *) triggerButton
+{
+    UIButton* _triggerButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [_triggerButton setBackgroundColor:[UIColor whiteColor]];
+    [_triggerButton setTitle: @"Take Photo" forState: UIControlStateNormal];
+    [_triggerButton setTitleColor: [UIColor blueColor] forState: UIControlStateNormal];
     
-    NSLog(@"Image captured is ready to be processed. (but not doing anything with it right now)");
-    // Get a reference to the captured image
-    //UIImage* image = [info objectForKey:UIImagePickerControllerOriginalImage];
+    // Images take too long to appear on screen. Need to find a way to preload them.
+    //[_triggerButton setImage:[UIImage imageNamed:@"trigger"] forState:UIControlStateNormal];
+    //[_triggerButton setImage:[UIImage imageNamed:@"trigger"] forState:UIControlStateSelected];
     
-    // Get a file path to save the JPEG
-    //NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    //NSString* documentsDirectory = [paths objectAtIndex:0];
-    //NSString* filename = @"test.jpg";
-    //NSString* imagePath = [documentsDirectory stringByAppendingPathComponent:filename];
+    [_triggerButton setFrame:(CGRect){ 10, 80, 100, 30 }];
+    [_triggerButton addTarget:self action:@selector(triggerAction:) forControlEvents:UIControlEventTouchUpInside];
     
-    // Get the image data (blocking; around 1 second)
-    //NSData* imageData = UIImageJPEGRepresentation(image, 0.5);
-    
-    // Write the data to the file
-    //[imageData writeToFile:imagePath atomically:YES];
-    
-    // Tell the plugin class that we're finished processing the image
-    //[self.plugin capturedImageWithPath:imagePath];
+    return _triggerButton;
 }
 
-- (void)viewDidLoad {
-    [super viewDidLoad];
-    // Do any additional setup after loading the view from its nib.
+- (IBAction) triggerAction:(id)sender {
+    // Call Take Picture
+    NSLog(@"Take Photo tapped!");
+    [self takePicture];
 }
 
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+
+- (UIButton *) closeButton
+{
+    UIButton* _closeButton = _closeButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    
+    [_closeButton setBackgroundColor:[UIColor whiteColor]];
+    //[_closeButton setImage:[[UIImage imageNamed:@"close"] tintImageWithColor:self.tintColor] forState:UIControlStateNormal];
+    //[_closeButton setFrame:(CGRect){ 25,  CGRectGetMidY(self.bottomContainerBar.bounds) - 15, 30, 30 }];
+    [_closeButton setFrame:(CGRect){ 10, 200, 100, 30 }];
+    [_closeButton setTitle: @"Done" forState: UIControlStateNormal];
+    [_closeButton setTitleColor: [UIColor blackColor] forState: UIControlStateNormal];
+    [_closeButton addTarget:self action:@selector(closeAction:) forControlEvents:UIControlEventTouchUpInside];
+    
+    return _closeButton;
 }
 
-/*
-#pragma mark - Navigation
-
-// In a storyboard-based application, you will often want to do a little preparation before navigation
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
+- (IBAction) closeAction:(id)sender {
+    // Call Take Picture
+    NSLog(@"Closing the camera is not supported! You are trapped!");
+    [self.plugin imagePickerControllerDidCancel:self];
 }
-*/
 
 @end
