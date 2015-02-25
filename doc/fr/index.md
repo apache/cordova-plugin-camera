@@ -19,31 +19,39 @@
 
 # org.apache.cordova.camera
 
-Ce plugin fournit une API pour la prise de photos et de choisir des images de la bibliothèque d'images du système.
+Ce plugin définit un global `navigator.camera` objet qui fournit une API pour la prise de photos et de choisir des images de la bibliothèque d'images du système.
 
-    cordova plugin add org.apache.cordova.camera
+Bien que l'objet est attaché à la portée globale `navigator` , il n'est pas disponible jusqu'après la `deviceready` événement.
+
+    document.addEventListener (« deviceready », onDeviceReady, false) ;
+    function onDeviceReady() {console.log(navigator.camera);}
+    
+
+## Installation
+
+    Cordova plugin ajouter org.apache.cordova.camera
     
 
 ## navigator.camera.getPicture
 
-Prend une photo à l'aide de la caméra, ou récupère une photo de la Galerie d'images de l'appareil. L'image est passée au callback "succès" comme une `String` encodée en base64 ou l'URI du fichier de l'image. La méthode elle-même renvoie un objet `CameraPopoverHandle` qui permet de repositionner la boite de dialogue de selection d'image.
+Prend une photo à l'aide de la caméra, ou récupère une photo de la Galerie d'images de l'appareil. L'image est passé au rappel succès comme un codage base64 `String` , ou comme l'URI du fichier de l'image. La méthode elle-même retourne un `CameraPopoverHandle` objet qui permet de repositionner le kangourou de sélection de fichier.
 
-    navigator.camera.getPicture( cameraSuccess, cameraError, cameraOptions );
+    navigator.camera.getPicture (cameraSuccess, cameraError, cameraOptions) ;
     
 
 ### Description
 
-La fonction `camera.getPicture` ouvre l'application par défaut de l'appareil qui permet aux utilisateurs de prendre des photos. Ce comportement se produit par défaut, lorsque `Camera.sourceType` est égal à `Camera.PictureSourceType.CAMERA`. Une fois que l'utilisateur a pris la photo, l'application "camera" se ferme et l'application est restaurée.
+Le `camera.getPicture` fonction ouvre l'application de caméra par défaut de l'appareil qui permet aux utilisateurs de prendre des photos. Ce comportement se produit par défaut, lorsque `Camera.sourceType` est égal à `Camera.PictureSourceType.CAMERA` . Une fois que l'utilisateur s'enclenche la photo, l'application appareil photo se ferme et l'application est restaurée.
 
-Si `Camera.sourceType` est `Camera.PictureSourceType.PHOTOLIBRARY` ou `Camera.PictureSourceType.SAVEDPHOTOALBUM`, alors une boîte de dialogue s'affiche pour permettre aux utilisateurs de sélectionner une image existante. La fonction `camera.getPicture` retourne un objet `CameraPopoverHandle` qui permet de repositionner le dialogue de sélection d'image, par exemple, lorsque l'orientation de l'appareil change.
+Si `Camera.sourceType` est `Camera.PictureSourceType.PHOTOLIBRARY` ou `Camera.PictureSourceType.SAVEDPHOTOALBUM` , puis un dialogue affiche qui permet aux utilisateurs de sélectionner une image existante. Le `camera.getPicture` retourne un `CameraPopoverHandle` objet, ce qui permet de repositionner le dialogue de sélection d'image, par exemple, lorsque l'orientation de l'appareil change.
 
-La valeur de retour est envoyée à la fonction callback `cameraSuccess`, dans l'un des formats suivants, selon spécifié par `cameraOptions` :
+La valeur de retour est envoyée à la `cameraSuccess` la fonction de rappel, dans l'un des formats suivants, selon les `cameraOptions` :
 
 *   A `String` contenant l'image photo codée en base64.
 
 *   A `String` qui représente l'emplacement du fichier image sur le stockage local (par défaut).
 
-Vous pouvez faire ce que vous voulez avec l'image encodée ou l'URI, par exemple :
+Vous pouvez faire ce que vous voulez avec l'image codée ou URI, par exemple :
 
 *   Afficher l'image dans un `<img>` tag, comme dans l'exemple ci-dessous
 
@@ -53,7 +61,7 @@ Vous pouvez faire ce que vous voulez avec l'image encodée ou l'URI, par exemple
 
  [1]: http://brianleroux.github.com/lawnchair/
 
-**NOTE**: la résolution de Photo sur les nouveaux appareils est assez bonne. Les photos sélectionnées de la Galerie de l'appareil ne sont pas réduites avec une baisse de la qualité, même si un paramètre de `qualité` est spécifié. Pour éviter les problèmes de mémoire, définissez `Camera.destinationType` à `FILE_URI` plutôt que `DATA_URL`.
+**NOTE**: la résolution de Photo sur les nouveaux appareils est assez bonne. Photos sélectionnées de la Galerie de l'appareil ne sont pas réduites à une baisse de la qualité, même si un `quality` paramètre est spécifié. Pour éviter les problèmes de mémoire commun, définissez `Camera.destinationType` à `FILE_URI` au lieu de`DATA_URL`.
 
 ### Plates-formes prises en charge
 
@@ -96,7 +104,7 @@ Appareil photo plugin est actuellement mis en œuvre à l'aide [d'Activités sur
 
 Y compris un JavaScript `alert()` dans les deux le rappel fonctions peuvent causer des problèmes. Envelopper l'alerte dans un `setTimeout()` pour permettre le sélecteur d'image iOS ou kangourou pour fermer entièrement avant que l'alerte s'affiche :
 
-    setTimeout(function() {/ / votre code ici!}, 0) ;
+    setTimeout(function() {/ / faire votre truc ici!}, 0) ;
     
 
 ### Windows Phone 7 Quirks
@@ -111,48 +119,31 @@ Paciarelli prend uniquement en charge un `destinationType` de `Camera.Destinatio
 
 Prendre une photo, puis extrayez-la comme une image codée en base64 :
 
-    navigator.camera.getPicture(onSuccess, onFail, { quality: 50,
+    navigator.camera.getPicture (onSuccess, onFail, { quality: 50,
         destinationType: Camera.DestinationType.DATA_URL
-    });
+    }) ;
     
-    function onSuccess(imageData) {
-        var image = document.getElementById('myImage');
-        image.src = "data:image/jpeg;base64," + imageData;
-    }
+    function onSuccess(imageData) {var image = document.getElementById('myImage') ;
+        image.src = "données : image / jpeg ; base64," + imageData;}
     
-    function onFail(message) {
-        alert('Failed because: ' + message);
-    }
+    function onFail(message) {alert (' a échoué car: "+ message);}
     
 
 Prendre une photo et récupérer l'emplacement du fichier de l'image :
 
-    navigator.camera.getPicture(onSuccess, onFail, { quality: 50,
-        destinationType: Camera.DestinationType.FILE_URI });
+    navigator.camera.getPicture (onSuccess, onFail, { quality: 50,
+        destinationType: Camera.DestinationType.FILE_URI }) ;
     
-    function onSuccess(imageURI) {
-        var image = document.getElementById('myImage');
-        image.src = imageURI;
-    }
-    
-    function onFail(message) {
-        alert('Failed because: ' + message);
-    }
+    function onSuccess(imageURI) {var image = document.getElementById('myImage') ;
+        image.SRC = imageURI ;
+    } function onFail(message) {alert (' a échoué car: "+ message);}
     
 
 ## CameraOptions
 
 Paramètres optionnels pour personnaliser les réglages de l'appareil.
 
-    { quality : 75,
-      destinationType : Camera.DestinationType.DATA_URL,
-      sourceType : Camera.PictureSourceType.CAMERA,
-      allowEdit : true,
-      encodingType: Camera.EncodingType.JPEG,
-      targetWidth: 100,
-      targetHeight: 100,
-      popoverOptions: CameraPopoverOptions,
-      saveToPhotoAlbum: false };
+    {qualité : destinationType 75,: Camera.DestinationType.DATA_URL, TypeSource : Camera.PictureSourceType.CAMERA, allowEdit : encodingType vrai,: Camera.EncodingType.JPEG, targetWidth : 100, targetHeight : 100, popoverOptions : CameraPopoverOptions, saveToPhotoAlbum : false} ;
     
 
 ### Options
@@ -292,9 +283,7 @@ Paramètres optionnels pour personnaliser les réglages de l'appareil.
 
 fonction de rappel onError qui fournit un message d'erreur.
 
-    function(message) {
-        // Show a helpful message
-    }
+    function(message) {/ / afficher un message utile}
     
 
 ### Paramètres
@@ -305,9 +294,7 @@ fonction de rappel onError qui fournit un message d'erreur.
 
 fonction de rappel onSuccess qui fournit les données d'image.
 
-    function(imageData) {
-        // Do something with the image
-    }
+    function(ImageData) {/ / faire quelque chose avec l'image}
     
 
 ### Paramètres
@@ -316,12 +303,8 @@ fonction de rappel onSuccess qui fournit les données d'image.
 
 ### Exemple
 
-    // Show image
-    //
-    function cameraCallback(imageData) {
-        var image = document.getElementById('myImage');
-        image.src = "data:image/jpeg;base64," + imageData;
-    }
+    Afficher image / / function cameraCallback(imageData) {var image = document.getElementById('myImage') ;
+        image.src = "données : image / jpeg ; base64," + imageData;}
     
 
 ## CameraPopoverHandle
@@ -346,16 +329,11 @@ Définir la position de la kangourou.
 
 ### Exemple
 
-     var cameraPopoverHandle = navigator.camera.getPicture(onSuccess, onFail,
-         { destinationType: Camera.DestinationType.FILE_URI,
-           sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
-           popoverOptions: new CameraPopoverOptions(300, 300, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY)
-         });
+     var cameraPopoverHandle = navigator.camera.getPicture (onSuccess, onFail, {destinationType : Camera.DestinationType.FILE_URI, TypeSource : Camera.PictureSourceType.PHOTOLIBRARY, popoverOptions : nouvelle CameraPopoverOptions (300, 300, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY)}) ;
     
-     // Reposition the popover if the orientation changes.
-     window.onorientationchange = function() {
-         var cameraPopoverOptions = new CameraPopoverOptions(0, 0, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY);
-         cameraPopoverHandle.setPosition(cameraPopoverOptions);
+     Repositionner le kangourou si l'orientation change.
+     Window.onorientationchange = function() {var cameraPopoverOptions = new CameraPopoverOptions (0, 0, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY) ;
+         cameraPopoverHandle.setPosition(cameraPopoverOptions) ;
      }
     
 
@@ -363,7 +341,7 @@ Définir la position de la kangourou.
 
 iOS uniquement les paramètres qui spécifient la direction ancre élément emplacement et de la flèche de la kangourou lors de la sélection des images de la bibliothèque de l'iPad ou l'album.
 
-    { x : 0, y :  32, width : 320, height : 480, arrowDir : Camera.PopoverArrowDirection.ARROW_ANY };
+    {x: 0, y: 32, largeur : 320, hauteur : 480, arrowDir : Camera.PopoverArrowDirection.ARROW_ANY} ;
     
 
 ### CameraPopoverOptions
@@ -393,7 +371,7 @@ Notez que la taille de la kangourou peut changer pour s'adapter à la direction 
 
 Supprime les intermédiaires photos prises par la caméra de stockage temporaire.
 
-    navigator.camera.cleanup( cameraSuccess, cameraError );
+    Navigator.Camera.Cleanup (cameraSuccess, cameraError) ;
     
 
 ### Description
@@ -406,12 +384,8 @@ Supprime les intermédiaires les fichiers image qui sont gardées en dépôt tem
 
 ### Exemple
 
-    navigator.camera.cleanup(onSuccess, onFail);
+    Navigator.Camera.Cleanup (onSuccess, onFail) ;
     
-    function onSuccess() {
-        console.log("Camera cleanup success.")
-    }
+    fonction onSuccess() {console.log ("succès de caméra nettoyage.")}
     
-    function onFail(message) {
-        alert('Failed because: ' + message);
-    }
+    function onFail(message) {alert (' a échoué car: "+ message);}

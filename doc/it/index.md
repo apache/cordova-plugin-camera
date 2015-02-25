@@ -19,25 +19,35 @@
 
 # org.apache.cordova.camera
 
-Questo plugin fornisce un'API per scattare foto e per aver scelto immagini dalla libreria di immagini del sistema.
+Questo plugin definisce un oggetto globale `navigator.camera`, che fornisce un'API per scattare foto e per aver scelto immagini dalla libreria di immagini del sistema.
+
+Anche se l'oggetto è associato con ambito globale del `navigator`, non è disponibile fino a dopo l'evento `deviceready`.
+
+    document.addEventListener("deviceready", onDeviceReady, false);
+    function onDeviceReady() {
+        console.log(navigator.camera);
+    }
+    
+
+## Installazione
 
     cordova plugin add org.apache.cordova.camera
     
 
 ## navigator.camera.getPicture
 
-Prende una foto utilizzando la fotocamera, o recupera una foto dalla galleria di immagini del dispositivo. L'immagine viene passata al metodo di callback successo come una codifica base64 `String` , o come l'URI per il file di immagine. Il metodo stesso restituisce un `CameraPopoverHandle` che può essere utilizzato per riposizionare il Muffin di selezione file.
+Prende una foto utilizzando la fotocamera, o recupera una foto dalla galleria di immagini del dispositivo. L'immagine è passata al callback di successo come `String` con codifica base64, o come l'URI per il file di immagine. Lo stesso metodo restituisce un oggetto `CameraPopoverHandle` che può essere utilizzato per riposizionare il Muffin di selezione file.
 
     navigator.camera.getPicture( cameraSuccess, cameraError, cameraOptions );
     
 
 ### Descrizione
 
-il `camera.getPicture` funzione apre predefinito fotocamera applicazione il dispositivo che consente agli utenti di scattare foto. Questo comportamento si verifica per impostazione predefinita, quando `Camera.sourceType` è uguale a `Camera.PictureSourceType.CAMERA` . Una volta che l'utente scatta la foto, si chiude l'applicazione fotocamera e l'applicazione viene ripristinato.
+La funzione `camera.getPicture` apre predefinito fotocamera applicazione il dispositivo che consente agli utenti di scattare foto. Questo comportamento si verifica per impostazione predefinita, quando `Camera.sourceType` è uguale a `Camera.PictureSourceType.CAMERA`. Una volta che l'utente scatta la foto, si chiude l'applicazione fotocamera e l'applicazione viene ripristinato.
 
-Se `Camera.sourceType` è `Camera.PictureSourceType.PHOTOLIBRARY` o `Camera.PictureSourceType.SAVEDPHOTOALBUM` , quindi un display finestra di dialogo che consente agli utenti di selezionare un'immagine esistente. La `camera.getPicture` la funzione restituisce un `CameraPopoverHandle` oggetto, che può essere utilizzato per riposizionare la finestra di selezione immagine, ad esempio, quando l'orientamento del dispositivo.
+Se `Camera.sourceType` è `Camera.PictureSourceType.PHOTOLIBRARY` o `Camera.PictureSourceType.SAVEDPHOTOALBUM`, una finestra di dialogo Visualizza che permette agli utenti di selezionare un'immagine esistente. La funzione `camera.getPicture` restituisce un oggetto `CameraPopoverHandle` che può essere utilizzato per riposizionare la finestra di selezione immagine, ad esempio, quando l'orientamento del dispositivo.
 
-Il valore restituito viene inviato alla `cameraSuccess` funzione di callback, in uno dei seguenti formati, a seconda che l'oggetto specificato `cameraOptions` :
+Il valore restituito viene inviato alla funzione di callback `cameraSuccess`, in uno dei seguenti formati, a seconda il `cameraOptions` specificato:
 
 *   A `String` contenente l'immagine della foto con codifica base64.
 
@@ -53,7 +63,7 @@ Si può fare quello che vuoi con l'immagine codificata o URI, ad esempio:
 
  [1]: http://brianleroux.github.com/lawnchair/
 
-**Nota**: risoluzione foto sui più recenti dispositivi è abbastanza buona. Foto selezionate dalla galleria del dispositivo non è percepiranno di qualità inferiore, anche se un `quality` è specificato il parametro. Per evitare problemi di memoria comune, impostare `Camera.destinationType` a `FILE_URI` piuttosto che`DATA_URL`.
+**Nota**: risoluzione foto sui più recenti dispositivi è abbastanza buona. Foto selezionate dalla galleria del dispositivo non è percepiranno di qualità inferiore, anche se viene specificato un parametro di `quality`. Per evitare problemi di memoria comune, impostare `Camera.destinationType` `FILE_URI` piuttosto che `DATA_URL`.
 
 ### Piattaforme supportate
 
@@ -88,24 +98,26 @@ Può restituire solo la foto come immagine con codifica base64.
 
 ### Firefox OS stranezze
 
-Fotocamera plugin è attualmente implementato mediante [Attività Web][2].
+Fotocamera plugin è attualmente implementato mediante [Web Activities][2].
 
  [2]: https://hacks.mozilla.org/2013/01/introducing-web-activities/
 
 ### iOS stranezze
 
-Compreso un JavaScript `alert()` in entrambi il callback funzioni possono causare problemi. Avvolgere l'avviso all'interno di un `setTimeout()` per consentire la selezione immagine iOS o muffin per chiudere completamente la prima che viene visualizzato l'avviso:
+Compreso un JavaScript `alert()` in una delle funzioni di callback può causare problemi. Avvolgere l'avviso all'interno di un `setTimeout()` per consentire la selezione immagine iOS o muffin per chiudere completamente la prima che viene visualizzato l'avviso:
 
-    setTimeout(function() {/ / fai la tua cosa qui!}, 0);
+    setTimeout(function() {
+        // do your thing here!
+    }, 0);
     
 
-### Windows Phone 7 capricci
+### Windows Phone 7 stranezze
 
 Richiamando l'applicazione nativa fotocamera mentre il dispositivo è collegato tramite Zune non funziona e innesca un callback di errore.
 
 ### Tizen stranezze
 
-Tizen supporta solo un `destinationType` di `Camera.DestinationType.FILE_URI` e un `sourceType` di`Camera.PictureSourceType.PHOTOLIBRARY`.
+Tizen supporta solo a `destinationType` di `Camera.DestinationType.FILE_URI` e un `sourceType` di `Camera.PictureSourceType.PHOTOLIBRARY`.
 
 ### Esempio
 
@@ -144,12 +156,20 @@ Scattare una foto e recuperare il percorso del file dell'immagine:
 
 Parametri opzionali per personalizzare le impostazioni della fotocamera.
 
-    {qualità: 75, destinationType: Camera.DestinationType.DATA_URL, sourceType: Camera.PictureSourceType.CAMERA, allowEdit: vero, encodingType: Camera.EncodingType.JPEG, targetWidth: 100, targetHeight: 100, popoverOptions: CameraPopoverOptions, saveToPhotoAlbum: false};
+    { quality : 75,
+      destinationType : Camera.DestinationType.DATA_URL,
+      sourceType : Camera.PictureSourceType.CAMERA,
+      allowEdit : true,
+      encodingType: Camera.EncodingType.JPEG,
+      targetWidth: 100,
+      targetHeight: 100,
+      popoverOptions: CameraPopoverOptions,
+      saveToPhotoAlbum: false };
     
 
 ### Opzioni
 
-*   **qualità**: qualità dell'immagine salvata, espressa come un intervallo di 0-100, dove 100 è tipicamente piena risoluzione senza perdita di compressione file. Il valore predefinito è 50. *(Numero)* (Si noti che informazioni sulla risoluzione della fotocamera non sono disponibile).
+*   **quality**: qualità dell'immagine salvata, espressa come un intervallo di 0-100, dove 100 è tipicamente piena risoluzione senza perdita di compressione file. Il valore predefinito è 50. *(Numero)* (Si noti che informazioni sulla risoluzione della fotocamera non sono disponibile).
 
 *   **destinationType**: Scegli il formato del valore restituito. Il valore predefinito è FILE_URI. Definito in `navigator.camera.DestinationType` *(numero)*
     
@@ -291,7 +311,7 @@ funzione di callback onError che fornisce un messaggio di errore.
 
 ### Parametri
 
-*   **messaggio**: il messaggio è fornito dal codice nativo del dispositivo. *(String)*
+*   **message**: il messaggio è fornito dal codice nativo del dispositivo. *(String)*
 
 ## cameraSuccess
 
@@ -318,7 +338,7 @@ funzione di callback onSuccess che fornisce i dati di immagine.
 
 ## CameraPopoverHandle
 
-Un handle per la finestra di dialogo di muffin creato da`navigator.camera.getPicture`.
+Un handle per la finestra di dialogo di muffin creato da `navigator.camera.getPicture`.
 
 ### Metodi
 
@@ -355,7 +375,12 @@ Impostare la posizione dei muffin.
 
 iOS solo parametri che specificano l'ancoraggio elemento posizione e freccia direzione il Muffin quando si selezionano le immagini dalla libreria un iPad o un album.
 
-    {x: 0, y: 32, larghezza: 320, altezza: 480, arrowDir: Camera.PopoverArrowDirection.ARROW_ANY};
+    { x : 0,
+      y :  32,
+      width : 320,
+      height : 480,
+      arrowDir : Camera.PopoverArrowDirection.ARROW_ANY
+    };
     
 
 ### CameraPopoverOptions
@@ -364,9 +389,9 @@ iOS solo parametri che specificano l'ancoraggio elemento posizione e freccia dir
 
 *   **y**: coordinata y di pixel dell'elemento dello schermo su cui ancorare il muffin. *(Numero)*
 
-*   **larghezza**: larghezza, in pixel, dell'elemento dello schermo su cui ancorare il muffin. *(Numero)*
+*   **width**: larghezza, in pixel, dell'elemento dello schermo su cui ancorare il muffin. *(Numero)*
 
-*   **altezza**: altezza, in pixel, dell'elemento dello schermo su cui ancorare il muffin. *(Numero)*
+*   **height**: altezza, in pixel, dell'elemento dello schermo su cui ancorare il muffin. *(Numero)*
 
 *   **arrowDir**: direzione dovrebbe puntare la freccia il muffin. Definito in `Camera.PopoverArrowDirection` *(numero)*
     
@@ -381,7 +406,7 @@ iOS solo parametri che specificano l'ancoraggio elemento posizione e freccia dir
 
 Si noti che la dimensione del muffin possa cambiare per regolare la direzione della freccia e l'orientamento dello schermo. Assicurarsi che tenere conto di modifiche di orientamento quando si specifica la posizione di elemento di ancoraggio.
 
-## Navigator.camera.Cleanup
+## navigator.camera.cleanup
 
 Rimuove intermedio foto scattate con la fotocamera da deposito temporaneo.
 
@@ -390,7 +415,7 @@ Rimuove intermedio foto scattate con la fotocamera da deposito temporaneo.
 
 ### Descrizione
 
-Rimuove intermedio i file di immagine che vengono tenuti in custodia temporanea dopo la chiamata `camera.getPicture` . Si applica solo quando il valore di `Camera.sourceType` è uguale a `Camera.PictureSourceType.CAMERA` e il `Camera.destinationType` è uguale a`Camera.DestinationType.FILE_URI`.
+Rimuove i file di immagine intermedia che vengono tenuti in custodia temporanea dopo la chiamata a `camera.getPicture`. Si applica solo quando il valore di `Camera.sourceType` è uguale a `Camera.PictureSourceType.CAMERA` e il `Camera.destinationType` è uguale a `Camera.DestinationType.FILE_URI`.
 
 ### Piattaforme supportate
 

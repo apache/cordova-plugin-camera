@@ -19,31 +19,41 @@
 
 # org.apache.cordova.camera
 
-這個外掛程式提供了一個 API，拍照，從系統的圖像庫中選擇圖像。
+這個外掛程式定義了一個全球 `navigator.camera` 物件，它提供了 API，拍照，從系統的圖像庫中選擇圖像。
+
+雖然該物件附加到全球範圍內 `導航器`，它不可用直到 `deviceready` 事件之後。
+
+    document.addEventListener("deviceready", onDeviceReady, false);
+    function onDeviceReady() {
+        console.log(navigator.camera);
+    }
+    
+
+## 安裝
 
     cordova plugin add org.apache.cordova.camera
     
 
 ## navigator.camera.getPicture
 
-需要使用的相機，一張照片或從設備的圖像庫檢索一張照片。 圖像作為 base64 編碼傳遞成功回檔到 `String` ，或作為影像檔的 URI。 該方法本身返回 `CameraPopoverHandle` 可以用於重新置放檔選擇彈出的物件。
+需要一張照片，使用相機，或從設備的圖像庫檢索一張照片。 圖像被傳遞給成功回檔的 base64 編碼 `String`，或作為 URI 為影像檔。 該方法本身返回一個 `CameraPopoverHandle` 物件，它可以用來重新置放檔選擇氣泡框。
 
     navigator.camera.getPicture( cameraSuccess, cameraError, cameraOptions );
     
 
 ### 說明
 
-`camera.getPicture`函數將打開該設備的預設攝像頭應用程式，使使用者能夠對齊圖片。 預設情況下，會發生此行為時 `Camera.sourceType` 等於 `Camera.PictureSourceType.CAMERA` 。 一旦使用者快照照片、 攝像頭應用程式關閉，並恢復該應用程式。
+`camera.getPicture` 函數打開該設備的預設攝像頭應用程式，允許使用者拍照。 `Camera.sourceType` 等於 `Camera.PictureSourceType.CAMERA` 時，預設情況下，發生此行為。 一旦使用者打斷了他的照片，相機應用程式關閉，且應用程式還原。
 
-如果 `Camera.sourceType` 是 `Camera.PictureSourceType.PHOTOLIBRARY` 或 `Camera.PictureSourceType.SAVEDPHOTOALBUM` ，然後允許使用者選擇一個現有圖像對話方塊的顯示。 `camera.getPicture`函數返回 `CameraPopoverHandle` 物件，可用於設備方向更改時重新置放圖像選擇對話方塊，例如。
+如果 `Camera.sourceType` 是 `Camera.PictureSourceType.PHOTOLIBRARY` 或 `Camera.PictureSourceType.SAVEDPHOTOALBUM`，然後顯示一個對話方塊，允許使用者選擇一個現有的圖像。 `camera.getPicture` 函數返回一個 `CameraPopoverHandle` 物件，它可以用於重新置放圖像選擇的對話方塊，例如，當設備的方向變化。
 
-傳回值發送到 `cameraSuccess` 回呼函數，根據指定的以下格式之一 `cameraOptions` ：
+傳回值是發送到 `cameraSuccess` 回呼函數中，在以下的格式，具體取決於指定的 `cameraOptions` 之一：
 
 *   A `String` 包含的 base64 編碼的照片圖像。
 
 *   A `String` 表示在本機存放區 （預設值） 上的影像檔位置。
 
-你可以做任何你想與編碼的圖像或 URI，例如：
+你可以做任何你想要的編碼的圖像或 URI，例如：
 
 *   呈現在圖像 `<img>` 標記，如下面的示例所示
 
@@ -53,7 +63,7 @@
 
  [1]: http://brianleroux.github.com/lawnchair/
 
-**注**： 在較新的設備上的照片解析度是相當好。 從設備的庫選擇了照片不到較低的品質，壓縮螢幕使即使 `quality` 指定參數。 為了避免常見的記憶體問題，設置 `Camera.destinationType` 到 `FILE_URI` 而不是`DATA_URL`.
+**注**： 在更新設備上的照片解析度是很好。 選擇從設備的庫的照片是不壓縮螢幕使其以較低的品質，即使指定了一個 `quality` 參數。 要避免常見的記憶體問題，請將 `Camera.destinationType` 設置為 `FILE_URI`，而不是 `DATA_URL`.
 
 ### 支援的平臺
 
@@ -76,11 +86,11 @@
 
 ### 亞馬遜火 OS 怪癖
 
-亞馬遜火 OS 使用意向啟動捕獲圖像，在設備上的相機活動和與低記憶體手機，科爾多瓦活動可能被殺。 在此方案中，可能不會顯示圖像還原科爾多瓦活動時。
+亞馬遜火 OS 使用意圖啟動相機活動設備來捕捉圖像上, 和手機上記憶體不足，科爾多瓦活動可能被殺害。 在這種情況下，可能不會顯示圖像時恢復了科爾多瓦活動。
 
 ### Android 的怪癖
 
-Android 使用意向啟動捕獲圖像，在設備上的相機活動和與低記憶體手機，科爾多瓦活動可能被殺。 在此方案中，可能不會顯示圖像還原科爾多瓦活動時。
+Android 使用意圖以啟動相機活動設備來捕捉圖像上, 和手機上記憶體不足，科爾多瓦活動可能被殺害。 在這種情況下，可能不會顯示圖像時恢復了科爾多瓦活動。
 
 ### 瀏覽器的怪癖
 
@@ -88,15 +98,17 @@ Android 使用意向啟動捕獲圖像，在設備上的相機活動和與低記
 
 ### 火狐瀏覽器作業系統的怪癖
 
-觀景窗外掛程式目前實施使用[Web 活動][2].
+觀景窗外掛程式目前實施使用 [Web 活動][2].
 
  [2]: https://hacks.mozilla.org/2013/01/introducing-web-activities/
 
 ### iOS 的怪癖
 
-包括 JavaScript `alert()` 在任何回呼函數可能會導致問題。 包裝內的警報 `setTimeout()` 允許 iOS 圖像選取器或氣泡框以完全關閉之前，警報將顯示：
+包括 JavaScript `alert ()` 中的回呼函數會導致問題。 包裝內 `setTimeout()` 允許 iOS 圖像選取器或氣泡框以完全關閉之前，警報將顯示警報：
 
-    setTimeout(function() {/ / 做你的事!}，0) ；
+    setTimeout(function() {
+        // do your thing here!
+    }, 0);
     
 
 ### Windows Phone 7 的怪癖
@@ -105,7 +117,7 @@ Android 使用意向啟動捕獲圖像，在設備上的相機活動和與低記
 
 ### 泰怪癖
 
-泰僅支援 `destinationType` 的 `Camera.DestinationType.FILE_URI` 和 `sourceType` 的`Camera.PictureSourceType.PHOTOLIBRARY`.
+泰只支援 `destinationType` 的 `Camera.DestinationType.FILE_URI` 和 `Camera.PictureSourceType.PHOTOLIBRARY` 的 `sourceType`.
 
 ### 示例
 
@@ -144,7 +156,15 @@ Android 使用意向啟動捕獲圖像，在設備上的相機活動和與低記
 
 要自訂相機設置的可選參數。
 
-    {品質： 75，destinationType： Camera.DestinationType.DATA_URL，sourceType： Camera.PictureSourceType.CAMERA，allowEdit： 為 true，encodingType： Camera.EncodingType.JPEG，targetWidth： 100，targetHeight： 100，popoverOptions： CameraPopoverOptions，saveToPhotoAlbum： 虛假} ；
+    { quality : 75,
+      destinationType : Camera.DestinationType.DATA_URL,
+      sourceType : Camera.PictureSourceType.CAMERA,
+      allowEdit : true,
+      encodingType: Camera.EncodingType.JPEG,
+      targetWidth: 100,
+      targetHeight: 100,
+      popoverOptions: CameraPopoverOptions,
+      saveToPhotoAlbum: false };
     
 
 ### 選項
@@ -292,7 +312,7 @@ onError 的回呼函數提供了一條錯誤訊息。
 
 ### 參數
 
-*   **消息**： 消息提供的設備的本機代碼。*（字串）*
+*   **message**： 消息提供的設備的本機代碼。*（String）*
 
 ## cameraSuccess
 
@@ -305,7 +325,7 @@ onError 的回呼函數提供了一條錯誤訊息。
 
 ### 參數
 
-*   **圖像資料**： Base64 編碼進行編碼的圖像資料，*或*影像檔的 URI，取決於 `cameraOptions` 效果。*（字串）*
+*   **imageData**： Base64 編碼進行編碼的圖像資料，*或*影像檔的 URI，取決於 `cameraOptions` 效果。*（String）*
 
 ### 示例
 
@@ -319,7 +339,7 @@ onError 的回呼函數提供了一條錯誤訊息。
 
 ## CameraPopoverHandle
 
-由創建的氣泡框對話方塊的控制碼`navigator.camera.getPicture`.
+由 `navigator.camera.getPicture` 創建的氣泡框對話方塊的控制碼.
 
 ### 方法
 
@@ -356,7 +376,12 @@ onError 的回呼函數提供了一條錯誤訊息。
 
 iOS 僅指定氣泡框的錨元素的位置和箭頭方向，從 iPad 庫或專輯選擇圖像時的參數。
 
-    {x: 0，y： 32，寬度： 320，高度： 480，arrowDir： Camera.PopoverArrowDirection.ARROW_ANY} ；
+    { x : 0,
+      y :  32,
+      width : 320,
+      height : 480,
+      arrowDir : Camera.PopoverArrowDirection.ARROW_ANY
+    };
     
 
 ### CameraPopoverOptions
@@ -365,9 +390,9 @@ iOS 僅指定氣泡框的錨元素的位置和箭頭方向，從 iPad 庫或專�
 
 *   **y**： 螢幕元素到其錨定氣泡框上的 y 圖元座標。*（人數）*
 
-*   **寬度**： 寬度以圖元為單位），到其錨定氣泡框上的螢幕元素。*（人數）*
+*   **width**： 寬度以圖元為單位），到其錨定氣泡框上的螢幕元素。*（人數）*
 
-*   **高度**： 高度以圖元為單位），到其錨定氣泡框上的螢幕元素。*（人數）*
+*   **height**： 高度以圖元為單位），到其錨定氣泡框上的螢幕元素。*（人數）*
 
 *   **arrowDir**： 氣泡框上的箭頭應指向的方向。定義在 `Camera.PopoverArrowDirection` *（人數）*
     
@@ -391,7 +416,7 @@ iOS 僅指定氣泡框的錨元素的位置和箭頭方向，從 iPad 庫或專�
 
 ### 描述
 
-刪除中間打完電話後保留在臨時存儲中的影像檔 `camera.getPicture` 。 只有當適用的價值 `Camera.sourceType` 等於 `Camera.PictureSourceType.CAMERA` 和 `Camera.destinationType` 等於`Camera.DestinationType.FILE_URI`.
+刪除保留在臨時存儲在調用 `camera.getPicture` 後的中間的影像檔。 適用只有當 `Camera.sourceType` 的值等於 `Camera.PictureSourceType.CAMERA` 和 `Camera.destinationType` 等於 `Camera.DestinationType.FILE_URI`.
 
 ### 支援的平臺
 
