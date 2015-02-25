@@ -35,25 +35,14 @@
         NSArray* mediaArray = @[(NSString*)(pictureOptions.mediaType == MediaTypeVideo ? kUTTypeMovie : kUTTypeImage)];
         newOverlay.mediaTypes = mediaArray;
     }
+    // Set the frames to be full screen
+    //CGRect screenFrame = [[UIScreen mainScreen] bounds];
+    //newOverlay.view.frame = screenFrame;
     
     newOverlay.showsCameraControls = NO;
     newOverlay.cameraOverlayView = newOverlay.view;
     
     return newOverlay;
-}
-
-+ (UIView*) getOverlayView {
-    UIView *overlay = [[UIView alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    overlay.backgroundColor = [UIColor clearColor];
-    overlay.clipsToBounds = NO;
-    
-    CGRect buttonFrame = CGRectMake( 10, 80, 100, 30 );
-    UIButton *button = [[UIButton alloc] initWithFrame: buttonFrame];
-    [button setTitle: @"My Button" forState: UIControlStateNormal];
-    [button setTitleColor: [UIColor blueColor] forState: UIControlStateNormal];
-    [overlay addSubview: button];
-    
-    return overlay;
 }
 
 
