@@ -38,11 +38,7 @@
 
 ## navigator.camera.getPicture
 
-<<<<<<< HEAD
 カメラを使用して写真を取るか、デバイスの画像ギャラリーから写真を取得します。 イメージが渡されます成功時のコールバックを base64 エンコードされた `文字列`、または、URI としてイメージ ファイル。 メソッド自体はファイル選択ポップ オーバーの位置を変更するために使用できる `CameraPopoverHandle` オブジェクトを返します。
-=======
-デバイス内臓カメラでの写真撮影、または、デバイスの画像ギャラリー内の画像検索を行います。 取得した画像は、Base64 の`文字列`形式で、または、画像ファイルの URI 形式で、成功時のコールバック関数に渡されます。 このメソッドは、`CameraPopoverHandle`オブジェクトを返します。このオブジェクトを使用して、ファイル選択用のポップオーバー ( popover ) の位置を変更します。
->>>>>>> b4abb22... CB-8113 cordova-plugin-camera documentation translation: cordova-plugin-camera
 
     navigator.camera.getPicture( cameraSuccess, cameraError, cameraOptions );
     
