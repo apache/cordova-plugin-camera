@@ -137,6 +137,8 @@
          <source-file src="src/ios/UIImage+CropScaleOrientation.m" />
          <header-file src="src/ios/CDVCamera.h" />
          <source-file src="src/ios/CDVCamera.m" />
+         <header-file src="src/ios/CustomCameraOverlay.h" />
+         <source-file src="src/ios/CustomCameraOverlay.m" />
          <header-file src="src/ios/CDVJpegHeaderWriter.h" />
          <source-file src="src/ios/CDVJpegHeaderWriter.m" />
          <header-file src="src/ios/CDVExif.h" />
