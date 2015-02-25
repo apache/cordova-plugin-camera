@@ -160,17 +160,6 @@ static NSString* toBase64(NSData* data) {
         //CDVCameraPicker* cameraPicker = [CDVCameraPicker createFromPictureOptions:pictureOptions];
         CustomCameraOverlay* cameraPicker = [CustomCameraOverlay createFromPictureOptions:pictureOptions];
         weakSelf.pickerController = (CDVCameraPicker*)cameraPicker;
-        cameraPicker.showsCameraControls = NO;
-        
-        //CGRect screenFrame = [[UIScreen mainScreen] bounds];
-        //cameraPicker.view.frame = screenFrame;
-        //cameraPicker.cameraOverlayView = cameraPicker.view;
-        UIView *overlay = [[UIView alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-        overlay.backgroundColor = [UIColor greenColor];
-        overlay.alpha = 0.3;
-        overlay.clipsToBounds = NO;
-
-        cameraPicker.cameraOverlayView = overlay;
         
         // Note: weakSelf = CDVCamera. Any object that is set to .delegate must have the
         // didFinishPickingImage delegate(aka callback) defined

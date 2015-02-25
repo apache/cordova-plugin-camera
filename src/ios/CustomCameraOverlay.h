@@ -7,9 +7,11 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "CDVCamera.h"
 
-@interface CustomCameraOverlay : UIViewController
-
+@interface CustomCameraOverlay : CDVCameraPicker
+/*
 -(IBAction) takePhotoButtonPressed:(id)sender forEvent:(UIEvent*)event;
-
+*/
++ (instancetype) createFromPictureOptions:(CDVPictureOptions*)options;
 @end
