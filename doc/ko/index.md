@@ -19,25 +19,35 @@
 
 # org.apache.cordova.camera
 
-이 플러그인 사진 촬영을 위한 및 시스템의 이미지 라이브러리에서 이미지를 선택 하기 위한 API를 제공 합니다.
+이 플러그인 시스템의 이미지 라이브러리에서 이미지를 선택 및 사진 촬영을 위한 API를 제공 하는 글로벌 `navigator.camera` 개체를 정의 합니다.
+
+개체 `navigator` 글로벌 범위 첨부 아니에요 때까지 사용할 수 있는 `deviceready` 이벤트 후.
+
+    document.addEventListener("deviceready", onDeviceReady, false);
+    function onDeviceReady() {
+        console.log(navigator.camera);
+    }
+    
+
+## 설치
 
     cordova plugin add org.apache.cordova.camera
     
 
 ## navigator.camera.getPicture
 
-카메라를 사용 하 여 사진을 걸립니다 또는 소자의 이미지 갤러리에서 사진을 검색 합니다. 이미지 base64 인코딩으로 성공 콜백에 전달 됩니다 `String` , 또는 이미지 파일에 대 한 URI로. 방법 자체는 반환 합니다 한 `CameraPopoverHandle` 개체 파일 선택 popover를 재배치 하는 데 사용할 수 있습니다.
+카메라를 사용 하 여 사진을 걸립니다 또는 소자의 이미지 갤러리에서 사진을 검색 합니다. 이미지는 성공 콜백에 전달 base64 인코딩된 `문자열` 또는 URI로 이미지 파일에 대 한. 방법 자체는 파일 선택 popover 위치를 사용할 수 있는 `CameraPopoverHandle` 개체를 반환 합니다.
 
     navigator.camera.getPicture( cameraSuccess, cameraError, cameraOptions );
     
 
 ### 설명
 
-`camera.getPicture`기능 스냅 사진을 사용자가 디바이스의 기본 카메라 응용 프로그램을 엽니다. 이 동작은 기본적으로 발생 할 때 `Camera.sourceType` 와 `Camera.PictureSourceType.CAMERA` . 일단 사용자 스냅 사진, 카메라 응용 프로그램 종료 하 고 응용 프로그램 복원 됩니다.
+`Camera.getPicture` 함수 스냅 사진을 사용자가 소자의 기본 카메라 응용 프로그램을 엽니다. 이 문제는 `Camera.sourceType` `Camera.PictureSourceType.CAMERA` 경우 기본적으로 발생 합니다. 일단 사용자 스냅 사진, 카메라 응용 프로그램 종료 하 고 응용 프로그램 복원 됩니다.
 
-경우 `Camera.sourceType` 은 `Camera.PictureSourceType.PHOTOLIBRARY` 또는 `Camera.PictureSourceType.SAVEDPHOTOALBUM` , 사용자가 기존 이미지를 선택할 수 있도록 다음 대화 상자 표시. `camera.getPicture`반환 함수는 `CameraPopoverHandle` 장치 방향 변경 될 때 이미지 선택 대화 상자, 예를 들어, 위치를 변경 하려면 사용할 수 있는 개체.
+`Camera.sourceType`은 `Camera.PictureSourceType.PHOTOLIBRARY` 또는 `Camera.PictureSourceType.SAVEDPHOTOALBUM`, 대화 상자가 사용자가 기존 이미지를 선택할 수 있도록 표시 됩니다. `camera.getPicture` 함수는 장치 방향 변경 될 때 이미지 선택 대화 상자, 예를 들어, 위치를 변경 하려면 사용할 수 있는 `CameraPopoverHandle` 개체를 반환 합니다.
 
-반환 값에 전송 되는 `cameraSuccess` 콜백 함수에 따라 지정 된 다음 형식 중 하나에 `cameraOptions` :
+반환 값은 `cameraSuccess` 콜백 함수 지정된 `cameraOptions`에 따라 다음 형식 중 하나에 전송 됩니다.
 
 *   A `String` base64 인코딩된 사진 이미지를 포함 합니다.
 
@@ -53,7 +63,7 @@
 
  [1]: http://brianleroux.github.com/lawnchair/
 
-**참고**: 더 새로운 장치에 사진 해상도 아주 좋은. 소자의 갤러리에서 선택 된 사진을 하지 낮은 품질에 관하여는 경우에는 `quality` 매개 변수를 지정 합니다. 일반적인 메모리 문제를 방지 하려면 설정 `Camera.destinationType` 을 `FILE_URI` 보다는`DATA_URL`.
+**참고**: 더 새로운 장치에 사진 해상도 아주 좋은. 소자의 갤러리에서 선택 된 사진 `품질` 매개 변수를 지정 하는 경우에 낮은 품질에 관하여 하지는. 일반적인 메모리 문제를 피하기 위해 `DATA_URL` 보다 `FILE_URI` `Camera.destinationType` 설정.
 
 ### 지원 되는 플랫폼
 
@@ -88,15 +98,17 @@
 
 ### 파이어 폭스 OS 단점
 
-카메라 플러그인은 현재 [웹 활동][2] 를 사용 하 여 구현.
+카메라 플러그인은 현재 [웹 활동][2]를 사용 하 여 구현.
 
  [2]: https://hacks.mozilla.org/2013/01/introducing-web-activities/
 
 ### iOS 단점
 
-자바 스크립트를 포함 하 여 `alert()` 함수는 콜백 중에 문제를 일으킬 수 있습니다. 내 경고를 래핑하는 `setTimeout()` 허용 iOS 이미지 피커 또는 popover를 완벽 하 게 경고를 표시 하기 전에 닫습니다:
+자바 `alert()`를 포함 하 여 콜백 함수 중 하나에 문제가 발생할 수 있습니다. 포장 허용 iOS 이미지 피커 또는 popover를 완벽 하 게 경고를 표시 하기 전에 닫습니다 `setTimeout()` 내에서 경고:
 
-    setTimeout(function() {/ / 여기 짓!}, 0);
+    setTimeout(function() {
+        // do your thing here!
+    }, 0);
     
 
 ### Windows Phone 7 단점
@@ -105,7 +117,7 @@
 
 ### Tizen 특수
 
-Tizen만 지원 한 `destinationType` 의 `Camera.DestinationType.FILE_URI` 와 `sourceType` 의`Camera.PictureSourceType.PHOTOLIBRARY`.
+`Camera.DestinationType.FILE_URI`의 `destinationType`와 `Camera.PictureSourceType.PHOTOLIBRARY`의 `sourceType` Tizen 지원.
 
 ### 예를 들어
 
@@ -144,7 +156,15 @@ Tizen만 지원 한 `destinationType` 의 `Camera.DestinationType.FILE_URI` 와 
 
 카메라 설정을 사용자 지정 하는 선택적 매개 변수.
 
-    {품질: 75, destinationType: Camera.DestinationType.DATA_URL, sourceType: Camera.PictureSourceType.CAMERA, allowEdit: 사실, encodingType: Camera.EncodingType.JPEG, targetWidth: 100, targetHeight: 100, popoverOptions: CameraPopoverOptions, saveToPhotoAlbum: false};
+    { quality : 75,
+      destinationType : Camera.DestinationType.DATA_URL,
+      sourceType : Camera.PictureSourceType.CAMERA,
+      allowEdit : true,
+      encodingType: Camera.EncodingType.JPEG,
+      targetWidth: 100,
+      targetHeight: 100,
+      popoverOptions: CameraPopoverOptions,
+      saveToPhotoAlbum: false };
     
 
 ### 옵션
@@ -318,7 +338,7 @@ Tizen만 지원 한 `destinationType` 의 `Camera.DestinationType.FILE_URI` 와 
 
 ## CameraPopoverHandle
 
-에 의해 만들어진 popover 대화에 대 한 핸들`navigator.camera.getPicture`.
+`navigator.camera.getPicture`에 의해 만들어진 popover 대화에 대 한 핸들.
 
 ### 메서드
 
@@ -355,7 +375,12 @@ popover의 위치를 설정 합니다.
 
 iOS 전용 매개 변수 iPad의 보관 함 또는 앨범에서 이미지를 선택 하면 앵커 요소 위치와 화살표의 방향으로 popover 지정 하는.
 
-    {x: 0, y: 32, 폭: 320, 높이: 480, arrowDir: Camera.PopoverArrowDirection.ARROW_ANY};
+    { x : 0,
+      y :  32,
+      width : 320,
+      height : 480,
+      arrowDir : Camera.PopoverArrowDirection.ARROW_ANY
+    };
     
 
 ### CameraPopoverOptions
@@ -390,7 +415,7 @@ iOS 전용 매개 변수 iPad의 보관 함 또는 앨범에서 이미지를 선
 
 ### 설명
 
-제거 중간 전화 후 임시 저장소에 보관 된 이미지 파일 `camera.getPicture` . 경우에만 적용의 값 `Camera.sourceType` 와 `Camera.PictureSourceType.CAMERA` 와 `Camera.destinationType` 같음`Camera.DestinationType.FILE_URI`.
+`camera.getPicture`를 호출한 후 임시 저장소에 보관 됩니다 중간 이미지 파일을 제거 합니다. `Camera.sourceType` 값은 `Camera.PictureSourceType.CAMERA` 및 `Camera.destinationType`와 `Camera.DestinationType.FILE_URI` 때만 적용 됩니다..
 
 ### 지원 되는 플랫폼
 
