@@ -297,6 +297,7 @@ static NSString* toBase64(NSData* data) {
             } else {
                 data = UIImageJPEGRepresentation(image, [options.quality floatValue] / 100.0f);
             }
+
             if (options.usesGeolocation) {
                 NSDictionary* controllerMetadata = [info objectForKey:@"UIImagePickerControllerMediaMetadata"];
                 if (controllerMetadata) {
@@ -313,7 +314,7 @@ static NSString* toBase64(NSData* data) {
                     }
                     [[self locationManager] startUpdatingLocation];
                 }
-                data = NULL;
+                data = nil;
             }
         }
             break;
