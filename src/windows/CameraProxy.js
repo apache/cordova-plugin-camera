@@ -418,7 +418,7 @@ module.exports = {
 
                         if (saveToPhotoAlbum) {
                             Windows.Storage.StorageFile.getFileFromPathAsync(picture.path).then(function(storageFile) {
-                                storageFile.copyAsync(Windows.Storage.KnownFolders.picturesLibrary, picture.name, Windows.Storage.NameCollisionOption.generateUniqueName).then(function(storageFile) {
+                                storageFile.copyAsync(Windows.Storage.KnownFolders.cameraRoll, picture.name, Windows.Storage.NameCollisionOption.generateUniqueName).then(function (storageFile) {
                                     success();
                                 }, function() {
                                     fail();
