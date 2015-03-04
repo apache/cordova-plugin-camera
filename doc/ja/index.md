@@ -19,25 +19,35 @@
 
 # org.apache.cordova.camera
 
-このプラグインは写真を撮るため、システムのイメージ ライブラリからイメージを選択するために API を提供します。
+このプラグインは、写真を撮るため、システムのイメージ ライブラリからイメージを選択するために API を提供します、グローバル `navigator.camera` オブジェクトを定義します。
+
+オブジェクトは、グローバル スコープの `ナビゲーター` に添付、それがないまで `deviceready` イベントの後。
+
+    document.addEventListener("deviceready", onDeviceReady, false);
+    function onDeviceReady() {
+        console.log(navigator.camera);
+    }
+    
+
+## インストール
 
     cordova plugin add org.apache.cordova.camera
     
 
 ## navigator.camera.getPicture
 
-カメラを使用して写真を取るか、デバイスの画像ギャラリーから写真を取得します。 イメージは base64 エンコードとして成功時のコールバックに渡される `String` 、またはイメージ ファイルの URI。 メソッド自体を返します、 `CameraPopoverHandle` オブジェクト ファイル選択ポップ オーバーの位置を変更するために使用することができます。
+カメラを使用して写真を取るか、デバイスの画像ギャラリーから写真を取得します。 イメージが渡されます成功時のコールバックを base64 エンコードされた `文字列`、または、URI としてイメージ ファイル。 メソッド自体はファイル選択ポップ オーバーの位置を変更するために使用できる `CameraPopoverHandle` オブジェクトを返します。
 
     navigator.camera.getPicture( cameraSuccess, cameraError, cameraOptions );
     
 
-### 説明
+### 解説
 
-`camera.getPicture`関数はデバイスのデフォルトのカメラ アプリケーションの写真をスナップするユーザーことができますを開きます。 既定では、この現象が発生したときに `Camera.sourceType` に等しい `Camera.PictureSourceType.CAMERA` 。 ユーザーは写真をスナップ、カメラ アプリケーションを閉じるし、アプリケーションが復元されます。
+`camera.getPicture` 関数は、ユーザーの写真をスナップすることができますデバイスのデフォルト カメラ アプリケーションを開きます。 `Camera.sourceType` が `Camera.PictureSourceType.CAMERA` と等しい場合既定では、この現象が発生します。 ユーザーは写真をスナップ、カメラ アプリケーションを閉じるし、アプリケーションが復元されます。
 
-場合 `Camera.sourceType` は、 `Camera.PictureSourceType.PHOTOLIBRARY` または `Camera.PictureSourceType.SAVEDPHOTOALBUM` 、その後、ダイアログが表示されますユーザーを既存のイメージを選択することができます。 `camera.getPicture`関数を返す、 `CameraPopoverHandle` オブジェクトは、たとえば、イメージの選択ダイアログには、デバイスの向きが変更されたときの位置を変更するために使用することができます。
+`Camera.sourceType` `Camera.PictureSourceType.PHOTOLIBRARY` または `Camera.PictureSourceType.SAVEDPHOTOALBUM` の場合、ダイアログ ボックスはユーザーを既存のイメージを選択することができますが表示されます。 `camera.getPicture` 関数は、デバイスの向きが変更されたとき、たとえば、イメージの選択ダイアログには、位置を変更するために使用することができます、`CameraPopoverHandle` オブジェクトを返します。
 
-戻り値に送信されます、 `cameraSuccess` の指定によって、次の形式のいずれかのコールバック関数 `cameraOptions` :
+戻り値が `cameraSuccess` コールバック関数の指定 `cameraOptions` に応じて、次の形式のいずれかに送信されます。
 
 *   A `String` 写真の base64 でエンコードされたイメージを含んでいます。
 
@@ -53,7 +63,7 @@
 
  [1]: http://brianleroux.github.com/lawnchair/
 
-**注**: 新しいデバイス上の写真の解像度はかなり良いです。 デバイスのギャラリーから選択した写真が下方の品質に縮小しない場合でも、 `quality` パラメーターを指定します。 一般的なメモリの問題を回避する設定 `Camera.destinationType` を `FILE_URI` よりもむしろ`DATA_URL`.
+**注**: 新しいデバイス上の写真の解像度はかなり良いです。 デバイスのギャラリーから選択した写真は `quality` パラメーターが指定されて場合でも下方の品質に縮小されません。 一般的なメモリの問題を避けるために `DATA_URL` ではなく `FILE_URI` に `Camera.destinationType` を設定します。.
 
 ### サポートされているプラットフォーム
 
@@ -76,7 +86,7 @@
 
 ### アマゾン火 OS 癖
 
-アマゾン火 OS イメージをキャプチャするデバイス上のカメラの活動を開始する意図を使用して、メモリの少ない携帯電話、コルドバ活動が殺されるかもしれない。 このシナリオでは、コルドバの活動が復元されるとき、画像が表示されません。
+アマゾン火 OS イメージをキャプチャするデバイス上のカメラの活動を開始する意図を使用して、メモリの少ない携帯電話、コルドバ活動が殺されるかもしれない。 このシナリオではコルドバ活動が復元されると、イメージが表示されません。
 
 ### Android の癖
 
@@ -88,15 +98,17 @@ Base64 エンコード イメージとして写真を返すのみことができ
 
 ### Firefox OS 癖
 
-カメラのプラグインは現在、 [Web アクティビティ][2]を使用して実装されていた.
+カメラのプラグインは現在、[Web アクティビティ][2] を使用して実装されていた.
 
  [2]: https://hacks.mozilla.org/2013/01/introducing-web-activities/
 
 ### iOS の癖
 
-JavaScript を含む `alert()` 関数コールバックのいずれかの問題を引き起こすことができます。 内でアラートのラップ、 `setTimeout()` iOS イメージ ピッカーまたは完全が終了するまで、警告が表示されますポップ オーバーを許可します。
+コールバック関数のいずれかの JavaScript `alert()` を含む問題が発生することができます。 IOS イメージ ピッカーまたは完全が終了するまで、警告が表示されますポップ オーバーを許可する `setTimeout()` 内でアラートをラップします。
 
-    setTimeout(function() {//ここにあなたのことを行います ！}, 0);
+    setTimeout(function() {
+        // do your thing here!
+    }, 0);
     
 
 ### Windows Phone 7 の癖
@@ -105,7 +117,7 @@ JavaScript を含む `alert()` 関数コールバックのいずれかの問題�
 
 ### Tizen の癖
 
-Tizen のみをサポートしている、 `destinationType` の `Camera.DestinationType.FILE_URI` と `sourceType` の`Camera.PictureSourceType.PHOTOLIBRARY`.
+Tizen のみ `Camera.DestinationType.FILE_URI` の `destinationType` と `Camera.PictureSourceType.PHOTOLIBRARY` の `sourceType` をサポートしています.
 
 ### 例
 
@@ -144,12 +156,20 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 
 カメラの設定をカスタマイズするオプションのパラメーター。
 
-    {品質： 75、destinationType: Camera.DestinationType.DATA_URL、sourceType: Camera.PictureSourceType.CAMERA、allowEdit: true の場合、encodingType: Camera.EncodingType.JPEG、targetWidth: 100、targetHeight: 100、popoverOptions： CameraPopoverOptions、saveToPhotoAlbum: false};
+    { quality : 75,
+      destinationType : Camera.DestinationType.DATA_URL,
+      sourceType : Camera.PictureSourceType.CAMERA,
+      allowEdit : true,
+      encodingType: Camera.EncodingType.JPEG,
+      targetWidth: 100,
+      targetHeight: 100,
+      popoverOptions: CameraPopoverOptions,
+      saveToPhotoAlbum: false };
     
 
 ### オプション
 
-*   **品質**： 0-100、100 がファイルの圧縮から損失なしで通常のフル解像度の範囲で表される、保存されたイメージの品質。 既定値は 50 です。 *(数)*（カメラの解像度についての情報が利用できないことに注意してください)。
+*   **quality**： 0-100、100 がファイルの圧縮から損失なしで通常のフル解像度の範囲で表される、保存されたイメージの品質。 既定値は 50 です。 *(数)*（カメラの解像度についての情報が利用できないことに注意してください)。
 
 *   **destinationType**: 戻り値の形式を選択します。既定値は FILE_URI です。定義されている `navigator.camera.DestinationType` *（番号）*
     
@@ -186,7 +206,7 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 *   **mediaType**： から選択するメディアの種類を設定します。 場合にのみ働きます `PictureSourceType` は `PHOTOLIBRARY` または `SAVEDPHOTOALBUM` 。 定義されている `nagivator.camera.MediaType` *（番号）*
     
         Camera.MediaType = {
-            PICTURE: 0,    // allow selection of still pictures only. 既定値です。 Will return format specified via DestinationType
+            PICTURE: 0,    // allow selection of still pictures only. DEFAULT. Will return format specified via DestinationType
             VIDEO: 1,      // allow selection of video only, WILL ALWAYS RETURN FILE_URI
             ALLMEDIA : 2   // allow selection from all media types
         };
@@ -291,7 +311,7 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 
 ### パラメーター
 
-*   **メッセージ**: メッセージは、デバイスのネイティブ コードによって提供されます。*(文字列)*
+*   **message**: メッセージは、デバイスのネイティブ コードによって提供されます。*(文字列)*
 
 ## cameraSuccess
 
@@ -318,7 +338,7 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 
 ## CameraPopoverHandle
 
-によって作成されたポップオーバーパン ダイアログへのハンドル`navigator.camera.getPicture`.
+`Navigator.camera.getPicture` によって作成されたポップオーバーパン ダイアログ ボックスへのハンドル.
 
 ### メソッド
 
@@ -355,7 +375,12 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 
 iOS だけ指定パラメーターをポップ オーバーのアンカー要素の場所および矢印方向計算されたライブラリまたはアルバムから画像を選択するとき。
 
-    {x: 0, y: 32、幅： 320、高さ： 480、arrowDir: Camera.PopoverArrowDirection.ARROW_ANY};
+    { x : 0,
+      y :  32,
+      width : 320,
+      height : 480,
+      arrowDir : Camera.PopoverArrowDirection.ARROW_ANY
+    };
     
 
 ### CameraPopoverOptions
@@ -364,9 +389,9 @@ iOS だけ指定パラメーターをポップ オーバーのアンカー要素
 
 *   **y**: y ピクセル座標の画面要素にポップ オーバーのアンカーになります。*(数)*
 
-*   **幅**: ポップ オーバーのアンカーになる上の画面要素のピクセル単位の幅。*(数)*
+*   **width**: ポップ オーバーのアンカーになる上の画面要素のピクセル単位の幅。*(数)*
 
-*   **高さ**: ポップ オーバーのアンカーになる上の画面要素のピクセル単位の高さ。*(数)*
+*   **height**: ポップ オーバーのアンカーになる上の画面要素のピクセル単位の高さ。*(数)*
 
 *   **arrowDir**: 方向のポップ オーバーで矢印をポイントする必要があります。定義されている `Camera.PopoverArrowDirection` *（番号）*
     
@@ -390,7 +415,7 @@ iOS だけ指定パラメーターをポップ オーバーのアンカー要素
 
 ### 説明
 
-削除を呼び出した後に一時記憶域に保存されている画像ファイルを中間 `camera.getPicture` 。 場合にのみ適用されるの値 `Camera.sourceType` に等しい `Camera.PictureSourceType.CAMERA` と、 `Camera.destinationType` に等しい`Camera.DestinationType.FILE_URI`.
+`camera.getPicture` を呼び出した後一時記憶域に保存されている中間画像ファイルを削除します。 `Camera.sourceType` の値が `Camera.PictureSourceType.CAMERA` に等しい、`Camera.destinationType` が `Camera.DestinationType.FILE_URI` と等しいの場合にのみ適用されます。.
 
 ### サポートされているプラットフォーム
 

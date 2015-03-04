@@ -19,31 +19,41 @@
 
 # org.apache.cordova.camera
 
-Wtyczka dostarcza API do robienia zdjęć i wybór zdjęć z biblioteki obrazu systemu.
+Ten plugin definiuje obiekt globalny `navigator.camera`, który dostarcza API do robienia zdjęć i wybór zdjęć z biblioteki obrazów systemu.
+
+Mimo, że obiekt jest dołączony do globalnego zakresu `navigator`, to nie dostępne dopiero po zdarzeniu `deviceready`.
+
+    document.addEventListener("deviceready", onDeviceReady, false);
+    function onDeviceReady() {
+        console.log(navigator.camera);
+    }
+    
+
+## Instalacja
 
     cordova plugin add org.apache.cordova.camera
     
 
 ## navigator.camera.getPicture
 
-Pobiera zdjęcia za pomocą aparatu lub z galerii zdjęć w urządzeniu. Obraz jest przekazywany do funkcji zwrotnej success jako `String` kodowany za pomocą base64 lub jako URI do pliku. Sama metoda zwraca obiekt `CameraPopoverHandle`, który może służyć do zmiany położenia wyskakującego okna wyboru pliku.
+Ma zdjęcia za pomocą aparatu, lub pobiera zdjęcia z urządzenia Galeria zdjęć. Obraz jest przekazywany do wywołania zwrotnego sukces jako kodowane algorytmem base64 `ciąg`, lub identyfikator URI dla pliku obrazu. Sama metoda zwraca obiekt `CameraPopoverHandle`, który może służyć do zmiany położenia pliku wyboru popover.
 
     navigator.camera.getPicture( cameraSuccess, cameraError, cameraOptions );
     
 
 ### Opis
 
-Funkcja `camera.getPicture` otwiera na urządzeniu domyślną aplikację aparatu, która pozwala użytkownikowi zrobić zdjęcie. To zachowanie występuje domyślnie, gdy `Camera.sourceType` jest równe `Camera.PictureSourceType.CAMERA`. Gdy użytkownik wykona zdjęcie, aplikacja aparatu zakończy działanie i nastąpi powrót do głównej aplikacji.
+Funkcja `camera.getPicture` otwiera urządzenia domyślnej aplikacji aparat fotograficzny ów pozwala użytkownik wobec chwycić zębami kino. To zachowanie występuje domyślnie, gdy `Camera.sourceType` jest równa `Camera.PictureSourceType.CAMERA`. Gdy użytkownik zaskoczy zdjęcie, ten aparat fotograficzny applicationâ zamyka i aplikacji jest przywracany.
 
 Jeśli `Camera.sourceType` jest równe `Camera.PictureSourceType.PHOTOLIBRARY` lub `Camera.PictureSourceType.SAVEDPHOTOALBUM`, wtedy zostanie wyświetlone okno dialogowe pozwalające użytkownikowi na wybór istniejącego obrazu. Funkcja `camera.getPicture` zwraca obiekt `CameraPopoverHandle`, który obsługuje zmianę położenia okna wyboru obrazu, np. po zmianie orientacji urządzenia.
 
-Zwracana wartość jest wysyłana do funkcji zwrotnej `cameraSuccess` w jednym z następujących formatów, w zależności od określonego parametru `cameraOptions`:
+Zwracana wartość jest wysyłany do funkcji wywołania zwrotnego `cameraSuccess`, w jednym z następujących formatów, w zależności od określonego `cameraOptions`:
 
 *   `String` zawierający obraz zakodowany przy pomocy base64.
 
 *   `String` reprezentujący lokalizację pliku obrazu w lokalnym magazynie (domyślnie).
 
-Z zakodowanym obrazem lub URI możesz zrobić co zechcesz, na przykład:
+Może rób, co chcesz z zakodowany obraz lub identyfikatora URI, na przykład:
 
 *   Przedstawić obraz w tagu `<img>`, jak w przykładzie poniżej
 
@@ -53,7 +63,7 @@ Z zakodowanym obrazem lub URI możesz zrobić co zechcesz, na przykład:
 
  [1]: http://brianleroux.github.com/lawnchair/
 
-**Uwaga**: zdjęcie rozdzielczości na nowsze urządzenia jest bardzo dobry. Zdjęcia wybrane z galerii urządzenia nie są skalowane do niższej jakości, nawet jeśli określono parametr `quality`. Aby uniknąć typowych problemów z pamięcią lepiej ustawić`Camera.destinationType` na `FILE_URI` niż `DATA_URL`.
+**Uwaga**: zdjęcie rozdzielczości na nowsze urządzenia jest bardzo dobry. Zdjęcia wybrane z galerii urządzenia są nie przeskalowanych w dół do niższej jakości, nawet jeśli określono parametr `quality`. Aby uniknąć typowych problemów z pamięci, zestaw `Camera.destinationType` `FILE_URI` zamiast `DATA_URL`.
 
 ### Obsługiwane platformy
 
@@ -76,11 +86,11 @@ Z zakodowanym obrazem lub URI możesz zrobić co zechcesz, na przykład:
 
 ### Amazon ogień OS dziwactwa
 
-Amazon ogień OS używa intencje do rozpoczęcia działalności aparatu na urządzenie do przechwytywania obrazów, i na telefony z pamięci, Cordova aktywność może zostać zabity. W takim scenariuszu obrazy mogą nie być wyświetlane po przywróceniu aktywności Cordovy.
+Amazon ogień OS używa intencje do rozpoczęcia działalności aparatu na urządzenie do przechwytywania obrazów, i na telefony z pamięci, Cordova aktywność może zostać zabity. W tym scenariuszu obraz mogą nie być wyświetlane po przywróceniu aktywności cordova.
 
 ### Dziwactwa Androida
 
-Android używa Intencji (Intents) do uruchomienia aktywności aparatu i na urządzeniach z małą ilością dostępnej pamięci aktywność Cordova może zostać przerwana. W tym scenariuszu obraz mogą nie być wyświetlane po przywróceniu aktywności Cordova.
+Android używa intencje do rozpoczęcia działalności aparatu na urządzenie do przechwytywania obrazów, i na telefony z pamięci, Cordova aktywność może zostać zabity. W tym scenariuszu obraz mogą nie być wyświetlane po przywróceniu aktywności Cordova.
 
 ### Quirks przeglądarki
 
@@ -94,7 +104,7 @@ Aparat plugin jest obecnie implementowane za pomocą [Działania sieci Web][2].
 
 ### Dziwactwa iOS
 
-Umieszczenie w funkcji zwrotnej wywołania `alert()` w JavaScript może powodować problemy. Aby umożliwić systemowi iOS na całkowite zamknięcie okna wyboru obrazu lub wyskakującego powiadomienia przed wyświetleniem alarmu należy opakować go w `setTimeout()`:
+W jednej z funkcji wywołania zwrotnego w tym JavaScript `alert()` może powodować problemy. Owinąć w `setTimeout()` umożliwia wybór obrazu iOS lub popover całkowicie zamknąć zanim wyświetli alert alert:
 
     setTimeout(function() {
         // do your thing here!
@@ -107,11 +117,11 @@ Wywoływanie aparat native aplikacji, podczas gdy urządzenie jest podłączone 
 
 ### Dziwactwa Tizen
 
-Tizen obsługuje tylko parametr `destinationType` jako `Camera.DestinationType.FILE_URI` oraz `sourceType` jako `Camera.PictureSourceType.PHOTOLIBRARY`.
+Tizen obsługuje tylko `destinationType` z `Camera.DestinationType.FILE_URI` i `sourceType` z `Camera.PictureSourceType.PHOTOLIBRARY`.
 
 ### Przykład
 
-Zrobienie zdjęcia i pobranie go jako obraz zakodowany base64:
+Zrób zdjęcie i pobrać go jako kodowane algorytmem base64 obrazu:
 
     navigator.camera.getPicture(onSuccess, onFail, { quality: 50,
         destinationType: Camera.DestinationType.DATA_URL
@@ -127,7 +137,7 @@ Zrobienie zdjęcia i pobranie go jako obraz zakodowany base64:
     }
     
 
-Zrobienie zdjęcia i pobranie lokacji pliku obrazu:
+Zrób zdjęcie i pobrać lokalizacji pliku obrazu:
 
     navigator.camera.getPicture(onSuccess, onFail, { quality: 50,
         destinationType: Camera.DestinationType.FILE_URI });
@@ -144,7 +154,7 @@ Zrobienie zdjęcia i pobranie lokacji pliku obrazu:
 
 ## CameraOptions
 
-Opcjonalne parametry dostosowania ustawień aparatu.
+Opcjonalne parametry, aby dostosować ustawienia aparatu.
 
     { quality : 75,
       destinationType : Camera.DestinationType.DATA_URL,
@@ -196,7 +206,7 @@ Opcjonalne parametry dostosowania ustawień aparatu.
 *   **mediaType**: Ustawia typ nośnika, z którego będzie wybrany. Działa tylko wtedy, gdy `PictureSourceType` jest `PHOTOLIBRARY` lub `SAVEDPHOTOALBUM`. Zdefiniowane w `nagivator.camera.MediaType` *(Liczba)*
     
         Camera.MediaType = {
-            PICTURE: 0,    // umożliwia wybór tylko zdjęcia. DOMYŚLNIE. Will return format specified via DestinationType
+            PICTURE: 0,    // allow selection of still pictures only. DEFAULT. Will return format specified via DestinationType
             VIDEO: 1,      // allow selection of video only, WILL ALWAYS RETURN FILE_URI
             ALLMEDIA : 2   // allow selection from all media types
         };
@@ -211,8 +221,8 @@ Opcjonalne parametry dostosowania ustawień aparatu.
 *   **cameraDirection**: Wybierz aparat do korzystania (lub z powrotem przodem). Wartością domyślną jest z powrotem. Zdefiniowane w `navigator.camera.Direction` *(numer)*
     
         Camera.Direction = {
-            BACK : 0,      // Używa tylnej kamery
-            FRONT : 1      // Używa przedniej kamery
+            BACK : 0,      // Use the back-facing camera
+            FRONT : 1      // Use the front-facing camera
         };
         
 
@@ -292,7 +302,7 @@ Opcjonalne parametry dostosowania ustawień aparatu.
 
 ## CameraError
 
-Funkcja zwrotna onError, która zawiera komunikat o błędzie.
+funkcja wywołania zwrotnego PrzyBłędzie, która zawiera komunikat o błędzie.
 
     function(message) {
         // Show a helpful message
@@ -305,7 +315,7 @@ Funkcja zwrotna onError, która zawiera komunikat o błędzie.
 
 ## cameraSuccess
 
-Funkcja zwrotna onSuccess, która dostarcza dane obrazu.
+onSuccess funkcji wywołania zwrotnego, który dostarcza dane obrazu.
 
     function(imageData) {
         // Do something with the image
@@ -328,7 +338,7 @@ Funkcja zwrotna onSuccess, która dostarcza dane obrazu.
 
 ## CameraPopoverHandle
 
-Uchwyt do okna dialogowego popover, stworzony przez`navigator.camera.getPicture`.
+Uchwyt do okna dialogowego popover, stworzony przez `navigator.camera.getPicture`.
 
 ### Metody
 
@@ -340,7 +350,7 @@ Uchwyt do okna dialogowego popover, stworzony przez`navigator.camera.getPicture`
 
 ### setPosition
 
-Ustawia pozycję wyskakującego okna.
+Ustaw pozycję popover.
 
 **Parametry**:
 
@@ -363,7 +373,7 @@ Ustawia pozycję wyskakującego okna.
 
 ## CameraPopoverOptions
 
-Parametry dotyczące tylko platformy iOS, które określają pozycję zakotwiczenia elementu oraz kierunek strzałki wyskakującego okna podczas wybierania obrazów z biblioteki lub albumu iPada.
+tylko do iOS parametrami, które określić kotwicy element lokalizacji i strzałka kierunku popover, przy wyborze zdjęć z iPad biblioteki lub album.
 
     { x : 0,
       y :  32,
@@ -394,18 +404,18 @@ Parametry dotyczące tylko platformy iOS, które określają pozycję zakotwicze
             };
         
 
-Pamiętaj, że wielkość wyskakującego okna może ulec zmianie by dostosować się do kierunku strzałki oraz orientacji ekranu. Upewnij się co do zmiany orientacji podczas określania położenia zakotwiczenia elementu.
+Należy pamiętać, że rozmiar popover może zmienić aby zmienić kierunek strzałki i orientacji ekranu. Upewnij się uwzględnić zmiany orientacji podczas określania położenia elementu kotwicy.
 
-## Navigator.Camera.CleanUp
+## navigator.camera.cleanup
 
-Usuwa pośrednie zdjęcia zrobione przez aparat z tymczasowego magazynu.
+Usuwa pośrednie zdjęcia zrobione przez aparat z czasowego składowania.
 
     navigator.camera.cleanup( cameraSuccess, cameraError );
     
 
 ### Opis
 
-Usuwa pośrednie pliki graficzne, które po wywołaniu `camera.getPicture` są przechowywane w tymczasowym magazynie. Ma zastosowanie tylko, gdy wartość `Camera.sourceType` jest równa `Camera.PictureSourceType.CAMERA` i `Camera.destinationType` jest równa `Camera.DestinationType.FILE_URI`.
+Usuwa pliki obrazów pośrednich, które są przechowywane w pamięci tymczasowej po wywołaniu `camera.getPicture`. Ma zastosowanie tylko, gdy wartość `Camera.sourceType` jest równa `Camera.PictureSourceType.CAMERA` i `Camera.destinationType` jest równa `Camera.DestinationType.FILE_URI`.
 
 ### Obsługiwane platformy
 
