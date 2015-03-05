@@ -241,6 +241,8 @@ Optional parameters to customize the camera settings.
             FRONT : 1      // Use the front-facing camera
         };
 
+- __onlyGalleries__: Android-only Allow getImage to only get from gallery apps, excluding dropbox,drive,onedrive and filesystem explorers. _(Boolean)_
+
 ### Amazon Fire OS Quirks
 
 - Any `cameraDirection` value results in a back-facing photo.
