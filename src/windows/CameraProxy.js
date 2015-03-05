@@ -331,7 +331,8 @@ module.exports = {
                             };
 
                             if (saveToPhotoAlbum) {
-                                capturedFile.copyAsync(Windows.Storage.KnownFolders.cameraRoll, capturedFile.name, generateUniqueCollisionOption)
+                                var savePath = Windows.Storage.KnownFolders.cameraRoll || Windows.Storage.KnownFolders.picturesLibrary;
+                                capturedFile.copyAsync(savePath, capturedFile.name, generateUniqueCollisionOption)
                                 .done(function() {
                                     success(capturedFile);
                                 }, errorCallback);
@@ -417,8 +418,9 @@ module.exports = {
                         };
 
                         if (saveToPhotoAlbum) {
-                            Windows.Storage.StorageFile.getFileFromPathAsync(picture.path).then(function(storageFile) {
-                                storageFile.copyAsync(Windows.Storage.KnownFolders.cameraRoll, picture.name, Windows.Storage.NameCollisionOption.generateUniqueName).then(function (storageFile) {
+                            Windows.Storage.StorageFile.getFileFromPathAsync(picture.path).then(function (storageFile) {
+                                var savePath = Windows.Storage.KnownFolders.cameraRoll || Windows.Storage.KnownFolders.picturesLibrary;
+                                storageFile.copyAsync(savePath, picture.name, Windows.Storage.NameCollisionOption.generateUniqueName).then(function (storageFile) {
                                     success();
                                 }, function() {
                                     fail();
