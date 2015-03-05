@@ -80,6 +80,19 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private static final String LOG_TAG = "CameraLauncher";
     private static final int CROP_CAMERA = 100;
 
+    //error messages
+    private static final String E001 = "E001: Unable to create bitmap!";
+    private static final String E002 = "E002: Error capturing image - no media storage found.";
+    private static final String E003 = "E003: null data from photo library";
+    private static final String E004 = "E004: Unable to retrieve path to picture!";
+    private static final String E005 = "E005: Error retrieving image.";
+    private static final String E006 = "E006: Error capturing image.";
+    private static final String E007 = "E007: Camera cancelled.";
+    private static final String E008 = "E008: Did not complete!";
+    private static final String E009 = "E009: Selection cancelled.";
+    private static final String E010 = "E010: Selection did not complete!";
+    private static final String E011 = "E011: Error compressing image.";
+
     private int mQuality;                   // Compression quality hint (0-100: 0=low quality & high compression, 100=compress of max quality)
     private int targetWidth;                // desired width of the image
     private int targetHeight;               // desired height of the image
@@ -382,7 +395,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             // Double-check the bitmap.
             if (bitmap == null) {
                 Log.d(LOG_TAG, "I either have a null image path or bitmap");
-                this.failPicture("Unable to create bitmap!");
+                this.failPicture(E001);
                 return;
             }
 
@@ -409,7 +422,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             }
 
             if (uri == null) {
-                this.failPicture("Error capturing image - no media storage found.");
+                this.failPicture(E002);
                 return;
             }
 
@@ -457,7 +470,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         bitmap = null;
     }
 
-private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
+    private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         // Create an ExifHelper to save the exif data that is lost during compression
         String modifiedPath = getTempDirectoryPath() + "/modified.jpg";
 
@@ -484,7 +497,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         return modifiedPath;
     }
 
-/**
+    /**
      * Applies all needed transformation to the image received from the gallery.
      *
      * @param destType          In which form should we return the image
@@ -496,7 +509,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
             if (croppedUri != null) {
                 uri = croppedUri;
             } else {
-                this.failPicture("null data from photo library");
+                this.failPicture(E003);
                 return;
             }
         }
@@ -520,7 +533,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                 // If we don't have a valid image so quit.
                 if (!("image/jpeg".equalsIgnoreCase(mimeType) || "image/png".equalsIgnoreCase(mimeType))) {
                     Log.d(LOG_TAG, "I either have a null image path or bitmap");
-                    this.failPicture("Unable to retrieve path to picture!");
+                    this.failPicture(E004);
                     return;
                 }
                 Bitmap bitmap = null;
@@ -531,7 +544,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                 }
                 if (bitmap == null) {
                     Log.d(LOG_TAG, "I either have a null image path or bitmap");
-                    this.failPicture("Unable to create bitmap!");
+                    this.failPicture(E001);
                     return;
                 }
 
@@ -566,7 +579,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                             this.callbackContext.success("file://" + modifiedPath + "?" + System.currentTimeMillis());
                         } catch (Exception e) {
                             e.printStackTrace();
-                            this.failPicture("Error retrieving image.");
+                            this.failPicture(E005);
                         }
                     }
                     else {
@@ -605,12 +618,12 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         
       }// If cancelled
       else if (resultCode == Activity.RESULT_CANCELED) {
-        this.failPicture("Camera cancelled.");
+        this.failPicture(E007);
       }
 
       // If something else
       else {
-        this.failPicture("Did not complete!");
+        this.failPicture(E008);
       }
 
     }
@@ -622,18 +635,18 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                     this.processResultFromCamera(destType, intent);
                 } catch (IOException e) {
                     e.printStackTrace();
-                    this.failPicture("Error capturing image.");
+                    this.failPicture(E006);
                 }
             }
 
             // If cancelled
             else if (resultCode == Activity.RESULT_CANCELED) {
-                this.failPicture("Camera cancelled.");
+                this.failPicture(E007);
             }
 
             // If something else
             else {
-                this.failPicture("Did not complete!");
+                this.failPicture(E008);
             }
         }
 
@@ -643,10 +656,10 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                 this.processResultFromGallery(destType, intent);
             }
             else if (resultCode == Activity.RESULT_CANCELED) {
-                this.failPicture("Selection cancelled.");
+                this.failPicture(E009);
             }
             else {
-                this.failPicture("Selection did not complete!");
+                this.failPicture(E010);
             }
         }
     }
@@ -946,7 +959,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                 code = null;
             }
         } catch (Exception e) {
-            this.failPicture("Error compressing image.");
+            this.failPicture(E011);
         }
         jpeg_data = null;
     }
