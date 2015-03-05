@@ -165,7 +165,7 @@ module.exports = {
 
                             var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
                             file.copyAsync(storageFolder, file.name, Windows.Storage.NameCollisionOption.replaceExisting).then(function (storageFile) {
-                                successCallback(URL.createObjectURL(storageFile));
+                                successCallback("ms-appdata:///local/" + storagefile.name);
                             }, function () {
                                 errorCallback("Can't access localStorage folder.");
                             });
@@ -331,7 +331,7 @@ module.exports = {
                             };
 
                             if (saveToPhotoAlbum) {
-                                capturedFile.copyAsync(Windows.Storage.KnownFolders.picturesLibrary, capturedFile.name, generateUniqueCollisionOption)
+                                capturedFile.copyAsync(Windows.Storage.KnownFolders.cameraRoll, capturedFile.name, generateUniqueCollisionOption)
                                 .done(function() {
                                     success(capturedFile);
                                 }, errorCallback);
