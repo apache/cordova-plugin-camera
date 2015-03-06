@@ -19,4 +19,6 @@
 
 # org.apache.cordova.camera
 
+[![Build Status](https://travis-ci.org/apache/cordova-plugin-camera.svg)](https://travis-ci.org/apache/cordova-plugin-camera)
+
 Plugin documentation: [doc/index.md](doc/index.md)

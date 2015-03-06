@@ -19,25 +19,35 @@
 
 # org.apache.cordova.camera
 
-このプラグインは写真を撮るため、システムのイメージ ライブラリからイメージを選択するために API を提供します。
+このプラグインは、写真を撮るため、システムのイメージ ライブラリからイメージを選択するために API を提供します、グローバル `navigator.camera` オブジェクトを定義します。
+
+オブジェクトは、グローバル スコープの `ナビゲーター` に添付、それがないまで `deviceready` イベントの後。
+
+    document.addEventListener("deviceready", onDeviceReady, false);
+    function onDeviceReady() {
+        console.log(navigator.camera);
+    }
+    
+
+## インストール
 
     cordova plugin add org.apache.cordova.camera
     
 
 ## navigator.camera.getPicture
 
-カメラを使用して写真を取るか、デバイスの画像ギャラリーから写真を取得します。 イメージは base64 エンコードとして成功時のコールバックに渡される `String` 、またはイメージ ファイルの URI。 メソッド自体を返します、 `CameraPopoverHandle` オブジェクト ファイル選択ポップ オーバーの位置を変更するために使用することができます。
+カメラを使用して写真を取るか、デバイスの画像ギャラリーから写真を取得します。 イメージが渡されます成功時のコールバックを base64 エンコードされた `文字列`、または、URI としてイメージ ファイル。 メソッド自体はファイル選択ポップ オーバーの位置を変更するために使用できる `CameraPopoverHandle` オブジェクトを返します。
 
-    navigator.camera.getPicture( cameraSuccess, cameraError, [ cameraOptions ] );
+    navigator.camera.getPicture( cameraSuccess, cameraError, cameraOptions );
     
 
-### 説明
+### 解説
 
-`camera.getPicture`関数はデバイスのデフォルトのカメラ アプリケーションの写真をスナップするユーザーことができますを開きます。 既定では、この現象が発生したときに `Camera.sourceType` に等しい `Camera.PictureSourceType.CAMERA` 。 ユーザーは写真をスナップ、カメラ アプリケーションを閉じるし、アプリケーションが復元されます。
+`camera.getPicture` 関数は、ユーザーの写真をスナップすることができますデバイスのデフォルト カメラ アプリケーションを開きます。 `Camera.sourceType` が `Camera.PictureSourceType.CAMERA` と等しい場合既定では、この現象が発生します。 ユーザーは写真をスナップ、カメラ アプリケーションを閉じるし、アプリケーションが復元されます。
 
-場合 `Camera.sourceType` は、 `Camera.PictureSourceType.PHOTOLIBRARY` または `Camera.PictureSourceType.SAVEDPHOTOALBUM` 、その後、ダイアログが表示されますユーザーを既存のイメージを選択することができます。 `camera.getPicture`関数を返す、 `CameraPopoverHandle` オブジェクトは、たとえば、イメージの選択ダイアログには、デバイスの向きが変更されたときの位置を変更するために使用することができます。
+`Camera.sourceType` `Camera.PictureSourceType.PHOTOLIBRARY` または `Camera.PictureSourceType.SAVEDPHOTOALBUM` の場合、ダイアログ ボックスはユーザーを既存のイメージを選択することができますが表示されます。 `camera.getPicture` 関数は、デバイスの向きが変更されたとき、たとえば、イメージの選択ダイアログには、位置を変更するために使用することができます、`CameraPopoverHandle` オブジェクトを返します。
 
-戻り値に送信されます、 `cameraSuccess` の指定によって、次の形式のいずれかのコールバック関数 `cameraOptions` :
+戻り値が `cameraSuccess` コールバック関数の指定 `cameraOptions` に応じて、次の形式のいずれかに送信されます。
 
 *   A `String` 写真の base64 でエンコードされたイメージを含んでいます。
 
@@ -53,38 +63,52 @@
 
  [1]: http://brianleroux.github.com/lawnchair/
 
-**注**: 新しいデバイス上の写真の解像度はかなり良いです。 デバイスのギャラリーから選択した写真が下方の品質に縮小しない場合でも、 `quality` パラメーターを指定します。 一般的なメモリの問題を回避する設定 `Camera.destinationType` を `FILE_URI` よりもむしろ`DATA_URL`.
+**注**: 新しいデバイス上の写真の解像度はかなり良いです。 デバイスのギャラリーから選択した写真は `quality` パラメーターが指定されて場合でも下方の品質に縮小されません。 一般的なメモリの問題を避けるために `DATA_URL` ではなく `FILE_URI` に `Camera.destinationType` を設定します。.
 
 ### サポートされているプラットフォーム
 
 *   アマゾン火 OS
 *   アンドロイド
 *   ブラックベリー 10
+*   ブラウザー
 *   Firefox の OS
 *   iOS
 *   Tizen
 *   Windows Phone 7 と 8
 *   Windows 8
 
+### 環境設定 （iOS）
+
+*   **CameraUsesGeolocation**(ブール値、デフォルトは false)。 Jpeg 画像をキャプチャするため EXIF ヘッダーで地理位置情報データを取得する場合は true に設定します。 これは、場合地理位置情報のアクセス許可に対する要求をトリガーする true に設定します。
+    
+        <preference name="CameraUsesGeolocation" value="false" />
+        
+
 ### アマゾン火 OS 癖
 
-アマゾン火 OS イメージをキャプチャするデバイス上のカメラの活動を開始する意図を使用して、メモリの少ない携帯電話、コルドバ活動が殺されるかもしれない。 このシナリオでは、コルドバの活動が復元されるとき、画像が表示されません。
+アマゾン火 OS イメージをキャプチャするデバイス上のカメラの活動を開始する意図を使用して、メモリの少ない携帯電話、コルドバ活動が殺されるかもしれない。 このシナリオではコルドバ活動が復元されると、イメージが表示されません。
 
 ### Android の癖
 
 アンドロイド、イメージをキャプチャするデバイス上でカメラのアクティビティを開始する意図を使用し、メモリの少ない携帯電話、コルドバ活動が殺されるかもしれない。 このシナリオではコルドバ活動が復元されると、イメージが表示されません。
 
+### ブラウザーの癖
+
+Base64 エンコード イメージとして写真を返すのみことができます。
+
 ### Firefox OS 癖
 
-カメラのプラグインは現在、 [Web アクティビティ][2]を使用して実装されていた.
+カメラのプラグインは現在、[Web アクティビティ][2] を使用して実装されていた.
 
  [2]: https://hacks.mozilla.org/2013/01/introducing-web-activities/
 
 ### iOS の癖
 
-JavaScript を含む `alert()` 関数コールバックのいずれかの問題を引き起こすことができます。 内でアラートのラップ、 `setTimeout()` iOS イメージ ピッカーまたは完全が終了するまで、警告が表示されますポップ オーバーを許可します。
+コールバック関数のいずれかの JavaScript `alert()` を含む問題が発生することができます。 IOS イメージ ピッカーまたは完全が終了するまで、警告が表示されますポップ オーバーを許可する `setTimeout()` 内でアラートをラップします。
 
-    setTimeout(function() {//ここにあなたのことを行います ！}, 0);
+    setTimeout(function() {
+        // do your thing here!
+    }, 0);
     
 
 ### Windows Phone 7 の癖
@@ -93,7 +117,7 @@ JavaScript を含む `alert()` 関数コールバックのいずれかの問題�
 
 ### Tizen の癖
 
-Tizen のみをサポートしている、 `destinationType` の `Camera.DestinationType.FILE_URI` と `sourceType` の`Camera.PictureSourceType.PHOTOLIBRARY`.
+Tizen のみ `Camera.DestinationType.FILE_URI` の `destinationType` と `Camera.PictureSourceType.PHOTOLIBRARY` の `sourceType` をサポートしています.
 
 ### 例
 
@@ -132,37 +156,57 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 
 カメラの設定をカスタマイズするオプションのパラメーター。
 
-    {品質： 75、destinationType: Camera.DestinationType.DATA_URL、sourceType: Camera.PictureSourceType.CAMERA、allowEdit: true の場合、encodingType: Camera.EncodingType.JPEG、targetWidth: 100、targetHeight: 100、popoverOptions： CameraPopoverOptions、saveToPhotoAlbum: false};
+    { quality : 75,
+      destinationType : Camera.DestinationType.DATA_URL,
+      sourceType : Camera.PictureSourceType.CAMERA,
+      allowEdit : true,
+      encodingType: Camera.EncodingType.JPEG,
+      targetWidth: 100,
+      targetHeight: 100,
+      popoverOptions: CameraPopoverOptions,
+      saveToPhotoAlbum: false };
     
 
 ### オプション
 
-*   **品質**： 0-100、100 がファイルの圧縮から損失なしで通常のフル解像度の範囲で表される、保存されたイメージの品質。 *(数)*（カメラの解像度についての情報が利用できないことに注意してください)。
+*   **quality**： 0-100、100 がファイルの圧縮から損失なしで通常のフル解像度の範囲で表される、保存されたイメージの品質。 既定値は 50 です。 *(数)*（カメラの解像度についての情報が利用できないことに注意してください)。
 
-*   **destinationType**: 戻り値の形式を選択します。定義されている `navigator.camera.DestinationType` *（番号）*
+*   **destinationType**: 戻り値の形式を選択します。既定値は FILE_URI です。定義されている `navigator.camera.DestinationType` *（番号）*
     
-        Camera.DestinationType = {DATA_URL: 0、/base64 エンコード文字列 FILE_URI としてイメージを返す/: 1、//画像ファイル URI NATIVE_URI を返す： 2//戻り画像ネイティブ URI (例えば、資産ライブラリ://iOS またはコンテンツに：//アンドロイド)};
+        Camera.DestinationType = {
+            DATA_URL : 0,      // Return image as base64-encoded string
+            FILE_URI : 1,      // Return image file URI
+            NATIVE_URI : 2     // Return image native URI (e.g., assets-library:// on iOS or content:// on Android)
+        };
         
 
-*   **sourceType**: 画像のソースを設定します。定義されている `navigator.camera.PictureSourceType` *（番号）*
+*   **sourceType**: 画像のソースを設定します。既定値は、カメラです。定義されている `navigator.camera.PictureSourceType` *（番号）*
     
-        Camera.PictureSourceType = {フォト ライブラリ: 0, カメラ: 1、SAVEDPHOTOALBUM: 2};
+        Camera.PictureSourceType = {
+            PHOTOLIBRARY : 0,
+            CAMERA : 1,
+            SAVEDPHOTOALBUM : 2
+        };
         
 
 *   **allowEdit**: 単純な選択の前に画像の編集を許可します。*(ブール値)*
 
-*   **encodingType**: 返されるイメージ ファイルのエンコーディングを選択します。定義されている `navigator.camera.EncodingType` *（番号）*
+*   **encodingType**: 返されるイメージ ファイルのエンコーディングを選択します。デフォルトは JPEG です。定義されている `navigator.camera.EncodingType` *（番号）*
     
-        Camera.EncodingType = {JPEG: 0//戻る JPEG PNG イメージをエンコード: 1/返す PNG イメージをエンコードされた/};
+        Camera.EncodingType = {
+            JPEG : 0,               // Return JPEG encoded image
+            PNG : 1                 // Return PNG encoded image
+        };
         
 
 *   **targetWidth**: スケール イメージにピクセル単位の幅。**TargetHeight**を使用する必要があります。縦横比は変わりません。*(数)*
 
 *   **targetHeight**: スケール イメージにピクセル単位の高さ。**TargetWidth**を使用する必要があります。縦横比は変わりません。*(数)*
 
-*   **mediaType**： から選択するメディアの種類を設定します。 場合にのみ働きます `PictureSourceType` は `PHOTOLIBRARY` または `SAVEDPHOTOALBUM` 。 定義されている `nagivator.camera.MediaType` *（番号）* 
+*   **mediaType**： から選択するメディアの種類を設定します。 場合にのみ働きます `PictureSourceType` は `PHOTOLIBRARY` または `SAVEDPHOTOALBUM` 。 定義されている `nagivator.camera.MediaType` *（番号）*
     
-        Camera.MediaType = {画像： 0//静止画のみを選択できます。 既定値です。 Will return format specified via DestinationType
+        Camera.MediaType = {
+            PICTURE: 0,    // allow selection of still pictures only. DEFAULT. Will return format specified via DestinationType
             VIDEO: 1,      // allow selection of video only, WILL ALWAYS RETURN FILE_URI
             ALLMEDIA : 2   // allow selection from all media types
         };
@@ -174,12 +218,15 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 
 *   **popoverOptions**: iPad のポップ オーバーの場所を指定する iOS のみのオプションです。定義されています。`CameraPopoverOptions`.
 
-*   **cameraDirection**： （前面または背面側） を使用するカメラを選択します。定義されている `navigator.camera.Direction` *（番号）*
+*   **cameraDirection**： （前面または背面側） を使用するカメラを選択します。既定値は戻るです。定義されている `navigator.camera.Direction` *（番号）*
     
-        Camera.Direction = {戻る: 0、//後ろ向きカメラ前部を使用: 1/フロントに面したカメラを使用して/};
+        Camera.Direction = {
+            BACK : 0,      // Use the back-facing camera
+            FRONT : 1      // Use the front-facing camera
+        };
         
 
-### アマゾン火 OSQuirks
+### アマゾン火 OS 癖
 
 *   任意 `cameraDirection` 背面写真で結果の値します。
 
@@ -198,8 +245,6 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 ### ブラックベリー 10 癖
 
 *   無視、 `quality` パラメーター。
-
-*   無視、 `sourceType` パラメーター。
 
 *   無視、 `allowEdit` パラメーター。
 
@@ -233,7 +278,7 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 
 *   設定 `quality` 一部のデバイスでメモリ不足エラーを避けるために 50 の下。
 
-*   使用する場合 `destinationType.FILE_URI` 、写真、アプリケーションの一時ディレクトリに保存されます。 使用して、このディレクトリの内容を削除可能性があります、 `navigator.fileMgr` Api のストレージ スペースが必要な場合。
+*   使用する場合 `destinationType.FILE_URI` 、写真、アプリケーションの一時ディレクトリに保存されます。アプリケーションの一時ディレクトリの内容は、アプリケーションの終了時に削除されます。
 
 ### Tizen の癖
 
@@ -249,7 +294,11 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 
 *   無視、 `cameraDirection` パラメーター。
 
+*   無視、 `saveToPhotoAlbum` パラメーター。 重要: wp7/8 コルドバ カメラ API で撮影したすべての画像は携帯電話のカメラ巻き物に常にコピーします。 ユーザーの設定に応じて、これも、画像はその OneDrive に自動アップロードを意味できます。 イメージは意図したアプリより広い聴衆に利用できる可能性があります可能性があります。 場合は、このアプリケーションのブロッカー、msdn で説明されているように、CameraCaptureTask を実装する必要があります: <http://msdn.microsoft.com/en-us/library/windowsphone/develop/hh394006.aspx>コメントにすることがありますもかアップ投票関連の問題を[課題追跡システム][3]で
+
 *   無視、 `mediaType` のプロパティ `cameraOptions` として Windows Phone SDK には、フォト ライブラリからビデオを選択する方法は行いません。
+
+ [3]: https://issues.apache.org/jira/browse/CB-2083
 
 ## CameraError
 
@@ -262,7 +311,7 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 
 ### パラメーター
 
-*   **メッセージ**: メッセージは、デバイスのネイティブ コードによって提供されます。*(文字列)*
+*   **message**: メッセージは、デバイスのネイティブ コードによって提供されます。*(文字列)*
 
 ## cameraSuccess
 
@@ -289,7 +338,7 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 
 ## CameraPopoverHandle
 
-によって作成されたポップオーバーパン ダイアログへのハンドル`navigator.camera.getPicture`.
+`Navigator.camera.getPicture` によって作成されたポップオーバーパン ダイアログ ボックスへのハンドル.
 
 ### メソッド
 
@@ -326,7 +375,12 @@ Tizen のみをサポートしている、 `destinationType` の `Camera.Destina
 
 iOS だけ指定パラメーターをポップ オーバーのアンカー要素の場所および矢印方向計算されたライブラリまたはアルバムから画像を選択するとき。
 
-    {x: 0, y: 32、幅： 320、高さ： 480、arrowDir: Camera.PopoverArrowDirection.ARROW_ANY};
+    { x : 0,
+      y :  32,
+      width : 320,
+      height : 480,
+      arrowDir : Camera.PopoverArrowDirection.ARROW_ANY
+    };
     
 
 ### CameraPopoverOptions
@@ -335,13 +389,19 @@ iOS だけ指定パラメーターをポップ オーバーのアンカー要素
 
 *   **y**: y ピクセル座標の画面要素にポップ オーバーのアンカーになります。*(数)*
 
-*   **幅**: ポップ オーバーのアンカーになる上の画面要素のピクセル単位の幅。*(数)*
+*   **width**: ポップ オーバーのアンカーになる上の画面要素のピクセル単位の幅。*(数)*
 
-*   **高さ**: ポップ オーバーのアンカーになる上の画面要素のピクセル単位の高さ。*(数)*
+*   **height**: ポップ オーバーのアンカーになる上の画面要素のピクセル単位の高さ。*(数)*
 
-*   **arrowDir**: 方向のポップ オーバーで矢印をポイントする必要があります。定義されている `Camera.PopoverArrowDirection` *（番号）* 
+*   **arrowDir**: 方向のポップ オーバーで矢印をポイントする必要があります。定義されている `Camera.PopoverArrowDirection` *（番号）*
     
-            Camera.PopoverArrowDirection = {ARROW_UP: 1、/iOS UIPopoverArrowDirection 定数 ARROW_DOWN と一致する/: 2、ARROW_LEFT： 4、ARROW_RIGHT： 8、ARROW_ANY: 15};
+            Camera.PopoverArrowDirection = {
+                ARROW_UP : 1,        // matches iOS UIPopoverArrowDirection constants
+                ARROW_DOWN : 2,
+                ARROW_LEFT : 4,
+                ARROW_RIGHT : 8,
+                ARROW_ANY : 15
+            };
         
 
 矢印の方向と、画面の向きを調整するポップ オーバーのサイズを変更可能性がありますに注意してください。 アンカー要素の位置を指定するときの方向の変化を考慮することを確認します。
@@ -355,7 +415,7 @@ iOS だけ指定パラメーターをポップ オーバーのアンカー要素
 
 ### 説明
 
-削除を呼び出した後に一時記憶域に保存されている画像ファイルを中間 `camera.getPicture` 。 場合にのみ適用されるの値 `Camera.sourceType` に等しい `Camera.PictureSourceType.CAMERA` と、 `Camera.destinationType` に等しい`Camera.DestinationType.FILE_URI`.
+`camera.getPicture` を呼び出した後一時記憶域に保存されている中間画像ファイルを削除します。 `Camera.sourceType` の値が `Camera.PictureSourceType.CAMERA` に等しい、`Camera.destinationType` が `Camera.DestinationType.FILE_URI` と等しいの場合にのみ適用されます。.
 
 ### サポートされているプラットフォーム
 

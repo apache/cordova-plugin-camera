@@ -19,11 +19,19 @@
 
 # org.apache.cordova.camera
 
-This plugin provides an API for taking pictures and for choosing images from
+This plugin defines a global `navigator.camera` object, which provides an API for taking pictures and for choosing images from
 the system's image library.
 
-    cordova plugin add org.apache.cordova.camera
+Although the object is attached to the global scoped `navigator`, it is not available until after the `deviceready` event.
 
+    document.addEventListener("deviceready", onDeviceReady, false);
+    function onDeviceReady() {
+        console.log(navigator.camera);
+    }
+
+## Installation
+
+    cordova plugin add org.apache.cordova.camera
 
 ## navigator.camera.getPicture
 
@@ -78,11 +86,19 @@ than `DATA_URL`.
 - Amazon Fire OS
 - Android
 - BlackBerry 10
+- Browser
 - Firefox OS
 - iOS
 - Tizen
 - Windows Phone 7 and 8
 - Windows 8
+
+### Preferences (iOS)
+
+-  __CameraUsesGeolocation__ (boolean, defaults to false). For capturing JPEGs, set to true to get geolocation data in the EXIF header. This will trigger a request for geolocation permissions if set to true.
+
+        <preference name="CameraUsesGeolocation" value="false" />
+
 
 ### Amazon Fire OS Quirks
 
@@ -95,6 +111,10 @@ scenario, the image may not appear when the cordova activity is restored.
 Android uses intents to launch the camera activity on the device to capture
 images, and on phones with low memory, the Cordova activity may be killed.  In this
 scenario, the image may not appear when the Cordova activity is restored.
+
+### Browser Quirks
+
+Can only return photos as base64-encoded image.
 
 ### Firefox OS Quirks
 
@@ -221,7 +241,7 @@ Optional parameters to customize the camera settings.
             FRONT : 1      // Use the front-facing camera
         };
 
-### Amazon Fire OSQuirks
+### Amazon Fire OS Quirks
 
 - Any `cameraDirection` value results in a back-facing photo.
 
@@ -240,8 +260,6 @@ Optional parameters to customize the camera settings.
 ### BlackBerry 10 Quirks
 
 - Ignores the `quality` parameter.
-
-- Ignores the `sourceType` parameter.
 
 - Ignores the `allowEdit` parameter.
 

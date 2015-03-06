@@ -314,8 +314,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
           cropIntent.putExtra("aspectX", 1);
           cropIntent.putExtra("aspectY", 1);
       }
-      // retrieve data on return
-      cropIntent.putExtra("return-data", true);
+      // create new file handle to get full resolution crop
+      croppedUri = Uri.fromFile(new File(getTempDirectoryPath(), System.currentTimeMillis() + ".jpg"));
+      cropIntent.putExtra("output", croppedUri);
+
       // start the activity - we handle returning in onActivityResult
 
       if (this.cordova != null) {
@@ -343,6 +345,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         try {
             if (this.encodingType == JPEG) {
                 exif.createInFile(getTempDirectoryPath() + "/.Pic.jpg");
+                exif.readExifData();
+                rotate = exif.getOrientation();
+            } else if (this.encodingType == PNG) {
+                exif.createInFile(getTempDirectoryPath() + "/.Pic.png");
                 exif.readExifData();
                 rotate = exif.getOrientation();
             }
@@ -580,36 +586,11 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         // if camera crop
     if (requestCode == CROP_CAMERA) {
       if (resultCode == Activity.RESULT_OK) {
-        // // get the returned data
-        Bundle extras = intent.getExtras();
-        // get the cropped bitmap
-        Bitmap thePic = extras.getParcelable("data");
-                                if (thePic == null) {
-                                    this.failPicture("Crop returned no data.");
-                                    return;
-                                }
-
-        // now save the bitmap to a file
-        OutputStream fOut = null;
-        File temp_file = new File(getTempDirectoryPath(),
-            System.currentTimeMillis() + ".jpg");
-        try {
-          temp_file.createNewFile();
-          fOut = new FileOutputStream(temp_file);
-          thePic.compress(Bitmap.CompressFormat.JPEG, this.mQuality,
-              fOut);
-          fOut.flush();
-          fOut.close();
-        } catch (FileNotFoundException e) {
-          e.printStackTrace();
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
-
         // // Send Uri back to JavaScript for viewing image
         this.callbackContext
-            .success(Uri.fromFile(temp_file).toString());
-
+            .success(croppedUri.toString());
+        croppedUri = null;
+        
       }// If cancelled
       else if (resultCode == Activity.RESULT_CANCELED) {
         this.failPicture("Camera cancelled.");
