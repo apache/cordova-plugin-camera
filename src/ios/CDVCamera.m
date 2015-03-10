@@ -227,7 +227,7 @@ static NSString* toBase64(NSData* data) {
         UIImagePickerController* cameraPicker = (UIImagePickerController*)navigationController;
         
         if(![cameraPicker.mediaTypes containsObject:(NSString*)kUTTypeImage]){
-            [viewController.navigationItem setTitle:NSLocalizedString(@"Videos title", nil)];
+            [viewController.navigationItem setTitle:NSLocalizedString(@"Videos", nil)];
         }
     }
 }
