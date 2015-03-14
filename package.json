@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-camera",
-  "version": "0.3.6-dev",
+  "version": "0.3.7-dev",
   "description": "Cordova Camera Plugin",
   "cordova": {
     "id": "org.apache.cordova.camera",

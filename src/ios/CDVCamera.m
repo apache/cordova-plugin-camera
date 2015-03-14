@@ -20,9 +20,7 @@
 #import "CDVCamera.h"
 #import "CDVJpegHeaderWriter.h"
 #import "UIImage+CropScaleOrientation.h"
-#import <Cordova/NSArray+Comparisons.h>
 #import <Cordova/NSData+Base64.h>
-#import <Cordova/NSDictionary+Extensions.h>
 #import <ImageIO/CGImageProperties.h>
 #import <AssetsLibrary/ALAssetRepresentation.h>
 #import <AssetsLibrary/AssetsLibrary.h>
@@ -227,7 +225,7 @@ static NSString* toBase64(NSData* data) {
         UIImagePickerController* cameraPicker = (UIImagePickerController*)navigationController;
         
         if(![cameraPicker.mediaTypes containsObject:(NSString*)kUTTypeImage]){
-            [viewController.navigationItem setTitle:NSLocalizedString(@"Videos title", nil)];
+            [viewController.navigationItem setTitle:NSLocalizedString(@"Videos", nil)];
         }
     }
 }
