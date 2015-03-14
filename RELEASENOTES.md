@@ -166,3 +166,12 @@
 * CB-8032 ios: Add nativeURL external method support for CDVFileSystem->makeEntryForPath:isDirectory:
 * CB-7938 ios: Added XCTest unit tests project, with stubs (adapted from SplashScreen unit test setup)
 * CB-7937 ios: Re-factor iOS Camera plugin so that it is testable
+
+### 0.3.6 (Mar 10, 2015)
+* Fix localize key for Videos. This closes #58
+* CB-8235 android: Fix crash when selecting images from DropBox with spaces in path (close #65)
+* add try ... catch for getting image orientation
+* CB-8599 fix threading issue with cameraPicker (fixes #72)
+* CB-8559 Integrate TravisCI
+* CB-8438 cordova-plugin-camera documentation translation: cordova-plugin-camera
+* CB-8538 Added package.json file
