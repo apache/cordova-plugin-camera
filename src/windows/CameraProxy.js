@@ -314,7 +314,7 @@ module.exports = {
                 var destroyCameraPreview = function () {
                     capturePreview.pause();
                     capturePreview.src = null;
-                    [capturePreview, captureCancelButton].forEach(function(elem) {
+                    [capturePreview, cameraFooter].forEach(function(elem) {
                         if (elem /* && elem in document.body.childNodes */) {
                             document.body.removeChild(elem);
                         }
