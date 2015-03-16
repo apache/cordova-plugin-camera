@@ -214,7 +214,7 @@ module.exports = {
                     // is necessary to avoid overriding by another page elements, -1 sometimes is not enough
                     capturePreview.style.cssText = "position: fixed; left: 0; top: 0; right:0; bottom:0; width: 100%; height: 100%; z-index: 999; margin: 0 auto;";
 
-                    // Create a responsive footer with cancel and take button
+                    // Create cancel button and take button
                     cameraFooter = document.createElement("div");
                     cameraFooter.style.cssText = "position: fixed; bottom:0; left:0; right:0; z-index: 1000; width: 100%; height: 10%; display: table; text-align:center; vertical-align:middle;";
 
@@ -234,7 +234,6 @@ module.exports = {
 
                     rightCell.appendChild(captureCancelButton);
 
-
                     captureTakeButton = document.createElement("button");
                     captureTakeButton.id = "cameraCaptureTakeButton";
                     captureTakeButton.classList.add("cameraButton");
@@ -242,10 +241,11 @@ module.exports = {
                     captureTakeButton.style.cssText = "width:80%; height: 80%;";
 
                     leftCell.appendChild(captureTakeButton);
+                    
                 };
 
                 var startCameraPreview = function () {
-                    
+
                     capture = new CaptureNS.MediaCapture();
 
                     captureSettings = new CaptureNS.MediaCaptureInitializationSettings();
@@ -270,7 +270,7 @@ module.exports = {
                                 // msdn.microsoft.com/en-us/library/windows/apps/hh452807.aspx
                                 capturePreview.msZoom = true;
                                 
-                                //enable ontouch focus if available
+                                //create focus control if available
                                 var VideoDeviceController = capture.videoDeviceController;
                                 var FocusControl = VideoDeviceController.focusControl;
 
@@ -286,19 +286,21 @@ module.exports = {
                                     });
                                 }
                                 
-                                capturePreview.src = URL.createObjectURL(capture);
-                                capturePreview.play();
-                                
-                                // Insert preview frame and controls into page
-                                document.body.appendChild(capturePreview);
-                                document.body.appendChild(captureCancelButton);
-                                
                                 // Bind events to controls
+                                //capturePreview.addEventListener('click', captureAction);
                                 captureTakeButton.addEventListener('click', captureAction);
                                 captureCancelButton.addEventListener('click', function () {
                                     destroyCameraPreview();
                                     errorCallback('Cancelled');
                                 }, false);
+                                
+                                capturePreview.src = URL.createObjectURL(capture);
+                                capturePreview.play();
+
+                                // Insert preview frame and controls into page
+                                document.body.appendChild(capturePreview);
+                                //document.body.appendChild(captureCancelButton);
+                                document.body.appendChild(cameraFooter);
                                 
                             }, function (err) {
                                 destroyCameraPreview();
@@ -324,6 +326,8 @@ module.exports = {
                         capture = null;
                     }
                 };
+
+                window.closeWindowsCamera = destroyCameraPreview;
 
                 var captureAction = function () {
 
