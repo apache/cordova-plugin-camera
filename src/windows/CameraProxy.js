@@ -287,7 +287,6 @@ module.exports = {
                                 }
                                 
                                 // Bind events to controls
-                                //capturePreview.addEventListener('click', captureAction);
                                 captureTakeButton.addEventListener('click', captureAction);
                                 captureCancelButton.addEventListener('click', function () {
                                     destroyCameraPreview();
