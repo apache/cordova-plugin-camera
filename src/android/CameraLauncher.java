@@ -25,11 +25,15 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.LOG;
 import org.apache.cordova.PluginResult;
+import org.apache.cordova.file.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -50,7 +54,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
-
+import android.content.pm.PackageManager;
 /**
  * This class launches the camera view, allows the user to take a picture, closes the camera view,
  * and returns the captured image.  When the camera view is closed, the screen displayed before
@@ -203,8 +207,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         // Save the number of images currently on disk for later
         this.numPics = queryImgDB(whichContentStore()).getCount();
 
-        // Display camera
-        Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
+        // Let's use the intent and see what happens
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
         // Specify file so that large image is captured and returned
         File photo = createCaptureFile(encodingType);
@@ -212,7 +216,17 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         this.imageUri = Uri.fromFile(photo);
 
         if (this.cordova != null) {
-            this.cordova.startActivityForResult((CordovaPlugin) this, intent, (CAMERA + 1) * 16 + returnType + 1);
+            // Let's check to make sure the camera is actually installed. (Legacy Nexus 7 code)
+            PackageManager mPm = this.cordova.getActivity().getPackageManager();
+            if(intent.resolveActivity(mPm) != null)
+            {
+
+                this.cordova.startActivityForResult((CordovaPlugin) this, intent, (CAMERA + 1) * 16 + returnType + 1);
+            }
+            else
+            {
+                LOG.d(LOG_TAG, "Error: You don't have a default camera.  Your device may not be CTS complaint.");
+            }
         }
 //        else
 //            LOG.d(LOG_TAG, "ERROR: You must use the CordovaInterface for this to work correctly. Please implement it in your activity");
@@ -235,6 +249,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         }
         return photo;
     }
+
+
 
     /**
      * Get image from photo library.
@@ -384,14 +400,11 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
         // If sending filename back
         else if (destType == FILE_URI || destType == NATIVE_URI) {
+            uri = Uri.fromFile(new File(getTempDirectoryPath(), System.currentTimeMillis() + ".jpg"));
+
             if (this.saveToPhotoAlbum) {
-                Uri inputUri = getUriFromMediaStore();
-                try {
-                    //Just because we have a media URI doesn't mean we have a real file, we need to make it
-                    uri = Uri.fromFile(new File(FileHelper.getRealPath(inputUri, this.cordova)));
-                } catch (NullPointerException e) {
-                    uri = null;
-                }
+                //Create a URI on the filesystem so that we can write the file.
+                uri = Uri.fromFile(new File(getPicutresPath()));
             } else {
                 uri = Uri.fromFile(new File(getTempDirectoryPath(), System.currentTimeMillis() + ".jpg"));
             }
@@ -430,6 +443,12 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     exif.createOutFile(exifPath);
                     exif.writeExifData();
                 }
+
+                //Broadcast change to File System on MediaStore
+                if(this.saveToPhotoAlbum) {
+                    refreshGallery(uri);
+                }
+
                 if (this.allowEdit) {
                     performCrop(uri);
                 } else {
@@ -444,6 +463,24 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         this.cleanup(FILE_URI, this.imageUri, uri, bitmap);
         bitmap = null;
     }
+
+private String getPicutresPath()
+{
+    String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+    String imageFileName = "IMG_" + timeStamp + ".jpg";
+    File storageDir = Environment.getExternalStoragePublicDirectory(
+            Environment.DIRECTORY_PICTURES);
+    String galleryPath = storageDir.getAbsolutePath() + "/" + imageFileName;
+    return galleryPath;
+}
+
+private void refreshGallery(Uri contentUri)
+{
+    Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+    mediaScanIntent.setData(contentUri);
+    this.cordova.getActivity().sendBroadcast(mediaScanIntent);
+}
+
 
 private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         // Create an ExifHelper to save the exif data that is lost during compression
