@@ -17,7 +17,7 @@
     under the License.
 -->
 
-# org.apache.cordova.camera
+# cordova-plugin-camera
 
 這個外掛程式定義了一個全球 `navigator.camera` 物件，它提供了 API，拍照，從系統的圖像庫中選擇圖像。
 
@@ -31,7 +31,7 @@
 
 ## 安裝
 
-    cordova plugin add org.apache.cordova.camera
+    cordova plugin add cordova-plugin-camera
     
 
 ## navigator.camera.getPicture

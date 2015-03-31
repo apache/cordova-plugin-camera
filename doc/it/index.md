@@ -17,7 +17,7 @@
     under the License.
 -->
 
-# org.apache.cordova.camera
+# cordova-plugin-camera
 
 Questo plugin definisce un oggetto globale `navigator.camera`, che fornisce un'API per scattare foto e per aver scelto immagini dalla libreria di immagini del sistema.
 
@@ -31,7 +31,7 @@ Anche se l'oggetto è associato con ambito globale del `navigator`, non è dispo
 
 ## Installazione
 
-    cordova plugin add org.apache.cordova.camera
+    cordova plugin add cordova-plugin-camera
     
 
 ## navigator.camera.getPicture

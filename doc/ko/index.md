@@ -17,7 +17,7 @@
     under the License.
 -->
 
-# org.apache.cordova.camera
+# cordova-plugin-camera
 
 이 플러그인 시스템의 이미지 라이브러리에서 이미지를 선택 및 사진 촬영을 위한 API를 제공 하는 글로벌 `navigator.camera` 개체를 정의 합니다.
 
@@ -31,7 +31,7 @@
 
 ## 설치
 
-    cordova plugin add org.apache.cordova.camera
+    cordova plugin add cordova-plugin-camera
     
 
 ## navigator.camera.getPicture
