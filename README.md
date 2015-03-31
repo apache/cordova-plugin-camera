@@ -94,6 +94,7 @@ than `DATA_URL`.
 - Tizen
 - Windows Phone 7 and 8
 - Windows 8
+- Windows
 
 ### Preferences (iOS)
 
