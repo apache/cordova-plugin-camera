@@ -121,7 +121,7 @@ Can only return photos as base64-encoded image.
 
 ### Firefox OS Quirks
 
-Camera plugin is currently implemented using [Web Activities](https://hacks.mozilla.org/2013/01/introducing-web-activities/). 
+Camera plugin is currently implemented using [Web Activities](https://hacks.mozilla.org/2013/01/introducing-web-activities/).
 
 ### iOS Quirks
 
@@ -243,6 +243,9 @@ Optional parameters to customize the camera settings.
             BACK : 0,      // Use the back-facing camera
             FRONT : 1      // Use the front-facing camera
         };
+
+- __onlyGalleries__: Android-only Allow getImage to only get from gallery apps, excluding dropbox,drive,onedrive and filesystem explorers. _(Boolean)_
+
 
 ### Amazon Fire OS Quirks
 
