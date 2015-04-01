@@ -256,7 +256,8 @@ Optional parameters to customize the camera settings.
 
 - Any `cameraDirection` value results in a back-facing photo.
 
-- Ignores the `allowEdit` parameter.
+- Android also uses the Crop Activity for allowEdit, even though crop should work and actually pass the cropped image back to Cordova, the only one that works consistently is the one bundled 
+with the Google Plus Photos application.  Other crops may not work.
 
 - `Camera.PictureSourceType.PHOTOLIBRARY` and `Camera.PictureSourceType.SAVEDPHOTOALBUM` both display the same photo album.
 
