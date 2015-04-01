@@ -60,7 +60,7 @@ function showCameraDialog (done, cancel, fail) {
         });
         wv.on('JavaScriptCallback', function (evt, data) {
             var args = JSON.parse(data).args;
-            if (args[0] === 'cordova-plugin-camera') {
+            if (args[0] === 'org.apache.cordova.camera') {
                 if (args[1] === 'cancel') {
                     cancel('User canceled');
                 } else if (args[1] === 'error') {
