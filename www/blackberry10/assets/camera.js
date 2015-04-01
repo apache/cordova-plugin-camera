@@ -20,7 +20,7 @@
 
 document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('back').onclick = function () {
-        window.qnx.callExtensionMethod('org.apache.cordova.camera', 'cancel');
+        window.qnx.callExtensionMethod('cordova-plugin-camera', 'cancel');
     };
     window.navigator.webkitGetUserMedia(
         { video: true },
@@ -36,11 +36,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
                 canvas.getContext('2d').drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-                window.qnx.callExtensionMethod('org.apache.cordova.camera', canvas.toDataURL('img/png'));
+                window.qnx.callExtensionMethod('cordova-plugin-camera', canvas.toDataURL('img/png'));
             };
         },
         function () {
-            window.qnx.callExtensionMethod('org.apache.cordova.camera', 'error', 'getUserMedia failed');
+            window.qnx.callExtensionMethod('cordova-plugin-camera', 'error', 'getUserMedia failed');
         }
     );
 });
