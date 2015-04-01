@@ -130,8 +130,8 @@ static NSString* toBase64(NSData* data) {
     [self.commandDelegate runInBackground:^{
         
         CDVPictureOptions* pictureOptions = [CDVPictureOptions createFromTakePictureArguments:command];
-        pictureOptions.popoverSupported = [self popoverSupported];
-        pictureOptions.usesGeolocation = [self usesGeolocation];
+        pictureOptions.popoverSupported = [weakSelf popoverSupported];
+        pictureOptions.usesGeolocation = [weakSelf usesGeolocation];
         pictureOptions.cropToSize = NO;
         
         BOOL hasCamera = [UIImagePickerController isSourceTypeAvailable:pictureOptions.sourceType];
@@ -142,13 +142,6 @@ static NSString* toBase64(NSData* data) {
             return;
         }
         
-        // If a popover is already open, close it; we only want one at a time.
-        if (([[weakSelf pickerController] pickerPopoverController] != nil) && [[[weakSelf pickerController] pickerPopoverController] isPopoverVisible]) {
-            [[[weakSelf pickerController] pickerPopoverController] dismissPopoverAnimated:YES];
-            [[[weakSelf pickerController] pickerPopoverController] setDelegate:nil];
-            [[weakSelf pickerController] setPickerPopoverController:nil];
-        }
-        
         CDVCameraPicker* cameraPicker = [CDVCameraPicker createFromPictureOptions:pictureOptions];
         weakSelf.pickerController = cameraPicker;
         
@@ -157,20 +150,27 @@ static NSString* toBase64(NSData* data) {
         // we need to capture this state for memory warnings that dealloc this object
         cameraPicker.webView = weakSelf.webView;
         
-        if ([weakSelf popoverSupported] && (pictureOptions.sourceType != UIImagePickerControllerSourceTypeCamera)) {
-            if (cameraPicker.pickerPopoverController == nil) {
-                cameraPicker.pickerPopoverController = [[NSClassFromString(@"UIPopoverController") alloc] initWithContentViewController:cameraPicker];
+        // Perform UI operations on the main thread
+        dispatch_async(dispatch_get_main_queue(), ^{
+            // If a popover is already open, close it; we only want one at a time.
+            if (([[weakSelf pickerController] pickerPopoverController] != nil) && [[[weakSelf pickerController] pickerPopoverController] isPopoverVisible]) {
+                [[[weakSelf pickerController] pickerPopoverController] dismissPopoverAnimated:YES];
+                [[[weakSelf pickerController] pickerPopoverController] setDelegate:nil];
+                [[weakSelf pickerController] setPickerPopoverController:nil];
             }
-            [weakSelf displayPopover:pictureOptions.popoverOptions];
-            weakSelf.hasPendingOperation = NO;
 
-        } else {
-            dispatch_async(dispatch_get_main_queue(), ^{
+            if ([weakSelf popoverSupported] && (pictureOptions.sourceType != UIImagePickerControllerSourceTypeCamera)) {
+                if (cameraPicker.pickerPopoverController == nil) {
+                    cameraPicker.pickerPopoverController = [[NSClassFromString(@"UIPopoverController") alloc] initWithContentViewController:cameraPicker];
+                }
+                [weakSelf displayPopover:pictureOptions.popoverOptions];
+                weakSelf.hasPendingOperation = NO;
+            } else {
                 [weakSelf.viewController presentViewController:cameraPicker animated:YES completion:^{
                     weakSelf.hasPendingOperation = NO;
                 }];
-            });
-        }
+            }
+        });
     }];
 }
 
