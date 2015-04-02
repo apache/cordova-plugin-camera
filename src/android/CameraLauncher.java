@@ -173,7 +173,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             if (savedRequestCode > 0) {
                 onActivityResult(savedRequestCode, savedResultCode, savedIntent);
             } else {
-                callbackContext.success('checked');
+                callbackContext.success("no-result");
             }
             return true;
         }
