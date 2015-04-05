@@ -209,23 +209,47 @@ module.exports = {
 
                     // Create fullscreen preview
                     capturePreview = document.createElement("video");
-
-                    // z-order style element for capturePreview and captureCancelButton elts
+                    capturePreview.id = "winCamera";
+                    // z-index style element for capturePreview and captureCancelButton elts
                     // is necessary to avoid overriding by another page elements, -1 sometimes is not enough
-                    capturePreview.style.cssText = "position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-order: 999";
+                    capturePreview.style.cssText = "position: fixed; left: 0; top: 0; right:0; bottom:0; width: 100%; height: 100%; z-index: 999; margin: 0 auto;";
 
-                    // Create cancel button
+                    // Create cancel button and take button
+                    cameraFooter = document.createElement("div");
+                    cameraFooter.style.cssText = "position: fixed; bottom:0; left:0; right:0; z-index: 1000; width: 100%; height: 10%; display: table; text-align:center; vertical-align:middle;";
+
+                    var leftCell = document.createElement("div");
+                    leftCell.style.cssText = "display: table-cell; width: 50%";
+                    cameraFooter.appendChild(leftCell);
+ 
+                    var rightCell = document.createElement("div");
+                    rightCell.style.cssText = "display: table-cell; width: 50%";
+                    cameraFooter.appendChild(rightCell);
+
                     captureCancelButton = document.createElement("button");
+                    captureCancelButton.id = "cameraCaptureCancelButton";
+                    captureCancelButton.classList.add("cameraButton");
                     captureCancelButton.innerText = "Cancel";
-                    captureCancelButton.style.cssText = "position: fixed; right: 0; bottom: 0; display: block; margin: 20px; z-order: 1000";
+                    captureCancelButton.style.cssText = "width:80%; height: 80%;";
+
+                    rightCell.appendChild(captureCancelButton);
+
+                    captureTakeButton = document.createElement("button");
+                    captureTakeButton.id = "cameraCaptureTakeButton";
+                    captureTakeButton.classList.add("cameraButton");
+                    captureTakeButton.innerText = "Take";
+                    captureTakeButton.style.cssText = "width:80%; height: 80%;";
+
+                    leftCell.appendChild(captureTakeButton);
+                    
+                };
+
+                var startCameraPreview = function () {
 
                     capture = new CaptureNS.MediaCapture();
 
                     captureSettings = new CaptureNS.MediaCaptureInitializationSettings();
                     captureSettings.streamingCaptureMode = CaptureNS.StreamingCaptureMode.video;
-                };
-
-                var startCameraPreview = function () {
 
                     // Search for available camera devices
                     // This is necessary to detect which camera (front or back) we should use
@@ -245,19 +269,38 @@ module.exports = {
                                 capture.setPreviewRotation(Windows.Media.Capture.VideoRotation.clockwise90Degrees);
                                 // msdn.microsoft.com/en-us/library/windows/apps/hh452807.aspx
                                 capturePreview.msZoom = true;
+                                
+                                //create focus control if available
+                                var VideoDeviceController = capture.videoDeviceController;
+                                var FocusControl = VideoDeviceController.focusControl;
+
+                                if (FocusControl.supported == true) {
+                                    capturePreview.addEventListener('click', function () {
+
+                                        var preset = Windows.Media.Devices.FocusPreset.autoNormal;
+
+                                        FocusControl.setPresetAsync(preset).done(function () {
+
+                                        });
+
+                                    });
+                                }
+                                
+                                // Bind events to controls
+                                captureTakeButton.addEventListener('click', captureAction);
+                                captureCancelButton.addEventListener('click', function () {
+                                    destroyCameraPreview();
+                                    errorCallback('Cancelled');
+                                }, false);
+                                
                                 capturePreview.src = URL.createObjectURL(capture);
                                 capturePreview.play();
 
                                 // Insert preview frame and controls into page
                                 document.body.appendChild(capturePreview);
-                                document.body.appendChild(captureCancelButton);
-
-                                // Bind events to controls
-                                capturePreview.addEventListener('click', captureAction);
-                                captureCancelButton.addEventListener('click', function () {
-                                    destroyCameraPreview();
-                                    errorCallback('Cancelled');
-                                }, false);
+                                //document.body.appendChild(captureCancelButton);
+                                document.body.appendChild(cameraFooter);
+                                
                             }, function (err) {
                                 destroyCameraPreview();
                                 errorCallback('Camera intitialization error ' + err);
@@ -272,7 +315,7 @@ module.exports = {
                 var destroyCameraPreview = function () {
                     capturePreview.pause();
                     capturePreview.src = null;
-                    [capturePreview, captureCancelButton].forEach(function(elem) {
+                    [capturePreview, cameraFooter].forEach(function(elem) {
                         if (elem /* && elem in document.body.childNodes */) {
                             document.body.removeChild(elem);
                         }
@@ -282,6 +325,8 @@ module.exports = {
                         capture = null;
                     }
                 };
+
+                window.closeWindowsCamera = destroyCameraPreview;
 
                 var captureAction = function () {
 
