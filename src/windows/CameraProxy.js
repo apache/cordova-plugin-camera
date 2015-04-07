@@ -165,7 +165,11 @@ module.exports = {
 
                             var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
                             file.copyAsync(storageFolder, file.name, Windows.Storage.NameCollisionOption.replaceExisting).then(function (storageFile) {
-                                successCallback(URL.createObjectURL(storageFile));
+                                if (destinationType == Camera.DestinationType.NATIVE_URI) {
+                                    successCallback("ms-appdata:///local/" + storageFile.name);
+                                } else {
+                                    successCallback(URL.createObjectURL(storageFile));
+                                }
                             }, function () {
                                 errorCallback("Can't access localStorage folder.");
                             });
@@ -387,7 +391,7 @@ module.exports = {
                     if (picture) {
                         // save to photo album successCallback
                         var success = function() {
-                            if (destinationType == Camera.DestinationType.FILE_URI) {
+                            if (destinationType == Camera.DestinationType.FILE_URI || destinationType == Camera.DestinationType.NATIVE_URI) {
                                 if (targetHeight > 0 && targetWidth > 0) {
                                     resizeImage(picture);
                                 } else {
