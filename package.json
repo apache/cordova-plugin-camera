@@ -39,7 +39,7 @@
     "cordova-windows"
   ],
   "peerDependencies": {
-    "cordova-plugin-file": ">=1.0.1"
+    "cordova-plugin-file": ">=2.0.0"
   },
   "author": "Apache Software Foundation",
   "license": "Apache 2.0"
