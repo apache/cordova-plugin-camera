@@ -165,7 +165,7 @@ module.exports = {
 
                             var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
                             file.copyAsync(storageFolder, file.name, Windows.Storage.NameCollisionOption.replaceExisting).then(function (storageFile) {
-                                successCallback(URL.createObjectURL(storagefile));
+                                successCallback("ms-appdata:///local/" + storageFile.name);
                             }, function () {
                                 errorCallback("Can't access localStorage folder.");
                             });
