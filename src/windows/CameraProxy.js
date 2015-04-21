@@ -295,12 +295,12 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
 
         // z-order style element for capturePreview and captureCancelButton elts
         // is necessary to avoid overriding by another page elements, -1 sometimes is not enough
-        capturePreview.style.cssText = "position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: 999";
+        capturePreview.style.cssText = "position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-order: 999";
 
         // Create cancel button
         captureCancelButton = document.createElement("button");
         captureCancelButton.innerText = "Cancel";
-        captureCancelButton.style.cssText = "position: fixed; right: 0; bottom: 0; display: block; margin: 20px; z-index: 1000";
+        captureCancelButton.style.cssText = "position: fixed; right: 0; bottom: 0; display: block; margin: 20px; z-order: 1000";
 
         capture = new CaptureNS.MediaCapture();
 
