@@ -53,6 +53,9 @@ module.exports = {
     }
 };
 
+// https://msdn.microsoft.com/en-us/library/windows/apps/ff462087(v=vs.105).aspx
+var windowsVideoContainers = [".avi", ".flv", ".asx", ".asf", ".mov", ".mp4", ".mpg", ".rm", ".srt", ".swf", ".wmv", ".vob"];
+var windowsPhoneVideoContainers =  [".avi", ".3gp", ".3g2", ".wmv", ".3gp", ".3g2" ".mp4", ".m4v"];
 
 // Resize method
 function resizeImage(successCallback, errorCallback, file, targetWidth, targetHeight, encodingType) {
@@ -134,27 +137,99 @@ function resizeImageBase64(successCallback, errorCallback, file, targetWidth, ta
     }, function(err) { errorCallback(err); });
 }
 
-function takePictureFromFile(successCallback, errorCallback, mediaType, destinationType, targetWidth, targetHeight, encodingType) {
-    // TODO: Add WP8.1 support
-    // WP8.1 doesn't allow to use of pickSingleFileAsync method
-    // see http://msdn.microsoft.com/en-us/library/windows/apps/br207852.aspx for details
-    // replacement of pickSingleFileAsync - pickSingleFileAndContinue method
-    // will take application to suspended state and this require additional logic to wake application up
-    if (navigator.appVersion.indexOf('Windows Phone 8.1') >= 0 ) {
-        errorCallback('Not supported');
-        return;
+function takePictureFromFile(successCallback, errorCallback, args) {
+    // Detect Windows Phone
+    if (navigator.appVersion.indexOf('Windows Phone 8.1') >= 0) {
+        takePictureFromFileWP(successCallback, errorCallback, args);
+    } else {
+        takePictureFromFileWindows(successCallback, errorCallback, args);
     }
+}
+
+function takePictureFromFileWP(successCallback, errorCallback, args) {
+    var mediaType = args[6],
+        destinationType = args[1],
+        targetWidth = args[3],
+        targetHeight = args[4],
+        encodingType = args[5];
+
+    /*
+        Need to add and remove an event listener to catch activation state
+        Using FileOpenPicker will suspend the app and it's required to catch the PickSingleFileAndContinue
+        https://msdn.microsoft.com/en-us/library/windows/apps/xaml/dn631755.aspx
+    */
+    var filePickerActivationHandler = function(eventArgs) {
+        if (eventArgs.kind === Windows.ApplicationModel.Activation.ActivationKind.pickFileContinuation) {
+            var file = eventArgs.files[0];
+            if (!file) {
+                errorCallback("User didn't choose a file.");
+                Windows.UI.WebUI.WebUIApplication.removeEventListener("activated", filePickerActivationHandler);
+                return;
+            }
+            if (destinationType == Camera.DestinationType.FILE_URI || destinationType == Camera.DestinationType.NATIVE_URI) {
+                if (targetHeight > 0 && targetWidth > 0) {
+                    resizeImage(successCallback, errorCallback, file, targetWidth, targetHeight, encodingType);
+                }
+                else {
+                    var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
+                    file.copyAsync(storageFolder, file.name, Windows.Storage.NameCollisionOption.replaceExisting).done(function (storageFile) {
+                        successCallback(URL.createObjectURL(storageFile));
+                    }, function () {
+                        errorCallback("Can't access localStorage folder.");
+                    });
+                }
+            }
+            else {
+                if (targetHeight > 0 && targetWidth > 0) {
+                    resizeImageBase64(successCallback, errorCallback, file, targetWidth, targetHeight);
+                } else {
+                    Windows.Storage.FileIO.readBufferAsync(file).done(function (buffer) {
+                        var strBase64 = Windows.Security.Cryptography.CryptographicBuffer.encodeToBase64String(buffer);
+                        successCallback(strBase64);
+                    }, errorCallback);
+                }
+            }
+            Windows.UI.WebUI.WebUIApplication.removeEventListener("activated", filePickerActivationHandler);
+        }
+    };
 
     var fileOpenPicker = new Windows.Storage.Pickers.FileOpenPicker();
-    fileOpenPicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.picturesLibrary;
     if (mediaType == Camera.MediaType.PICTURE) {
         fileOpenPicker.fileTypeFilter.replaceAll([".png", ".jpg", ".jpeg"]);
+        fileOpenPicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.picturesLibrary;
     }
     else if (mediaType == Camera.MediaType.VIDEO) {
-        fileOpenPicker.fileTypeFilter.replaceAll([".avi", ".flv", ".asx", ".asf", ".mov", ".mp4", ".mpg", ".rm", ".srt", ".swf", ".wmv", ".vob"]);
+        fileOpenPicker.fileTypeFilter.replaceAll(windowsPhoneVideoContainers);
+        fileOpenPicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.videosLibrary;
     }
     else {
         fileOpenPicker.fileTypeFilter.replaceAll(["*"]);
+        fileOpenPicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.documentsLibrary;
+    }
+
+    Windows.UI.WebUI.WebUIApplication.addEventListener("activated", filePickerActivationHandler);
+    fileOpenPicker.pickSingleFileAndContinue();
+}
+
+function takePictureFromFileWindows(successCallback, errorCallback, args) {
+    var mediaType = args[6],
+        destinationType = args[1],
+        targetWidth = args[3],
+        targetHeight = args[4],
+        encodingType = args[5];
+
+    var fileOpenPicker = new Windows.Storage.Pickers.FileOpenPicker();
+    if (mediaType == Camera.MediaType.PICTURE) {
+        fileOpenPicker.fileTypeFilter.replaceAll([".png", ".jpg", ".jpeg"]);
+        fileOpenPicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.picturesLibrary;
+    }
+    else if (mediaType == Camera.MediaType.VIDEO) {
+        fileOpenPicker.fileTypeFilter.replaceAll(windowsVideoContainers);
+        fileOpenPicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.videosLibrary;
+    }
+    else {
+        fileOpenPicker.fileTypeFilter.replaceAll(["*"]);
+        fileOpenPicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.documentsLibrary;
     }
 
     fileOpenPicker.pickSingleFileAsync().done(function (file) {
@@ -173,7 +248,6 @@ function takePictureFromFile(successCallback, errorCallback, mediaType, destinat
                 }, function () {
                     errorCallback("Can't access localStorage folder.");
                 });
-
             }
         }
         else {
@@ -379,7 +453,7 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
                 };
 
                 var savePicker = new Windows.Storage.Pickers.FileSavePicker();
-                savePicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.documentsLibrary;
+                savePicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.picturesLibrary;
                 if (encodingType === Camera.EncodingType.PNG) {
                     savePicker.fileTypeChoices.insert("PNG", [".png"]);
                 } else {
@@ -475,7 +549,7 @@ function takePictureFromCameraWindows(successCallback, errorCallback, args) {
 
         var savePicker = new Windows.Storage.Pickers.FileSavePicker();
 
-        savePicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.documentsLibrary;
+        savePicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.picturesLibrary;
         if (encodingType === Camera.EncodingType.PNG) {
             savePicker.fileTypeChoices.insert("PNG", [".png"]);
             savePicker.suggestedFileName = "photo.png";
