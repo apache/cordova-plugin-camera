@@ -55,7 +55,7 @@ module.exports = {
 
 // https://msdn.microsoft.com/en-us/library/windows/apps/ff462087(v=vs.105).aspx
 var windowsVideoContainers = [".avi", ".flv", ".asx", ".asf", ".mov", ".mp4", ".mpg", ".rm", ".srt", ".swf", ".wmv", ".vob"];
-var windowsPhoneVideoContainers =  [".avi", ".3gp", ".3g2", ".wmv", ".3gp", ".3g2" ".mp4", ".m4v"];
+var windowsPhoneVideoContainers =  [".avi", ".3gp", ".3g2", ".wmv", ".3gp", ".3g2", ".mp4", ".m4v"];
 
 // Resize method
 function resizeImage(successCallback, errorCallback, file, targetWidth, targetHeight, encodingType) {
