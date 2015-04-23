@@ -105,7 +105,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private int savedRequestCode;
     private int savedResultCode;
     private Intent savedIntent;
-    private boolean getPictureFromGallery;  // flag to indicate we are getting an image from the gallery
 
     /**
      * Executes the request and returns PluginResult.
@@ -171,10 +170,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             return true;
         } else if (action.equals("checkForSavedResult")) {
             this.imageUri = Uri.fromFile(createCaptureFile(JPEG));
-            if (savedRequestCode > 0) {
+            if (savedRequestCode > 0 || savedResultCode > 0) {
                 onActivityResult(savedRequestCode, savedResultCode, savedIntent);
             } else {
-                callbackContext.success("no-result");
+                callbackContext.success("");
             }
             return true;
         }
@@ -280,7 +279,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         Intent intent = new Intent();
         String title = GET_PICTURE;
         croppedUri = null;
-        this.getPictureFromGallery = true;
         if (this.mediaType == PICTURE) {
             intent.setType("image/*");
             if (this.allowEdit) {
@@ -645,7 +643,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      */
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
 
-        if (this.imageUri == null && this.getPictureFromGallery == false) {
+        if (this.callbackContext == null) {
             this.savedRequestCode = requestCode;
             this.savedResultCode = resultCode;
             this.savedIntent = intent;
@@ -1084,7 +1082,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      */
     public void failPicture(String err) {
         this.callbackContext.error(err);
-        this.getPictureFromGallery = false;
     }
 
     /**
@@ -1094,7 +1091,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      */
     public void returnResult(String result){
         this.callbackContext.success(result);
-        this.getPictureFromGallery = false;
     }
 
     private void scanForGallery(Uri newImage) {
