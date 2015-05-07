@@ -35,6 +35,16 @@ Although the object is attached to the global scoped `navigator`, it is not avai
 
     cordova plugin add cordova-plugin-camera
 
+## API
+- Camera
+    - navigator.camera.getPicture(success, fail, options)
+    - CameraOptions
+    - CameraPopoverHandle
+    - CameraPopoverOptions
+    - navigator.camera.cleanup
+
+
+
 ## navigator.camera.getPicture
 
 Takes a photo using the camera, or retrieves a photo from the device's
@@ -43,9 +53,9 @@ base64-encoded `String`, or as the URI for the image file.  The method
 itself returns a `CameraPopoverHandle` object that can be used to
 reposition the file selection popover.
 
-    navigator.camera.getPicture( cameraSuccess, cameraError, cameraOptions );
+    navigator.camera.getPicture(cameraSuccess, cameraError, cameraOptions);
 
-### Description
+#### Description
 
 The `camera.getPicture` function opens the device's default camera
 application that allows users to snap pictures. This behavior occurs
@@ -83,69 +93,11 @@ quality, even if a `quality` parameter is specified.  To avoid common
 memory problems, set `Camera.destinationType` to `FILE_URI` rather
 than `DATA_URL`.
 
-### Supported Platforms
+#### Supported Platforms
 
-- Amazon Fire OS
-- Android
-- BlackBerry 10
-- Browser
-- Firefox OS
-- iOS
-- Tizen
-- Windows Phone 7 and 8
-- Windows 8
-- Windows
+![](doc/img/android-success.png) ![](doc/img/blackberry-success.png) ![](doc/img/browser-success.png) ![](doc/img/firefox-success.png) ![](doc/img/fireos-success.png) ![](doc/img/ios-success.png) ![](doc/img/windows-success.png) ![](doc/img/wp8-success.png) ![](doc/img/ubuntu-success.png)
 
-### Preferences (iOS)
-
--  __CameraUsesGeolocation__ (boolean, defaults to false). For capturing JPEGs, set to true to get geolocation data in the EXIF header. This will trigger a request for geolocation permissions if set to true.
-
-        <preference name="CameraUsesGeolocation" value="false" />
-
-
-### Amazon Fire OS Quirks
-
-Amazon Fire OS uses intents to launch the camera activity on the device to capture
-images, and on phones with low memory, the Cordova activity may be killed.  In this
-scenario, the image may not appear when the cordova activity is restored.
-
-### Android Quirks
-
-Android uses intents to launch the camera activity on the device to capture
-images, and on phones with low memory, the Cordova activity may be killed.  In this
-scenario, the image may not appear when the Cordova activity is restored.
-
-### Browser Quirks
-
-Can only return photos as base64-encoded image.
-
-### Firefox OS Quirks
-
-Camera plugin is currently implemented using [Web Activities](https://hacks.mozilla.org/2013/01/introducing-web-activities/). 
-
-### iOS Quirks
-
-Including a JavaScript `alert()` in either of the callback functions
-can cause problems.  Wrap the alert within a `setTimeout()` to allow
-the iOS image picker or popover to fully close before the alert
-displays:
-
-    setTimeout(function() {
-        // do your thing here!
-    }, 0);
-
-### Windows Phone 7 Quirks
-
-Invoking the native camera application while the device is connected
-via Zune does not work, and triggers an error callback.
-
-### Tizen Quirks
-
-Tizen only supports a `destinationType` of
-`Camera.DestinationType.FILE_URI` and a `sourceType` of
-`Camera.PictureSourceType.PHOTOLIBRARY`.
-
-### Example
+#### Example
 
 Take a photo and retrieve it as a base64-encoded image:
 
@@ -176,6 +128,54 @@ Take a photo and retrieve the image's file location:
         alert('Failed because: ' + message);
     }
 
+#### Preferences (iOS)
+
+-  __CameraUsesGeolocation__ (boolean, defaults to false). For capturing JPEGs, set to true to get geolocation data in the EXIF header. This will trigger a request for geolocation permissions if set to true.
+
+        <preference name="CameraUsesGeolocation" value="false" />
+
+#### Amazon Fire OS Quirks
+
+Amazon Fire OS uses intents to launch the camera activity on the device to capture
+images, and on phones with low memory, the Cordova activity may be killed.  In this
+scenario, the image may not appear when the cordova activity is restored.
+
+#### Android Quirks
+
+Android uses intents to launch the camera activity on the device to capture
+images, and on phones with low memory, the Cordova activity may be killed.  In this
+scenario, the image may not appear when the Cordova activity is restored.
+
+#### Browser Quirks
+
+Can only return photos as base64-encoded image.
+
+#### Firefox OS Quirks
+
+Camera plugin is currently implemented using [Web Activities](https://hacks.mozilla.org/2013/01/introducing-web-activities/). 
+
+#### iOS Quirks
+
+Including a JavaScript `alert()` in either of the callback functions
+can cause problems.  Wrap the alert within a `setTimeout()` to allow
+the iOS image picker or popover to fully close before the alert
+displays:
+
+    setTimeout(function() {
+        // do your thing here!
+    }, 0);
+
+#### Windows Phone 7 Quirks
+
+Invoking the native camera application while the device is connected
+via Zune does not work, and triggers an error callback.
+
+#### Tizen Quirks
+
+Tizen only supports a `destinationType` of
+`Camera.DestinationType.FILE_URI` and a `sourceType` of
+`Camera.PictureSourceType.PHOTOLIBRARY`.
+
 ## CameraOptions
 
 Optional parameters to customize the camera settings.
@@ -189,8 +189,6 @@ Optional parameters to customize the camera settings.
       targetHeight: 100,
       popoverOptions: CameraPopoverOptions,
       saveToPhotoAlbum: false };
-
-### Options
 
 - __quality__: Quality of the saved image, expressed as a range of 0-100, where 100 is typically full resolution with no loss from file compression. The default is 50. _(Number)_ (Note that information about the camera's resolution is unavailable.)
 
@@ -244,7 +242,7 @@ Optional parameters to customize the camera settings.
             FRONT : 1      // Use the front-facing camera
         };
 
-### Amazon Fire OS Quirks
+#### Amazon Fire OS Quirks
 
 - Any `cameraDirection` value results in a back-facing photo.
 
@@ -252,7 +250,7 @@ Optional parameters to customize the camera settings.
 
 - `Camera.PictureSourceType.PHOTOLIBRARY` and `Camera.PictureSourceType.SAVEDPHOTOALBUM` both display the same photo album.
 
-### Android Quirks
+#### Android Quirks
 
 - Any `cameraDirection` value results in a back-facing photo.
 
@@ -261,7 +259,7 @@ with the Google Plus Photos application.  Other crops may not work.
 
 - `Camera.PictureSourceType.PHOTOLIBRARY` and `Camera.PictureSourceType.SAVEDPHOTOALBUM` both display the same photo album.
 
-### BlackBerry 10 Quirks
+#### BlackBerry 10 Quirks
 
 - Ignores the `quality` parameter.
 
@@ -273,7 +271,7 @@ with the Google Plus Photos application.  Other crops may not work.
 
 - Ignores the `cameraDirection` parameter.
 
-### Firefox OS Quirks
+#### Firefox OS Quirks
 
 - Ignores the `quality` parameter.
 
@@ -293,19 +291,19 @@ with the Google Plus Photos application.  Other crops may not work.
 
 - Ignores the `cameraDirection` parameter.
 
-### iOS Quirks
+#### iOS Quirks
 
 - Set `quality` below 50 to avoid memory errors on some devices.
 
 - When using `destinationType.FILE_URI`, photos are saved in the application's temporary directory. The contents of the application's temporary directory is deleted when the application ends.
 
-### Tizen Quirks
+#### Tizen Quirks
 
 - options not supported
 
 - always returns a FILE URI
 
-### Windows Phone 7 and 8 Quirks
+#### Windows Phone 7 and 8 Quirks
 
 - Ignores the `allowEdit` parameter.
 
@@ -327,7 +325,7 @@ onError callback function that provides an error message.
         // Show a helpful message
     }
 
-### Parameters
+#### Description
 
 - __message__: The message is provided by the device's native code. _(String)_
 
@@ -340,11 +338,11 @@ onSuccess callback function that provides the image data.
         // Do something with the image
     }
 
-### Parameters
+#### Description
 
 - __imageData__: Base64 encoding of the image data, _or_ the image file URI, depending on `cameraOptions` in effect. _(String)_
 
-### Example
+#### Example
 
     // Show image
     //
@@ -358,23 +356,15 @@ onSuccess callback function that provides the image data.
 
 A handle to the popover dialog created by `navigator.camera.getPicture`.
 
-### Methods
+#### Description
 
-- __setPosition__: Set the position of the popover.
+- __setPosition__: Set the position of the popover. Takes the `CameraPopoverOptions` that specify the new position.
 
-### Supported Platforms
+#### Supported Platforms
 
-- iOS
+![](doc/img/android-fail.png) ![](doc/img/blackberry-fail.png) ![](doc/img/browser-fail.png) ![](doc/img/firefox-fail.png) ![](doc/img/fireos-fail.png) ![](doc/img/ios-success.png) ![](doc/img/windows-fail.png) ![](doc/img/wp8-fail.png) ![](doc/img/ubuntu-fail.png)
 
-### setPosition
-
-Set the position of the popover.
-
-__Parameters__:
-
-- `cameraPopoverOptions`: the `CameraPopoverOptions` that specify the new position
-
-### Example
+#### Example
 
      var cameraPopoverHandle = navigator.camera.getPicture(onSuccess, onFail,
          { destinationType: Camera.DestinationType.FILE_URI,
@@ -387,7 +377,6 @@ __Parameters__:
          var cameraPopoverOptions = new CameraPopoverOptions(0, 0, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY);
          cameraPopoverHandle.setPosition(cameraPopoverOptions);
      }
-
 
 ## CameraPopoverOptions
 
@@ -402,7 +391,7 @@ or album.
       arrowDir : Camera.PopoverArrowDirection.ARROW_ANY
     };
 
-### CameraPopoverOptions
+#### Description
 
 - __x__: x pixel coordinate of screen element onto which to anchor the popover. _(Number)_
 
@@ -434,18 +423,18 @@ storage.
 
     navigator.camera.cleanup( cameraSuccess, cameraError );
 
-### Description
+#### Description
 
 Removes intermediate image files that are kept in temporary storage
 after calling `camera.getPicture`. Applies only when the value of
 `Camera.sourceType` equals `Camera.PictureSourceType.CAMERA` and the
 `Camera.destinationType` equals `Camera.DestinationType.FILE_URI`.
 
-### Supported Platforms
+#### Supported Platforms
 
-- iOS
+![](doc/img/android-fail.png) ![](doc/img/blackberry-fail.png) ![](doc/img/browser-fail.png) ![](doc/img/firefox-fail.png) ![](doc/img/fireos-fail.png) ![](doc/img/ios-success.png) ![](doc/img/windows-fail.png) ![](doc/img/wp8-fail.png) ![](doc/img/ubuntu-fail.png)
 
-### Example
+#### Example
 
     navigator.camera.cleanup(onSuccess, onFail);
 
