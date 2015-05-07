@@ -197,3 +197,12 @@
 * docs: added 'Windows' to supported platforms
 * CB-8653 Updated Readme
 * CB-8659: ios: 4.0.x Compatibility: Remove use of deprecated headers
+
+### 1.1.0 (May 06, 2015)
+* CB-8943 fix `PickAndContinue` issue on *Win10Phone*
+* CB-8253 Fix potential unreleased resources
+* CB-8909: Remove unused import from File
+* CB-8404 typo fix `cameraproxy.js`
+* CB-8404 Rotate camera feed with device orientation
+* CB-8054 Support taking pictures from file for *WP8*
+* CB-8405 Use `z-index` instead of `z-order`
