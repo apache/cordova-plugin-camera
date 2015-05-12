@@ -57,6 +57,9 @@ module.exports = {
 var windowsVideoContainers = [".avi", ".flv", ".asx", ".asf", ".mov", ".mp4", ".mpg", ".rm", ".srt", ".swf", ".wmv", ".vob"];
 var windowsPhoneVideoContainers =  [".avi", ".3gp", ".3g2", ".wmv", ".3gp", ".3g2", ".mp4", ".m4v"];
 
+// Default aspect ratio 1.78 (16:9 hd video standard)
+var DEFAULT_ASPECT_RATIO = '1.8';
+
 // Resize method
 function resizeImage(successCallback, errorCallback, file, targetWidth, targetHeight, encodingType) {
     var tempPhotoFileName = "";
@@ -323,8 +326,7 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
         // Search for available camera devices
         // This is necessary to detect which camera (front or back) we should use
         var expectedPanel = cameraDirection === 1 ? Windows.Devices.Enumeration.Panel.front : Windows.Devices.Enumeration.Panel.back;
-        Windows.Devices.Enumeration.DeviceInformation.findAllAsync(Windows.Devices.Enumeration.DeviceClass.videoCapture)
-        .done(function (devices) {
+        Windows.Devices.Enumeration.DeviceInformation.findAllAsync(Windows.Devices.Enumeration.DeviceClass.videoCapture).then(function (devices) {
             if (devices.length <= 0) {
                 destroyCameraPreview();
                 errorCallback('Camera not found');
@@ -337,28 +339,47 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
                 }
             });
 
-            capture.initializeAsync(captureSettings).done(function () {
-                // msdn.microsoft.com/en-us/library/windows/apps/hh452807.aspx
-                capturePreview.msZoom = true;
-                capturePreview.src = URL.createObjectURL(capture);
-                capturePreview.play();
+            captureSettings.photoCaptureSource = Windows.Media.Capture.PhotoCaptureSource.photo;
 
-                // Insert preview frame and controls into page
-                document.body.appendChild(capturePreview);
-                document.body.appendChild(captureCancelButton);
+            return capture.initializeAsync(captureSettings);
+        }).then(function () {
+            // msdn.microsoft.com/en-us/library/windows/apps/hh452807.aspx
+            capturePreview.msZoom = true;
+            capturePreview.src = URL.createObjectURL(capture);
+            capturePreview.play();
 
-                // Bind events to controls
-                window.addEventListener('deviceorientation', cameraPreviewOrientation, false);
-                capturePreview.addEventListener('click', captureAction);
-                captureCancelButton.addEventListener('click', function () {
-                    destroyCameraPreview();
-                    errorCallback('Cancelled');
-                }, false);
-            }, function (err) {
+            // Insert preview frame and controls into page
+            document.body.appendChild(capturePreview);
+            document.body.appendChild(captureCancelButton);
+
+            // Bind events to controls
+            window.addEventListener('deviceorientation', cameraPreviewOrientation, false);
+            capturePreview.addEventListener('click', captureAction);
+            captureCancelButton.addEventListener('click', function () {
                 destroyCameraPreview();
-                errorCallback('Camera intitialization error ' + err);
-            });
-        }, errorCallback);
+                errorCallback('Cancelled');
+            }, false);
+
+            // Get available aspect ratios
+            var aspectRatios = getAspectRatios(capture);
+
+            // Couldn't find a good ratio
+            if (aspectRatios.length === 0) {
+                destroyCameraPreview();
+                errorCallback('There\'s not a good aspect ratio available');
+                return;
+            }
+
+            if (aspectRatios.indexOf(DEFAULT_ASPECT_RATIO) > -1) {
+                return setAspectRatio(capture, DEFAULT_ASPECT_RATIO);
+            } else {
+                // Doesn't support 16:9 - pick next best
+                return setAspectRatio(capture, aspectRatios[0]);
+            }
+        }).done(null, function (err) {
+            destroyCameraPreview();
+            errorCallback('Camera intitialization error ' + err);
+        });
     };
 
     var destroyCameraPreview = function () {
@@ -436,6 +457,61 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
                     destroyCameraPreview();
                     errorCallback(err);
             });
+    };
+
+    var getAspectRatios = function (capture) {
+        var photoAspectRatios = capture.videoDeviceController.getAvailableMediaStreamProperties(Windows.Media.Capture.MediaStreamType.photo).map(function (element) {
+            return (element.width / element.height).toFixed(1);
+        }).filter(function (element, index, array) { return (index === array.indexOf(element)); });
+
+        var videoAspectRatios = capture.videoDeviceController.getAvailableMediaStreamProperties(Windows.Media.Capture.MediaStreamType.videoRecord).map(function (element) {
+            return (element.width / element.height).toFixed(1);
+        }).filter(function (element, index, array) { return (index === array.indexOf(element)); });
+
+        var videoPreviewAspectRatios = capture.videoDeviceController.getAvailableMediaStreamProperties(Windows.Media.Capture.MediaStreamType.videoPreview).map(function (element) {
+            return (element.width / element.height).toFixed(1);
+        }).filter(function (element, index, array) { return (index === array.indexOf(element)); });
+
+        var allAspectRatios = [].concat(photoAspectRatios, videoAspectRatios, videoPreviewAspectRatios);
+
+        var aspectObj = allAspectRatios.reduce(function (map, item) {
+            if (!map[item]) {
+                map[item] = 0;
+            }
+            map[item]++;
+            return map;
+        }, {});
+
+        return Object.keys(aspectObj).filter(function (k) {
+            return aspectObj[k] === 3;
+        });
+    };
+
+    var setAspectRatio = function (capture, aspect) {
+        // Max photo resolution with desired aspect ratio
+        var photoResolution = capture.videoDeviceController.getAvailableMediaStreamProperties(Windows.Media.Capture.MediaStreamType.photo).filter(function (elem) {
+            return ((elem.width / elem.height).toFixed(1) === aspect);
+        }).reduce(function (prop1, prop2) {
+            return (prop1.width * prop1.height) > (prop2.width * prop2.height) ? prop1 : prop2;
+        });
+
+        // Max video resolution with desired aspect ratio
+        var videoRecordResolution = capture.videoDeviceController.getAvailableMediaStreamProperties(Windows.Media.Capture.MediaStreamType.videoRecord).filter(function (elem) {
+            return ((elem.width / elem.height).toFixed(1) === aspect);
+        }).reduce(function (prop1, prop2) {
+            return (prop1.width * prop1.height) > (prop2.width * prop2.height) ? prop1 : prop2;
+        });
+
+        // Max video preview resolution with desired aspect ratio
+        var videoPreviewResolution = capture.videoDeviceController.getAvailableMediaStreamProperties(Windows.Media.Capture.MediaStreamType.videoPreview).filter(function (elem) {
+            return ((elem.width / elem.height).toFixed(1) === aspect);
+        }).reduce(function (prop1, prop2) {
+            return (prop1.width * prop1.height) > (prop2.width * prop2.height) ? prop1 : prop2;
+        });
+
+        return capture.videoDeviceController.setMediaStreamPropertiesAsync(Windows.Media.Capture.MediaStreamType.photo, photoResolution)
+            .then(function () { return capture.videoDeviceController.setMediaStreamPropertiesAsync(Windows.Media.Capture.MediaStreamType.videoPreview, videoPreviewResolution); })
+            .then(function () { return capture.videoDeviceController.setMediaStreamPropertiesAsync(Windows.Media.Capture.MediaStreamType.videoRecord, videoRecordResolution); });
     };
 
     try {
