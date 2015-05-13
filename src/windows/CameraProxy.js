@@ -57,6 +57,9 @@ module.exports = {
 var windowsVideoContainers = [".avi", ".flv", ".asx", ".asf", ".mov", ".mp4", ".mpg", ".rm", ".srt", ".swf", ".wmv", ".vob"];
 var windowsPhoneVideoContainers =  [".avi", ".3gp", ".3g2", ".wmv", ".3gp", ".3g2", ".mp4", ".m4v"];
 
+// Default aspect ratio 1.78 (16:9 hd video standard)
+var DEFAULT_ASPECT_RATIO = '1.8';
+
 // Resize method
 function resizeImage(successCallback, errorCallback, file, targetWidth, targetHeight, encodingType) {
     var tempPhotoFileName = "";
@@ -367,9 +370,8 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
                 return;
             }
 
-            // Default aspect ratio 1.78 (16:9 hd video standard)
-            if (aspectRatios.indexOf("1.8") > -1) {
-                return setAspectRatio(capture, "1.8");
+            if (aspectRatios.indexOf(DEFAULT_ASPECT_RATIO) > -1) {
+                return setAspectRatio(capture, DEFAULT_ASPECT_RATIO);
             } else {
                 // Doesn't support 16:9 - pick next best
                 return setAspectRatio(capture, aspectRatios[0]);
@@ -460,15 +462,15 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
     var getAspectRatios = function (capture) {
         var photoAspectRatios = capture.videoDeviceController.getAvailableMediaStreamProperties(Windows.Media.Capture.MediaStreamType.photo).map(function (element) {
             return (element.width / element.height).toFixed(1);
-        }).filter(function (element, index, array) { if (index === array.indexOf(element)) return 1; return 0; });
+        }).filter(function (element, index, array) { return (index === array.indexOf(element)); });
 
         var videoAspectRatios = capture.videoDeviceController.getAvailableMediaStreamProperties(Windows.Media.Capture.MediaStreamType.videoRecord).map(function (element) {
             return (element.width / element.height).toFixed(1);
-        }).filter(function (element, index, array) { if (index === array.indexOf(element)) return 1; return 0; });
+        }).filter(function (element, index, array) { return (index === array.indexOf(element)); });
 
         var videoPreviewAspectRatios = capture.videoDeviceController.getAvailableMediaStreamProperties(Windows.Media.Capture.MediaStreamType.videoPreview).map(function (element) {
             return (element.width / element.height).toFixed(1);
-        }).filter(function (element, index, array) { if (index === array.indexOf(element)) return 1; return 0; });
+        }).filter(function (element, index, array) { return (index === array.indexOf(element)); });
 
         var allAspectRatios = [].concat(photoAspectRatios, videoAspectRatios, videoPreviewAspectRatios);
 
@@ -488,21 +490,21 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
     var setAspectRatio = function (capture, aspect) {
         // Max photo resolution with desired aspect ratio
         var photoResolution = capture.videoDeviceController.getAvailableMediaStreamProperties(Windows.Media.Capture.MediaStreamType.photo).filter(function (elem) {
-            return ((elem.width / elem.height).toFixed(1) === aspect) ? 1 : 0;
+            return ((elem.width / elem.height).toFixed(1) === aspect);
         }).reduce(function (prop1, prop2) {
             return (prop1.width * prop1.height) > (prop2.width * prop2.height) ? prop1 : prop2;
         });
 
         // Max video resolution with desired aspect ratio
         var videoRecordResolution = capture.videoDeviceController.getAvailableMediaStreamProperties(Windows.Media.Capture.MediaStreamType.videoRecord).filter(function (elem) {
-            return ((elem.width / elem.height).toFixed(1) === aspect) ? 1 : 0;
+            return ((elem.width / elem.height).toFixed(1) === aspect);
         }).reduce(function (prop1, prop2) {
             return (prop1.width * prop1.height) > (prop2.width * prop2.height) ? prop1 : prop2;
         });
 
         // Max video preview resolution with desired aspect ratio
         var videoPreviewResolution = capture.videoDeviceController.getAvailableMediaStreamProperties(Windows.Media.Capture.MediaStreamType.videoPreview).filter(function (elem) {
-            return ((elem.width / elem.height).toFixed(1) === aspect) ? 1 : 0;
+            return ((elem.width / elem.height).toFixed(1) === aspect);
         }).reduce(function (prop1, prop2) {
             return (prop1.width * prop1.height) > (prop2.width * prop2.height) ? prop1 : prop2;
         });
