@@ -38,7 +38,6 @@ var webUIApp = Windows.UI.WebUI.WebUIApplication;
 var fileIO = Windows.Storage.FileIO;
 var pickerLocId = Windows.Storage.Pickers.PickerLocationId;
 
-
 module.exports = {
 
     // args will contain :
@@ -198,8 +197,6 @@ function takePictureFromFileWP(successCallback, errorCallback, args) {
                         else {
                             successCallback(URL.createObjectURL(storageFile));
                         }
-
-                        
                     }, function () {
                         errorCallback("Can't access localStorage folder.");
                     });
@@ -313,18 +310,8 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
         captureCancelButton = null,
         capture = null,
         captureSettings = null,
-        CaptureNS = Windows.Media.Capture;
-
-    function cameraPreviewOrientation() {
-        // Rotate the cam since WP8.1 MediaCapture outputs video stream rotated 90° CCW
-        if (screen.msOrientation === "portrait-primary" || screen.msOrientation === "portrait-secondary") {
-            capture.setPreviewRotation(CaptureNS.VideoRotation.clockwise90Degrees);
-        } else if (screen.msOrientation === "landscape-secondary") {
-            capture.setPreviewRotation(CaptureNS.VideoRotation.clockwise180Degrees);
-        } else {
-            capture.setPreviewRotation(CaptureNS.VideoRotation.none);
-        }
-    }
+        CaptureNS = Windows.Media.Capture,
+        sensor = null;
 
     var createCameraUI = function () {
         // Create fullscreen preview
@@ -350,7 +337,7 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
         // This is necessary to detect which camera (front or back) we should use
         var DeviceEnum = Windows.Devices.Enumeration;
         var expectedPanel = cameraDirection === 1 ? DeviceEnum.Panel.front : DeviceEnum.Panel.back;
-        
+
         DeviceEnum.DeviceInformation.findAllAsync(DeviceEnum.DeviceClass.videoCapture).then(function (devices) {
             if (devices.length <= 0) {
                 destroyCameraPreview();
@@ -373,17 +360,23 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
             capturePreview.src = URL.createObjectURL(capture);
             capturePreview.play();
 
-            // Insert preview frame and controls into page
-            document.body.appendChild(capturePreview);
-            document.body.appendChild(captureCancelButton);
-
             // Bind events to controls
-            window.addEventListener('deviceorientation', cameraPreviewOrientation, false);
+            sensor = Windows.Devices.Sensors.SimpleOrientationSensor.getDefault();
+            if (sensor !== null) {
+                sensor.addEventListener("orientationchanged", onOrientationChange);
+            }
             capturePreview.addEventListener('click', captureAction);
             captureCancelButton.addEventListener('click', function () {
                 destroyCameraPreview();
                 errorCallback('Cancelled');
             }, false);
+
+            // Change default orientation
+            if (sensor) {
+                setPreviewRotation(sensor.getCurrentOrientation());
+            } else {
+                setPreviewRotation(Windows.Graphics.Display.DisplayInformation.getForCurrentView().currentOrientation);
+            }
 
             // Get available aspect ratios
             var aspectRatios = getAspectRatios(capture);
@@ -394,6 +387,10 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
                 errorCallback('There\'s not a good aspect ratio available');
                 return;
             }
+
+            // Insert preview frame and controls into page
+            document.body.appendChild(capturePreview);
+            document.body.appendChild(captureCancelButton);
 
             if (aspectRatios.indexOf(DEFAULT_ASPECT_RATIO) > -1) {
                 return setAspectRatio(capture, DEFAULT_ASPECT_RATIO);
@@ -408,7 +405,9 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
     };
 
     var destroyCameraPreview = function () {
-        window.removeEventListener('deviceorientation', cameraPreviewOrientation, false);
+        if (sensor !== null) {
+            sensor.removeEventListener('orientationchanged', onOrientationChange);
+        }
         capturePreview.pause();
         capturePreview.src = null;
         [capturePreview, captureCancelButton].forEach(function(elem) {
@@ -439,31 +438,34 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
         tempFolder.createFileAsync(fileName, OptUnique)
             .then(function(tempCapturedFile) {
                 return new WinJS.Promise(function (complete) {
-                    var imgStream = new Windows.Storage.Streams.InMemoryRandomAccessStream();
-                    capture.capturePhotoToStreamAsync(encodingProperties, imgStream)
+                    var photoStream = new Windows.Storage.Streams.InMemoryRandomAccessStream();
+                    var finalStream = new Windows.Storage.Streams.InMemoryRandomAccessStream();
+                    capture.capturePhotoToStreamAsync(encodingProperties, photoStream)
                     .then(function() {
-                        return Windows.Graphics.Imaging.BitmapDecoder.createAsync(imgStream);
+                        return Windows.Graphics.Imaging.BitmapDecoder.createAsync(photoStream);
                     })
                     .then(function(dec) {
-                        return Windows.Graphics.Imaging.BitmapEncoder.createForTranscodingAsync(imgStream, dec);
+                        finalStream.size = 0; // BitmapEncoder requires the output stream to be empty
+                        return Windows.Graphics.Imaging.BitmapEncoder.createForTranscodingAsync(finalStream, dec);
                     })
                     .then(function(enc) {
-                        // We need to rotate the photo 90° CW because by default wp8.1 takes 90° CCW rotated photos.
-                        enc.bitmapTransform.rotation = Windows.Graphics.Imaging.BitmapRotation.clockwise90Degrees;
+                        // We need to rotate the photo wrt sensor orientation
+                        enc.bitmapTransform.rotation = orientationToRotation(sensor.getCurrentOrientation());
                         return enc.flushAsync();
                     })
                     .then(function() {
                         return tempCapturedFile.openAsync(Windows.Storage.FileAccessMode.readWrite);
                     })
                     .then(function(fileStream) {
-                        imgStream.seek(0); // required for win8.1 emulator
-                        return Windows.Storage.Streams.RandomAccessStream.copyAsync(imgStream, fileStream);
+                        return Windows.Storage.Streams.RandomAccessStream.copyAsync(finalStream, fileStream);
                     })
                     .done(function() {
-                        imgStream.close();
+                        photoStream.close();
+                        finalStream.close();
                         complete(tempCapturedFile);
                     }, function() {
-                        imgStream.close();
+                        photoStream.close();
+                        finalStream.close();
                         throw new Error("An error has occured while capturing the photo.");
                     });
                 });
@@ -484,16 +486,16 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
     };
 
     var getAspectRatios = function (capture) {
-        var getMSProps = capture.videoDeviceController.getAvailableMediaStreamProperties;
-        var photoAspectRatios = getMSProps(CapMSType.photo).map(function (element) {
+        var videoDeviceController = capture.videoDeviceController;
+        var photoAspectRatios = videoDeviceController.getAvailableMediaStreamProperties(CapMSType.photo).map(function (element) {
             return (element.width / element.height).toFixed(1);
         }).filter(function (element, index, array) { return (index === array.indexOf(element)); });
 
-        var videoAspectRatios = getMSProps(CapMSType.videoRecord).map(function (element) {
+        var videoAspectRatios = videoDeviceController.getAvailableMediaStreamProperties(CapMSType.videoRecord).map(function (element) {
             return (element.width / element.height).toFixed(1);
         }).filter(function (element, index, array) { return (index === array.indexOf(element)); });
 
-        var videoPreviewAspectRatios = getMSProps(CapMSType.videoPreview).map(function (element) {
+        var videoPreviewAspectRatios = videoDeviceController.getAvailableMediaStreamProperties(CapMSType.videoPreview).map(function (element) {
             return (element.width / element.height).toFixed(1);
         }).filter(function (element, index, array) { return (index === array.indexOf(element)); });
 
@@ -514,8 +516,8 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
 
     var setAspectRatio = function (capture, aspect) {
         // Max photo resolution with desired aspect ratio
-        var getMSProps = capture.videoDeviceController.getAvailableMediaStreamProperties;
-        var photoResolution = getMSProps(CapMSType.photo)
+        var videoDeviceController = capture.videoDeviceController;
+        var photoResolution = videoDeviceController.getAvailableMediaStreamProperties(CapMSType.photo)
             .filter(function (elem) {
                 return ((elem.width / elem.height).toFixed(1) === aspect);
             })
@@ -524,7 +526,7 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
             });
 
         // Max video resolution with desired aspect ratio
-        var videoRecordResolution = getMSProps(CapMSType.videoRecord)
+        var videoRecordResolution = videoDeviceController.getAvailableMediaStreamProperties(CapMSType.videoRecord)
             .filter(function (elem) {
                 return ((elem.width / elem.height).toFixed(1) === aspect);
             })
@@ -533,7 +535,7 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
             });
 
         // Max video preview resolution with desired aspect ratio
-        var videoPreviewResolution = getMSProps(CapMSType.videoPreview)
+        var videoPreviewResolution = videoDeviceController.getAvailableMediaStreamProperties(CapMSType.videoPreview)
             .filter(function (elem) {
                 return ((elem.width / elem.height).toFixed(1) === aspect);
             })
@@ -541,15 +543,61 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
                 return (prop1.width * prop1.height) > (prop2.width * prop2.height) ? prop1 : prop2;
             });
 
-        var setMSPropsAsync = capture.videoDeviceController.setMediaStreamPropertiesAsync;
-
-        return setMSPropsAsync(CapMSType.photo, photoResolution)
+        return videoDeviceController.setMediaStreamPropertiesAsync(CapMSType.photo, photoResolution)
             .then(function () {
-                return setMSPropsAsync(CapMSType.videoPreview, videoPreviewResolution);
+                return videoDeviceController.setMediaStreamPropertiesAsync(CapMSType.videoPreview, videoPreviewResolution);
             })
             .then(function () {
-                return setMSPropsAsync(CapMSType.videoRecord, videoRecordResolution);
+                return videoDeviceController.setMediaStreamPropertiesAsync(CapMSType.videoRecord, videoRecordResolution);
             });
+    };
+
+    /**
+     * When the phone orientation change, get the event and change camera preview rotation
+     * @param  {Object} e - SimpleOrientationSensorOrientationChangedEventArgs
+     */
+    var onOrientationChange = function (e) {
+        setPreviewRotation(e.orientation);
+    };
+
+    /**
+     * Converts SimpleOrientation to a VideoRotation to remove difference between camera sensor orientation
+     * and video orientation
+     * @param  {number} orientation - Windows.Devices.Sensors.SimpleOrientation
+     * @return {number} - Windows.Media.Capture.VideoRotation
+     */
+    var orientationToRotation = function (orientation) {
+        // VideoRotation enumerable and BitmapRotation enumerable have the same values
+        // https://msdn.microsoft.com/en-us/library/windows/apps/windows.media.capture.videorotation.aspx
+        // https://msdn.microsoft.com/en-us/library/windows/apps/windows.graphics.imaging.bitmaprotation.aspx
+
+        switch (orientation) {
+            // portrait
+            case Windows.Devices.Sensors.SimpleOrientation.notRotated:
+                return Windows.Media.Capture.VideoRotation.clockwise90Degrees;
+            // landscape
+            case Windows.Devices.Sensors.SimpleOrientation.rotated90DegreesCounterclockwise:
+                return Windows.Media.Capture.VideoRotation.none;
+            // portrait-flipped (not supported by WinPhone Apps)
+            case Windows.Devices.Sensors.SimpleOrientation.rotated180DegreesCounterclockwise:
+                // Falling back to portrait default
+                return Windows.Media.Capture.VideoRotation.clockwise90Degrees;
+            // landscape-flipped
+            case Windows.Devices.Sensors.SimpleOrientation.rotated270DegreesCounterclockwise:
+                return Windows.Media.Capture.VideoRotation.clockwise180Degrees;
+            // faceup & facedown
+            default:
+                // Falling back to portrait default
+                return Windows.Media.Capture.VideoRotation.clockwise90Degrees;
+        }
+    };
+
+    /**
+     * Rotates the current MediaCapture's video
+     * @param {number} orientation - Windows.Devices.Sensors.SimpleOrientation
+     */
+    var setPreviewRotation = function(orientation) {
+        capture.setPreviewRotation(orientationToRotation(orientation));
     };
 
     try {
@@ -569,7 +617,7 @@ function takePictureFromCameraWindows(successCallback, errorCallback, args) {
         saveToPhotoAlbum = args[9],
         WMCapture = Windows.Media.Capture,
         cameraCaptureUI = new WMCapture.CameraCaptureUI();
-        
+
     cameraCaptureUI.photoSettings.allowCropping = allowCrop;
 
     if (encodingType == Camera.EncodingType.PNG) {
