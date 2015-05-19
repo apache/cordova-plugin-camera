@@ -176,7 +176,14 @@ function takePictureFromFileWP(successCallback, errorCallback, args) {
                 else {
                     var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
                     file.copyAsync(storageFolder, file.name, Windows.Storage.NameCollisionOption.replaceExisting).done(function (storageFile) {
-                        successCallback(URL.createObjectURL(storageFile));
+                        if(destinationType == Camera.DestinationType.NATIVE_URI) {
+                            successCallback("ms-appdata:///local/" + storageFile.name);
+                        }
+                        else {
+                            successCallback(URL.createObjectURL(storageFile));
+                        }
+
+                        
                     }, function () {
                         errorCallback("Can't access localStorage folder.");
                     });
