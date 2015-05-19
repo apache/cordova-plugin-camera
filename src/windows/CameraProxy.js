@@ -25,6 +25,20 @@
 
 var Camera = require('./Camera');
 
+
+var getAppData = function () {
+    return Windows.Storage.ApplicationData.current;
+};
+var encodeToBase64String = function (buffer) {
+    return Windows.Security.Cryptography.CryptographicBuffer.encodeToBase64String(buffer);
+};
+var OptUnique = Windows.Storage.CreationCollisionOption.generateUniqueName;
+var CapMSType = Windows.Media.Capture.MediaStreamType;
+var webUIApp = Windows.UI.WebUI.WebUIApplication;
+var fileIO = Windows.Storage.FileIO;
+var pickerLocId = Windows.Storage.Pickers.PickerLocationId;
+
+
 module.exports = {
 
     // args will contain :
@@ -69,11 +83,13 @@ function resizeImage(successCallback, errorCallback, file, targetWidth, targetHe
         tempPhotoFileName = "camera_cordova_temp_return.jpg";
     }
 
-    var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
+    var storageFolder = getAppData().localFolder;
     file.copyAsync(storageFolder, file.name, Windows.Storage.NameCollisionOption.replaceExisting)
-        .then(function (storageFile) { return Windows.Storage.FileIO.readBufferAsync(storageFile); })
+        .then(function (storageFile) {
+            return fileIO.readBufferAsync(storageFile);
+        })
         .then(function(buffer) {
-            var strBase64 = Windows.Security.Cryptography.CryptographicBuffer.encodeToBase64String(buffer);
+            var strBase64 =encodeToBase64String(buffer);
             var imageData = "data:" + file.contentType + ";base64," + strBase64;
             var image = new Image();
             image.src = imageData;
@@ -90,13 +106,13 @@ function resizeImage(successCallback, errorCallback, file, targetWidth, targetHe
 
                 var fileContent = canvas.toDataURL(file.contentType).split(',')[1];
 
-                var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
+                var storageFolder = getAppData().localFolder;
 
-                storageFolder.createFileAsync(tempPhotoFileName, Windows.Storage.CreationCollisionOption.generateUniqueName)
+                storageFolder.createFileAsync(tempPhotoFileName, OptUnique)
                     .then(function (storagefile) {
                         var content = Windows.Security.Cryptography.CryptographicBuffer.decodeFromBase64String(fileContent);
                         storageFileName = storagefile.name;
-                        return Windows.Storage.FileIO.writeBufferAsync(storagefile, content);
+                        return fileIO.writeBufferAsync(storagefile, content);
                     })
                     .done(function () {
                         successCallback("ms-appdata:///local/" + storageFileName);
@@ -111,8 +127,8 @@ function resizeImage(successCallback, errorCallback, file, targetWidth, targetHe
 
 // Because of asynchronous method, so let the successCallback be called in it.
 function resizeImageBase64(successCallback, errorCallback, file, targetWidth, targetHeight) {
-    Windows.Storage.FileIO.readBufferAsync(file).done( function(buffer) {
-        var strBase64 = Windows.Security.Cryptography.CryptographicBuffer.encodeToBase64String(buffer);
+    fileIO.readBufferAsync(file).done( function(buffer) {
+        var strBase64 =encodeToBase64String(buffer);
         var imageData = "data:" + file.contentType + ";base64," + strBase64;
 
         var image = new Image();
@@ -166,7 +182,7 @@ function takePictureFromFileWP(successCallback, errorCallback, args) {
             var file = eventArgs.files[0];
             if (!file) {
                 errorCallback("User didn't choose a file.");
-                Windows.UI.WebUI.WebUIApplication.removeEventListener("activated", filePickerActivationHandler);
+                webUIApp.removeEventListener("activated", filePickerActivationHandler);
                 return;
             }
             if (destinationType == Camera.DestinationType.FILE_URI || destinationType == Camera.DestinationType.NATIVE_URI) {
@@ -174,7 +190,7 @@ function takePictureFromFileWP(successCallback, errorCallback, args) {
                     resizeImage(successCallback, errorCallback, file, targetWidth, targetHeight, encodingType);
                 }
                 else {
-                    var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
+                    var storageFolder = getAppData().localFolder;
                     file.copyAsync(storageFolder, file.name, Windows.Storage.NameCollisionOption.replaceExisting).done(function (storageFile) {
                         if(destinationType == Camera.DestinationType.NATIVE_URI) {
                             successCallback("ms-appdata:///local/" + storageFile.name);
@@ -193,31 +209,31 @@ function takePictureFromFileWP(successCallback, errorCallback, args) {
                 if (targetHeight > 0 && targetWidth > 0) {
                     resizeImageBase64(successCallback, errorCallback, file, targetWidth, targetHeight);
                 } else {
-                    Windows.Storage.FileIO.readBufferAsync(file).done(function (buffer) {
-                        var strBase64 = Windows.Security.Cryptography.CryptographicBuffer.encodeToBase64String(buffer);
+                    fileIO.readBufferAsync(file).done(function (buffer) {
+                        var strBase64 =encodeToBase64String(buffer);
                         successCallback(strBase64);
                     }, errorCallback);
                 }
             }
-            Windows.UI.WebUI.WebUIApplication.removeEventListener("activated", filePickerActivationHandler);
+            webUIApp.removeEventListener("activated", filePickerActivationHandler);
         }
     };
 
     var fileOpenPicker = new Windows.Storage.Pickers.FileOpenPicker();
     if (mediaType == Camera.MediaType.PICTURE) {
         fileOpenPicker.fileTypeFilter.replaceAll([".png", ".jpg", ".jpeg"]);
-        fileOpenPicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.picturesLibrary;
+        fileOpenPicker.suggestedStartLocation = pickerLocId.picturesLibrary;
     }
     else if (mediaType == Camera.MediaType.VIDEO) {
         fileOpenPicker.fileTypeFilter.replaceAll(windowsPhoneVideoContainers);
-        fileOpenPicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.videosLibrary;
+        fileOpenPicker.suggestedStartLocation = pickerLocId.videosLibrary;
     }
     else {
         fileOpenPicker.fileTypeFilter.replaceAll(["*"]);
-        fileOpenPicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.documentsLibrary;
+        fileOpenPicker.suggestedStartLocation = pickerLocId.documentsLibrary;
     }
 
-    Windows.UI.WebUI.WebUIApplication.addEventListener("activated", filePickerActivationHandler);
+    webUIApp.addEventListener("activated", filePickerActivationHandler);
     fileOpenPicker.pickSingleFileAndContinue();
 }
 
@@ -231,15 +247,15 @@ function takePictureFromFileWindows(successCallback, errorCallback, args) {
     var fileOpenPicker = new Windows.Storage.Pickers.FileOpenPicker();
     if (mediaType == Camera.MediaType.PICTURE) {
         fileOpenPicker.fileTypeFilter.replaceAll([".png", ".jpg", ".jpeg"]);
-        fileOpenPicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.picturesLibrary;
+        fileOpenPicker.suggestedStartLocation = pickerLocId.picturesLibrary;
     }
     else if (mediaType == Camera.MediaType.VIDEO) {
         fileOpenPicker.fileTypeFilter.replaceAll(windowsVideoContainers);
-        fileOpenPicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.videosLibrary;
+        fileOpenPicker.suggestedStartLocation = pickerLocId.videosLibrary;
     }
     else {
         fileOpenPicker.fileTypeFilter.replaceAll(["*"]);
-        fileOpenPicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.documentsLibrary;
+        fileOpenPicker.suggestedStartLocation = pickerLocId.documentsLibrary;
     }
 
     fileOpenPicker.pickSingleFileAsync().done(function (file) {
@@ -252,7 +268,7 @@ function takePictureFromFileWindows(successCallback, errorCallback, args) {
                 resizeImage(successCallback, errorCallback, file, targetWidth, targetHeight, encodingType);
             }
             else {
-                var storageFolder = Windows.Storage.ApplicationData.current.localFolder;
+                var storageFolder = getAppData().localFolder;
                 file.copyAsync(storageFolder, file.name, Windows.Storage.NameCollisionOption.replaceExisting).done(function (storageFile) {
                     successCallback(URL.createObjectURL(storageFile));
                 }, function () {
@@ -264,8 +280,8 @@ function takePictureFromFileWindows(successCallback, errorCallback, args) {
             if (targetHeight > 0 && targetWidth > 0) {
                 resizeImageBase64(successCallback, errorCallback, file, targetWidth, targetHeight);
             } else {
-                Windows.Storage.FileIO.readBufferAsync(file).done(function (buffer) {
-                    var strBase64 = Windows.Security.Cryptography.CryptographicBuffer.encodeToBase64String(buffer);
+                fileIO.readBufferAsync(file).done(function (buffer) {
+                    var strBase64 =encodeToBase64String(buffer);
                     successCallback(strBase64);
                 }, errorCallback);
             }
@@ -408,8 +424,7 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
 
         var encodingProperties,
             fileName,
-            generateUniqueCollisionOption = Windows.Storage.CreationCollisionOption.generateUniqueName,
-            tempFolder = Windows.Storage.ApplicationData.current.temporaryFolder;
+            tempFolder = getAppData().temporaryFolder;
 
         if (encodingType == Camera.EncodingType.PNG) {
             fileName = 'photo.png';
@@ -419,7 +434,7 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
             encodingProperties = Windows.Media.MediaProperties.ImageEncodingProperties.createJpeg();
         }
 
-        tempFolder.createFileAsync(fileName, generateUniqueCollisionOption)
+        tempFolder.createFileAsync(fileName, OptUnique)
             .then(function(tempCapturedFile) {
                 return new WinJS.Promise(function (complete) {
                     var imgStream = new Windows.Storage.Streams.InMemoryRandomAccessStream();
@@ -467,15 +482,16 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
     };
 
     var getAspectRatios = function (capture) {
-        var photoAspectRatios = capture.videoDeviceController.getAvailableMediaStreamProperties(Windows.Media.Capture.MediaStreamType.photo).map(function (element) {
+        var getMSProps = capture.videoDeviceController.getAvailableMediaStreamProperties;
+        var photoAspectRatios = getMSProps(CapMSType.photo).map(function (element) {
             return (element.width / element.height).toFixed(1);
         }).filter(function (element, index, array) { return (index === array.indexOf(element)); });
 
-        var videoAspectRatios = capture.videoDeviceController.getAvailableMediaStreamProperties(Windows.Media.Capture.MediaStreamType.videoRecord).map(function (element) {
+        var videoAspectRatios = getMSProps(CapMSType.videoRecord).map(function (element) {
             return (element.width / element.height).toFixed(1);
         }).filter(function (element, index, array) { return (index === array.indexOf(element)); });
 
-        var videoPreviewAspectRatios = capture.videoDeviceController.getAvailableMediaStreamProperties(Windows.Media.Capture.MediaStreamType.videoPreview).map(function (element) {
+        var videoPreviewAspectRatios = getMSProps(CapMSType.videoPreview).map(function (element) {
             return (element.width / element.height).toFixed(1);
         }).filter(function (element, index, array) { return (index === array.indexOf(element)); });
 
@@ -496,29 +512,42 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
 
     var setAspectRatio = function (capture, aspect) {
         // Max photo resolution with desired aspect ratio
-        var photoResolution = capture.videoDeviceController.getAvailableMediaStreamProperties(Windows.Media.Capture.MediaStreamType.photo).filter(function (elem) {
-            return ((elem.width / elem.height).toFixed(1) === aspect);
-        }).reduce(function (prop1, prop2) {
-            return (prop1.width * prop1.height) > (prop2.width * prop2.height) ? prop1 : prop2;
-        });
+        var getMSProps = capture.videoDeviceController.getAvailableMediaStreamProperties;
+        var photoResolution = getMSProps(CapMSType.photo)
+            .filter(function (elem) {
+                return ((elem.width / elem.height).toFixed(1) === aspect);
+            })
+            .reduce(function (prop1, prop2) {
+                return (prop1.width * prop1.height) > (prop2.width * prop2.height) ? prop1 : prop2;
+            });
 
         // Max video resolution with desired aspect ratio
-        var videoRecordResolution = capture.videoDeviceController.getAvailableMediaStreamProperties(Windows.Media.Capture.MediaStreamType.videoRecord).filter(function (elem) {
-            return ((elem.width / elem.height).toFixed(1) === aspect);
-        }).reduce(function (prop1, prop2) {
-            return (prop1.width * prop1.height) > (prop2.width * prop2.height) ? prop1 : prop2;
-        });
+        var videoRecordResolution = getMSProps(CapMSType.videoRecord)
+            .filter(function (elem) {
+                return ((elem.width / elem.height).toFixed(1) === aspect);
+            })
+            .reduce(function (prop1, prop2) {
+                return (prop1.width * prop1.height) > (prop2.width * prop2.height) ? prop1 : prop2;
+            });
 
         // Max video preview resolution with desired aspect ratio
-        var videoPreviewResolution = capture.videoDeviceController.getAvailableMediaStreamProperties(Windows.Media.Capture.MediaStreamType.videoPreview).filter(function (elem) {
-            return ((elem.width / elem.height).toFixed(1) === aspect);
-        }).reduce(function (prop1, prop2) {
-            return (prop1.width * prop1.height) > (prop2.width * prop2.height) ? prop1 : prop2;
-        });
+        var videoPreviewResolution = getMSProps(CapMSType.videoPreview)
+            .filter(function (elem) {
+                return ((elem.width / elem.height).toFixed(1) === aspect);
+            })
+            .reduce(function (prop1, prop2) {
+                return (prop1.width * prop1.height) > (prop2.width * prop2.height) ? prop1 : prop2;
+            });
 
-        return capture.videoDeviceController.setMediaStreamPropertiesAsync(Windows.Media.Capture.MediaStreamType.photo, photoResolution)
-            .then(function () { return capture.videoDeviceController.setMediaStreamPropertiesAsync(Windows.Media.Capture.MediaStreamType.videoPreview, videoPreviewResolution); })
-            .then(function () { return capture.videoDeviceController.setMediaStreamPropertiesAsync(Windows.Media.Capture.MediaStreamType.videoRecord, videoRecordResolution); });
+        var setMSPropsAsync = capture.videoDeviceController.setMediaStreamPropertiesAsync;
+
+        return setMSPropsAsync(CapMSType.photo, photoResolution)
+            .then(function () {
+                return setMSPropsAsync(CapMSType.videoPreview, videoPreviewResolution);
+            })
+            .then(function () {
+                return setMSPropsAsync(CapMSType.videoRecord, videoRecordResolution);
+            });
     };
 
     try {
@@ -546,19 +575,30 @@ function takePictureFromCameraWindows(successCallback, errorCallback, args) {
     }
 
     // decide which max pixels should be supported by targetWidth or targetHeight.
-    if (targetWidth >= 1280 || targetHeight >= 960) {
-        cameraCaptureUI.photoSettings.maxResolution = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution.large3M;
-    } else if (targetWidth >= 1024 || targetHeight >= 768) {
-        cameraCaptureUI.photoSettings.maxResolution = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution.mediumXga;
-    } else if (targetWidth >= 800 || targetHeight >= 600) {
-        cameraCaptureUI.photoSettings.maxResolution = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution.mediumXga;
-    } else if (targetWidth >= 640 || targetHeight >= 480) {
-        cameraCaptureUI.photoSettings.maxResolution = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution.smallVga;
-    } else if (targetWidth >= 320 || targetHeight >= 240) {
-        cameraCaptureUI.photoSettings.maxResolution = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution.verySmallQvga;
-    } else {
-        cameraCaptureUI.photoSettings.maxResolution = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution.highestAvailable;
+    var maxRes = null;
+    var UIMaxRes = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution;
+    switch (true) {
+        case (targetWidth >= 1280 || targetHeight >= 960) :
+            cameraCaptureUI.photoSettings.maxResolution = UIMaxRes.large3M;
+            break;
+        case (targetWidth >= 1024 || targetHeight >= 768) :
+            maxRes = UIMaxRes.mediumXga;
+            break;
+        case    (targetWidth >= 800 || targetHeight >= 600) :
+            maxRes = UIMaxRes.mediumXga;
+            break;
+        case  (targetWidth >= 640 || targetHeight >= 480) :
+            maxRes = UIMaxRes.smallVga;
+            break;
+        case    (targetWidth >= 320 || targetHeight >= 240) :
+            maxRes = UIMaxRes.verySmallQvga;
+            break;
+        default :
+            maxRes = UIMaxRes.highestAvailable;
     }
+
+    cameraCaptureUI.photoSettings.maxResolution = maxRes;
+
 
     cameraCaptureUI.captureFileAsync(Windows.Media.Capture.CameraCaptureUIMode.photo).done(function(picture) {
         if (!picture) {
@@ -581,12 +621,11 @@ function takePictureFromCameraWindows(successCallback, errorCallback, args) {
 function savePhoto(picture, options, successCallback, errorCallback) {
     // success callback for capture operation
     var success = function(picture) {
-        var generateUniqueCollisionOption = Windows.Storage.CreationCollisionOption.generateUniqueName;
         if (options.destinationType == Camera.DestinationType.FILE_URI || options.destinationType == Camera.DestinationType.NATIVE_URI) {
             if (options.targetHeight > 0 && options.targetWidth > 0) {
                 resizeImage(successCallback, errorCallback, picture, options.targetWidth, options.targetHeight, options.encodingType);
             } else {
-                picture.copyAsync(Windows.Storage.ApplicationData.current.localFolder, picture.name, generateUniqueCollisionOption).done(function(copiedFile) {
+                picture.copyAsync(getAppData().localFolder, picture.name, OptUnique).done(function (copiedFile) {
                     successCallback("ms-appdata:///local/" + copiedFile.name);
                 },errorCallback);
             }
@@ -594,8 +633,8 @@ function savePhoto(picture, options, successCallback, errorCallback) {
             if (options.targetHeight > 0 && options.targetWidth > 0) {
                 resizeImageBase64(successCallback, errorCallback, picture, options.targetWidth, options.targetHeight);
             } else {
-                Windows.Storage.FileIO.readBufferAsync(picture).done(function(buffer) {
-                    var strBase64 = Windows.Security.Cryptography.CryptographicBuffer.encodeToBase64String(buffer);
+                fileIO.readBufferAsync(picture).done(function(buffer) {
+                    var strBase64 =encodeToBase64String(buffer);
                     picture.deleteAsync().done(function() {
                         successCallback(strBase64);
                     }, function(err) {
@@ -632,7 +671,7 @@ function savePhoto(picture, options, successCallback, errorCallback) {
                 errorCallback("Failed to select a file.");
             }
         };
-        savePicker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.picturesLibrary;
+        savePicker.suggestedStartLocation = pickerLocId.picturesLibrary;
 
         if (options.encodingType === Camera.EncodingType.PNG) {
             savePicker.fileTypeChoices.insert("PNG", [".png"]);
@@ -653,10 +692,10 @@ function savePhoto(picture, options, successCallback, errorCallback) {
                 if (eventArgs.kind === Windows.ApplicationModel.Activation.ActivationKind.pickSaveFileContinuation) {
                     var file = eventArgs.file;
                     saveFile(file);
-                    Windows.UI.WebUI.WebUIApplication.removeEventListener("activated", fileSaveHandler);
+                    webUIApp.removeEventListener("activated", fileSaveHandler);
                 }
             };
-            Windows.UI.WebUI.WebUIApplication.addEventListener("activated", fileSaveHandler);
+            webUIApp.addEventListener("activated", fileSaveHandler);
             savePicker.pickSaveFileAndContinue();
         } else {
             savePicker.pickSaveFileAsync()
