@@ -60,6 +60,23 @@ var windowsPhoneVideoContainers =  [".avi", ".3gp", ".3g2", ".wmv", ".3gp", ".3g
 // Default aspect ratio 1.78 (16:9 hd video standard)
 var DEFAULT_ASPECT_RATIO = '1.8';
 
+// Retain aspect ratio
+function scaleImage(image, maxWidth, maxHeight) {
+    var width = image.naturalWidth,
+        height = image.naturalHeight;
+
+    if (maxWidth && width > maxWidth) {
+        height = Math.round(height *= maxWidth / width);
+        width = maxWidth;
+    }
+    if (maxHeight && height > maxHeight) {
+        width = Math.round(width *= maxHeight / height);
+        height = maxHeight;
+    }
+
+    return [width, height];
+}
+
 // Resize method
 function resizeImage(successCallback, errorCallback, file, targetWidth, targetHeight, encodingType) {
     var tempPhotoFileName = "";
@@ -78,13 +95,12 @@ function resizeImage(successCallback, errorCallback, file, targetWidth, targetHe
             var image = new Image();
             image.src = imageData;
             image.onload = function() {
-                var imageWidth = targetWidth,
-                    imageHeight = targetHeight;
+                var imageSize = scaleImage(image, targetWidth, targetHeight);
                 var canvas = document.createElement('canvas');
                 var storageFileName;
 
-                canvas.width = imageWidth;
-                canvas.height = imageHeight;
+                canvas.width = imageSize[0];
+                canvas.height = imageSize[1];
 
                 canvas.getContext("2d").drawImage(this, 0, 0, imageWidth, imageHeight);
 
@@ -119,12 +135,11 @@ function resizeImageBase64(successCallback, errorCallback, file, targetWidth, ta
         image.src = imageData;
 
         image.onload = function() {
-            var imageWidth = targetWidth,
-                imageHeight = targetHeight;
+            var imageSize = scaleImage(image, targetWidth, targetHeight);
             var canvas = document.createElement('canvas');
 
-            canvas.width = imageWidth;
-            canvas.height = imageHeight;
+            canvas.width = imageSize[0];
+            canvas.height = imageSize[1];
 
             var ctx = canvas.getContext("2d");
             ctx.drawImage(this, 0, 0, imageWidth, imageHeight);
