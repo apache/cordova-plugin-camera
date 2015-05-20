@@ -89,7 +89,7 @@ function resizeImage(successCallback, errorCallback, file, targetWidth, targetHe
             return fileIO.readBufferAsync(storageFile);
         })
         .then(function(buffer) {
-            var strBase64 =encodeToBase64String(buffer);
+            var strBase64 = encodeToBase64String(buffer);
             var imageData = "data:" + file.contentType + ";base64," + strBase64;
             var image = new Image();
             image.src = imageData;
@@ -128,7 +128,7 @@ function resizeImage(successCallback, errorCallback, file, targetWidth, targetHe
 // Because of asynchronous method, so let the successCallback be called in it.
 function resizeImageBase64(successCallback, errorCallback, file, targetWidth, targetHeight) {
     fileIO.readBufferAsync(file).done( function(buffer) {
-        var strBase64 =encodeToBase64String(buffer);
+        var strBase64 = encodeToBase64String(buffer);
         var imageData = "data:" + file.contentType + ";base64," + strBase64;
 
         var image = new Image();
@@ -318,11 +318,11 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
     function cameraPreviewOrientation() {
         // Rotate the cam since WP8.1 MediaCapture outputs video stream rotated 90° CCW
         if (screen.msOrientation === "portrait-primary" || screen.msOrientation === "portrait-secondary") {
-            capture.setPreviewRotation(Windows.Media.Capture.VideoRotation.clockwise90Degrees);
+            capture.setPreviewRotation(CaptureNS.VideoRotation.clockwise90Degrees);
         } else if (screen.msOrientation === "landscape-secondary") {
-            capture.setPreviewRotation(Windows.Media.Capture.VideoRotation.clockwise180Degrees);
+            capture.setPreviewRotation(CaptureNS.VideoRotation.clockwise180Degrees);
         } else {
-            capture.setPreviewRotation(Windows.Media.Capture.VideoRotation.none);
+            capture.setPreviewRotation(CaptureNS.VideoRotation.none);
         }
     }
 
@@ -348,8 +348,10 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
     var startCameraPreview = function () {
         // Search for available camera devices
         // This is necessary to detect which camera (front or back) we should use
-        var expectedPanel = cameraDirection === 1 ? Windows.Devices.Enumeration.Panel.front : Windows.Devices.Enumeration.Panel.back;
-        Windows.Devices.Enumeration.DeviceInformation.findAllAsync(Windows.Devices.Enumeration.DeviceClass.videoCapture).then(function (devices) {
+        var DeviceEnum = Windows.Devices.Enumeration;
+        var expectedPanel = cameraDirection === 1 ? DeviceEnum.Panel.front : DeviceEnum.Panel.back;
+        
+        DeviceEnum.DeviceInformation.findAllAsync(DeviceEnum.DeviceClass.videoCapture).then(function (devices) {
             if (devices.length <= 0) {
                 destroyCameraPreview();
                 errorCallback('Camera not found');
@@ -566,6 +568,7 @@ function takePictureFromCameraWindows(successCallback, errorCallback, args) {
         allowCrop = !!args[7],
         saveToPhotoAlbum = args[9],
         cameraCaptureUI = new Windows.Media.Capture.CameraCaptureUI();
+        
     cameraCaptureUI.photoSettings.allowCropping = allowCrop;
 
     if (encodingType == Camera.EncodingType.PNG) {
@@ -598,7 +601,6 @@ function takePictureFromCameraWindows(successCallback, errorCallback, args) {
     }
 
     cameraCaptureUI.photoSettings.maxResolution = maxRes;
-
 
     cameraCaptureUI.captureFileAsync(Windows.Media.Capture.CameraCaptureUIMode.photo).done(function(picture) {
         if (!picture) {
