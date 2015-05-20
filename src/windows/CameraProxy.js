@@ -567,19 +567,20 @@ function takePictureFromCameraWindows(successCallback, errorCallback, args) {
         encodingType = args[5],
         allowCrop = !!args[7],
         saveToPhotoAlbum = args[9],
-        cameraCaptureUI = new Windows.Media.Capture.CameraCaptureUI();
+        WMCapture = Windows.Media.Capture,
+        cameraCaptureUI = new WMCapture.CameraCaptureUI();
         
     cameraCaptureUI.photoSettings.allowCropping = allowCrop;
 
     if (encodingType == Camera.EncodingType.PNG) {
-        cameraCaptureUI.photoSettings.format = Windows.Media.Capture.CameraCaptureUIPhotoFormat.png;
+        cameraCaptureUI.photoSettings.format = WMCapture.CameraCaptureUIPhotoFormat.png;
     } else {
-        cameraCaptureUI.photoSettings.format = Windows.Media.Capture.CameraCaptureUIPhotoFormat.jpeg;
+        cameraCaptureUI.photoSettings.format = WMCapture.CameraCaptureUIPhotoFormat.jpeg;
     }
 
     // decide which max pixels should be supported by targetWidth or targetHeight.
     var maxRes = null;
-    var UIMaxRes = Windows.Media.Capture.CameraCaptureUIMaxPhotoResolution;
+    var UIMaxRes = WMCapture.CameraCaptureUIMaxPhotoResolution;
     switch (true) {
         case (targetWidth >= 1280 || targetHeight >= 960) :
             cameraCaptureUI.photoSettings.maxResolution = UIMaxRes.large3M;
@@ -602,7 +603,7 @@ function takePictureFromCameraWindows(successCallback, errorCallback, args) {
 
     cameraCaptureUI.photoSettings.maxResolution = maxRes;
 
-    cameraCaptureUI.captureFileAsync(Windows.Media.Capture.CameraCaptureUIMode.photo).done(function(picture) {
+    cameraCaptureUI.captureFileAsync(WMCapture.CameraCaptureUIMode.photo).done(function(picture) {
         if (!picture) {
             errorCallback("User didn't capture a photo.");
             return;
