@@ -64,7 +64,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
     private static final int DATA_URL = 0;              // Return base64 encoded string
     private static final int FILE_URI = 1;              // Return file uri (content://media/external/images/media/2 for Android)
-    private static final int NATIVE_URI = 2;                    // On Android, this is the same as FILE_URI
+    private static final int NATIVE_URI = 2;            // On Android, this is the same as FILE_URI
 
     private static final int PHOTOLIBRARY = 0;          // Choose image from picture library (same as SAVEDPHOTOALBUM for Android)
     private static final int CAMERA = 1;                // Take picture from camera
@@ -102,6 +102,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private MediaScannerConnection conn;    // Used to update gallery app with newly-written files
     private Uri scanMe;                     // Uri of image to be added to content store
     private Uri croppedUri;
+    private int savedRequestCode;
+    private int savedResultCode;
+    private Intent savedIntent;
 
     /**
      * Executes the request and returns PluginResult.
@@ -163,7 +166,15 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             PluginResult r = new PluginResult(PluginResult.Status.NO_RESULT);
             r.setKeepCallback(true);
             callbackContext.sendPluginResult(r);
-            
+
+            return true;
+        } else if (action.equals("checkForSavedResult")) {
+            this.imageUri = Uri.fromFile(createCaptureFile(JPEG));
+            if (savedRequestCode > 0 || savedResultCode > 0) {
+                onActivityResult(savedRequestCode, savedResultCode, savedIntent);
+            } else {
+                callbackContext.success("");
+            }
             return true;
         }
         return false;
@@ -440,7 +451,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     !this.correctOrientation) {
                 writeUncompressedImage(uri);
 
-                this.callbackContext.success(uri.toString());
+                this.returnResult(uri.toString());
             } else {
                 bitmap = getScaledBitmap(FileHelper.stripFileProtocol(imageUri.toString()));
 
@@ -468,7 +479,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
 
                 // Send Uri back to JavaScript for viewing image
-                this.callbackContext.success(uri.toString());
+                this.returnResult(uri.toString());
 
             }
         } else {
@@ -479,25 +490,25 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         bitmap = null;
     }
 
-private String getPicutresPath()
-{
-    String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-    String imageFileName = "IMG_" + timeStamp + ".jpg";
-    File storageDir = Environment.getExternalStoragePublicDirectory(
-            Environment.DIRECTORY_PICTURES);
-    String galleryPath = storageDir.getAbsolutePath() + "/" + imageFileName;
-    return galleryPath;
-}
+    private String getPicutresPath()
+    {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "IMG_" + timeStamp + ".jpg";
+        File storageDir = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES);
+        String galleryPath = storageDir.getAbsolutePath() + "/" + imageFileName;
+        return galleryPath;
+    }
 
-private void refreshGallery(Uri contentUri)
-{
-    Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-    mediaScanIntent.setData(contentUri);
-    this.cordova.getActivity().sendBroadcast(mediaScanIntent);
-}
+    private void refreshGallery(Uri contentUri)
+    {
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        mediaScanIntent.setData(contentUri);
+        this.cordova.getActivity().sendBroadcast(mediaScanIntent);
+    }
 
 
-private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
+    private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         // Create an ExifHelper to save the exif data that is lost during compression
         String modifiedPath = getTempDirectoryPath() + "/modified.jpg";
 
@@ -524,7 +535,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         return modifiedPath;
     }
 
-/**
+    /**
      * Applies all needed transformation to the image received from the gallery.
      *
      * @param destType          In which form should we return the image
@@ -545,14 +556,14 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         // If you ask for video or all media type you will automatically get back a file URI
         // and there will be no attempt to resize any returned data
         if (this.mediaType != PICTURE) {
-            this.callbackContext.success(uri.toString());
+            this.returnResult(uri.toString());
         }
         else {
             // This is a special case to just return the path as no scaling,
             // rotating, nor compressing needs to be done
             if (this.targetHeight == -1 && this.targetWidth == -1 &&
                     (destType == FILE_URI || destType == NATIVE_URI) && !this.correctOrientation) {
-                this.callbackContext.success(uri.toString());
+                this.returnResult(uri.toString());
             } else {
                 String uriString = uri.toString();
                 // Get the path to the image. Makes loading so much easier.
@@ -603,14 +614,14 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                             String modifiedPath = this.ouputModifiedBitmap(bitmap, uri);
                             // The modified image is cached by the app in order to get around this and not have to delete you
                             // application cache I'm adding the current system time to the end of the file url.
-                            this.callbackContext.success("file://" + modifiedPath + "?" + System.currentTimeMillis());
+                            this.returnResult("file://" + modifiedPath + "?" + System.currentTimeMillis());
                         } catch (Exception e) {
                             e.printStackTrace();
                             this.failPicture("Error retrieving image.");
                         }
                     }
                     else {
-                        this.callbackContext.success(uri.toString());
+                        this.returnResult(uri.toString());
                     }
                 }
                 if (bitmap != null) {
@@ -632,73 +643,79 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
      */
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
 
-        // Get src and dest types from request code for a Camera Activity
-        int srcType = (requestCode / 16) - 1;
-        int destType = (requestCode % 16) - 1;
+        if (this.callbackContext == null) {
+            this.savedRequestCode = requestCode;
+            this.savedResultCode = resultCode;
+            this.savedIntent = intent;
+        } else {
+            // Get src and dest types from request code for a Camera Activity
+            int srcType = (requestCode / 16) - 1;
+            int destType = (requestCode % 16) - 1;
 
-        // If Camera Crop
-        if (requestCode >= CROP_CAMERA) {
-            if (resultCode == Activity.RESULT_OK) {
+            // If Camera Crop
+            if (requestCode >= CROP_CAMERA) {
+                if (resultCode == Activity.RESULT_OK) {
 
-                // Because of the inability to pass through multiple intents, this hack will allow us
-                // to pass arcane codes back.
-                destType = requestCode - CROP_CAMERA;
-                try {
-                    processResultFromCamera(destType, intent);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    Log.e(LOG_TAG, "Unable to write to file");
+                    // Because of the inability to pass through multiple intents, this hack will allow us
+                    // to pass arcane codes back.
+                    destType = requestCode - CROP_CAMERA;
+                    try {
+                        processResultFromCamera(destType, intent);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        Log.e(LOG_TAG, "Unable to write to file");
+                    }
+
+                }// If cancelled
+                else if (resultCode == Activity.RESULT_CANCELED) {
+                    this.failPicture("Camera cancelled.");
                 }
 
-            }// If cancelled
-            else if (resultCode == Activity.RESULT_CANCELED) {
-                this.failPicture("Camera cancelled.");
-            }
-
-            // If something else
-            else {
-                this.failPicture("Did not complete!");
-            }
-        }
-        // If CAMERA
-        else if (srcType == CAMERA) {
-            // If image available
-            if (resultCode == Activity.RESULT_OK) {
-                try {
-                    if(this.allowEdit)
-                    {
-                        Uri tmpFile = Uri.fromFile(new File(getTempDirectoryPath(), ".Pic.jpg"));
-                        performCrop(tmpFile, destType, intent);
-                    }
-                    else {
-                        this.processResultFromCamera(destType, intent);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    this.failPicture("Error capturing image.");
+                // If something else
+                else {
+                    this.failPicture("Did not complete!");
                 }
             }
+            // If CAMERA
+            else if (srcType == CAMERA) {
+                // If image available
+                if (resultCode == Activity.RESULT_OK) {
+                    try {
+                        if(this.allowEdit)
+                        {
+                            Uri tmpFile = Uri.fromFile(new File(getTempDirectoryPath(), ".Pic.jpg"));
+                            performCrop(tmpFile, destType, intent);
+                        }
+                        else {
+                            this.processResultFromCamera(destType, intent);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        this.failPicture("Error capturing image.");
+                    }
+                }
 
-            // If cancelled
-            else if (resultCode == Activity.RESULT_CANCELED) {
-                this.failPicture("Camera cancelled.");
-            }
+                // If cancelled
+                else if (resultCode == Activity.RESULT_CANCELED) {
+                    this.failPicture("Camera cancelled.");
+                }
 
-            // If something else
-            else {
-                this.failPicture("Did not complete!");
+                // If something else
+                else {
+                    this.failPicture("Did not complete!");
+                }
             }
-        }
-        // If retrieving photo from library
-        else if ((srcType == PHOTOLIBRARY) || (srcType == SAVEDPHOTOALBUM)) {
-            if (resultCode == Activity.RESULT_OK && intent != null) {
-                this.processResultFromGallery(destType, intent);
-            }
-            else if (resultCode == Activity.RESULT_CANCELED) {
-                this.failPicture("Selection cancelled.");
-            }
-            else {
-                this.failPicture("Selection did not complete!");
+            // If retrieving photo from library
+            else if ((srcType == PHOTOLIBRARY) || (srcType == SAVEDPHOTOALBUM)) {
+                if (resultCode == Activity.RESULT_OK && intent != null) {
+                    this.processResultFromGallery(destType, intent);
+                }
+                else if (resultCode == Activity.RESULT_CANCELED) {
+                    this.failPicture("Selection cancelled.");
+                }
+                else {
+                    this.failPicture("Selection did not complete!");
+                }
             }
         }
     }
@@ -1047,7 +1064,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                 byte[] code = jpeg_data.toByteArray();
                 byte[] output = Base64.encode(code, Base64.NO_WRAP);
                 String js_out = new String(output);
-                this.callbackContext.success(js_out);
+                this.returnResult(js_out);
                 js_out = null;
                 output = null;
                 code = null;
@@ -1065,6 +1082,15 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
      */
     public void failPicture(String err) {
         this.callbackContext.error(err);
+    }
+
+    /**
+     * Send result back to JavaScript.
+     *
+     * @param result
+     */
+    public void returnResult(String result){
+        this.callbackContext.success(result);
     }
 
     private void scanForGallery(Uri newImage) {
