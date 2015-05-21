@@ -72,4 +72,8 @@ cameraExport.cleanup = function(successCallback, errorCallback) {
     exec(successCallback, errorCallback, "Camera", "cleanup", []);
 };
 
+cameraExport.checkForSavedResult = function(successCallback, errorCallback) {
+    exec(successCallback, errorCallback, "Camera", "checkForSavedResult", []);
+};
+
 module.exports = cameraExport;
