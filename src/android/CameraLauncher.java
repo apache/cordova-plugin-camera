@@ -102,6 +102,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private MediaScannerConnection conn;    // Used to update gallery app with newly-written files
     private Uri scanMe;                     // Uri of image to be added to content store
     private Uri croppedUri;
+    private int savedRequestCode;
+    private int savedResultCode;
+    private Intent savedIntent;
 
     /**
      * Executes the request and returns PluginResult.
@@ -163,7 +166,15 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             PluginResult r = new PluginResult(PluginResult.Status.NO_RESULT);
             r.setKeepCallback(true);
             callbackContext.sendPluginResult(r);
-            
+
+            return true;
+        } else if (action.equals("checkForSavedResult")) {
+            this.imageUri = Uri.fromFile(createCaptureFile(JPEG));
+            if (savedRequestCode > 0 || savedResultCode > 0) {
+                onActivityResult(savedRequestCode, savedResultCode, savedIntent);
+            } else {
+                callbackContext.success("");
+            }
             return true;
         }
         return false;
@@ -632,73 +643,79 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
      */
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
 
-        // Get src and dest types from request code for a Camera Activity
-        int srcType = (requestCode / 16) - 1;
-        int destType = (requestCode % 16) - 1;
+        if (this.callbackContext == null) {
+            this.savedRequestCode = requestCode;
+            this.savedResultCode = resultCode;
+            this.savedIntent = intent;
+        } else {
+            // Get src and dest types from request code for a Camera Activity
+            int srcType = (requestCode / 16) - 1;
+            int destType = (requestCode % 16) - 1;
 
-        // If Camera Crop
-        if (requestCode >= CROP_CAMERA) {
-            if (resultCode == Activity.RESULT_OK) {
+            // If Camera Crop
+            if (requestCode >= CROP_CAMERA) {
+                if (resultCode == Activity.RESULT_OK) {
 
-                // Because of the inability to pass through multiple intents, this hack will allow us
-                // to pass arcane codes back.
-                destType = requestCode - CROP_CAMERA;
-                try {
-                    processResultFromCamera(destType, intent);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    Log.e(LOG_TAG, "Unable to write to file");
+                    // Because of the inability to pass through multiple intents, this hack will allow us
+                    // to pass arcane codes back.
+                    destType = requestCode - CROP_CAMERA;
+                    try {
+                        processResultFromCamera(destType, intent);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        Log.e(LOG_TAG, "Unable to write to file");
+                    }
+
+                }// If cancelled
+                else if (resultCode == Activity.RESULT_CANCELED) {
+                    this.failPicture("Camera cancelled.");
                 }
 
-            }// If cancelled
-            else if (resultCode == Activity.RESULT_CANCELED) {
-                this.failPicture("Camera cancelled.");
-            }
-
-            // If something else
-            else {
-                this.failPicture("Did not complete!");
-            }
-        }
-        // If CAMERA
-        else if (srcType == CAMERA) {
-            // If image available
-            if (resultCode == Activity.RESULT_OK) {
-                try {
-                    if(this.allowEdit)
-                    {
-                        Uri tmpFile = Uri.fromFile(new File(getTempDirectoryPath(), ".Pic.jpg"));
-                        performCrop(tmpFile, destType, intent);
-                    }
-                    else {
-                        this.processResultFromCamera(destType, intent);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    this.failPicture("Error capturing image.");
+                // If something else
+                else {
+                    this.failPicture("Did not complete!");
                 }
             }
+            // If CAMERA
+            else if (srcType == CAMERA) {
+                // If image available
+                if (resultCode == Activity.RESULT_OK) {
+                    try {
+                        if(this.allowEdit)
+                        {
+                            Uri tmpFile = Uri.fromFile(new File(getTempDirectoryPath(), ".Pic.jpg"));
+                            performCrop(tmpFile, destType, intent);
+                        }
+                        else {
+                            this.processResultFromCamera(destType, intent);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        this.failPicture("Error capturing image.");
+                    }
+                }
 
-            // If cancelled
-            else if (resultCode == Activity.RESULT_CANCELED) {
-                this.failPicture("Camera cancelled.");
-            }
+                // If cancelled
+                else if (resultCode == Activity.RESULT_CANCELED) {
+                    this.failPicture("Camera cancelled.");
+                }
 
-            // If something else
-            else {
-                this.failPicture("Did not complete!");
+                // If something else
+                else {
+                    this.failPicture("Did not complete!");
+                }
             }
-        }
-        // If retrieving photo from library
-        else if ((srcType == PHOTOLIBRARY) || (srcType == SAVEDPHOTOALBUM)) {
-            if (resultCode == Activity.RESULT_OK && intent != null) {
-                this.processResultFromGallery(destType, intent);
-            }
-            else if (resultCode == Activity.RESULT_CANCELED) {
-                this.failPicture("Selection cancelled.");
-            }
-            else {
-                this.failPicture("Selection did not complete!");
+            // If retrieving photo from library
+            else if ((srcType == PHOTOLIBRARY) || (srcType == SAVEDPHOTOALBUM)) {
+                if (resultCode == Activity.RESULT_OK && intent != null) {
+                    this.processResultFromGallery(destType, intent);
+                }
+                else if (resultCode == Activity.RESULT_CANCELED) {
+                    this.failPicture("Selection cancelled.");
+                }
+                else {
+                    this.failPicture("Selection did not complete!");
+                }
             }
         }
     }
