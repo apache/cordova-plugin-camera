@@ -7,7 +7,7 @@
          "License"); you may not use this file except in compliance
          with the License.  You may obtain a copy of the License at
 
-           http://www.apache.org/licenses/LICENSE-2.0
+           http://www.apache.org/licenses/LInCENSE-2.0
 
          Unless required by applicable law or agreed to in writing,
          software distributed under the License is distributed on an
@@ -223,7 +223,7 @@ Optional parameters to customize the camera settings.
 
 - __targetHeight__: Height in pixels to scale image. Must be used with __targetWidth__. Aspect ratio remains constant. _(Number)_
 
-- __mediaType__: Set the type of media to select from.  Only works when `PictureSourceType` is `PHOTOLIBRARY` or `SAVEDPHOTOALBUM`. Defined in `nagivator.camera.MediaType` _(Number)_
+- __mediaType__: Set the type of media to select from.  Only works when `PictureSourceType` is `PHOTOLIBRARY` or `SAVEDPHOTOALBUM`. Defined in `navigator.camera.MediaType` _(Number)_
 
         Camera.MediaType = {
             PICTURE: 0,    // allow selection of still pictures only. DEFAULT. Will return format specified via DestinationType
