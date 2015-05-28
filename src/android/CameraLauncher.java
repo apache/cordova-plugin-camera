@@ -508,9 +508,15 @@ private void refreshGallery(Uri contentUri)
 
 
 private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
-        // Create an ExifHelper to save the exif data that is lost during compression
-        String modifiedPath = getTempDirectoryPath() + "/modified." +
-                (this.encodingType == JPEG ? "jpg" : "png");
+        // Some content: URIs do not map to file paths (e.g. picasa).
+        String realPath = FileHelper.getRealPath(uri, this.cordova);
+
+        // Get filename from uri
+        String fileName = realPath != null ?
+            realPath.substring(realPath.lastIndexOf('/') + 1) : 
+            "modified." + (this.encodingType == JPEG ? "jpg" : "png");
+
+        String modifiedPath = getTempDirectoryPath() + "/" + fileName;
 
         OutputStream os = new FileOutputStream(modifiedPath);
         CompressFormat compressFormat = this.encodingType == JPEG ?
@@ -520,8 +526,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         bitmap.compress(compressFormat, this.mQuality, os);
         os.close();
 
-        // Some content: URIs do not map to file paths (e.g. picasa).
-        String realPath = FileHelper.getRealPath(uri, this.cordova);
+        // Create an ExifHelper to save the exif data that is lost during compression
         ExifHelper exif = new ExifHelper();
         if (realPath != null && this.encodingType == JPEG) {
             try {
