@@ -114,7 +114,7 @@ scenario, the image may not appear when the cordova activity is restored.
 Android uses intents to launch the camera activity on the device to capture
 images, and on phones with low memory, the Cordova activity may be killed.  In this
 scenario, the image may not appear when the Cordova activity is restored.
-You may try to get the image using the checkForSavedResult method. 
+You should try to get the image using the checkForSavedResult method. 
 
 ### Browser Quirks
 
