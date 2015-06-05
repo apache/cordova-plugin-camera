@@ -80,6 +80,10 @@ typedef NSUInteger CDVMediaType;
 
 // ======================================================================= //
 
+typedef void(^CDVCameraReadMetadataCompletionBlock)(UIImage*, NSDictionary*, CDVPictureOptions*);
+typedef void(^CDVCameraProcessImageResultBlock)(UIImage*, NSDictionary*, NSURL*);
+typedef void(^CDVCameraProcessImageFailureBlock)(NSString*);
+
 @interface CDVCamera : CDVPlugin <UIImagePickerControllerDelegate,
                        UINavigationControllerDelegate,
                        UIPopoverControllerDelegate,
@@ -87,19 +91,51 @@ typedef NSUInteger CDVMediaType;
 {}
 
 @property (strong) CDVCameraPicker* pickerController;
-@property (strong) NSMutableDictionary *metadata;
+@property (strong) NSDictionary* metadata;
 @property (strong, nonatomic) CLLocationManager *locationManager;
-@property (strong) NSData* data;
+@property (strong) UIImage* image;
 
 /*
- * getPicture
+ * takePicture
  *
  * arguments:
- *	1: this is the javascript function that will be called with the results, the first parameter passed to the
- *		javascript function is the picture as a Base64 encoded string
- *  2: this is the javascript function to be called if there was an error
+ *  1: success callback (called with either Base64, file URI or native URI)
+ *  2: error callback
  * options:
- *	quality: integer between 1 and 100
+ *  - quality (number [0-100])
+ *  - destinationType (number):
+ *    0: DATA_URL => Returns a Base64 image
+ *    1: FILE_URI => Returns a file URI
+ *    2: NATIVE_URI => Returns a native URI (asset-library://...)
+ *  - sourceType (number):
+ *    0: PHOTOLIBRARY
+ *    1: CAMERA
+ *    2: SAVEDPHOTOALBUM
+ *  - allowEdit (bool)
+ *  - encodingType (number):
+ *    0: JPEG
+ *    1: PNG
+ *  - targetWidth/targetHeight (number)
+ *  - mediaType (number):
+ *    0: PICTURE
+ *    1: VIDEO
+ *    2: ALLMEDIA
+ *  - correctOrientation (bool)
+ *  - saveToPhotoAlbum (bool)
+ *  - cameraDirection (number)
+ *    0: BACK
+ *    1: FRONT
+ *  - popoverOptions (dictionnary) [iPad only]:
+ *    - x (number)
+ *    - y (number)
+ *    - width (number)
+ *    - height (number)
+ *    - arrowDir (number):
+ *      1: ARROW_UP
+ *      2: ARROW_DOWN
+ *      4: ARROW_LEFT
+ *      8: ARROW_RIGHT
+ *      15: ARROW_ANY
  */
 - (void)takePicture:(CDVInvokedUrlCommand*)command;
 - (void)cleanup:(CDVInvokedUrlCommand*)command;
