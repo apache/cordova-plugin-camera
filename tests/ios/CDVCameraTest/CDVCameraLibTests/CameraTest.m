@@ -297,11 +297,13 @@
     
     // test 640x480
     
-    targetSize = CGSizeMake(640, 480);
+    targetSize = CGSizeMake(480, 640);
     
     targetImage = [sourceImagePortrait imageByScalingNotCroppingForSize:targetSize];
     XCTAssertEqual(targetImage.size.width, targetSize.width);
     XCTAssertEqual(targetImage.size.height, targetSize.height);
+
+    targetSize = CGSizeMake(640, 480);
     
     targetImage = [sourceImageLandscape imageByScalingNotCroppingForSize:targetSize];
     XCTAssertEqual(targetImage.size.width, targetSize.width);
@@ -310,11 +312,13 @@
     
     // test 800x600
     
-    targetSize = CGSizeMake(800, 600);
+    targetSize = CGSizeMake(600, 800);
     
     targetImage = [sourceImagePortrait imageByScalingNotCroppingForSize:targetSize];
     XCTAssertEqual(targetImage.size.width, targetSize.width);
     XCTAssertEqual(targetImage.size.height, targetSize.height);
+    
+    targetSize = CGSizeMake(800, 600);
     
     targetImage = [sourceImageLandscape imageByScalingNotCroppingForSize:targetSize];
     XCTAssertEqual(targetImage.size.width, targetSize.width);
@@ -322,11 +326,13 @@
     
     // test 1024x768
     
-    targetSize = CGSizeMake(1024, 768);
+    targetSize = CGSizeMake(768, 1024);
     
     targetImage = [sourceImagePortrait imageByScalingNotCroppingForSize:targetSize];
     XCTAssertEqual(targetImage.size.width, targetSize.width);
     XCTAssertEqual(targetImage.size.height, targetSize.height);
+    
+    targetSize = CGSizeMake(1024, 768);
     
     targetImage = [sourceImageLandscape imageByScalingNotCroppingForSize:targetSize];
     XCTAssertEqual(targetImage.size.width, targetSize.width);
