@@ -80,6 +80,10 @@ typedef NSUInteger CDVMediaType;
 
 // ======================================================================= //
 
+typedef void(^CDVCameraReadMetadataCompletionBlock)(UIImage*, NSDictionary*, CDVPictureOptions*);
+typedef void(^CDVCameraProcessImageResultBlock)(UIImage*, NSDictionary*, NSURL*);
+typedef void(^CDVCameraProcessImageFailureBlock)(NSString*);
+
 @interface CDVCamera : CDVPlugin <UIImagePickerControllerDelegate,
                        UINavigationControllerDelegate,
                        UIPopoverControllerDelegate,
@@ -87,19 +91,19 @@ typedef NSUInteger CDVMediaType;
 {}
 
 @property (strong) CDVCameraPicker* pickerController;
-@property (strong) NSMutableDictionary *metadata;
+@property (strong) NSDictionary* metadata;
 @property (strong, nonatomic) CLLocationManager *locationManager;
-@property (strong) NSData* data;
+@property (strong) UIImage* image;
 
 /*
  * getPicture
  *
  * arguments:
- *	1: this is the javascript function that will be called with the results, the first parameter passed to the
- *		javascript function is the picture as a Base64 encoded string
+ *  1: this is the javascript function that will be called with the results, the first parameter passed to the
+ *    javascript function is the picture as a Base64 encoded string
  *  2: this is the javascript function to be called if there was an error
  * options:
- *	quality: integer between 1 and 100
+ *  quality: integer between 1 and 100
  */
 - (void)takePicture:(CDVInvokedUrlCommand*)command;
 - (void)cleanup:(CDVInvokedUrlCommand*)command;

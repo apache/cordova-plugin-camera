@@ -24,6 +24,7 @@
 #import <Cordova/NSArray+Comparisons.h>
 #import <Cordova/NSData+Base64.h>
 #import <Cordova/NSDictionary+Extensions.h>
+#import <AssetsLibrary/AssetsLibrary.h>
 #import <MobileCoreServices/UTCoreTypes.h>
 
 
@@ -36,8 +37,13 @@
 @interface CDVCamera ()
 
 // expose private interface
-- (NSData*)processImage:(UIImage*)image info:(NSDictionary*)info options:(CDVPictureOptions*)options;
 - (UIImage*)retrieveImage:(NSDictionary*)info options:(CDVPictureOptions*)options;
+- (void)retrieveMetadata:(UIImage*)image info:(NSDictionary*)info options:(CDVPictureOptions*)options completionBlock:(CDVCameraReadMetadataCompletionBlock)completionBlock;
+- (void)fixOrientation:(UIImage**)image metadata:(NSDictionary**)metadata;
+- (void)resizeImage:(UIImage**)image metadata:(NSDictionary**)metadata size:(CGSize)size;
+- (void)saveToPhotoAlbum:(UIImage*)image metadata:(NSDictionary*)metadata completionBlock:(ALAssetsLibraryWriteImageCompletionBlock)completionBlock;
+- (void)processImage:(UIImage*)image metadata:(NSDictionary*)metadata options:(CDVPictureOptions*)options resultBlock:(CDVCameraProcessImageResultBlock)resultBlock failureBlock:(CDVCameraProcessImageFailureBlock)failureBlock;
+- (NSData*)imageToData:(UIImage*)image metadata:(NSDictionary*)metadata options:(CDVPictureOptions*)options;
 - (CDVPluginResult*)resultForImage:(CDVPictureOptions*)options info:(NSDictionary*)info;
 - (CDVPluginResult*)resultForVideo:(NSDictionary*)info;
 
@@ -390,7 +396,6 @@
     UIImage* originalCorrectedForOrientation = [originalImage imageCorrectedForCaptureOrientation];
 
     UIImage* editedImage = [self createImage:CGRectMake(0, 0, 800, 600) orientation:UIImageOrientationDown];
-    UIImage* scaledImageWithCrop = [originalImage imageByScalingAndCroppingForSize:CGSizeMake(640, 480)];
     UIImage* scaledImageNoCrop = [originalImage imageByScalingNotCroppingForSize:CGSizeMake(640, 480)];
     
     infoDict1 = @{
@@ -429,11 +434,26 @@
     pictureOptions.cropToSize = NO;
     pictureOptions.correctOrientation = YES;
     
+    XCTestExpectation* correctedOrientation = [self expectationWithDescription:@"Process Original With Corrected Orientation"];
+    
     resultImage = [self.plugin retrieveImage:infoDict1 options:pictureOptions];
-    XCTAssertNotEqual(resultImage.imageOrientation, originalImage.imageOrientation);
-    XCTAssertEqual(resultImage.imageOrientation, originalCorrectedForOrientation.imageOrientation);
-    XCTAssertEqual(resultImage.size.width, originalCorrectedForOrientation.size.width);
-    XCTAssertEqual(resultImage.size.height, originalCorrectedForOrientation.size.height);
+    [self.plugin
+     processImage:resultImage
+     metadata:@{}
+     options:pictureOptions
+     resultBlock:^(UIImage* image, NSDictionary* metadata, NSURL* url){
+         XCTAssertNotEqual(image.imageOrientation, originalImage.imageOrientation);
+         XCTAssertEqual(image.imageOrientation, originalCorrectedForOrientation.imageOrientation);
+         XCTAssertEqual(image.size.width, originalCorrectedForOrientation.size.width);
+         XCTAssertEqual(image.size.height, originalCorrectedForOrientation.size.height);
+         [correctedOrientation fulfill];
+     }
+     failureBlock:^(NSString* error){
+         XCTAssert(false, @"Error occured %@", error);
+         [correctedOrientation fulfill];
+     }];
+    
+    [self waitForExpectationsWithTimeout:(NSTimeInterval)5 handler:nil];
 
     // Original with targetSize, no crop
     
@@ -442,30 +462,37 @@
     pictureOptions.cropToSize = NO;
     pictureOptions.correctOrientation = NO;
     
-    resultImage = [self.plugin retrieveImage:infoDict1 options:pictureOptions];
-    XCTAssertEqual(resultImage.size.width, scaledImageNoCrop.size.width);
-    XCTAssertEqual(resultImage.size.height, scaledImageNoCrop.size.height);
-
-    // Original with targetSize, plus crop
-    
-    pictureOptions.allowsEditing = YES;
-    pictureOptions.targetSize = CGSizeMake(640, 480);
-    pictureOptions.cropToSize = YES;
-    pictureOptions.correctOrientation = NO;
+    XCTestExpectation* targetSizeNoCrop = [self expectationWithDescription:@"Process Original With Target Size No Crop"];
     
     resultImage = [self.plugin retrieveImage:infoDict1 options:pictureOptions];
-    XCTAssertEqual(resultImage.size.width, scaledImageWithCrop.size.width);
-    XCTAssertEqual(resultImage.size.height, scaledImageWithCrop.size.height);
+    [self.plugin
+     processImage:resultImage
+     metadata:@{}
+     options:pictureOptions
+     resultBlock:^(UIImage* image, NSDictionary* metadata, NSURL* url){
+         XCTAssertNotEqual(image.imageOrientation, originalImage.imageOrientation);
+         XCTAssertEqual(image.size.width, scaledImageNoCrop.size.width);
+         XCTAssertEqual(image.size.height, scaledImageNoCrop.size.height);
+         [targetSizeNoCrop fulfill];
+     }
+     failureBlock:^(NSString* error){
+         XCTAssert(false, @"Error occured %@", error);
+         [targetSizeNoCrop fulfill];
+     }];
+    
+    [self waitForExpectationsWithTimeout:(NSTimeInterval)5 handler:^(NSError *error) {
+        XCTAssert(error == nil, @"Error occured %@", [error localizedDescription]);
+    }];
 }
 
 - (void) testProcessImage
 {
     CDVPictureOptions* pictureOptions = [[CDVPictureOptions alloc] init];
-    NSData* resultData;
     
     UIImage* originalImage = [self createImage:CGRectMake(0, 0, 1024, 768) orientation:UIImageOrientationDown];
     NSData* originalImageDataPNG = UIImagePNGRepresentation(originalImage);
-    NSData* originalImageDataJPEG = UIImageJPEGRepresentation(originalImage, 1.0);
+    // Default quality is 50
+    NSData* originalImageDataJPEG = UIImageJPEGRepresentation(originalImage, 50.f / 100.f);
     
     // Original, PNG
     
@@ -474,9 +501,22 @@
     pictureOptions.cropToSize = NO;
     pictureOptions.correctOrientation = NO;
     pictureOptions.encodingType = EncodingTypePNG;
+
+    XCTestExpectation* expectOriginalPNG = [self expectationWithDescription:@"Process Original PNG"];
     
-    resultData = [self.plugin processImage:originalImage info:@{} options:pictureOptions];
-    XCTAssertEqualObjects([resultData base64EncodedStringWithOptions:0], [originalImageDataPNG base64EncodedStringWithOptions:0]);
+    [self.plugin
+     processImage:originalImage
+     metadata:@{}
+     options:pictureOptions
+     resultBlock:^(UIImage* image, NSDictionary* metadata, NSURL* url){
+         NSData* resultData = [self.plugin imageToData:image metadata:metadata options:pictureOptions];
+         XCTAssert([resultData isEqualToData:originalImageDataPNG]);
+         [expectOriginalPNG fulfill];
+     }
+     failureBlock:^(NSString* error){
+         XCTAssert(false, @"Error occured %@", error);
+         [expectOriginalPNG fulfill];
+     }];
 
     // Original, JPEG, full quality
     
@@ -486,8 +526,21 @@
     pictureOptions.correctOrientation = NO;
     pictureOptions.encodingType = EncodingTypeJPEG;
     
-    resultData = [self.plugin processImage:originalImage info:@{} options:pictureOptions];
-    XCTAssertEqualObjects([resultData base64EncodedStringWithOptions:0], [originalImageDataJPEG base64EncodedStringWithOptions:0]);
+    XCTestExpectation* expectOriginalJPEG = [self expectationWithDescription:@"Process Original JPEG"];
+    
+    [self.plugin
+     processImage:originalImage
+     metadata:@{}
+     options:pictureOptions
+     resultBlock:^(UIImage* image, NSDictionary* metadata, NSURL* url){
+         NSData* resultData = [self.plugin imageToData:image metadata:metadata options:pictureOptions];
+         XCTAssert(![resultData isEqualToData:originalImageDataJPEG]);
+         [expectOriginalJPEG fulfill];
+     }
+     failureBlock:^(NSString* error){
+         XCTAssert(false, @"Error occured %@", error);
+         [expectOriginalJPEG fulfill];
+     }];
     
     // Original, JPEG, with quality value
     
@@ -499,9 +552,26 @@
     pictureOptions.quality = @(57);
     
     NSData* originalImageDataJPEGWithQuality = UIImageJPEGRepresentation(originalImage, [pictureOptions.quality floatValue]/ 100.f);
-    resultData = [self.plugin processImage:originalImage info:@{} options:pictureOptions];
-    XCTAssertEqualObjects([resultData base64EncodedStringWithOptions:0], [originalImageDataJPEGWithQuality base64EncodedStringWithOptions:0]);
     
+    XCTestExpectation* expectOriginalJPEGQuality = [self expectationWithDescription:@"Process Original JPEG with Quality"];
+    
+    [self.plugin
+     processImage:originalImage
+     metadata:@{}
+     options:pictureOptions
+     resultBlock:^(UIImage* image, NSDictionary* metadata, NSURL* url){
+         NSData* resultData = [self.plugin imageToData:image metadata:metadata options:pictureOptions];
+         XCTAssertEqualObjects([resultData cdv_base64EncodedString], [originalImageDataJPEGWithQuality cdv_base64EncodedString]);
+         [expectOriginalJPEGQuality fulfill];
+     }
+     failureBlock:^(NSString* error){
+         XCTAssert(false, @"Error occured %@", error);
+         [expectOriginalJPEGQuality fulfill];
+     }];
+    
+    [self waitForExpectationsWithTimeout:(NSTimeInterval)5 handler:^(NSError *error) {
+        XCTAssert(error == nil, @"Error occured %@", [error localizedDescription]);
+    }];
     // TODO: usesGeolocation is not tested
 }
 
