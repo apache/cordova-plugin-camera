@@ -217,8 +217,10 @@ static NSString* toBase64(NSData* data) {
         BOOL needsResize = [self needsResize:pictureOptions];
         BOOL needsOrientationCorrection = pictureOptions.correctOrientation;
         BOOL isSourceCamera = (pictureOptions.sourceType == UIImagePickerControllerSourceTypeCamera);
-        BOOL needsSavingToPhotoAlbum = (isSourceCamera || needsResize || needsOrientationCorrection);
+        BOOL allowsEditing = pictureOptions.allowsEditing;
+        BOOL needsSavingToPhotoAlbum = (isSourceCamera || needsResize || needsOrientationCorrection || allowsEditing);
         
+        // if one wants an edited image and a NATIVE_URI, the edited image must be in the assets library therefore one must set the saveToPhotoAlbum option to true.
         if (!pictureOptions.saveToPhotoAlbum && isDestinationNativeUri && needsSavingToPhotoAlbum) {
             NSLog(@"Incompatible options, cannot return native URI if image is not in the assets library");
             CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Incompatible options, cannot return native URI if image is not in the assets library"];
