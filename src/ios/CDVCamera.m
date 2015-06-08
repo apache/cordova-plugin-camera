@@ -562,28 +562,55 @@ static NSString* toBase64(NSData* data) {
     return image;
 }
 
+- (NSDictionary*)fixMetadataForEdited:(NSDictionary*)metadata info:(NSDictionary*)info
+{
+    CGRect cropRect = [[info objectForKey:UIImagePickerControllerCropRect] CGRectValue];
+    NSMutableDictionary* mutableMetadata = [metadata mutableCopy];
+    
+    [mutableMetadata setValue:[NSNumber numberWithFloat:cropRect.size.width] forKey:(NSString*)kCGImagePropertyPixelWidth];
+    [mutableMetadata setValue:[NSNumber numberWithFloat:cropRect.size.height] forKey:(NSString*)kCGImagePropertyPixelHeight];
+    // orientation: 1 == TopLeft
+    // allowsEditing simply allows to crop the image into a square..
+    // front facing camera seemingly flips the picture..
+    [mutableMetadata setValue:[NSNumber numberWithInt:1] forKey:(NSString*)kCGImagePropertyOrientation];
+    
+    return mutableMetadata;
+}
+
 - (void)retrieveMetadata:(UIImage*)image info:(NSDictionary*)info options:(CDVPictureOptions*)options completionBlock:(CDVCameraReadMetadataCompletionBlock)completionBlock
 {
     if (options.sourceType != UIImagePickerControllerSourceTypeCamera) {
         // Gallery pictures don't have metadata available at UIImagePickerControllerMediaMetadata :(
         ALAssetsLibrary* assetslibrary = [[ALAssetsLibrary alloc] init];
+        __weak CDVCamera* weakSelf = self;
+        __weak NSDictionary* weakInfo = info;
+        __weak CDVPictureOptions* weakOptions = options;
         [assetslibrary
          assetForURL:[info valueForKey:UIImagePickerControllerReferenceURL]
          resultBlock:^(ALAsset* asset) {
              ALAssetRepresentation* representation = [asset defaultRepresentation];
              NSDictionary* metadata = [representation metadata];
-             completionBlock(image, metadata, options);
+             if (options.allowsEditing) {
+                 metadata = [weakSelf fixMetadataForEdited:metadata info:weakInfo];
+             }
+             completionBlock(image, metadata, weakOptions);
          }
          failureBlock:^(NSError* error) {
              // Do not fail completely, just we won't have the metadata...
              // we always want a metadata dictionary, even if empty...
-             completionBlock(image, @{}, options);
+             completionBlock(image, @{}, weakOptions);
          }
         ];
         return;
     }
     
-    completionBlock(image, [info objectForKey:UIImagePickerControllerMediaMetadata], options);
+    NSDictionary* metadata = [info objectForKey:UIImagePickerControllerMediaMetadata];
+    
+    if (options.allowsEditing) {
+        metadata = [self fixMetadataForEdited:metadata info:info];
+    }
+    
+    completionBlock(image, metadata, options);
 }
 
 - (void)startUpdatingLocation:(UIImage*)image metadata:(NSDictionary*)metadata
