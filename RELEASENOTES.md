@@ -206,3 +206,19 @@
 * CB-8404 Rotate camera feed with device orientation
 * CB-8054 Support taking pictures from file for *WP8*
 * CB-8405 Use `z-index` instead of `z-order`
+
+### 1.2.0 (Jun 17, 2015)
+* Closing stale pull request: close #84
+* Closing stale pull request: close #66
+* CB-9128 cordova-plugin-camera documentation translation: cordova-plugin-camera
+* Update docs. This closes #100
+* attempt to fix npm markdown issue
+* CB-8883 fix picture rotation issue
+* one more alias
+* Fixed some nit white-space issues, aliased a little more
+* major refactor : readability
+* Patch for CB-8498, this closes #64
+* CB-8879 fix stripe issue with correct aspect ratio
+* CB-8601 - iOS camera unit tests broken
+* CB-7667 iOS8: Handle case where camera is not authorized (closes #49)
+* add missing license header
