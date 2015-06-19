@@ -450,15 +450,18 @@ after calling `camera.getPicture`. Applies only when the value of
 ## navigator.camera.checkForSavedResult
 
 call this method in onDeviceReady to see if there is a result present from a previous call to getPicture.
-this in case 
+add the same options you used when calling getPicture, or leave it out to pass default options
 
-    navigator.camera.checkForSavedResult( successCallback, errorCallback );
+    navigator.camera.checkForSavedResult( successCallback, errorCallback, options );
 
 ### Description
 
 Tries to get the intermediate image file that is kept in temporary storage after calling `camera.getPicture`.
 Applies when the operating system decides to kill our MainActivity while getting an Image. 
-Once our MainActivity restarts you should call this method to see if a result is available
+Once our MainActivity restarts you should call this method to see if a result is available.
+
+If you want to use the same options you used when calling getPicture you have to make sure you store the options first,
+this way you can use your saved options to call checkForSavedResult, so the picture get's handled the same as it would have when Android hadn't killed our MainActivity
 
 ### Supported Platforms
 
@@ -466,7 +469,7 @@ Once our MainActivity restarts you should call this method to see if a result is
 
 ### Example
 
-    navigator.camera.checkForSavedResult(onSuccess, onFail);
+    navigator.camera.checkForSavedResult(onSuccess, onFail, savedOptions);
 
     function onSuccess(result) {
         console.log("checkForSavedResult success.");
