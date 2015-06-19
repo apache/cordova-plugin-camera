@@ -162,9 +162,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
             return true;
         } else if (action.equals("checkForSavedResult")) {
-            this.imageUri = Uri.fromFile(createCaptureFile(JPEG));
             if (savedRequestCode > 0 || savedResultCode > 0) {
                 processConfiguration(args);
+                imageUri = Uri.fromFile(createCaptureFile(encodingType));
                 onActivityResult(savedRequestCode, savedResultCode, savedIntent);
                 savedRequestCode = 0;
                 savedResultCode = 0;
