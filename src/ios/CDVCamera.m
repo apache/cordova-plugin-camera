@@ -46,7 +46,7 @@ static NSString* toBase64(NSData* data) {
     if ([data respondsToSelector:s1]) {
         NSString* (*func)(id, SEL) = (void *)[data methodForSelector:s1];
         return func(data, s1);
-    } else if ([data respondsToSelector:s1]) {
+    } else if ([data respondsToSelector:s2]) {
         NSString* (*func)(id, SEL) = (void *)[data methodForSelector:s2];
         return func(data, s2);
     } else if ([data respondsToSelector:s3]) {
