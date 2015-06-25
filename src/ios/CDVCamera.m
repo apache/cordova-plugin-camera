@@ -30,6 +30,10 @@
 #import <MobileCoreServices/UTCoreTypes.h>
 #import <objc/message.h>
 
+#ifndef __CORDOVA_4_0_0
+    #import <Cordova/NSData+Base64.h>
+#endif
+
 #define CDV_PHOTO_PREFIX @"cdv_photo_"
 
 static NSSet* org_apache_cordova_validArrowDirections;
