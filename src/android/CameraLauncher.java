@@ -368,16 +368,16 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         // Create an ExifHelper to save the exif data that is lost during compression
         ExifHelper exif = new ExifHelper();
         String sourcePath;
-        try {
-            if(allowEdit && croppedUri != null)
-            {
-                sourcePath = FileHelper.stripFileProtocol(croppedUri.toString());
-            }
-            else
-            {
-                sourcePath = getTempDirectoryPath() + "/.Pic.jpg";
-            }
+        if(allowEdit && croppedUri != null)
+        {
+            sourcePath = FileHelper.stripFileProtocol(croppedUri.toString());
+        }
+        else
+        {
+            sourcePath = FileHelper.stripFileProtocol(imageUri.toString());
+        }
 
+        try {
             //We don't support PNG, so let's not pretend we do
             exif.createInFile(getTempDirectoryPath() + "/.Pic.jpg");
             exif.readExifData();
@@ -392,13 +392,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
         // If sending base64 image back
         if (destType == DATA_URL) {
-            if(croppedUri != null) {
-                bitmap = getScaledBitmap(FileHelper.stripFileProtocol(croppedUri.toString()));
-            }
-            else
-            {
-                bitmap = getScaledBitmap(FileHelper.stripFileProtocol(imageUri.toString()));
-            }
+            bitmap = getScaledBitmap(sourcePath);
             if (bitmap == null) {
                 // Try to get the bitmap from intent.
                 bitmap = (Bitmap)intent.getExtras().get("data");
@@ -438,11 +432,11 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             // If all this is true we shouldn't compress the image.
             if (this.targetHeight == -1 && this.targetWidth == -1 && this.mQuality == 100 && 
                     !this.correctOrientation) {
-                writeUncompressedImage(uri);
+                writeUncompressedImage(uri, sourcePath);
 
                 this.callbackContext.success(uri.toString());
             } else {
-                bitmap = getScaledBitmap(FileHelper.stripFileProtocol(imageUri.toString()));
+                bitmap = getScaledBitmap(sourcePath);
 
                 if (rotate != 0 && this.correctOrientation) {
                     bitmap = getRotatedBitmap(rotate, bitmap, exif);
@@ -760,12 +754,12 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
      * @throws FileNotFoundException
      * @throws IOException
      */
-    private void writeUncompressedImage(Uri uri) throws FileNotFoundException,
+    private void writeUncompressedImage(Uri uri, String src) throws FileNotFoundException,
             IOException {
         FileInputStream fis = null;
         OutputStream os = null;
         try {
-            fis = new FileInputStream(FileHelper.stripFileProtocol(imageUri.toString()));
+            fis = new FileInputStream(src);
             os = this.cordova.getActivity().getContentResolver().openOutputStream(uri);
             byte[] buffer = new byte[4096];
             int len;
