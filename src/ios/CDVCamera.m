@@ -20,7 +20,6 @@
 #import "CDVCamera.h"
 #import "CDVJpegHeaderWriter.h"
 #import "UIImage+CropScaleOrientation.h"
-#import <Cordova/NSData+Base64.h>
 #import <ImageIO/CGImageProperties.h>
 #import <AssetsLibrary/ALAssetRepresentation.h>
 #import <AssetsLibrary/AssetsLibrary.h>
@@ -31,6 +30,10 @@
 #import <MobileCoreServices/UTCoreTypes.h>
 #import <objc/message.h>
 
+#ifndef __CORDOVA_4_0_0
+    #import <Cordova/NSData+Base64.h>
+#endif
+
 #define CDV_PHOTO_PREFIX @"cdv_photo_"
 
 static NSSet* org_apache_cordova_validArrowDirections;
@@ -38,9 +41,20 @@ static NSSet* org_apache_cordova_validArrowDirections;
 static NSString* toBase64(NSData* data) {
     SEL s1 = NSSelectorFromString(@"cdv_base64EncodedString");
     SEL s2 = NSSelectorFromString(@"base64EncodedString");
-    SEL realSel = [data respondsToSelector:s1] ? s1 : s2;
-    NSString* (*func)(id, SEL) = (void *)[data methodForSelector:realSel];
-    return func(data, realSel);
+    SEL s3 = NSSelectorFromString(@"base64EncodedStringWithOptions:");
+    
+    if ([data respondsToSelector:s1]) {
+        NSString* (*func)(id, SEL) = (void *)[data methodForSelector:s1];
+        return func(data, s1);
+    } else if ([data respondsToSelector:s2]) {
+        NSString* (*func)(id, SEL) = (void *)[data methodForSelector:s2];
+        return func(data, s2);
+    } else if ([data respondsToSelector:s3]) {
+        NSString* (*func)(id, SEL, NSUInteger) = (void *)[data methodForSelector:s3];
+        return func(data, s3, 0);
+    } else {
+        return nil;
+    }
 }
 
 @implementation CDVPictureOptions
