@@ -379,7 +379,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             }
 
             //We don't support PNG, so let's not pretend we do
-            exif.createInFile(getTempDirectoryPath() + "/.Pic.jpg");
+            exif.createInFile(sourcePath);
             exif.readExifData();
             rotate = exif.getOrientation();
 
@@ -442,7 +442,13 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
                 this.callbackContext.success(uri.toString());
             } else {
-                bitmap = getScaledBitmap(FileHelper.stripFileProtocol(imageUri.toString()));
+                if(croppedUri != null) {
+                    bitmap = getScaledBitmap(FileHelper.stripFileProtocol(croppedUri.toString()));
+                }
+                else
+                {
+                    bitmap = getScaledBitmap(FileHelper.stripFileProtocol(imageUri.toString()));
+                }
 
                 if (rotate != 0 && this.correctOrientation) {
                     bitmap = getRotatedBitmap(rotate, bitmap, exif);
