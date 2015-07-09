@@ -312,6 +312,7 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
         saveToPhotoAlbum = args[9],
         cameraDirection = args[11],
         capturePreview = null,
+        captureTakePhotoButton = null,
         captureCancelButton = null,
         capture = null,
         captureSettings = null,
@@ -324,13 +325,20 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
 
         // z-order style element for capturePreview and captureCancelButton elts
         // is necessary to avoid overriding by another page elements, -1 sometimes is not enough
-        capturePreview.style.cssText = "position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: 999";
+        capturePreview.style.cssText = "position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: 999;";
+
+        var buttonStyle = "width:45%;padding: 10px 16px;font-size: 18px;line-height: 1.3333333;color: #333;background-color: #fff;border-color: #ccc; border: 1px solid transparent;border-radius: 6px; display: block; margin: 20px; z-index: 1000;border-color: #adadad;";
+
+        // Create capture button
+        captureTakePhotoButton = document.createElement("button");
+        captureTakePhotoButton.innerText = "Take";
+        captureTakePhotoButton.style.cssText = buttonStyle + "position: fixed; left: 0; bottom: 0; margin: 20px; z-index: 1000";
 
         // Create cancel button
         captureCancelButton = document.createElement("button");
         captureCancelButton.innerText = "Cancel";
-        captureCancelButton.style.cssText = "position: fixed; right: 0; bottom: 0; display: block; margin: 20px; z-index: 1000";
-
+        captureCancelButton.style.cssText = buttonStyle + "position: fixed; right: 0; bottom: 0; margin: 20px; z-index: 1000";
+        
         capture = new CaptureNS.MediaCapture();
 
         captureSettings = new CaptureNS.MediaCaptureInitializationSettings();
@@ -360,6 +368,23 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
 
             return capture.initializeAsync(captureSettings);
         }).then(function () {
+
+            // create focus control if available
+            var VideoDeviceController = capture.videoDeviceController;
+            var FocusControl = VideoDeviceController.focusControl;
+
+            if (FocusControl.supported == true) {
+                capturePreview.addEventListener('click', function () {
+
+                    var preset = Windows.Media.Devices.FocusPreset.autoNormal;
+
+                    FocusControl.setPresetAsync(preset).done(function () {
+
+                    });
+
+                });
+            }
+
             // msdn.microsoft.com/en-us/library/windows/apps/hh452807.aspx
             capturePreview.msZoom = true;
             capturePreview.src = URL.createObjectURL(capture);
@@ -370,10 +395,11 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
             if (sensor !== null) {
                 sensor.addEventListener("orientationchanged", onOrientationChange);
             }
-            capturePreview.addEventListener('click', captureAction);
+            //capturePreview.addEventListener('click', captureAction);
+            captureTakePhotoButton.addEventListener('click', captureAction);
             captureCancelButton.addEventListener('click', function () {
                 destroyCameraPreview();
-                errorCallback('Cancelled');
+                errorCallback('no image selected');
             }, false);
 
             // Change default orientation
@@ -393,8 +419,9 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
                 return;
             }
 
-            // Insert preview frame and controls into page
+            // add elements to body
             document.body.appendChild(capturePreview);
+            document.body.appendChild(captureTakePhotoButton);
             document.body.appendChild(captureCancelButton);
 
             if (aspectRatios.indexOf(DEFAULT_ASPECT_RATIO) > -1) {
@@ -415,7 +442,8 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
         }
         capturePreview.pause();
         capturePreview.src = null;
-        [capturePreview, captureCancelButton].forEach(function(elem) {
+        // remove elements from wrapper
+        [capturePreview, captureTakePhotoButton, captureCancelButton].forEach(function (elem) {
             if (elem /* && elem in document.body.childNodes */) {
                 document.body.removeChild(elem);
             }
@@ -446,33 +474,33 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
                     var photoStream = new Windows.Storage.Streams.InMemoryRandomAccessStream();
                     var finalStream = new Windows.Storage.Streams.InMemoryRandomAccessStream();
                     capture.capturePhotoToStreamAsync(encodingProperties, photoStream)
-                    .then(function() {
-                        return Windows.Graphics.Imaging.BitmapDecoder.createAsync(photoStream);
-                    })
-                    .then(function(dec) {
-                        finalStream.size = 0; // BitmapEncoder requires the output stream to be empty
-                        return Windows.Graphics.Imaging.BitmapEncoder.createForTranscodingAsync(finalStream, dec);
-                    })
-                    .then(function(enc) {
-                        // We need to rotate the photo wrt sensor orientation
-                        enc.bitmapTransform.rotation = orientationToRotation(sensor.getCurrentOrientation());
-                        return enc.flushAsync();
-                    })
-                    .then(function() {
-                        return tempCapturedFile.openAsync(Windows.Storage.FileAccessMode.readWrite);
-                    })
-                    .then(function(fileStream) {
-                        return Windows.Storage.Streams.RandomAccessStream.copyAsync(finalStream, fileStream);
-                    })
-                    .done(function() {
-                        photoStream.close();
-                        finalStream.close();
-                        complete(tempCapturedFile);
-                    }, function() {
-                        photoStream.close();
-                        finalStream.close();
-                        throw new Error("An error has occured while capturing the photo.");
-                    });
+                        .then(function() {
+                            return Windows.Graphics.Imaging.BitmapDecoder.createAsync(photoStream);
+                        })
+                        .then(function(dec) {
+                            finalStream.size = 0; // BitmapEncoder requires the output stream to be empty
+                            return Windows.Graphics.Imaging.BitmapEncoder.createForTranscodingAsync(finalStream, dec);
+                        })
+                        .then(function(enc) {
+                            // We need to rotate the photo wrt sensor orientation
+                            enc.bitmapTransform.rotation = orientationToRotation(sensor.getCurrentOrientation());
+                            return enc.flushAsync();
+                        })
+                        .then(function() {
+                            return tempCapturedFile.openAsync(Windows.Storage.FileAccessMode.readWrite);
+                        })
+                        .then(function(fileStream) {
+                            return Windows.Storage.Streams.RandomAccessStream.copyAsync(finalStream, fileStream);
+                        })
+                        .done(function() {
+                            photoStream.close();
+                            finalStream.close();
+                            complete(tempCapturedFile);
+                        }, function() {
+                            photoStream.close();
+                            finalStream.close();
+                            throw new Error("An error has occured while capturing the photo.");
+                        });
                 });
             })
             .done(function(capturedFile) {
@@ -485,8 +513,8 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
                     saveToPhotoAlbum: saveToPhotoAlbum
                 }, successCallback, errorCallback);
             }, function(err) {
-                    destroyCameraPreview();
-                    errorCallback(err);
+                destroyCameraPreview();
+                errorCallback(err);
             });
     };
 
