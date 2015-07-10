@@ -320,14 +320,14 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
         sensor = null;
 
     var createCameraUI = function () {
-        // Create fullscreen preview
-        capturePreview = document.createElement("video");
+        // create style for take and cancel buttons
+        var buttonStyle = "width:45%;padding: 10px 16px;font-size: 18px;line-height: 1.3333333;color: #333;background-color: #fff;border-color: #ccc; border: 1px solid transparent;border-radius: 6px; display: block; margin: 20px; z-index: 1000;border-color: #adadad;";
 
+        // Create fullscreen preview
         // z-order style element for capturePreview and captureCancelButton elts
         // is necessary to avoid overriding by another page elements, -1 sometimes is not enough
+        capturePreview = document.createElement("video");
         capturePreview.style.cssText = "position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: 999;";
-
-        var buttonStyle = "width:45%;padding: 10px 16px;font-size: 18px;line-height: 1.3333333;color: #333;background-color: #fff;border-color: #ccc; border: 1px solid transparent;border-radius: 6px; display: block; margin: 20px; z-index: 1000;border-color: #adadad;";
 
         // Create capture button
         captureTakePhotoButton = document.createElement("button");
@@ -338,7 +338,7 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
         captureCancelButton = document.createElement("button");
         captureCancelButton.innerText = "Cancel";
         captureCancelButton.style.cssText = buttonStyle + "position: fixed; right: 0; bottom: 0; margin: 20px; z-index: 1000";
-        
+
         capture = new CaptureNS.MediaCapture();
 
         captureSettings = new CaptureNS.MediaCaptureInitializationSettings();
@@ -381,7 +381,6 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
                     FocusControl.setPresetAsync(preset).done(function () {
 
                     });
-
                 });
             }
 
@@ -395,7 +394,8 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
             if (sensor !== null) {
                 sensor.addEventListener("orientationchanged", onOrientationChange);
             }
-            //capturePreview.addEventListener('click', captureAction);
+
+            // add click events to take and cancel buttons
             captureTakePhotoButton.addEventListener('click', captureAction);
             captureCancelButton.addEventListener('click', function () {
                 destroyCameraPreview();
