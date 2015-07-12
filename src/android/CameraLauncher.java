@@ -55,6 +55,9 @@ import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
 import android.content.pm.PackageManager;
+
+import android.graphics.Canvas;
+import android.graphics.Color;
 /**
  * This class launches the camera view, allows the user to take a picture, closes the camera view,
  * and returns the captured image.  When the camera view is closed, the screen displayed before
@@ -594,12 +597,19 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                         }
                     }
                 }
+                
+              // Replace black background to white background for transparent pics
+                Bitmap imageWithBG = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(),bitmap.getConfig());
+                imageWithBG.eraseColor(Color.WHITE);
+                Canvas canvas = new Canvas(imageWithBG);
+                canvas.drawBitmap(bitmap, 0f, 0f, null);
+                bitmap.recycle();
+                bitmap = imageWithBG;
 
                 // If sending base64 image back
                 if (destType == DATA_URL) {
                     this.processPicture(bitmap);
                 }
-
                 // If sending filename back
                 else if (destType == FILE_URI || destType == NATIVE_URI) {
                     // Did we modify the image?
