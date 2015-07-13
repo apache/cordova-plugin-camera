@@ -598,13 +598,20 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                     }
                 }
                 
-              // Replace black background to white background for transparent pics
-                Bitmap imageWithBG = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(),bitmap.getConfig());
-                imageWithBG.eraseColor(Color.WHITE);
-                Canvas canvas = new Canvas(imageWithBG);
-                canvas.drawBitmap(bitmap, 0f, 0f, null);
-                bitmap.recycle();
-                bitmap = imageWithBG;
+              // Update black bg to white bg if PNG or GIF only
++              if( "image/gif".equalsIgnoreCase(mimeType) || "image/png".equalsIgnoreCase(mimeType) )
++              {
++                     // Check size to prevent heavy load making crash the app
++                     if( (bitmap.getWidth() < 2000 ) && (bitmap.getHeight() < 2000) )
++                     {
++                            Bitmap imageWithBG = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(),bitmap.getConfig());
++                            imageWithBG.eraseColor(Color.WHITE);
++                            Canvas canvas = new Canvas(imageWithBG);
++                            canvas.drawBitmap(bitmap, 0f, 0f, null);
++                            bitmap.recycle();
++                            bitmap = imageWithBG;
++                     }
++              }
 
                 // If sending base64 image back
                 if (destType == DATA_URL) {
