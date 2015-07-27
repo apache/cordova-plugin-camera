@@ -396,7 +396,14 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
             }
 
             // add click events to take and cancel buttons
-            captureTakePhotoButton.addEventListener('click', captureAction);
+            captureTakePhotoButton.addEventListener('click', function() {
+                if (this.getAttribute('clicked') === '1') {
+                    return false;
+                } else {
+                    this.setAttribute('clicked', '1');
+                }
+                captureAction();
+            });
             captureCancelButton.addEventListener('click', function () {
                 destroyCameraPreview();
                 errorCallback('no image selected');
