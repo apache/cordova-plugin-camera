@@ -490,7 +490,7 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
                             return tempCapturedFile.openAsync(Windows.Storage.FileAccessMode.readWrite);
                         })
                         .then(function(fileStream) {
-                            return Windows.Storage.Streams.RandomAccessStream.copyAsync(finalStream, fileStream);
+                            return Windows.Storage.Streams.RandomAccessStream.copyAndCloseAsync(finalStream, fileStream);
                         })
                         .done(function() {
                             photoStream.close();
@@ -718,7 +718,7 @@ function savePhoto(picture, options, successCallback, errorCallback) {
                 resizeImageBase64(successCallback, errorCallback, picture, options.targetWidth, options.targetHeight);
             } else {
                 fileIO.readBufferAsync(picture).done(function(buffer) {
-                    var strBase64 =encodeToBase64String(buffer);
+                    var strBase64 = encodeToBase64String(buffer);
                     picture.deleteAsync().done(function() {
                         successCallback(strBase64);
                     }, function(err) {
