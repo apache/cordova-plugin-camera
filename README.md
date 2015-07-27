@@ -291,8 +291,6 @@ with the Google Plus Photos application.  Other crops may not work.
 
 #### iOS Quirks
 
-- Set `quality` below 50 to avoid memory errors on some devices.
-
 - When using `destinationType.FILE_URI`, photos are saved in the application's temporary directory. The contents of the application's temporary directory is deleted when the application ends.
 
 #### Tizen Quirks
