@@ -79,7 +79,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private static final String GET_PICTURE = "Get Picture";
     private static final String GET_VIDEO = "Get Video";
     private static final String GET_All = "Get All";
-    
+
     private static final String LOG_TAG = "CameraLauncher";
 
     //Where did this come from?
@@ -159,11 +159,11 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 callbackContext.sendPluginResult(r);
                 return true;
             }
-             
+
             PluginResult r = new PluginResult(PluginResult.Status.NO_RESULT);
             r.setKeepCallback(true);
             callbackContext.sendPluginResult(r);
-            
+
             return true;
         }
         return false;
@@ -260,7 +260,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @param quality           Compression quality hint (0-100: 0=low quality & high compression, 100=compress of max quality)
      * @param srcType           The album to get image from.
      * @param returnType        Set the type of image to return.
-     * @param encodingType 
+     * @param encodingType
      */
     // TODO: Images selected from SDCARD don't display correctly, but from CAMERA ALBUM do!
     // TODO: Images from kitkat filechooser not going into crop function
@@ -311,7 +311,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
   /**
    * Brings up the UI to perform crop on passed image URI
-   * 
+   *
    * @param picUri
    */
   private void performCrop(Uri picUri, int destType, Intent cameraIntent) {
@@ -333,9 +333,17 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
           cropIntent.putExtra("aspectX", 1);
           cropIntent.putExtra("aspectY", 1);
       }
+
+      // TODO 1:
+      // fix the crop doesn't work on Kithat and when allowEdit=true, crop from PHOTOLIBRARY doesn't work
       // create new file handle to get full resolution crop
-      croppedUri = Uri.fromFile(new File(getTempDirectoryPath(), System.currentTimeMillis() + ".jpg"));
-      cropIntent.putExtra("output", croppedUri);
+      if(srcType == CAMERA){
+    	  croppedUri = Uri.fromFile(new File(getTempDirectoryPath(), System.currentTimeMillis() + ".jpg"));
+    	  Log.e(LOG_TAG, "CROPING>>>>>>CAMREA");
+      }else{
+    	  cropIntent.putExtra("output", croppedUri);
+        Log.e(LOG_TAG, "CROPING>>>>>>GALLERY");
+      }
 
       // start the activity - we handle returning in onActivityResult
 
@@ -403,7 +411,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 // Try to get the bitmap from intent.
                 bitmap = (Bitmap)intent.getExtras().get("data");
             }
-            
+
             // Double-check the bitmap.
             if (bitmap == null) {
                 Log.d(LOG_TAG, "I either have a null image path or bitmap");
@@ -436,7 +444,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             }
 
             // If all this is true we shouldn't compress the image.
-            if (this.targetHeight == -1 && this.targetWidth == -1 && this.mQuality == 100 && 
+            if (this.targetHeight == -1 && this.targetWidth == -1 && this.mQuality == 100 &&
                     !this.correctOrientation) {
                 writeUncompressedImage(uri);
 
@@ -627,7 +635,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
             }
         }
     }
-    
+
     /**
      * Called when the camera view exits.
      *
@@ -649,12 +657,9 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                 // Because of the inability to pass through multiple intents, this hack will allow us
                 // to pass arcane codes back.
                 destType = requestCode - CROP_CAMERA;
-                try {
-                    processResultFromCamera(destType, intent);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    Log.e(LOG_TAG, "Unable to write to file");
-                }
+                // TODO 2: 
+                // process result shoud be processResultFromGallery() not processResultFromCamera()
+                processResultFromGallery(destType, intent);
 
             }// If cancelled
             else if (resultCode == Activity.RESULT_CANCELED) {
@@ -825,7 +830,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
      *
      * @param imagePath
      * @return
-     * @throws IOException 
+     * @throws IOException
      */
     private Bitmap getScaledBitmap(String imageUrl) throws IOException {
         // If no new width or height were specified return the original bitmap
@@ -863,13 +868,13 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                 }
             }
         }
-        
+
         //CB-2292: WTF? Why is the width null?
         if(options.outWidth == 0 || options.outHeight == 0)
         {
             return null;
         }
-        
+
         // determine the correct aspect ratio
         int[] widthHeight = calculateAspectRatio(options.outWidth, options.outHeight);
 
