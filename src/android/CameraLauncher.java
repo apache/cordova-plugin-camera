@@ -377,7 +377,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             }
 
             //We don't support PNG, so let's not pretend we do
-            exif.createInFile(getTempDirectoryPath() + "/.Pic.jpg");
+            exif.createInFile(sourcePath);
             exif.readExifData();
             rotate = exif.getOrientation();
 
