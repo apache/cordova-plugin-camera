@@ -26,7 +26,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -41,6 +40,7 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
@@ -49,12 +49,10 @@ import android.graphics.Matrix;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.net.Uri;
-import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
-import android.content.pm.PackageManager;
 /**
  * This class launches the camera view, allows the user to take a picture, closes the camera view,
  * and returns the captured image.  When the camera view is closed, the screen displayed before
@@ -272,7 +270,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             intent.setType("image/*");
             if (this.allowEdit) {
                 intent.setAction(Intent.ACTION_PICK);
-                intent.putExtra("crop", "true");
+//                intent.putExtra("crop", "true");
                 if (targetWidth > 0) {
                     intent.putExtra("outputX", targetWidth);
                 }
@@ -283,8 +281,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     intent.putExtra("aspectX", 1);
                     intent.putExtra("aspectY", 1);
                 }
-                File photo = createCaptureFile(encodingType);
-                croppedUri = Uri.fromFile(photo);
+//                File photo = createCaptureFile(encodingType);
+//                croppedUri = Uri.fromFile(photo);
                 intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, croppedUri);
             } else {
                 intent.setAction(Intent.ACTION_GET_CONTENT);
@@ -314,8 +312,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
    *
    * @param picUri
    */
-   // TODO 0: add srcType parameter in performCrop() function
-  private void performCrop(Uri picUri, int srcType, int destType, Intent cameraIntent) {
+  private void performCrop(Uri picUri, int destType, Intent cameraIntent) {
     try {
       Intent cropIntent = new Intent("com.android.camera.action.CROP");
       // indicate image type and Uri
@@ -334,17 +331,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
           cropIntent.putExtra("aspectX", 1);
           cropIntent.putExtra("aspectY", 1);
       }
-
-      // TODO 1:
-      // fix the crop doesn't work on Kithat and when allowEdit=true, crop from PHOTOLIBRARY doesn't work on android
       // create new file handle to get full resolution crop
-      if(srcType == CAMERA){
-    	  croppedUri = Uri.fromFile(new File(getTempDirectoryPath(), System.currentTimeMillis() + ".jpg"));
-    	  Log.e(LOG_TAG, "CROPING>>>>>>CAMREA");
-      }else{
-    	  cropIntent.putExtra("output", croppedUri);
-        Log.e(LOG_TAG, "CROPING>>>>>>GALLERY");
-      }
+      croppedUri = Uri.fromFile(new File(getTempDirectoryPath(), System.currentTimeMillis() + ".jpg"));
+      cropIntent.putExtra("output", croppedUri);
 
       // start the activity - we handle returning in onActivityResult
 
@@ -388,7 +377,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             }
 
             //We don't support PNG, so let's not pretend we do
-            exif.createInFile(sourcePath);
+            exif.createInFile(getTempDirectoryPath() + "/.Pic.jpg");
             exif.readExifData();
             rotate = exif.getOrientation();
 
@@ -451,13 +440,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
                 this.callbackContext.success(uri.toString());
             } else {
-                if(croppedUri != null) {
-                    bitmap = getScaledBitmap(FileHelper.stripFileProtocol(croppedUri.toString()));
-                }
-                else
-                {
-                    bitmap = getScaledBitmap(FileHelper.stripFileProtocol(imageUri.toString()));
-                }
+                bitmap = getScaledBitmap(FileHelper.stripFileProtocol(imageUri.toString()));
 
                 if (rotate != 0 && this.correctOrientation) {
                     bitmap = getRotatedBitmap(rotate, bitmap, exif);
@@ -658,9 +641,12 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                 // Because of the inability to pass through multiple intents, this hack will allow us
                 // to pass arcane codes back.
                 destType = requestCode - CROP_CAMERA;
-                // TODO 2:
-                // process result shoud be processResultFromGallery() not processResultFromCamera()
-                processResultFromGallery(destType, intent);
+                try {
+                    processResultFromCamera(destType, intent);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Log.e(LOG_TAG, "Unable to write to file");
+                }
 
             }// If cancelled
             else if (resultCode == Activity.RESULT_CANCELED) {
@@ -680,7 +666,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                     if(this.allowEdit)
                     {
                         Uri tmpFile = Uri.fromFile(new File(getTempDirectoryPath(), ".Pic.jpg"));
-                        performCrop(tmpFile, srcType, destType, intent);
+                        performCrop(tmpFile, destType, intent);
                     }
                     else {
                         this.processResultFromCamera(destType, intent);
@@ -704,7 +690,9 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         // If retrieving photo from library
         else if ((srcType == PHOTOLIBRARY) || (srcType == SAVEDPHOTOALBUM)) {
             if (resultCode == Activity.RESULT_OK && intent != null) {
-                this.processResultFromGallery(destType, intent);
+//                this.processResultFromGallery(destType, intent);
+            	Log.i(LOG_TAG,"CROP>>>>>>PHOTOLIBRARY");
+            	performCrop(intent.getData(), destType, intent);
             }
             else if (resultCode == Activity.RESULT_CANCELED) {
                 this.failPicture("Selection cancelled.");
