@@ -314,7 +314,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
    *
    * @param picUri
    */
-  private void performCrop(Uri picUri, int destType, Intent cameraIntent) {
+   // TODO 0: add srcType parameter in performCrop() function
+  private void performCrop(Uri picUri, int srcType, int destType, Intent cameraIntent) {
     try {
       Intent cropIntent = new Intent("com.android.camera.action.CROP");
       // indicate image type and Uri
@@ -335,7 +336,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
       }
 
       // TODO 1:
-      // fix the crop doesn't work on Kithat and when allowEdit=true, crop from PHOTOLIBRARY doesn't work
+      // fix the crop doesn't work on Kithat and when allowEdit=true, crop from PHOTOLIBRARY doesn't work on android
       // create new file handle to get full resolution crop
       if(srcType == CAMERA){
     	  croppedUri = Uri.fromFile(new File(getTempDirectoryPath(), System.currentTimeMillis() + ".jpg"));
@@ -657,7 +658,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                 // Because of the inability to pass through multiple intents, this hack will allow us
                 // to pass arcane codes back.
                 destType = requestCode - CROP_CAMERA;
-                // TODO 2: 
+                // TODO 2:
                 // process result shoud be processResultFromGallery() not processResultFromCamera()
                 processResultFromGallery(destType, intent);
 
@@ -679,7 +680,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                     if(this.allowEdit)
                     {
                         Uri tmpFile = Uri.fromFile(new File(getTempDirectoryPath(), ".Pic.jpg"));
-                        performCrop(tmpFile, destType, intent);
+                        performCrop(tmpFile, srcType, destType, intent);
                     }
                     else {
                         this.processResultFromCamera(destType, intent);
