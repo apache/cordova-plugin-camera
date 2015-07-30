@@ -312,8 +312,8 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
         saveToPhotoAlbum = args[9],
         cameraDirection = args[11],
         capturePreview = null,
-        captureTakePhotoButton = null,
-        captureCancelButton = null,
+        cameraCaptureButton = null,
+        cameraCancelButton = null,
         capture = null,
         captureSettings = null,
         CaptureNS = Windows.Media.Capture,
@@ -324,20 +324,20 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
         var buttonStyle = "width:45%;padding: 10px 16px;font-size: 18px;line-height: 1.3333333;color: #333;background-color: #fff;border-color: #ccc; border: 1px solid transparent;border-radius: 6px; display: block; margin: 20px; z-index: 1000;border-color: #adadad;";
 
         // Create fullscreen preview
-        // z-order style element for capturePreview and captureCancelButton elts
+        // z-order style element for capturePreview and cameraCancelButton elts
         // is necessary to avoid overriding by another page elements, -1 sometimes is not enough
         capturePreview = document.createElement("video");
         capturePreview.style.cssText = "position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: 999;";
 
         // Create capture button
-        captureTakePhotoButton = document.createElement("button");
-        captureTakePhotoButton.innerText = "Take";
-        captureTakePhotoButton.style.cssText = buttonStyle + "position: fixed; left: 0; bottom: 0; margin: 20px; z-index: 1000";
+        cameraCaptureButton = document.createElement("button");
+        cameraCaptureButton.innerText = "Take";
+        cameraCaptureButton.style.cssText = buttonStyle + "position: fixed; left: 0; bottom: 0; margin: 20px; z-index: 1000";
 
         // Create cancel button
-        captureCancelButton = document.createElement("button");
-        captureCancelButton.innerText = "Cancel";
-        captureCancelButton.style.cssText = buttonStyle + "position: fixed; right: 0; bottom: 0; margin: 20px; z-index: 1000";
+        cameraCancelButton = document.createElement("button");
+        cameraCancelButton.innerText = "Cancel";
+        cameraCancelButton.style.cssText = buttonStyle + "position: fixed; right: 0; bottom: 0; margin: 20px; z-index: 1000";
 
         capture = new CaptureNS.MediaCapture();
 
@@ -373,7 +373,7 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
             var VideoDeviceController = capture.videoDeviceController;
             var FocusControl = VideoDeviceController.focusControl;
 
-            if (FocusControl.supported == true) {
+            if (FocusControl.supported === true) {
                 capturePreview.addEventListener('click', function () {
 
                     var preset = Windows.Media.Devices.FocusPreset.autoNormal;
@@ -395,19 +395,9 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
                 sensor.addEventListener("orientationchanged", onOrientationChange);
             }
 
-            // add click events to take and cancel buttons
-            captureTakePhotoButton.addEventListener('click', function() {
-                if (this.getAttribute('clicked') === '1') {
-                    return false;
-                } else {
-                    this.setAttribute('clicked', '1');
-                }
-                captureAction();
-            });
-            captureCancelButton.addEventListener('click', function () {
-                destroyCameraPreview();
-                errorCallback('no image selected');
-            }, false);
+            // add click events to capture and cancel buttons
+            cameraCaptureButton.addEventListener('click', onCameraCaptureButtonClick);
+            cameraCancelButton.addEventListener('click', onCameraCancelButtonClick);
 
             // Change default orientation
             if (sensor) {
@@ -428,8 +418,8 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
 
             // add elements to body
             document.body.appendChild(capturePreview);
-            document.body.appendChild(captureTakePhotoButton);
-            document.body.appendChild(captureCancelButton);
+            document.body.appendChild(cameraCaptureButton);
+            document.body.appendChild(cameraCancelButton);
 
             if (aspectRatios.indexOf(DEFAULT_ASPECT_RATIO) > -1) {
                 return setAspectRatio(capture, DEFAULT_ASPECT_RATIO);
@@ -444,17 +434,27 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
     };
 
     var destroyCameraPreview = function () {
+        // If sensor is available, remove event listener
         if (sensor !== null) {
             sensor.removeEventListener('orientationchanged', onOrientationChange);
         }
+
+        // Pause and dispose preview element
         capturePreview.pause();
         capturePreview.src = null;
-        // remove elements from wrapper
-        [capturePreview, captureTakePhotoButton, captureCancelButton].forEach(function (elem) {
+
+        // Remove event listeners from buttons
+        cameraCaptureButton.removeEventListener('click', onCameraCaptureButtonClick);
+        cameraCancelButton.removeEventListener('click', onCameraCancelButtonClick);
+
+        // Remove elements
+        [capturePreview, cameraCaptureButton, cameraCancelButton].forEach(function (elem) {
             if (elem /* && elem in document.body.childNodes */) {
                 document.body.removeChild(elem);
             }
         });
+
+        // Stop and dispose media capture manager
         if (capture) {
             capture.stopRecordAsync();
             capture = null;
@@ -590,6 +590,33 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
             .then(function () {
                 return videoDeviceController.setMediaStreamPropertiesAsync(CapMSType.videoRecord, videoRecordResolution);
             });
+    };
+
+    /**
+     * When Capture button is clicked, try to capture a picture and return
+     */
+    var onCameraCaptureButtonClick = function() {
+        // Make sure user can't click more than once
+        if (this.getAttribute('clicked') === '1') {
+            return false;
+        } else {
+            this.setAttribute('clicked', '1');
+        }
+        captureAction();
+    };
+
+    /**
+     * When Cancel button is clicked, destroy camera preview and return with error callback
+     */
+    var onCameraCancelButtonClick = function() {
+        // Make sure user can't click more than once
+        if (this.getAttribute('clicked') === '1') {
+            return false;
+        } else {
+            this.setAttribute('clicked', '1');
+        }
+        destroyCameraPreview();
+        errorCallback('no image selected');
     };
 
     /**
