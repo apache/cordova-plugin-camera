@@ -697,24 +697,19 @@ function takePictureFromCameraWindows(successCallback, errorCallback, args) {
     var maxRes = null;
     var UIMaxRes = WMCapture.CameraCaptureUIMaxPhotoResolution;
     var totalPixels = targetWidth * targetHeight;
-    switch (true) {
-        case (totalPixels <= 320 * 240):
-            cameraCaptureUI.photoSettings.maxResolution = UIMaxRes.verySmallQvga;
-            break;
-        case (totalPixels <= 640 * 480):
-            maxRes = UIMaxRes.smallVga;
-            break;
-        case (totalPixels <= 1024 * 768):
-            maxRes = UIMaxRes.mediumXga;
-            break;
-        case (totalPixels <= 3 * 1000 * 1000):
-            maxRes = UIMaxRes.large3M;
-            break;
-        case (totalPixels <= 5 * 1000 * 1000):
-            maxRes = UIMaxRes.veryLarge5M;
-            break;
-        default :
-            maxRes = UIMaxRes.highestAvailable;
+
+    if (totalPixels <= 320 * 240) {
+        maxRes = UIMaxRes.verySmallQvga;
+    } else if (totalPixels <= 640 * 480) {
+        maxRes = UIMaxRes.smallVga;
+    } else if (totalPixels <= 1024 * 768) {
+        maxRes = UIMaxRes.mediumXga;
+    } else if (totalPixels <= 3 * 1000 * 1000) {
+        maxRes = UIMaxRes.large3M;
+    } else if (totalPixels <= 5 * 1000 * 1000) {
+        maxRes = UIMaxRes.veryLarge5M;
+    } else {
+        maxRes = UIMaxRes.highestAvailable;
     }
 
     cameraCaptureUI.photoSettings.maxResolution = maxRes;
