@@ -53,7 +53,11 @@ public class ExifHelper {
      * @throws IOException
      */
     public void createInFile(String filePath) throws IOException {
-        this.inFile = new ExifInterface(filePath);
+        if (filePath != null) {
+            this.inFile = new ExifInterface(filePath);
+        } else {
+            throw new IOException("null pointer passed to createInFile");
+        }
     }
 
     /**
@@ -63,7 +67,11 @@ public class ExifHelper {
      * @throws IOException
      */
     public void createOutFile(String filePath) throws IOException {
-        this.outFile = new ExifInterface(filePath);
+        if (filePath != null) {
+            this.outFile = new ExifInterface(filePath);
+        } else {
+            throw new IOException("null pointer passed to createOutFile");
+        }
     }
 
     /**
