@@ -635,7 +635,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         int destType = (requestCode % 16) - 1;
 
         // If Camera Crop
-        if (requestCode >= CROP_CAMERA) {
+        if (requestCode == CROP_CAMERA) {
             if (resultCode == Activity.RESULT_OK) {
 
                 // Because of the inability to pass through multiple intents, this hack will allow us
@@ -658,6 +658,26 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                 this.failPicture("Did not complete!");
             }
         }
+        // If gallery crop
+        else if (requestCode > CROP_CAMERA) {
+            if (resultCode == Activity.RESULT_OK) {
+
+                // Because of the inability to pass through multiple intents, this hack will allow us
+                // to pass arcane codes back.
+                destType = requestCode - CROP_CAMERA - 1;
+                this.processResultFromGallery(destType, intent);
+
+            }// If cancelled
+            else if (resultCode == Activity.RESULT_CANCELED) {
+                this.failPicture("Gallery cancelled.");
+            }
+
+            // If something else
+            else {
+                this.failPicture("Did not complete!");
+            }
+        }
+
         // If CAMERA
         else if (srcType == CAMERA) {
             // If image available
@@ -690,9 +710,8 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         // If retrieving photo from library
         else if ((srcType == PHOTOLIBRARY) || (srcType == SAVEDPHOTOALBUM)) {
             if (resultCode == Activity.RESULT_OK && intent != null) {
-//                this.processResultFromGallery(destType, intent);
-            	Log.i(LOG_TAG,"CROP>>>>>>PHOTOLIBRARY");
-            	performCrop(intent.getData(), destType, intent);
+            	Log.i(LOG_TAG,"CROP>>>>>>PHOTOLIBRARY, destType+1");
+            	performCrop(intent.getData(), destType + 1, intent);
             }
             else if (resultCode == Activity.RESULT_CANCELED) {
                 this.failPicture("Selection cancelled.");
