@@ -403,10 +403,11 @@ static NSString* toBase64(NSData* data) {
     } else {
         image = [info objectForKey:UIImagePickerControllerOriginalImage];
     }
-    
-    if (options.correctOrientation) {
+    // start
+    //if (options.correctOrientation) {
         image = [image imageCorrectedForCaptureOrientation];
-    }
+    //}
+    // end
     
     UIImage* scaledImage = nil;
     
