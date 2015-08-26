@@ -211,6 +211,25 @@ static NSString* toBase64(NSData* data) {
     }];
 }
 
+- (void)dismissCamera:(CDVInvokedUrlCommand*)command
+{
+    // If a popover is already open, close it
+    if (([[self pickerController] pickerPopoverController] != nil) && [[[self pickerController] pickerPopoverController] isPopoverVisible]) {
+        [[[self pickerController] pickerPopoverController] dismissPopoverAnimated:YES];
+        [[[self pickerController] pickerPopoverController] setDelegate:nil];
+        [[self pickerController] setPickerPopoverController:nil];
+    }
+    
+    [self.pickerController dismissViewControllerAnimated:NO completion:nil];
+    
+    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"dismissed camera"];
+    [self.commandDelegate sendPluginResult:result callbackId:self.pickerController.callbackId];
+    
+    self.hasPendingOperation = NO;
+    self.pickerController = nil;
+}
+
+
 // Delegate for camera permission UIAlertView
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
 {
@@ -357,7 +376,7 @@ static NSString* toBase64(NSData* data) {
                         self.metadata = [[NSMutableDictionary alloc] init];
                         
                         NSMutableDictionary* EXIFDictionary = [[controllerMetadata objectForKey:(NSString*)kCGImagePropertyExifDictionary]mutableCopy];
-                        if (EXIFDictionary)	{
+                        if (EXIFDictionary) {
                             [self.metadata setObject:EXIFDictionary forKey:(NSString*)kCGImagePropertyExifDictionary];
                         }
                         
@@ -549,15 +568,15 @@ static NSString* toBase64(NSData* data) {
 
 - (CLLocationManager*)locationManager
 {
-	if (locationManager != nil) {
-		return locationManager;
-	}
+    if (locationManager != nil) {
+        return locationManager;
+    }
     
-	locationManager = [[CLLocationManager alloc] init];
-	[locationManager setDesiredAccuracy:kCLLocationAccuracyNearestTenMeters];
-	[locationManager setDelegate:self];
+    locationManager = [[CLLocationManager alloc] init];
+    [locationManager setDesiredAccuracy:kCLLocationAccuracyNearestTenMeters];
+    [locationManager setDelegate:self];
     
-	return locationManager;
+    return locationManager;
 }
 
 - (void)locationManager:(CLLocationManager*)manager didUpdateToLocation:(CLLocation*)newLocation fromLocation:(CLLocation*)oldLocation

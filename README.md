@@ -441,3 +441,23 @@ after calling `camera.getPicture`. Applies only when the value of
     function onFail(message) {
         alert('Failed because: ' + message);
     }
+
+## navigator.camera.dismiss
+
+Dismisses the camera view controller or open popover. Triggers the error callback passed to getPicture, so it does not use its own callbacks.
+
+    navigator.camera.dismiss();
+
+#### Description
+
+Allows the camera view controller and popovers to be dismissed via javascript
+when needed. Aborts the `getPicture` process and calls the `getPicture` error handler.
+
+#### Supported Platforms
+
+![](doc/img/android-fail.png) ![](doc/img/blackberry-fail.png) ![](doc/img/browser-fail.png) ![](doc/img/firefox-fail.png) ![](doc/img/fireos-fail.png) ![](doc/img/ios-success.png) ![](doc/img/windows-fail.png) ![](doc/img/wp8-fail.png) ![](doc/img/ubuntu-fail.png)
+
+#### Example
+
+    navigator.camera.dismiss();
+

@@ -1,4 +1,4 @@
-/*
+cordova.define("cordova-plugin-camera.camera", function(require, exports, module) { /*
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -71,5 +71,11 @@ cameraExport.getPicture = function(successCallback, errorCallback, options) {
 cameraExport.cleanup = function(successCallback, errorCallback) {
     exec(successCallback, errorCallback, "Camera", "cleanup", []);
 };
+               
+cameraExport.dismiss = function() {
+    exec(null, null, "Camera", "dismissCamera", []);
+};
 
 module.exports = cameraExport;
+
+});
