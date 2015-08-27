@@ -93,8 +93,10 @@ function resizeImage(successCallback, errorCallback, file, targetWidth, targetHe
             var image = new Image();
             image.src = imageData;
             image.onload = function() {
-                var imageWidth = targetWidth,
-                    imageHeight = targetHeight;
+                var scale = Math.min(targetWidth, targetHeight) / Math.max(this.width, this.height);
+                var imageWidth = scale * this.width;
+                var imageHeight = scale * this.height;
+
                 var canvas = document.createElement('canvas');
                 var storageFileName;
 
@@ -134,8 +136,9 @@ function resizeImageBase64(successCallback, errorCallback, file, targetWidth, ta
         image.src = imageData;
 
         image.onload = function() {
-            var imageWidth = targetWidth,
-                imageHeight = targetHeight;
+            var scale = Math.min(targetWidth, targetHeight) / Math.max(this.width, this.height);
+            var imageWidth = scale * this.width;
+            var imageHeight = scale * this.height;
             var canvas = document.createElement('canvas');
 
             canvas.width = imageWidth;
