@@ -37,6 +37,7 @@ import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
@@ -49,6 +50,7 @@ import android.graphics.Matrix;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -79,7 +81,11 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private static final String GET_PICTURE = "Get Picture";
     private static final String GET_VIDEO = "Get Video";
     private static final String GET_All = "Get All";
-    
+
+    public static final int PERMISSION_DENIED_ERROR = 20;
+    public static final int TAKE_PIC_SEC = 0;
+    public static final int SAVE_TO_ALBUM_SEC = 1;
+
     private static final String LOG_TAG = "CameraLauncher";
 
     //Where did this come from?
@@ -91,10 +97,15 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private Uri imageUri;                   // Uri of captured image
     private int encodingType;               // Type of encoding to use
     private int mediaType;                  // What type of media to retrieve
+    private int destType;                   // Source type (needs to be saved for the permission handling)
+    private int srcType;                    // Destination type (needs to be saved for permission handling)
     private boolean saveToPhotoAlbum;       // Should the picture be saved to the device's photo album
     private boolean correctOrientation;     // Should the pictures orientation be corrected
     private boolean orientationCorrected;   // Has the picture's orientation been corrected
     private boolean allowEdit;              // Should we allow the user to crop the image.
+
+
+
 
     public CallbackContext callbackContext;
     private int numPics;
@@ -102,6 +113,29 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private MediaScannerConnection conn;    // Used to update gallery app with newly-written files
     private Uri scanMe;                     // Uri of image to be added to content store
     private Uri croppedUri;
+
+
+    /**
+     *  This plugin requires read access to the storage.
+     */
+
+    protected int checkReadStorage()
+    {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+        {
+            return cordova.getActivity().checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
+        }
+        else
+        {
+            return PackageManager.PERMISSION_GRANTED;
+        }
+    }
+
+    protected void getReadPermission(int requestCode)
+    {
+        cordova.requestPermission(this, requestCode, Manifest.permission.READ_EXTERNAL_STORAGE);
+    }
+
 
     /**
      * Executes the request and returns PluginResult.
@@ -115,8 +149,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         this.callbackContext = callbackContext;
 
         if (action.equals("takePicture")) {
-            int srcType = CAMERA;
-            int destType = FILE_URI;
+            this.srcType = CAMERA;
+            this.destType = FILE_URI;
             this.saveToPhotoAlbum = false;
             this.targetHeight = 0;
             this.targetWidth = 0;
@@ -124,9 +158,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             this.mediaType = PICTURE;
             this.mQuality = 80;
 
+            //Take the values from the arguments if they're not already defined (this is tricky)
+            this.destType = args.getInt(1);
+            this.srcType = args.getInt(2);
             this.mQuality = args.getInt(0);
-            destType = args.getInt(1);
-            srcType = args.getInt(2);
             this.targetWidth = args.getInt(3);
             this.targetHeight = args.getInt(4);
             this.encodingType = args.getInt(5);
@@ -145,11 +180,11 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             }
 
              try {
-                if (srcType == CAMERA) {
-                    this.takePicture(destType, encodingType);
+                if (this.srcType == CAMERA) {
+                    this.callTakePicture(destType, encodingType);
                 }
-                else if ((srcType == PHOTOLIBRARY) || (srcType == SAVEDPHOTOALBUM)) {
-                    this.getImage(srcType, destType, encodingType);
+                else if ((this.srcType == PHOTOLIBRARY) || (this.srcType == SAVEDPHOTOALBUM)) {
+                    this.getImage(this.srcType, destType, encodingType);
                 }
             }
             catch (IllegalArgumentException e)
@@ -205,7 +240,17 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @param quality           Compression quality hint (0-100: 0=low quality & high compression, 100=compress of max quality)
      * @param returnType        Set the type of image to return.
      */
-    public void takePicture(int returnType, int encodingType) {
+    public void callTakePicture(int returnType, int encodingType) {
+        if (checkReadStorage() == PackageManager.PERMISSION_GRANTED) {
+            takePicture(returnType, encodingType);
+        } else {
+            getReadPermission(TAKE_PIC_SEC);
+        }
+    }
+
+
+    public void takePicture(int returnType, int encodingType)
+    {
         // Save the number of images currently on disk for later
         this.numPics = queryImgDB(whichContentStore()).getCount();
 
@@ -1093,5 +1138,27 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
 
     public void onScanCompleted(String path, Uri uri) {
         this.conn.disconnect();
+    }
+
+
+    public void onRequestPermissionResult(int requestCode, String[] permissions,
+                                          int[] grantResults) throws JSONException
+    {
+        for(int r:grantResults)
+        {
+            if(r == PackageManager.PERMISSION_DENIED)
+            {
+                this.callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, PERMISSION_DENIED_ERROR));
+            }
+        }
+        switch(requestCode)
+        {
+            case TAKE_PIC_SEC:
+                takePicture(this.destType, this.encodingType);
+                break;
+            case SAVE_TO_ALBUM_SEC:
+                break;
+
+        }
     }
 }
