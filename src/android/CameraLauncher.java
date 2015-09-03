@@ -1149,6 +1149,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
             if(r == PackageManager.PERMISSION_DENIED)
             {
                 this.callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, PERMISSION_DENIED_ERROR));
+                return;
             }
         }
         switch(requestCode)
