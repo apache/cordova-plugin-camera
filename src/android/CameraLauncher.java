@@ -241,15 +241,30 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @return a File object pointing to the temporary picture
      */
     private File createCaptureFile(int encodingType) {
-        File photo = null;
+        return createCaptureFile(encodingType, "");
+    }
+
+    /**
+     * Create a file in the applications temporary directory based upon the supplied encoding.
+     *
+     * @param encodingType of the image to be taken
+     * @param fileName or resultant File object.
+     * @return a File object pointing to the temporary picture
+     */
+    private File createCaptureFile(int encodingType, String fileName) {
+        if (fileName.isEmpty()) {
+            fileName = ".Pic";
+        }
+
         if (encodingType == JPEG) {
-            photo = new File(getTempDirectoryPath(), ".Pic.jpg");
+            fileName = fileName + ".jpg";
         } else if (encodingType == PNG) {
-            photo = new File(getTempDirectoryPath(), ".Pic.png");
+            fileName = fileName + ".png";
         } else {
             throw new IllegalArgumentException("Invalid Encoding Type: " + encodingType);
         }
-        return photo;
+
+        return new File(getTempDirectoryPath(), fileName);
     }
 
 
@@ -334,7 +349,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
           cropIntent.putExtra("aspectY", 1);
       }
       // create new file handle to get full resolution crop
-      croppedUri = Uri.fromFile(new File(getTempDirectoryPath(), System.currentTimeMillis() + ".jpg"));
+      croppedUri = Uri.fromFile(createCaptureFile(this.encodingType, System.currentTimeMillis() + ""));
       cropIntent.putExtra("output", croppedUri);
 
       // start the activity - we handle returning in onActivityResult
@@ -367,24 +382,20 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
         // Create an ExifHelper to save the exif data that is lost during compression
         ExifHelper exif = new ExifHelper();
-        String sourcePath;
-        try {
-            if(allowEdit && croppedUri != null)
-            {
-                sourcePath = FileHelper.stripFileProtocol(croppedUri.toString());
-            }
-            else
-            {
-                sourcePath = getTempDirectoryPath() + "/.Pic.jpg";
-            }
+        String sourcePath = (this.allowEdit && this.croppedUri != null) ?
+            FileHelper.stripFileProtocol(this.croppedUri.toString()) :
+            FileHelper.stripFileProtocol(this.imageUri.toString());
 
-            //We don't support PNG, so let's not pretend we do
-            exif.createInFile(sourcePath);
-            exif.readExifData();
-            rotate = exif.getOrientation();
+        if (this.encodingType == JPEG) {
+            try {
+                //We don't support PNG, so let's not pretend we do
+                exif.createInFile(sourcePath);
+                exif.readExifData();
+                rotate = exif.getOrientation();
 
-        } catch (IOException e) {
-            e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         Bitmap bitmap = null;
@@ -392,13 +403,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
         // If sending base64 image back
         if (destType == DATA_URL) {
-            if(croppedUri != null) {
-                bitmap = getScaledBitmap(FileHelper.stripFileProtocol(croppedUri.toString()));
-            }
-            else
-            {
-                bitmap = getScaledBitmap(FileHelper.stripFileProtocol(imageUri.toString()));
-            }
+            bitmap = getScaledBitmap(sourcePath);
+
             if (bitmap == null) {
                 // Try to get the bitmap from intent.
                 bitmap = (Bitmap)intent.getExtras().get("data");
@@ -415,24 +421,17 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 bitmap = getRotatedBitmap(rotate, bitmap, exif);
             }
 
-            this.processPicture(bitmap);
+            this.processPicture(bitmap, this.encodingType);
             checkForDuplicateImage(DATA_URL);
         }
 
         // If sending filename back
         else if (destType == FILE_URI || destType == NATIVE_URI) {
-            uri = Uri.fromFile(new File(getTempDirectoryPath(), System.currentTimeMillis() + ".jpg"));
-
             if (this.saveToPhotoAlbum) {
                 //Create a URI on the filesystem so that we can write the file.
                 uri = Uri.fromFile(new File(getPicutresPath()));
             } else {
-                uri = Uri.fromFile(new File(getTempDirectoryPath(), System.currentTimeMillis() + ".jpg"));
-            }
-
-            if (uri == null) {
-                this.failPicture("Error capturing image - no media storage found.");
-                return;
+                uri = Uri.fromFile(createCaptureFile(this.encodingType, System.currentTimeMillis() + ""));
             }
 
             // If all this is true we shouldn't compress the image.
@@ -442,12 +441,13 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
                 this.callbackContext.success(uri.toString());
             } else {
-                if(croppedUri != null) {
-                    bitmap = getScaledBitmap(FileHelper.stripFileProtocol(croppedUri.toString()));
-                }
-                else
-                {
-                    bitmap = getScaledBitmap(FileHelper.stripFileProtocol(imageUri.toString()));
+                bitmap = getScaledBitmap(sourcePath);
+
+                // Double-check the bitmap.
+                if (bitmap == null) {
+                    Log.d(LOG_TAG, "I either have a null image path or bitmap");
+                    this.failPicture("Unable to create bitmap!");
+                    return;
                 }
 
                 if (rotate != 0 && this.correctOrientation) {
@@ -456,7 +456,11 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
                 // Add compressed version of captured image to returned media store Uri
                 OutputStream os = this.cordova.getActivity().getContentResolver().openOutputStream(uri);
-                bitmap.compress(Bitmap.CompressFormat.JPEG, this.mQuality, os);
+                CompressFormat compressFormat = encodingType == JPEG ?
+                        CompressFormat.JPEG :
+                        CompressFormat.PNG;
+
+                bitmap.compress(compressFormat, this.mQuality, os);
                 os.close();
 
                 // Restore exif data to file
@@ -488,7 +492,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 private String getPicutresPath()
 {
     String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-    String imageFileName = "IMG_" + timeStamp + ".jpg";
+    String imageFileName = "IMG_" + timeStamp + (this.encodingType == JPEG ? ".jpg" : ".png");
     File storageDir = Environment.getExternalStoragePublicDirectory(
             Environment.DIRECTORY_PICTURES);
     String galleryPath = storageDir.getAbsolutePath() + "/" + imageFileName;
@@ -505,10 +509,15 @@ private void refreshGallery(Uri contentUri)
 
 private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         // Create an ExifHelper to save the exif data that is lost during compression
-        String modifiedPath = getTempDirectoryPath() + "/modified.jpg";
+        String modifiedPath = getTempDirectoryPath() + "/modified." +
+                (this.encodingType == JPEG ? "jpg" : "png");
 
         OutputStream os = new FileOutputStream(modifiedPath);
-        bitmap.compress(Bitmap.CompressFormat.JPEG, this.mQuality, os);
+        CompressFormat compressFormat = this.encodingType == JPEG ?
+                CompressFormat.JPEG :
+                CompressFormat.PNG;
+
+        bitmap.compress(compressFormat, this.mQuality, os);
         os.close();
 
         // Some content: URIs do not map to file paths (e.g. picasa).
@@ -597,7 +606,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
 
                 // If sending base64 image back
                 if (destType == DATA_URL) {
-                    this.processPicture(bitmap);
+                    this.processPicture(bitmap, this.encodingType);
                 }
 
                 // If sending filename back
@@ -673,7 +682,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                 try {
                     if(this.allowEdit)
                     {
-                        Uri tmpFile = Uri.fromFile(new File(getTempDirectoryPath(), ".Pic.jpg"));
+                        Uri tmpFile = Uri.fromFile(createCaptureFile(this.encodingType));
                         performCrop(tmpFile, destType, intent);
                     }
                     else {
@@ -1046,10 +1055,14 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
      *
      * @param bitmap
      */
-    public void processPicture(Bitmap bitmap) {
+    public void processPicture(Bitmap bitmap, int encodingType) {
         ByteArrayOutputStream jpeg_data = new ByteArrayOutputStream();
+        CompressFormat compressFormat = encodingType == JPEG ?
+                CompressFormat.JPEG :
+                CompressFormat.PNG;
+
         try {
-            if (bitmap.compress(CompressFormat.JPEG, mQuality, jpeg_data)) {
+            if (bitmap.compress(compressFormat, mQuality, jpeg_data)) {
                 byte[] code = jpeg_data.toByteArray();
                 byte[] output = Base64.encode(code, Base64.NO_WRAP);
                 String js_out = new String(output);
