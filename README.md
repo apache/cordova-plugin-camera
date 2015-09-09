@@ -143,6 +143,7 @@ scenario, the image may not appear when the cordova activity is restored.
 Android uses intents to launch the camera activity on the device to capture
 images, and on phones with low memory, the Cordova activity may be killed.  In this
 scenario, the image may not appear when the Cordova activity is restored.
+You should try to get the image using the checkForSavedResult method. 
 
 #### Browser Quirks
 
@@ -436,6 +437,39 @@ after calling `camera.getPicture`. Applies only when the value of
 
     function onSuccess() {
         console.log("Camera cleanup success.")
+    }
+
+    function onFail(message) {
+        alert('Failed because: ' + message);
+    }
+
+## navigator.camera.checkForSavedResult
+
+call this method in onDeviceReady to see if there is a result present from a previous call to getPicture.
+add the same options you used when calling getPicture, or leave it out to pass default options
+
+    navigator.camera.checkForSavedResult( successCallback, errorCallback, options );
+
+### Description
+
+Tries to get the intermediate image file that is kept in temporary storage after calling `camera.getPicture`.
+Applies when the operating system decides to kill our MainActivity while getting an Image. 
+Once our MainActivity restarts you should call this method to see if a result is available.
+
+If you want to use the same options you used when calling getPicture you have to make sure you store the options first,
+this way you can use your saved options to call checkForSavedResult, so the picture get's handled the same as it would have when Android hadn't killed our MainActivity
+
+### Supported Platforms
+
+- Android
+
+### Example
+
+    navigator.camera.checkForSavedResult(onSuccess, onFail, savedOptions);
+
+    function onSuccess(result) {
+        console.log("checkForSavedResult success.");
+        doSomethingWith(result);
     }
 
     function onFail(message) {

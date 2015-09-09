@@ -102,6 +102,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private MediaScannerConnection conn;    // Used to update gallery app with newly-written files
     private Uri scanMe;                     // Uri of image to be added to content store
     private Uri croppedUri;
+    private int savedRequestCode;
+    private int savedResultCode;
+    private Intent savedIntent;
 
     /**
      * Executes the request and returns PluginResult.
@@ -124,16 +127,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             this.mediaType = PICTURE;
             this.mQuality = 80;
 
-            this.mQuality = args.getInt(0);
-            destType = args.getInt(1);
-            srcType = args.getInt(2);
-            this.targetWidth = args.getInt(3);
-            this.targetHeight = args.getInt(4);
-            this.encodingType = args.getInt(5);
-            this.mediaType = args.getInt(6);
-            this.allowEdit = args.getBoolean(7);
-            this.correctOrientation = args.getBoolean(8);
-            this.saveToPhotoAlbum = args.getBoolean(9);
+            destType = args.optInt(1, FILE_URI);
+            srcType = args.optInt(2, CAMERA);
+            processConfiguration(args);
 
             // If the user specifies a 0 or smaller width/height
             // make it -1 so later comparisons succeed
@@ -163,7 +159,19 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             PluginResult r = new PluginResult(PluginResult.Status.NO_RESULT);
             r.setKeepCallback(true);
             callbackContext.sendPluginResult(r);
-            
+
+            return true;
+        } else if (action.equals("checkForSavedResult")) {
+            if (savedRequestCode > 0 || savedResultCode > 0) {
+                processConfiguration(args);
+                imageUri = Uri.fromFile(createCaptureFile(encodingType));
+                onActivityResult(savedRequestCode, savedResultCode, savedIntent);
+                savedRequestCode = 0;
+                savedResultCode = 0;
+                savedIntent = null;
+            } else {
+                callbackContext.success("");
+            }
             return true;
         }
         return false;
@@ -172,6 +180,20 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     //--------------------------------------------------------------------------
     // LOCAL METHODS
     //--------------------------------------------------------------------------
+
+    private void processConfiguration(JSONArray args) throws JSONException {
+        if (args == null)
+            throw new JSONException("no configuration object passed");
+        this.mQuality = args.optInt(0, 80);
+        // args 1 and 2 (destType, srcType) are skipped because they have no field representation in this class
+        this.targetWidth = args.optInt(3);
+        this.targetHeight = args.optInt(4);
+        this.encodingType = args.optInt(5, JPEG);
+        this.mediaType = args.optInt(6, PICTURE);
+        this.allowEdit = args.optBoolean(7);
+        this.correctOrientation = args.optBoolean(8);
+        this.saveToPhotoAlbum = args.optBoolean(9);
+    }
 
     private String getTempDirectoryPath() {
         File cache = null;
@@ -647,6 +669,12 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
      */
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
 
+        if (this.callbackContext == null) {
+            this.savedRequestCode = requestCode;
+            this.savedResultCode = resultCode;
+            this.savedIntent = intent;
+            return;
+        }
         // Get src and dest types from request code for a Camera Activity
         int srcType = (requestCode / 16) - 1;
         int destType = (requestCode % 16) - 1;
