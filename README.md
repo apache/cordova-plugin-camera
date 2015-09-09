@@ -95,7 +95,52 @@ Documentation consists of template and API docs produced from the plugin JS code
 ## camera
 <a name="module_camera.getPicture"></a>
 ### camera.getPicture(successCallback, errorCallback, options)
-Takes a photo using the camera, or retrieves a photo from the device'simage gallery.  The image is passed to the success callback as abase64-encoded `String`, or as the URI for the image file.  The `camera.getPicture` function opens the device's default cameraapplication that allows users to snap pictures by default - this behavior occurs,when `Camera.sourceType` equals [`Camera.PictureSourceType.CAMERA`](#module_Camera.PictureSourceType).  Once the user snaps the photo, the camera application closes and the application is restored.If `Camera.sourceType` is `Camera.PictureSourceType.PHOTOLIBRARY` or`Camera.PictureSourceType.SAVEDPHOTOALBUM`, then a dialog displaysthat allows users to select an existing image.  The`camera.getPicture` function returns a [`CameraPopoverHandle`](#module_CameraPopoverHandle) object,which can be used to reposition the image selection dialog, forexample, when the device orientation changes.The return value is sent to the [`cameraSuccess`](#module_camera.onSuccess) callback function, inone of the following formats, depending on the specified`cameraOptions`:- A `String` containing the base64-encoded photo image.- A `String` representing the image file location on local storage (default).You can do whatever you want with the encoded image or URI, forexample:- Render the image in an `<img>` tag, as in the example below- Save the data locally (`LocalStorage`, [Lawnchair](http://brianleroux.github.com/lawnchair/), etc.)- Post the data to a remote server__NOTE__: Photo resolution on newer devices is quite good. Photosselected from the device's gallery are not downscaled to a lowerquality, even if a `quality` parameter is specified.  To avoid commonmemory problems, set `Camera.destinationType` to `FILE_URI` ratherthan `DATA_URL`.__Supported Platforms__![](doc/img/android-success.png) ![](doc/img/blackberry-success.png) ![](doc/img/browser-success.png) ![](doc/img/firefox-success.png) ![](doc/img/fireos-success.png) ![](doc/img/ios-success.png) ![](doc/img/windows-success.png) ![](doc/img/wp8-success.png) ![](doc/img/ubuntu-success.png)* [More examples](#camera-getPicture-examples)* [Quirks](#camera-getPicture-quirks)
+Takes a photo using the camera, or retrieves a photo from the device's
+image gallery.  The image is passed to the success callback as a
+base64-encoded `String`, or as the URI for the image file.  
+
+The `camera.getPicture` function opens the device's default camera
+application that allows users to snap pictures by default - this behavior occurs,
+when `Camera.sourceType` equals [`Camera.PictureSourceType.CAMERA`](#module_Camera.PictureSourceType).  
+Once the user snaps the photo, the camera application closes and the application is restored.
+
+If `Camera.sourceType` is `Camera.PictureSourceType.PHOTOLIBRARY` or
+`Camera.PictureSourceType.SAVEDPHOTOALBUM`, then a dialog displays
+that allows users to select an existing image.  The
+`camera.getPicture` function returns a [`CameraPopoverHandle`](#module_CameraPopoverHandle) object,
+which can be used to reposition the image selection dialog, for
+example, when the device orientation changes.
+
+The return value is sent to the [`cameraSuccess`](#module_camera.onSuccess) callback function, in
+one of the following formats, depending on the specified
+`cameraOptions`:
+
+- A `String` containing the base64-encoded photo image.
+
+- A `String` representing the image file location on local storage (default).
+
+You can do whatever you want with the encoded image or URI, for
+example:
+
+- Render the image in an `<img>` tag, as in the example below
+
+- Save the data locally (`LocalStorage`, [Lawnchair](http://brianleroux.github.com/lawnchair/), etc.)
+
+- Post the data to a remote server
+
+__NOTE__: Photo resolution on newer devices is quite good. Photos
+selected from the device's gallery are not downscaled to a lower
+quality, even if a `quality` parameter is specified.  To avoid common
+memory problems, set `Camera.destinationType` to `FILE_URI` rather
+than `DATA_URL`.
+
+__Supported Platforms__
+
+![](doc/img/android-success.png) ![](doc/img/blackberry-success.png) ![](doc/img/browser-success.png) ![](doc/img/firefox-success.png) ![](doc/img/fireos-success.png) ![](doc/img/ios-success.png) ![](doc/img/windows-success.png) ![](doc/img/wp8-success.png) ![](doc/img/ubuntu-success.png)
+
+* [More examples](#camera-getPicture-examples)
+
+* [Quirks](#camera-getPicture-quirks)
 
 **Kind**: static method of <code>[camera](#module_camera)</code>  
 
@@ -111,12 +156,27 @@ navigator.camera.getPicture(cameraSuccess, cameraError, cameraOptions);
 ```
 <a name="module_camera.cleanup"></a>
 ### camera.cleanup()
-Removes intermediate image files that are kept in temporary storageafter calling [`camera.getPicture`](#module_camera.getPicture). Applies only when the value of`Camera.sourceType` equals `Camera.PictureSourceType.CAMERA` and the`Camera.destinationType` equals `Camera.DestinationType.FILE_URI`.__Supported Platforms__![](doc/img/android-fail.png) ![](doc/img/blackberry-fail.png) ![](doc/img/browser-fail.png) ![](doc/img/firefox-fail.png) ![](doc/img/fireos-fail.png) ![](doc/img/ios-success.png) ![](doc/img/windows-fail.png) ![](doc/img/wp8-fail.png) ![](doc/img/ubuntu-fail.png)
+Removes intermediate image files that are kept in temporary storage
+after calling [`camera.getPicture`](#module_camera.getPicture). Applies only when the value of
+`Camera.sourceType` equals `Camera.PictureSourceType.CAMERA` and the
+`Camera.destinationType` equals `Camera.DestinationType.FILE_URI`.
+
+__Supported Platforms__
+
+![](doc/img/android-fail.png) ![](doc/img/blackberry-fail.png) ![](doc/img/browser-fail.png) ![](doc/img/firefox-fail.png) ![](doc/img/fireos-fail.png) ![](doc/img/ios-success.png) ![](doc/img/windows-fail.png) ![](doc/img/wp8-fail.png) ![](doc/img/ubuntu-fail.png)
 
 **Kind**: static method of <code>[camera](#module_camera)</code>  
 **Example**  
 ```js
-navigator.camera.cleanup(onSuccess, onFail);function onSuccess() {    console.log("Camera cleanup success.")}function onFail(message) {    alert('Failed because: ' + message);}
+navigator.camera.cleanup(onSuccess, onFail);
+
+function onSuccess() {
+    console.log("Camera cleanup success.")
+}
+
+function onFail(message) {
+    alert('Failed because: ' + message);
+}
 ```
 <a name="module_camera.onError"></a>
 ### camera.onError : <code>function</code>
@@ -140,11 +200,17 @@ Callback function that provides the image data.
 
 **Example**  
 ```js
-// Show image//function cameraCallback(imageData) {   var image = document.getElementById('myImage');   image.src = "data:image/jpeg;base64," + imageData;}
+// Show image
+//
+function cameraCallback(imageData) {
+   var image = document.getElementById('myImage');
+   image.src = "data:image/jpeg;base64," + imageData;
+}
 ```
 <a name="module_camera.CameraOptions"></a>
 ### camera.CameraOptions : <code>Object</code>
-Optional parameters to customize the camera settings.* [Quirks](#CameraOptions-quirks)
+Optional parameters to customize the camera settings.
+* [Quirks](#CameraOptions-quirks)
 
 **Kind**: static typedef of <code>[camera](#module_camera)</code>  
 **Properties**
@@ -240,7 +306,13 @@ Matches iOS UIPopoverArrowDirection constants to specify arrow location on popov
 
 <a name="module_CameraPopoverOptions"></a>
 ## CameraPopoverOptions
-iOS-only parameters that specify the anchor element location and arrowdirection of the popover when selecting images from an iPad's libraryor album.Note that the size of the popover may change to adjust to thedirection of the arrow and orientation of the screen.  Make sure toaccount for orientation changes when specifying the anchor elementlocation.
+iOS-only parameters that specify the anchor element location and arrow
+direction of the popover when selecting images from an iPad's library
+or album.
+Note that the size of the popover may change to adjust to the
+direction of the arrow and orientation of the screen.  Make sure to
+account for orientation changes when specifying the anchor element
+location.
 
 
 | Param | Type | Default | Description |
@@ -255,11 +327,26 @@ iOS-only parameters that specify the anchor element location and arrowdirection
 
 <a name="module_CameraPopoverHandle"></a>
 ## CameraPopoverHandle
-A handle to an image picker popover.__Supported Platforms__![](doc/img/android-fail.png) ![](doc/img/blackberry-fail.png) ![](doc/img/browser-fail.png) ![](doc/img/firefox-fail.png) ![](doc/img/fireos-fail.png) ![](doc/img/ios-success.png) ![](doc/img/windows-fail.png) ![](doc/img/wp8-fail.png) ![](doc/img/ubuntu-fail.png)
+A handle to an image picker popover.
+
+__Supported Platforms__
+
+![](doc/img/android-fail.png) ![](doc/img/blackberry-fail.png) ![](doc/img/browser-fail.png) ![](doc/img/firefox-fail.png) ![](doc/img/fireos-fail.png) ![](doc/img/ios-success.png) ![](doc/img/windows-fail.png) ![](doc/img/wp8-fail.png) ![](doc/img/ubuntu-fail.png)
 
 **Example**  
 ```js
-var cameraPopoverHandle = navigator.camera.getPicture(onSuccess, onFail,{     destinationType: Camera.DestinationType.FILE_URI,    sourceType: Camera.PictureSourceType.PHOTOLIBRARY,    popoverOptions: new CameraPopoverOptions(300, 300, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY)});// Reposition the popover if the orientation changes.window.onorientationchange = function() {    var cameraPopoverOptions = new CameraPopoverOptions(0, 0, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY);    cameraPopoverHandle.setPosition(cameraPopoverOptions);}
+var cameraPopoverHandle = navigator.camera.getPicture(onSuccess, onFail,
+{ 
+    destinationType: Camera.DestinationType.FILE_URI,
+    sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
+    popoverOptions: new CameraPopoverOptions(300, 300, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY)
+});
+
+// Reposition the popover if the orientation changes.
+window.onorientationchange = function() {
+    var cameraPopoverOptions = new CameraPopoverOptions(0, 0, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY);
+    cameraPopoverHandle.setPosition(cameraPopoverOptions);
+}
 ```
 ---
 
@@ -400,6 +487,8 @@ with the Google Plus Photos application.  Other crops may not work.
 #### iOS Quirks
 
 - When using `destinationType.FILE_URI`, photos are saved in the application's temporary directory. The contents of the application's temporary directory is deleted when the application ends.
+
+- When using `destinationType.NATIVE_URI` and `sourceType.CAMERA`, photos are saved in the saved photo album regardless on the value of `saveToPhotoAlbum` parameter.
 
 #### Tizen Quirks
 
