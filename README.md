@@ -29,6 +29,9 @@ Although the object is attached to the global scoped `navigator`, it is not avai
         console.log(navigator.camera);
     }
 
+:warning: Report issues on the [Apache Cordova issue tracker](https://issues.apache.org/jira/issues/?jql=project%20%3D%20CB%20AND%20status%20in%20%28Open%2C%20%22In%20Progress%22%2C%20Reopened%29%20AND%20resolution%20%3D%20Unresolved%20AND%20component%20%3D%20%22Plugin%20Camera%22%20ORDER%20BY%20priority%20DESC%2C%20summary%20ASC%2C%20updatedDate%20DESC)
+
+
 ## Installation
 
     cordova plugin add cordova-plugin-camera
@@ -150,7 +153,7 @@ Can only return photos as base64-encoded image.
 
 #### Firefox OS Quirks
 
-Camera plugin is currently implemented using [Web Activities](https://hacks.mozilla.org/2013/01/introducing-web-activities/). 
+Camera plugin is currently implemented using [Web Activities](https://hacks.mozilla.org/2013/01/introducing-web-activities/).
 
 #### iOS Quirks
 
@@ -252,7 +255,7 @@ Optional parameters to customize the camera settings.
 
 - Any `cameraDirection` value results in a back-facing photo.
 
-- Android also uses the Crop Activity for allowEdit, even though crop should work and actually pass the cropped image back to Cordova, the only one that works consistently is the one bundled 
+- Android also uses the Crop Activity for allowEdit, even though crop should work and actually pass the cropped image back to Cordova, the only one that works consistently is the one bundled
 with the Google Plus Photos application.  Other crops may not work.
 
 - `Camera.PictureSourceType.PHOTOLIBRARY` and `Camera.PictureSourceType.SAVEDPHOTOALBUM` both display the same photo album.
