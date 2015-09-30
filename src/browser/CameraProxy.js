@@ -60,7 +60,7 @@ function capture(success, errorCallback) {
         // create a canvas and capture a frame from video stream
         var canvas = document.createElement('canvas');
         canvas.getContext('2d').drawImage(video, 0, 0, 320, 240);
-        
+
         // convert image stored in canvas to base64 encoded image
         var imageData = canvas.toDataURL('img/png');
         imageData = imageData.replace('data:image/png;base64,', '');
@@ -72,6 +72,15 @@ function capture(success, errorCallback) {
 
         return success(imageData);
     }
+
+    button.style.position = 'absolute';
+    button.style.bottom = 0;
+    button.style.right = 0;
+    button.style.zIndex = 1000;
+
+    video.style.position = 'absolute';
+    video.style.bottom = 0;
+    video.style.zIndex = 1000;
 
     navigator.getUserMedia = navigator.getUserMedia ||
                              navigator.webkitGetUserMedia ||
