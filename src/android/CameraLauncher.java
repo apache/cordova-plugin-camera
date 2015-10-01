@@ -32,6 +32,7 @@ import java.util.Date;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.CordovaResourceApi;
 import org.apache.cordova.LOG;
 import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
@@ -104,8 +105,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private boolean orientationCorrected;   // Has the picture's orientation been corrected
     private boolean allowEdit;              // Should we allow the user to crop the image.
 
-
-
+    protected final static String[] permissions = { Manifest.permission.READ_EXTERNAL_STORAGE };
 
     public CallbackContext callbackContext;
     private int numPics;
@@ -115,27 +115,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private Uri croppedUri;
 
 
-    /**
-     *  This plugin requires read access to the storage.
-     */
-
-    protected int checkReadStorage()
-    {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-        {
-            return cordova.getActivity().checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
-        }
-        else
-        {
-            return PackageManager.PERMISSION_GRANTED;
-        }
-    }
-
     protected void getReadPermission(int requestCode)
     {
         cordova.requestPermission(this, requestCode, Manifest.permission.READ_EXTERNAL_STORAGE);
     }
-
 
     /**
      * Executes the request and returns PluginResult.
@@ -241,7 +224,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @param returnType        Set the type of image to return.
      */
     public void callTakePicture(int returnType, int encodingType) {
-        if (checkReadStorage() == PackageManager.PERMISSION_GRANTED) {
+        if (cordova.hasPermission(permissions[0])) {
             takePicture(returnType, encodingType);
         } else {
             getReadPermission(TAKE_PIC_SEC);
@@ -575,6 +558,21 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         return modifiedPath;
     }
 
+
+
+    /**
+     * We already have shared code to resolve URIs, don't need any more.
+     */
+    private String getRealFileFromUri(Uri uri)
+    {
+        CordovaResourceApi api = webView.getResourceApi();
+        File f = api.mapUriToFile(uri);
+        if(f != null)
+            return "file://" + f.getAbsolutePath();
+        else
+            return uri.toString();
+    }
+
 /**
      * Applies all needed transformation to the image received from the gallery.
      *
@@ -593,10 +591,13 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         }
         int rotate = 0;
 
+        String fileLocation = getRealFileFromUri(uri);
+        Log.d(LOG_TAG, "File locaton is: " + fileLocation);
+
         // If you ask for video or all media type you will automatically get back a file URI
         // and there will be no attempt to resize any returned data
         if (this.mediaType != PICTURE) {
-            this.callbackContext.success(uri.toString());
+            this.callbackContext.success(fileLocation);
         }
         else {
             // This is a special case to just return the path as no scaling,
@@ -661,7 +662,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                         }
                     }
                     else {
-                        this.callbackContext.success(uri.toString());
+                        this.callbackContext.success(fileLocation);
                     }
                 }
                 if (bitmap != null) {
@@ -743,7 +744,13 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         // If retrieving photo from library
         else if ((srcType == PHOTOLIBRARY) || (srcType == SAVEDPHOTOALBUM)) {
             if (resultCode == Activity.RESULT_OK && intent != null) {
-                this.processResultFromGallery(destType, intent);
+                final Intent i = intent;
+                final int finalDestType = destType;
+                cordova.getThreadPool().execute(new Runnable() {
+                    public void run() {
+                        processResultFromGallery(finalDestType, i);
+                    }
+                });
             }
             else if (resultCode == Activity.RESULT_CANCELED) {
                 this.failPicture("Selection cancelled.");
@@ -1159,7 +1166,6 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                 break;
             case SAVE_TO_ALBUM_SEC:
                 break;
-
         }
     }
 }
