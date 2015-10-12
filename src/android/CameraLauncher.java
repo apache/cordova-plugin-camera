@@ -422,7 +422,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             }
 
             this.processPicture(bitmap, this.encodingType);
-            checkForDuplicateImage(DATA_URL);
+            cleanupTempImages(DATA_URL);
         }
 
         // If sending filename back
@@ -485,8 +485,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             throw new IllegalStateException();
         }
 
-        this.cleanup(FILE_URI, this.imageUri, uri, bitmap);
         bitmap = null;
+        this.cleanup(FILE_URI, uri, bitmap);
     }
 
 private String getPicutresPath()
@@ -987,55 +987,58 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                 null);
     }
 
-    /**
-     * Cleans up after picture taking. Checking for duplicates and that kind of stuff.
+/**
+     * Cleans up after picture taking.
+     * @param imageType
      * @param newImage
+     * @param bitmap
      */
-    private void cleanup(int imageType, Uri oldImage, Uri newImage, Bitmap bitmap) {
+    private void cleanup(int imageType, Uri newImage, Bitmap bitmap) {
         if (bitmap != null) {
             bitmap.recycle();
         }
 
-        // Clean up initial camera-written image file.
-        (new File(FileHelper.stripFileProtocol(oldImage.toString()))).delete();
-
-        checkForDuplicateImage(imageType);
         // Scan for the gallery to update pic refs in gallery
         if (this.saveToPhotoAlbum && newImage != null) {
             this.scanForGallery(newImage);
         }
 
+        this.cleanupTempImages(imageType);
+
         System.gc();
     }
 
     /**
-     * Used to find out if we are in a situation where the Camera Intent adds to images
-     * to the content store. If we are using a FILE_URI and the number of images in the DB
-     * increases by 2 we have a duplicate, when using a DATA_URL the number is 1.
-     *
-     * @param type FILE_URI or DATA_URL
+     * Checking for duplicates and leftover images and removing them
+     * @param imageType
      */
-    private void checkForDuplicateImage(int type) {
-        int diff = 1;
+    private void cleanupTempImages(int imageType) {
         Uri contentStore = whichContentStore();
         Cursor cursor = queryImgDB(contentStore);
         int currentNumOfImages = cursor.getCount();
+        int diff = currentNumOfImages - numPics;
+        int id;
 
-        if (type == FILE_URI && this.saveToPhotoAlbum) {
-            diff = 2;
-        }
-
-        // delete the duplicate file if the difference is 2 for file URI or 1 for Data URL
-        if ((currentNumOfImages - numPics) == diff) {
+        // Check for camera-written image files that are not the chosen image
+        // Gets rid of initial camera-written image file as well as any retakes
+        // Addresses issue CD-9490
+        if (currentNumOfImages > 0 && diff > 0) {
             cursor.moveToLast();
-            int id = Integer.valueOf(cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media._ID)));
-            if (diff == 2) {
+            id = Integer.valueOf(cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media._ID)));
+
+            if (imageType == FILE_URI) {
                 id--;
             }
-            Uri uri = Uri.parse(contentStore + "/" + id);
-            this.cordova.getActivity().getContentResolver().delete(uri, null, null);
-            cursor.close();
+            
+            for (int i = diff; i > 0; i--) {
+                Uri uri = Uri.parse(contentStore + "/" + id);
+                this.cordova.getActivity().getContentResolver().delete(uri, null, null);
+                id--;
+            }
         }
+        cursor.close();
+
+        System.gc();
     }
 
     /**
