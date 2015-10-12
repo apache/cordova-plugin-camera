@@ -353,7 +353,7 @@ static NSString* toBase64(NSData* data) {
                 if (options.usesGeolocation) {
                     NSDictionary* controllerMetadata = [info objectForKey:@"UIImagePickerControllerMediaMetadata"];
                     if (controllerMetadata) {
-                        self.data = data;
+                        self.data = UIImageJPEGRepresentation(image, [options.quality floatValue] / 100.0f);
                         self.metadata = [[NSMutableDictionary alloc] init];
                         
                         NSMutableDictionary* EXIFDictionary = [[controllerMetadata objectForKey:(NSString*)kCGImagePropertyExifDictionary]mutableCopy];
@@ -427,7 +427,7 @@ static NSString* toBase64(NSData* data) {
     CDVPluginResult* result = nil;
     BOOL saveToPhotoAlbum = options.saveToPhotoAlbum;
     UIImage* image = nil;
-
+    NSData* data = nil;
     switch (options.destinationType) {
         case DestinationTypeNativeUri:
         {
@@ -440,7 +440,7 @@ static NSString* toBase64(NSData* data) {
         case DestinationTypeFileUri:
         {
             image = [self retrieveImage:info options:options];
-            NSData* data = [self processImage:image info:info options:options];
+             data = [self processImage:image info:info options:options];
             if (data) {
                 
                 NSString* extension = options.encodingType == EncodingTypePNG? @"png" : @"jpg";
@@ -459,7 +459,7 @@ static NSString* toBase64(NSData* data) {
         case DestinationTypeDataUrl:
         {
             image = [self retrieveImage:info options:options];
-            NSData* data = [self processImage:image info:info options:options];
+            data = [self processImage:image info:info options:options];
             
             if (data)  {
                 result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:toBase64(data)];
@@ -470,7 +470,7 @@ static NSString* toBase64(NSData* data) {
             break;
     };
     
-    if (saveToPhotoAlbum && image) {
+    if (saveToPhotoAlbum && image && data) {
         ALAssetsLibrary* library = [ALAssetsLibrary new];
         [library writeImageToSavedPhotosAlbum:image.CGImage orientation:(ALAssetOrientation)(image.imageOrientation) completionBlock:nil];
     }
@@ -676,15 +676,16 @@ static NSString* toBase64(NSData* data) {
         [self.commandDelegate sendPluginResult:result callbackId:self.pickerController.callbackId];
     }
     
-    self.hasPendingOperation = NO;
-    self.pickerController = nil;
-    self.data = nil;
-    self.metadata = nil;
+
     
     if (options.saveToPhotoAlbum) {
         ALAssetsLibrary *library = [ALAssetsLibrary new];
         [library writeImageDataToSavedPhotosAlbum:self.data metadata:self.metadata completionBlock:nil];
     }
+    self.hasPendingOperation = NO;
+    self.pickerController = nil;
+    self.data = nil;
+    self.metadata = nil;
 }
 
 @end
