@@ -30,6 +30,8 @@
     <repo>https://git-wip-us.apache.org/repos/asf/cordova-plugin-camera.git</repo>
     <issue>https://issues.apache.org/jira/browse/CB/component/12320645</issue>
 
+    <dependency id="org.apache.cordova.file" version=">=1.0.1" />
+
     <js-module src="www/CameraConstants.js" name="Camera">
         <clobbers target="Camera" />
     </js-module>
