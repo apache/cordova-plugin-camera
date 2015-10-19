@@ -21,6 +21,7 @@
 #import <CoreLocation/CoreLocation.h>
 #import <CoreLocation/CLLocationManager.h>
 #import <Cordova/CDVPlugin.h>
+#import "GKImageCropViewController.h"
 
 enum CDVDestinationType {
     DestinationTypeDataUrl = 0,
@@ -59,6 +60,7 @@ typedef NSUInteger CDVMediaType;
 @property (assign) BOOL popoverSupported;
 @property (assign) BOOL usesGeolocation;
 @property (assign) BOOL cropToSize;
+@property (assign) BOOL variableEditRect;
 
 + (instancetype) createFromTakePictureArguments:(CDVInvokedUrlCommand*)command;
 
@@ -83,7 +85,8 @@ typedef NSUInteger CDVMediaType;
 @interface CDVCamera : CDVPlugin <UIImagePickerControllerDelegate,
                        UINavigationControllerDelegate,
                        UIPopoverControllerDelegate,
-                       CLLocationManagerDelegate>
+                       CLLocationManagerDelegate,
+                       GKImageCropControllerDelegate>
 {}
 
 @property (strong) CDVCameraPicker* pickerController;
