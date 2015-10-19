@@ -85,6 +85,8 @@ static NSString* toBase64(NSData* data) {
     pictureOptions.popoverSupported = NO;
     pictureOptions.usesGeolocation = NO;
     
+    pictureOptions.variableEditRect = NO;
+
     return pictureOptions;
 }
 
@@ -105,6 +107,14 @@ static NSString* toBase64(NSData* data) {
 }
 
 @synthesize hasPendingOperation, pickerController, locationManager;
+
+-(void)pluginInitialize
+{
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(fetchCapturedPhoto)
+                                                 name:@"_UIImagePickerControllerUserDidCaptureItem"
+                                               object:nil];
+}
 
 - (NSURL*) urlTransformer:(NSURL*)url
 {
@@ -136,6 +146,12 @@ static NSString* toBase64(NSData* data) {
            (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad);
 }
 
+- (BOOL)withVariableEdit
+{
+    id variRect = [self.commandDelegate.settings objectForKey:[@"CameraUsesVariableEdit" lowercaseString]];
+    return [(NSNumber*)variRect boolValue];
+}
+
 - (void)takePicture:(CDVInvokedUrlCommand*)command
 {
     self.hasPendingOperation = YES;
@@ -147,6 +163,7 @@ static NSString* toBase64(NSData* data) {
         CDVPictureOptions* pictureOptions = [CDVPictureOptions createFromTakePictureArguments:command];
         pictureOptions.popoverSupported = [weakSelf popoverSupported];
         pictureOptions.usesGeolocation = [weakSelf usesGeolocation];
+        pictureOptions.variableEditRect = [weakSelf withVariableEdit];
         pictureOptions.cropToSize = NO;
         
         BOOL hasCamera = [UIImagePickerController isSourceTypeAvailable:pictureOptions.sourceType];
@@ -501,14 +518,12 @@ static NSString* toBase64(NSData* data) {
     return [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:moviePath];
 }
 
-- (void)imagePickerController:(UIImagePickerController*)picker didFinishPickingMediaWithInfo:(NSDictionary*)info
+- (void)processFromPicker:(UIImagePickerController*)picker itsInfo:(NSDictionary*)info
 {
     __weak CDVCameraPicker* cameraPicker = (CDVCameraPicker*)picker;
     __weak CDVCamera* weakSelf = self;
+    CDVPluginResult* result = nil;
     
-    dispatch_block_t invoke = ^(void) {
-        __block CDVPluginResult* result = nil;
-        
         NSString* mediaType = [info objectForKey:UIImagePickerControllerMediaType];
         if ([mediaType isEqualToString:(NSString*)kUTTypeImage]) {
             [self resultForImage:cameraPicker.pictureOptions info:info completion:^(CDVPluginResult* res) {
@@ -523,9 +538,27 @@ static NSString* toBase64(NSData* data) {
             weakSelf.hasPendingOperation = NO;
             weakSelf.pickerController = nil;
         }
+}
+
+- (void)imagePickerController:(UIImagePickerController*)picker didFinishPickingMediaWithInfo:(NSDictionary*)info
+{
+    __weak CDVCameraPicker* cameraPicker = (CDVCameraPicker*)picker;
+    CDVPictureOptions* options = cameraPicker.pictureOptions;
+
+    dispatch_block_t invoke = ^(void) {
+        if (!(options.allowsEditing && options.variableEditRect))
+            [self processFromPicker:picker itsInfo:info];
+        else
+        {
+            GKImageCropViewController *cropCtrl = [[GKImageCropViewController alloc] init];
+            [cropCtrl setDelegate:self];
+            [cropCtrl setDerImagePicker:picker];
+            [cropCtrl setDieBildInfo:info];
+            [self.viewController presentViewController:cropCtrl animated:YES completion:NULL];
+        }
     };
     
-    if (cameraPicker.pictureOptions.popoverSupported && (cameraPicker.pickerPopoverController != nil)) {
+    if (options.popoverSupported && (cameraPicker.pickerPopoverController != nil)) {
         [cameraPicker.pickerPopoverController dismissPopoverAnimated:YES];
         cameraPicker.pickerPopoverController.delegate = nil;
         cameraPicker.pickerPopoverController = nil;
@@ -541,6 +574,34 @@ static NSString* toBase64(NSData* data) {
     NSDictionary* imageInfo = [NSDictionary dictionaryWithObject:image forKey:UIImagePickerControllerOriginalImage];
 
     [self imagePickerController:picker didFinishPickingMediaWithInfo:imageInfo];
+}
+
+- (void)fetchCapturedPhoto
+{
+    CDVCameraPicker *pickCtrl = self.pickerController;
+    CDVPictureOptions* options = pickCtrl.pictureOptions;
+    
+    if (options.allowsEditing && options.variableEditRect)
+    {
+        UIImage *img = [(UIImageView *)[[self allImageViewsSubViews:[[[pickCtrl viewControllers]firstObject] view]] lastObject] image];
+        if (img)
+            [self imagePickerController:pickCtrl didFinishPickingMediaWithInfo:[NSDictionary dictionaryWithObject:img forKey:UIImagePickerControllerOriginalImage]];
+        else
+            [self imagePickerControllerDidCancel:pickCtrl];
+    }
+}
+
+- (NSMutableArray*)allImageViewsSubViews:(UIView *)pView
+{
+    NSMutableArray *arrImageViews = [NSMutableArray array];
+    
+    if ([pView isKindOfClass:[UIImageView class]])
+        [arrImageViews addObject:pView];
+    else
+        for (UIView *sv in [pView subviews])
+            [arrImageViews addObjectsFromArray:[self allImageViewsSubViews:sv]];
+
+    return arrImageViews;
 }
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController*)picker
@@ -562,7 +623,30 @@ static NSString* toBase64(NSData* data) {
         weakSelf.pickerController = nil;
     };
 
-    [[cameraPicker presentingViewController] dismissViewControllerAnimated:YES completion:invoke];
+    UIViewController *ctrl = [cameraPicker presentingViewController];
+    if (ctrl) // when coming from imageCropControllerDidCancel, this one's already gone
+        [ctrl dismissViewControllerAnimated:YES completion:invoke];
+    else
+        invoke();
+}
+
+- (void)imageCropControllerDidCancel:(GKImageCropViewController *)pCropCtrl withImagePicker:(UIImagePickerController*)picker
+{
+    [pCropCtrl dismissViewControllerAnimated:YES completion:^
+     {
+         [self.viewController presentViewController:picker animated:YES completion:nil];
+     }
+     ];
+}
+
+- (void)imageCropController:(GKImageCropViewController *)pCropCtrl didFinishWithCroppedImageInfo:(NSDictionary *)pImageInfo
+            fromImagePicker:(UIImagePickerController *)pPicker
+{
+    [pCropCtrl dismissViewControllerAnimated:YES completion:^
+     {
+         [self processFromPicker:pPicker itsInfo:pImageInfo];
+     }
+     ];
 }
 
 - (CLLocationManager*)locationManager
@@ -734,7 +818,8 @@ static NSString* toBase64(NSData* data) {
     CDVCameraPicker* cameraPicker = [[CDVCameraPicker alloc] init];
     cameraPicker.pictureOptions = pictureOptions;
     cameraPicker.sourceType = pictureOptions.sourceType;
-    cameraPicker.allowsEditing = pictureOptions.allowsEditing;
+    if (!pictureOptions.variableEditRect)
+        cameraPicker.allowsEditing = pictureOptions.allowsEditing;
     
     if (cameraPicker.sourceType == UIImagePickerControllerSourceTypeCamera) {
         // We only allow taking pictures (no video) in this API.
