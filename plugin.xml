@@ -22,9 +22,9 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:rim="http://www.blackberry.com/ns/widgets"
     id="cordova-plugin-camera"
-    version="1.2.1.1-dev">
+    version="1.2.1.2-dev">
     <name>Camera</name>
-    <description>Cordova Camera Plugin (version by convey 1.2.1.1-dev with enhancements for iOS)</description>
+    <description>Cordova Camera Plugin (version by convey 1.2.1.2-dev with enhancements for iOS)</description>
     <license>Apache 2.0</license>
     <keywords>cordova,camera</keywords>
     <repo>https://git-wip-us.apache.org/repos/asf/cordova-plugin-camera.git</repo>
@@ -144,7 +144,7 @@
          <header-file src="src/ios/CDVJpegHeaderWriter.h" />
          <source-file src="src/ios/CDVJpegHeaderWriter.m" />
          <header-file src="src/ios/CDVExif.h" />
-         <source-file src="src/ios/GKClasses/GKlicense" />
+         <header-file src="src/ios/GKClasses/GKlicense" />
          <header-file src="src/ios/GKClasses/GKCropBorderView.h" />
          <source-file src="src/ios/GKClasses/GKCropBorderView.m" />
          <header-file src="src/ios/GKClasses/GKImageCropView.h" />
