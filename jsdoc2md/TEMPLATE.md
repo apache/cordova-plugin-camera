@@ -124,8 +124,7 @@ Tizen only supports a `destinationType` of
 
 - Any `cameraDirection` value results in a back-facing photo.
 
-- Android also uses the Crop Activity for allowEdit, even though crop should work and actually pass the cropped image back to Cordova, the only one that works consistently is the one bundled 
-with the Google Plus Photos application.  Other crops may not work.
+- **`allowEdit` is unpredictable on Android and it should not be used!** The Android implementation of this plugin tries to find and use an application on the user's device to do image cropping. The plugin has no control over what application the user selects to perform the image cropping and it is very possible that the user could choose an incompatible option and cause the plugin to fail. This sometimes works because most devices come with an application that handles cropping in a way that is compatible with this plugin (Google Plus Photos), but it is unwise to rely on that being the case. If image editing is essential to your application, consider seeking a third party library or plugin that provides its own image editing utility for a more robust solution.
 
 - `Camera.PictureSourceType.PHOTOLIBRARY` and `Camera.PictureSourceType.SAVEDPHOTOALBUM` both display the same photo album.
 
