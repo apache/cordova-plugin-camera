@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-camera",
-  "version": „1.2.1.2-dev",
+  "version": "1.2.1.2-dev",
   "description": "Cordova Camera Plugin (version by convey 1.2.1.2-dev with enhancements for iOS)",
   "cordova": {
     "id": "cordova-plugin-camera",
