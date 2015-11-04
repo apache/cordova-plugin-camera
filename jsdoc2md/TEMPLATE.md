@@ -67,6 +67,10 @@ Take a photo and retrieve the image's file location:
 
         <preference name="CameraUsesGeolocation" value="false" />
 
+-  __CameraUsesVariableEdit__ (boolean, defaults to false). If the plugin is called with the optional parameter `allowEdit == true`, then setting this preference to `true` suppresses the standard (fairly useless) square for cropping the photo, even suppresses the (then also useless) view of the photo with the "Retake"- and "Use Photo"-buttons, but instead offers a resizable cropping rectangle (with "Redo" and "Save"). For this portions of [GKImagePicker](https://github.com/gekitz/GKImagePicker) by Georg Kitz are used (under MIT-License).
+
+        <preference name="CameraUsesVariableEdit" value="false" />
+
 #### Amazon Fire OS Quirks <a name="camera-getPicture-quirks"></a>
 
 Amazon Fire OS uses intents to launch the camera activity on the device to capture
