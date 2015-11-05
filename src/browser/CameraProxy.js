@@ -24,6 +24,8 @@ function takePicture(success, error, opts) {
         capture(success, error);
     } else {
         var input = document.createElement('input');
+        input.style.position= 'relative';
+        input.style.zIndex= 99999;
         input.type = 'file';
         input.name = 'files[]';
 
@@ -51,6 +53,11 @@ function capture(success, errorCallback) {
 
     var video = document.createElement('video');
     var button = document.createElement('button');
+    var parent = document.createElement('div');
+    parent.style.position = 'relative';
+    parent.style.zIndex = 99999;
+    parent.appendChild(video);
+    parent.appendChild(button);
 
     video.width = 320;
     video.height = 240;
@@ -67,8 +74,7 @@ function capture(success, errorCallback) {
 
         // stop video stream, remove video and button
         localMediaStream.stop();
-        video.parentNode.removeChild(video);
-        button.parentNode.removeChild(button);
+        parent.parentNode.removeChild(parent);
 
         return success(imageData);
     }
@@ -83,8 +89,7 @@ function capture(success, errorCallback) {
         video.src = window.URL.createObjectURL(localMediaStream);
         video.play();
 
-        document.body.appendChild(video);
-        document.body.appendChild(button);
+        document.body.appendChild(parent);
     }
 
     if (navigator.getUserMedia) {
