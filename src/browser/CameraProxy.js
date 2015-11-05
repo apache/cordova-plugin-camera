@@ -24,8 +24,8 @@ function takePicture(success, error, opts) {
         capture(success, error);
     } else {
         var input = document.createElement('input');
-        input.style.position= 'relative';
-        input.style.zIndex= 99999;
+        input.style.position = 'relative';
+        input.style.zIndex = 99999;
         input.type = 'file';
         input.name = 'files[]';
 
