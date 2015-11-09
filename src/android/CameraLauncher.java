@@ -582,19 +582,6 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
 
 
 
-    /**
-     * We already have shared code to resolve URIs, don't need any more.
-     */
-    private String getRealFileFromUri(Uri uri)
-    {
-        CordovaResourceApi api = webView.getResourceApi();
-        File f = api.mapUriToFile(uri);
-        if(f != null)
-            return "file://" + f.getAbsolutePath();
-        else
-            return uri.toString();
-    }
-
 /**
      * Applies all needed transformation to the image received from the gallery.
      *
@@ -613,7 +600,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         }
         int rotate = 0;
 
-        String fileLocation = getRealFileFromUri(uri);
+        String fileLocation = FileHelper.getRealPath(uri, this.cordova);
         Log.d(LOG_TAG, "File locaton is: " + fileLocation);
 
         // If you ask for video or all media type you will automatically get back a file URI
