@@ -220,7 +220,7 @@ static NSString* toBase64(NSData* data) {
         [[self pickerController] setPickerPopoverController:nil];
     }
 
-    [self.pickerController dismissViewControllerAnimated:NO completion:^() {
+    [self.pickerController dismissViewControllerAnimated:NO completion:^{
         CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"dismissed camera"];
         [self.commandDelegate sendPluginResult:result callbackId:self.pickerController.callbackId];
 
