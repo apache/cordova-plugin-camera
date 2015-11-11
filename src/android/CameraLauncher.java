@@ -441,7 +441,22 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         }
 
         Bitmap bitmap = null;
-        Uri uri = null;
+        Uri galleryUri = null;
+
+        // CB-5479 When this option is given the unchanged image should be saved
+        // in the gallery and the modified image is saved in the temporary
+        // directory
+        if (this.saveToPhotoAlbum) {
+            galleryUri = Uri.fromFile(new File(getPicutresPath()));
+
+            if(this.allowEdit && this.croppedUri != null) {
+                writeUncompressedImage(this.croppedUri, galleryUri);
+            } else {
+                writeUncompressedImage(this.imageUri, galleryUri);
+            }
+
+            refreshGallery(galleryUri);
+        }
 
         // If sending base64 image back
         if (destType == DATA_URL) {
@@ -464,25 +479,35 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             }
 
             this.processPicture(bitmap, this.encodingType);
-            checkForDuplicateImage(DATA_URL);
+
+            if (!this.saveToPhotoAlbum) {
+                checkForDuplicateImage(DATA_URL);
+            }
         }
 
         // If sending filename back
         else if (destType == FILE_URI || destType == NATIVE_URI) {
-            if (this.saveToPhotoAlbum) {
-                //Create a URI on the filesystem so that we can write the file.
-                uri = Uri.fromFile(new File(getPicutresPath()));
-            } else {
-                uri = Uri.fromFile(createCaptureFile(this.encodingType, System.currentTimeMillis() + ""));
-            }
-
             // If all this is true we shouldn't compress the image.
             if (this.targetHeight == -1 && this.targetWidth == -1 && this.mQuality == 100 &&
                     !this.correctOrientation) {
-                writeUncompressedImage(uri);
 
-                this.callbackContext.success(uri.toString());
+                // If we saved the uncompressed photo to the album, we can just
+                // return the URI we already created
+                if (this.saveToPhotoAlbum) {
+                    this.callbackContext.success(galleryUri.toString());
+                } else {
+                    Uri uri = Uri.fromFile(createCaptureFile(this.encodingType, System.currentTimeMillis() + ""));
+
+                    if(this.allowEdit && this.croppedUri != null) {
+                        writeUncompressedImage(this.croppedUri, uri);
+                    } else {
+                        writeUncompressedImage(this.imageUri, uri);
+                    }
+                    
+                    this.callbackContext.success(uri.toString());
+                }
             } else {
+                Uri uri = Uri.fromFile(createCaptureFile(this.encodingType, System.currentTimeMillis() + ""));
                 bitmap = getScaledBitmap(sourcePath);
 
                 // Double-check the bitmap.
@@ -513,12 +538,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     exif.writeExifData();
                 }
 
-                //Broadcast change to File System on MediaStore
-                if(this.saveToPhotoAlbum) {
-                    refreshGallery(uri);
-                }
-
-
                 // Send Uri back to JavaScript for viewing image
                 this.callbackContext.success(uri.toString());
 
@@ -527,7 +546,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             throw new IllegalStateException();
         }
 
-        this.cleanup(FILE_URI, this.imageUri, uri, bitmap);
+        this.cleanup(FILE_URI, this.imageUri, galleryUri, bitmap);
         bitmap = null;
     }
 
@@ -835,13 +854,13 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
      * @throws FileNotFoundException
      * @throws IOException
      */
-    private void writeUncompressedImage(Uri uri) throws FileNotFoundException,
+    private void writeUncompressedImage(Uri src, Uri dest) throws FileNotFoundException,
             IOException {
         FileInputStream fis = null;
         OutputStream os = null;
         try {
-            fis = new FileInputStream(FileHelper.stripFileProtocol(imageUri.toString()));
-            os = this.cordova.getActivity().getContentResolver().openOutputStream(uri);
+            fis = new FileInputStream(FileHelper.stripFileProtocol(src.toString()));
+            os = this.cordova.getActivity().getContentResolver().openOutputStream(dest);
             byte[] buffer = new byte[4096];
             int len;
             while ((len = fis.read(buffer)) != -1) {
