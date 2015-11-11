@@ -73,6 +73,7 @@ Documentation consists of template and API docs produced from the plugin JS code
 * [camera](#module_camera)
   * [.getPicture(successCallback, errorCallback, options)](#module_camera.getPicture)
   * [.cleanup()](#module_camera.cleanup)
+  * [.dismiss()](#module_camera.dismiss)
   * [.onError](#module_camera.onError) : <code>function</code>
   * [.onSuccess](#module_camera.onSuccess) : <code>function</code>
   * [.CameraOptions](#module_camera.CameraOptions) : <code>Object</code>
@@ -97,11 +98,11 @@ Documentation consists of template and API docs produced from the plugin JS code
 ### camera.getPicture(successCallback, errorCallback, options)
 Takes a photo using the camera, or retrieves a photo from the device's
 image gallery.  The image is passed to the success callback as a
-base64-encoded `String`, or as the URI for the image file.  
+base64-encoded `String`, or as the URI for the image file.
 
 The `camera.getPicture` function opens the device's default camera
 application that allows users to snap pictures by default - this behavior occurs,
-when `Camera.sourceType` equals [`Camera.PictureSourceType.CAMERA`](#module_Camera.PictureSourceType).  
+when `Camera.sourceType` equals [`Camera.PictureSourceType.CAMERA`](#module_Camera.PictureSourceType).
 Once the user snaps the photo, the camera application closes and the application is restored.
 
 If `Camera.sourceType` is `Camera.PictureSourceType.PHOTOLIBRARY` or
@@ -177,6 +178,22 @@ function onSuccess() {
 function onFail(message) {
     alert('Failed because: ' + message);
 }
+```
+<a name="module_camera.dismiss"></a>
+### camera.dismiss()
+Allows the camera view controller and popovers to be dismissed via javascript
+when needed. Aborts the [`camera.getPicture`](#module_camera.getPicture) process
+and calls the [`camera.getPicture`](#module_camera.getPicture) error handler
+rather than using its own callback parameter.
+
+__Supported Platforms__
+
+![](doc/img/android-fail.png) ![](doc/img/blackberry-fail.png) ![](doc/img/browser-fail.png) ![](doc/img/firefox-fail.png) ![](doc/img/fireos-fail.png) ![](doc/img/ios-success.png) ![](doc/img/windows-fail.png) ![](doc/img/wp8-fail.png) ![](doc/img/ubuntu-fail.png)
+
+**Kind**: static method of <code>[camera](#module_camera)</code>  
+**Example**  
+```js
+navigator.camera.dismiss();
 ```
 <a name="module_camera.onError"></a>
 ### camera.onError : <code>function</code>
