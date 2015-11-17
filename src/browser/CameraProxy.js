@@ -52,6 +52,9 @@ function capture(success, errorCallback) {
     var video = document.createElement('video');
     var button = document.createElement('button');
 
+    video.id = 'cordovaCameraVideo';
+    button.id = 'cordovaCameraButton';
+
     video.width = 320;
     video.height = 240;
     button.innerHTML = 'Capture!';
