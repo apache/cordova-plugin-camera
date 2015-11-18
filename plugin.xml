@@ -144,6 +144,15 @@
          <header-file src="src/ios/CDVJpegHeaderWriter.h" />
          <source-file src="src/ios/CDVJpegHeaderWriter.m" />
          <header-file src="src/ios/CDVExif.h" />
+         <header-file src="src/ios/GKClasses/GKlicense" />
+         <header-file src="src/ios/GKClasses/GKCropBorderView.h" />
+         <source-file src="src/ios/GKClasses/GKCropBorderView.m" />
+         <header-file src="src/ios/GKClasses/GKImageCropView.h" />
+         <source-file src="src/ios/GKClasses/GKImageCropView.m" />
+         <header-file src="src/ios/GKClasses/GKImageCropViewController.h" />
+         <source-file src="src/ios/GKClasses/GKImageCropViewController.m" />
+         <header-file src="src/ios/GKClasses/GKResizeableCropOverlayView.h" />
+         <source-file src="src/ios/GKClasses/GKResizeableCropOverlayView.m" />
          <framework src="ImageIO.framework" weak="true" />
          <framework src="CoreLocation.framework" />
          <framework src="CoreGraphics.framework" />
