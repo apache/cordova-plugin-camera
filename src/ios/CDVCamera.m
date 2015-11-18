@@ -534,27 +534,28 @@ static NSString* toBase64(NSData* data) {
         }
         else {
             result = [self resultForVideo:info];
-            [weakSelf.commandDelegate sendPluginResult:result callbackId:cameraPicker.callbackId];
-            weakSelf.hasPendingOperation = NO;
-            weakSelf.pickerController = nil;
+            [self.commandDelegate sendPluginResult:result callbackId:cameraPicker.callbackId];
+            self.hasPendingOperation = NO;
+            self.pickerController = nil;
         }
 }
 
 - (void)imagePickerController:(UIImagePickerController*)picker didFinishPickingMediaWithInfo:(NSDictionary*)info
 {
-    __weak CDVCameraPicker* cameraPicker = (CDVCameraPicker*)picker;
-    CDVPictureOptions* options = cameraPicker.pictureOptions;
+    CDVCameraPicker* cameraPicker = (CDVCameraPicker*)picker;
+    __weak CDVCamera* weakSelf = self;
+    __weak CDVPictureOptions* options = cameraPicker.pictureOptions;
 
     dispatch_block_t invoke = ^(void) {
         if (!(options.allowsEditing && options.variableEditRect))
-            [self processFromPicker:picker itsInfo:info];
+            [weakSelf processFromPicker:picker itsInfo:info];
         else
         {
-            GKImageCropViewController *cropCtrl = [[GKImageCropViewController alloc] init];
-            [cropCtrl setDelegate:self];
+            __block GKImageCropViewController *cropCtrl = [[GKImageCropViewController alloc] init];
+            [cropCtrl setDelegate:weakSelf];
             [cropCtrl setDerImagePicker:picker];
             [cropCtrl setDieBildInfo:info];
-            [self.viewController presentViewController:cropCtrl animated:YES completion:NULL];
+            [weakSelf.viewController presentViewController:cropCtrl animated:YES completion:NULL];
         }
     };
     
@@ -632,9 +633,11 @@ static NSString* toBase64(NSData* data) {
 
 - (void)imageCropControllerDidCancel:(GKImageCropViewController *)pCropCtrl withImagePicker:(UIImagePickerController*)picker
 {
+    __weak CDVCamera* weakSelf = self;
+
     [pCropCtrl dismissViewControllerAnimated:YES completion:^
      {
-         [self.viewController presentViewController:picker animated:YES completion:nil];
+         [weakSelf.viewController presentViewController:picker animated:YES completion:nil];
      }
      ];
 }
@@ -642,9 +645,11 @@ static NSString* toBase64(NSData* data) {
 - (void)imageCropController:(GKImageCropViewController *)pCropCtrl didFinishWithCroppedImageInfo:(NSDictionary *)pImageInfo
             fromImagePicker:(UIImagePickerController *)pPicker
 {
+    __weak CDVCamera* weakSelf = self;
+    
     [pCropCtrl dismissViewControllerAnimated:YES completion:^
      {
-         [self processFromPicker:pPicker itsInfo:pImageInfo];
+         [weakSelf processFromPicker:pPicker itsInfo:pImageInfo];
      }
      ];
 }
