@@ -109,14 +109,12 @@ static NSString* toBase64(NSData* data) {
 - (NSURL*) urlTransformer:(NSURL*)url
 {
     NSURL* urlToTransform = url;
-    __weak CDVCamera* weakSelf = self;
     
     // for backwards compatibility - we check if this property is there
     SEL sel = NSSelectorFromString(@"urlTransformer");
     if ([self.commandDelegate respondsToSelector:sel]) {
-
         // grab the block from the commandDelegate
-        NSURL* (^urlTransformer)(NSURL*) = ((id(*)(id, SEL))objc_msgSend)(weakSelf.commandDelegate, sel);
+        NSURL* (^urlTransformer)(NSURL*) = ((id(*)(id, SEL))objc_msgSend)(self.commandDelegate, sel);
         // if block is not null, we call it
         if (urlTransformer) {
             urlToTransform = urlTransformer(url);
