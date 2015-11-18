@@ -109,12 +109,14 @@ static NSString* toBase64(NSData* data) {
 - (NSURL*) urlTransformer:(NSURL*)url
 {
     NSURL* urlToTransform = url;
+    __weak CDVCamera* weakSelf = self;
     
     // for backwards compatibility - we check if this property is there
     SEL sel = NSSelectorFromString(@"urlTransformer");
     if ([self.commandDelegate respondsToSelector:sel]) {
+
         // grab the block from the commandDelegate
-        NSURL* (^urlTransformer)(NSURL*) = ((id(*)(id, SEL))objc_msgSend)(self.commandDelegate, sel);
+        NSURL* (^urlTransformer)(NSURL*) = ((id(*)(id, SEL))objc_msgSend)(weakSelf.commandDelegate, sel);
         // if block is not null, we call it
         if (urlTransformer) {
             urlToTransform = urlTransformer(url);
@@ -172,7 +174,7 @@ static NSString* toBase64(NSData* data) {
                     [[[UIAlertView alloc] initWithTitle:[[NSBundle mainBundle]
                                                          objectForInfoDictionaryKey:@"CFBundleDisplayName"]
                                                 message:NSLocalizedString(@"Access to the camera has been prohibited; please enable it in the Settings app to continue.", nil)
-                                               delegate:self
+                                               delegate:weakSelf
                                       cancelButtonTitle:NSLocalizedString(@"OK", nil)
                                       otherButtonTitles:settingsButton, nil] show];
                 });
@@ -511,14 +513,14 @@ static NSString* toBase64(NSData* data) {
         
         NSString* mediaType = [info objectForKey:UIImagePickerControllerMediaType];
         if ([mediaType isEqualToString:(NSString*)kUTTypeImage]) {
-            [self resultForImage:cameraPicker.pictureOptions info:info completion:^(CDVPluginResult* res) {
+            [weakSelf resultForImage:cameraPicker.pictureOptions info:info completion:^(CDVPluginResult* res) {
                 [weakSelf.commandDelegate sendPluginResult:res callbackId:cameraPicker.callbackId];
                 weakSelf.hasPendingOperation = NO;
                 weakSelf.pickerController = nil;
             }];
         }
         else {
-            result = [self resultForVideo:info];
+            result = [weakSelf resultForVideo:info];
             [weakSelf.commandDelegate sendPluginResult:result callbackId:cameraPicker.callbackId];
             weakSelf.hasPendingOperation = NO;
             weakSelf.pickerController = nil;
