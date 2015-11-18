@@ -20,100 +20,80 @@
 -->
 # Release Notes
 
-### 0.2.1 (Sept 5, 2013)
-* [CB-4656] Don't add line-breaks to base64-encoded images (Fixes type=DataURI)
-* [CB-4432] copyright notice change
+### 1.2.0 (Jun 17, 2015)
+* Closing stale pull request: close #84
+* Closing stale pull request: close #66
+* CB-9128 cordova-plugin-camera documentation translation: cordova-plugin-camera
+* Update docs. This closes #100
+* attempt to fix npm markdown issue
+* CB-8883 fix picture rotation issue
+* one more alias
+* Fixed some nit white-space issues, aliased a little more
+* major refactor : readability
+* Patch for CB-8498, this closes #64
+* CB-8879 fix stripe issue with correct aspect ratio
+* CB-8601 - iOS camera unit tests broken
+* CB-7667 iOS8: Handle case where camera is not authorized (closes #49)
+* add missing license header
 
-### 0.2.3 (Sept 25, 2013)
-* CB-4889 bumping&resetting version
-* CB-4889 forgot index.html
-* CB-4889 renaming core inside cameraProxy
-* [Windows8] commandProxy has moved
-* [Windows8] commandProxy has moved
-* added Camera API for FirefoxOS
-* Rename CHANGELOG.md -> RELEASENOTES.md
-* [CB-4823] Fix XCode 5 camera plugin warnings
-* Fix compiler warnings
-* [CB-4765] Move ExifHelper.java into Camera Plugin
-* [CB-4764] Remove reference to DirectoryManager from CameraLauncher
-* [CB-4763] Use a copy of FileHelper.java within camera-plugin.
-* [CB-4752] Incremented plugin version on dev branch.
-* CB-4633: We really should close cursors.  It's just the right thing to do.
-* No longer causes a stack trace, but it doesn't cause the error to be called.
-* CB-4889 renaming org.apache.cordova.core.camera to org.apache.cordova.camera
+### 1.1.0 (May 06, 2015)
+* CB-8943 fix `PickAndContinue` issue on *Win10Phone*
+* CB-8253 Fix potential unreleased resources
+* CB-8909: Remove unused import from File
+* CB-8404 typo fix `cameraproxy.js`
+* CB-8404 Rotate camera feed with device orientation
+* CB-8054 Support taking pictures from file for *WP8*
+* CB-8405 Use `z-index` instead of `z-order`
 
- ### 0.2.4 (Oct 28, 2013)
-* CB-5128: added repo + issue tag to plugin.xml for camera plugin
-* CB-4958 - iOS - Camera plugin should not show the status bar
-* [CB-4919] updated plugin.xml for FxOS
-* [CB-4915] Incremented plugin version on dev branch.
+### 1.0.0 (Apr 15, 2015)
+* CB-8780 - Display popover using main thread. Fixes popover slowness (closes #81)
+* CB-8746 bumped version of file dependency
+* CB-8746 gave plugin major version bump
+* CB-8707 refactoring windows code to improve readability
+* CB-8706 use filePicker if saveToPhotoAlbum is true
+* CB-8706 remove unnecessary capabilities from xml
+* CB-8747 updated dependency, added peer dependency
+* CB-8683 updated blackberry specific references of org.apache.cordova.camera to cordova-plugin-camera
+* CB-8782: Updated the docs to talk about the allowEdit quirks, it's not 100% working, but better than it was
+* CB-8782: Fixed the flow so that we save the cropped image and use it, not the original non-cropped.  Crop only supports G+ Photos Crop, other crops may not work, depending on the OEM
+* CB-8740: Removing FileHelper call that was failing on Samsung Galaxy S3, now that we have a real path, we only need to update the MediaStore, not pull from it in this case
+* CB-8740: Partial fix for Save Image to Gallery error found in MobileSpec
+* CB-8683 changed plugin-id to pacakge-name
+* CB-8653 properly updated translated docs to use new id
+* CB-8653 updated translated docs to use new id
+* CB-8351 Fix custom implementation of integerValueForKey (close #79)
+* Fix cordova-paramedic path change, build with TRAVIS_BUILD_DIR, use npm to install paramedic
+* docs: added 'Windows' to supported platforms
+* CB-8653 Updated Readme
+* CB-8659: ios: 4.0.x Compatibility: Remove use of deprecated headers
 
-### 0.2.5 (Dec 4, 2013)
-* fix camera for firefox os
-* getPicture via web activities
-* [ubuntu] specify policy_group
-* add ubuntu platform
-* 1. User Agent detection now detects AmazonWebView. 2. Change to use amazon-fireos as the platform if user agent string contains 'cordova-amazon-fireos'
-* Added amazon-fireos platform.
+### 0.3.6 (Mar 10, 2015)
+* Fix localize key for Videos. This closes #58
+* CB-8235 android: Fix crash when selecting images from DropBox with spaces in path (close #65)
+* add try ... catch for getting image orientation
+* CB-8599 fix threading issue with cameraPicker (fixes #72)
+* CB-8559 Integrate TravisCI
+* CB-8438 cordova-plugin-camera documentation translation: cordova-plugin-camera
+* CB-8538 Added package.json file
 
-### 0.2.6 (Jan 02, 2014)
-* CB-5658 Add doc/index.md for Camera plugin
-* CB-2442 CB-2419 Use Windows.Storage.ApplicationData.current.localFolder, instead of writing to app package.
-* [BlackBerry10] Adding platform level permissions
-* CB-5599 Android: Catch and ignore OutOfMemoryError in getRotatedBitmap()
+### 0.3.5 (Feb 04, 2015)
+* CB-8351 ios: Stop using now-deprecated [NSData base64EncodedString]
+* CB-8351 ios: Stop using now-deprecated integerValueForKey: class extension
+* CB-8351 ios: Use argumentForIndex rather than NSArray extension
+* CB-8032 ios: Add nativeURL external method support for CDVFileSystem->makeEntryForPath:isDirectory:
+* CB-7938 ios: Added XCTest unit tests project, with stubs (adapted from SplashScreen unit test setup)
+* CB-7937 ios: Re-factor iOS Camera plugin so that it is testable
 
-### 0.2.7 (Feb 05, 2014)
-* CB-4919 firefox os quirks added and supported platforms list is updated
-* getPicture via web activities
-* Documented quirk for CB-5335 + CB-5206 for WP7+8
-* reference the correct firefoxos implementation
-* [BlackBerry10] Add permission to access_shared
+### 0.3.4 (Dec 02, 2014)
+* CB-7977 Mention `deviceready` in plugin docs
+* CB-7979 Each plugin doc should have a ## Installation section
+* Fix memory leak of image data in `imagePickerControllerReturnImageResult`
+* Pass uri to crop instead of pulling the low resolution image out of the intent return (close #43)
+* Add orientation support for PNG to Android (closes #45)
+* CB-7700 cordova-plugin-camera documentation translation: cordova-plugin-camera
 
-### 0.2.8 (Feb 26, 2014)
-* CB-1826 Catch OOM on gallery image resize
-
-### 0.2.9 (Apr 17, 2014)
-* CB-6460: Update license headers
-* CB-6422: [windows8] use cordova/exec/proxy
-* [WP8] When only targetWidth or targetHeight is provided, use it as the only bound
-* CB-4027, CB-5102, CB-2737, CB-2387: [WP] Fix camera issues, cropping, memory leaks
-* CB-6212: [iOS] fix warnings compiled under arm64 64-bit
-* [BlackBerry10] Add rim xml namespaces declaration
-* Add NOTICE file
-
-### 0.3.0 (Jun 05, 2014)
-* CB-2083 documented saveToPhotoAlbum quirk on WP8
-* CB-5895 documented saveToPhotoAlbum quirk on WP8
-* Remove deprecated symbols for iOS < 6
-* documentation translation: cordova-plugin-camera
-* Lisa testing pulling in plugins for plugin: cordova-plugin-camera
-* Lisa testing pulling in plugins for plugin: cordova-plugin-camera
-* Lisa testing pulling in plugins for plugin: cordova-plugin-camera
-* Lisa testing pulling in plugins for plugin: cordova-plugin-camera
-* ubuntu: use application directory for images
-* CB-6795 Add license
-* Little fix in code formatting
-* CB-6613 Use WinJS functionality to get base64-encoded content of image instead of File plugin functionality
-* CB-6612 camera.getPicture now always returns encoded JPEG image
-* Removed invalid note from CB-5398
-* CB-6576 - Returns a specific error message when app has no access to library.
-* CB-6491 add CONTRIBUTING.md
-* CB-6546 android: Fix a couple bugs with allowEdit pull request
-* CB-6546 android: Add support for allowEdit Camera option
-
-### 0.3.1 (Aug 06, 2014)
-* **FFOS** update CameraProxy.js
-* CB-7187 ios: Add explicit dependency on CoreLocation.framework
-* [BlackBerry10] Doc correction - sourceType is supported
-* CB-7071 android: Fix callback firing before CROP intent is sent when allowEdit=true
-* CB-6875 android: Handle exception when SDCard is not mounted
-* ios: Delete postImage (dead code)
-* Prevent NPE on processResiultFromGallery when intent comes null
-* Remove iOS doc reference to non-existing navigator.fileMgr API
-* Docs updated with some default values
-* Removes File plugin dependency from windows8 code.
-* Use WinJS functionality to resize image instead of File plugin functionality
-* CB-6127 Updated translations for docs
+### 0.3.3 (Oct 03, 2014)
+* CB-7600 Adds informative message to error callback in manual test.
 
 ### 0.3.2 (Sep 17, 2014)
 * CB-7551 [Camera][iOS 8] Scaled images show a white line
@@ -148,77 +128,92 @@
 * CB-6958 added manual tests
 * CB-6958 Port camera tests to plugin-test-framework
 
-### 0.3.3 (Oct 03, 2014)
-* CB-7600 Adds informative message to error callback in manual test.
+### 0.3.1 (Aug 06, 2014)
+* **FFOS** update CameraProxy.js
+* CB-7187 ios: Add explicit dependency on CoreLocation.framework
+* [BlackBerry10] Doc correction - sourceType is supported
+* CB-7071 android: Fix callback firing before CROP intent is sent when allowEdit=true
+* CB-6875 android: Handle exception when SDCard is not mounted
+* ios: Delete postImage (dead code)
+* Prevent NPE on processResiultFromGallery when intent comes null
+* Remove iOS doc reference to non-existing navigator.fileMgr API
+* Docs updated with some default values
+* Removes File plugin dependency from windows8 code.
+* Use WinJS functionality to resize image instead of File plugin functionality
+* CB-6127 Updated translations for docs
 
-### 0.3.4 (Dec 02, 2014)
-* CB-7977 Mention `deviceready` in plugin docs
-* CB-7979 Each plugin doc should have a ## Installation section
-* Fix memory leak of image data in `imagePickerControllerReturnImageResult`
-* Pass uri to crop instead of pulling the low resolution image out of the intent return (close #43)
-* Add orientation support for PNG to Android (closes #45)
-* CB-7700 cordova-plugin-camera documentation translation: cordova-plugin-camera
+### 0.3.0 (Jun 05, 2014)
+* CB-5895 documented saveToPhotoAlbum quirk on WP8
+* Remove deprecated symbols for iOS < 6
+* documentation translation: cordova-plugin-camera
+* ubuntu: use application directory for images
+* CB-6795 Add license
+* Little fix in code formatting
+* CB-6613 Use WinJS functionality to get base64-encoded content of image instead of File plugin functionality
+* CB-6612 camera.getPicture now always returns encoded JPEG image
+* Removed invalid note from CB-5398
+* CB-6576 - Returns a specific error message when app has no access to library.
+* CB-6491 add CONTRIBUTING.md
+* CB-6546 android: Fix a couple bugs with allowEdit pull request
+* CB-6546 android: Add support for allowEdit Camera option
 
-### 0.3.5 (Feb 04, 2015)
-* CB-8351 ios: Stop using now-deprecated [NSData base64EncodedString]
-* CB-8351 ios: Stop using now-deprecated integerValueForKey: class extension
-* CB-8351 ios: Use argumentForIndex rather than NSArray extension
-* CB-8032 ios: Add nativeURL external method support for CDVFileSystem->makeEntryForPath:isDirectory:
-* CB-7938 ios: Added XCTest unit tests project, with stubs (adapted from SplashScreen unit test setup)
-* CB-7937 ios: Re-factor iOS Camera plugin so that it is testable
+### 0.2.9 (Apr 17, 2014)
+* CB-6460: Update license headers
+* CB-6422: [windows8] use cordova/exec/proxy
+* [WP8] When only targetWidth or targetHeight is provided, use it as the only bound
+* CB-4027, CB-5102, CB-2737, CB-2387: [WP] Fix camera issues, cropping, memory leaks
+* CB-6212: [iOS] fix warnings compiled under arm64 64-bit
+* [BlackBerry10] Add rim xml namespaces declaration
+* Add NOTICE file
 
-### 0.3.6 (Mar 10, 2015)
-* Fix localize key for Videos. This closes #58
-* CB-8235 android: Fix crash when selecting images from DropBox with spaces in path (close #65)
-* add try ... catch for getting image orientation
-* CB-8599 fix threading issue with cameraPicker (fixes #72)
-* CB-8559 Integrate TravisCI
-* CB-8438 cordova-plugin-camera documentation translation: cordova-plugin-camera
-* CB-8538 Added package.json file
+### 0.2.8 (Feb 26, 2014)
+* CB-1826 Catch OOM on gallery image resize
 
-### 1.0.0 (Apr 15, 2015)
-* CB-8780 - Display popover using main thread. Fixes popover slowness (closes #81)
-* CB-8746 bumped version of file dependency
-* CB-8746 gave plugin major version bump
-* CB-8707 refactoring windows code to improve readability
-* CB-8706 use filePicker if saveToPhotoAlbum is true
-* CB-8706 remove unnecessary capabilities from xml
-* CB-8747 updated dependency, added peer dependency
-* CB-8683 updated blackberry specific references of org.apache.cordova.camera to cordova-plugin-camera
-* CB-8782: Updated the docs to talk about the allowEdit quirks, it's not 100% working, but better than it was
-* CB-8782: Fixed the flow so that we save the cropped image and use it, not the original non-cropped.  Crop only supports G+ Photos Crop, other crops may not work, depending on the OEM
-* CB-8740: Removing FileHelper call that was failing on Samsung Galaxy S3, now that we have a real path, we only need to update the MediaStore, not pull from it in this case
-* CB-8740: Partial fix for Save Image to Gallery error found in MobileSpec
-* CB-8683 changed plugin-id to pacakge-name
-* CB-8653 properly updated translated docs to use new id
-* CB-8653 updated translated docs to use new id
-* CB-8351 Fix custom implementation of integerValueForKey (close #79)
-* Fix cordova-paramedic path change, build with TRAVIS_BUILD_DIR, use npm to install paramedic
-* docs: added 'Windows' to supported platforms
-* CB-8653 Updated Readme
-* CB-8659: ios: 4.0.x Compatibility: Remove use of deprecated headers
+### 0.2.7 (Feb 05, 2014)
+* CB-4919 firefox os quirks added and supported platforms list is updated
+* getPicture via web activities
+* Documented quirk for CB-5335 + CB-5206 for WP7+8
+* reference the correct firefoxos implementation
+* [BlackBerry10] Add permission to access_shared
 
-### 1.1.0 (May 06, 2015)
-* CB-8943 fix `PickAndContinue` issue on *Win10Phone*
-* CB-8253 Fix potential unreleased resources
-* CB-8909: Remove unused import from File
-* CB-8404 typo fix `cameraproxy.js`
-* CB-8404 Rotate camera feed with device orientation
-* CB-8054 Support taking pictures from file for *WP8*
-* CB-8405 Use `z-index` instead of `z-order`
+### 0.2.6 (Jan 02, 2014)
+* CB-5658 Add doc/index.md for Camera plugin
+* CB-2442 CB-2419 Use Windows.Storage.ApplicationData.current.localFolder, instead of writing to app package.
+* [BlackBerry10] Adding platform level permissions
+* CB-5599 Android: Catch and ignore OutOfMemoryError in getRotatedBitmap()
 
-### 1.2.0 (Jun 17, 2015)
-* Closing stale pull request: close #84
-* Closing stale pull request: close #66
-* CB-9128 cordova-plugin-camera documentation translation: cordova-plugin-camera
-* Update docs. This closes #100
-* attempt to fix npm markdown issue
-* CB-8883 fix picture rotation issue
-* one more alias
-* Fixed some nit white-space issues, aliased a little more
-* major refactor : readability
-* Patch for CB-8498, this closes #64
-* CB-8879 fix stripe issue with correct aspect ratio
-* CB-8601 - iOS camera unit tests broken
-* CB-7667 iOS8: Handle case where camera is not authorized (closes #49)
-* add missing license header
+### 0.2.5 (Dec 4, 2013)
+* fix camera for firefox os
+* getPicture via web activities
+* [ubuntu] specify policy_group
+* add ubuntu platform
+* 1. User Agent detection now detects AmazonWebView. 2. Change to use amazon-fireos as the platform if user agent string contains 'cordova-amazon-fireos'
+* Added amazon-fireos platform.
+
+### 0.2.4 (Oct 28, 2013)
+* CB-5128: added repo + issue tag to plugin.xml for camera plugin
+* CB-4958 - iOS - Camera plugin should not show the status bar
+* [CB-4919] updated plugin.xml for FxOS
+* [CB-4915] Incremented plugin version on dev branch.
+
+### 0.2.3 (Sept 25, 2013)
+* CB-4889 bumping&resetting version
+* CB-4889 forgot index.html
+* CB-4889 renaming core inside cameraProxy
+* [Windows8] commandProxy has moved
+* [Windows8] commandProxy has moved
+* added Camera API for FirefoxOS
+* Rename CHANGELOG.md -> RELEASENOTES.md
+* [CB-4823] Fix XCode 5 camera plugin warnings
+* Fix compiler warnings
+* [CB-4765] Move ExifHelper.java into Camera Plugin
+* [CB-4764] Remove reference to DirectoryManager from CameraLauncher
+* [CB-4763] Use a copy of FileHelper.java within camera-plugin.
+* [CB-4752] Incremented plugin version on dev branch.
+* CB-4633: We really should close cursors.  It's just the right thing to do.
+* No longer causes a stack trace, but it doesn't cause the error to be called.
+* CB-4889 renaming org.apache.cordova.core.camera to org.apache.cordova.camera
+
+### 0.2.1 (Sept 5, 2013)
+* [CB-4656] Don't add line-breaks to base64-encoded images (Fixes type=DataURI)
+* [CB-4432] copyright notice change
