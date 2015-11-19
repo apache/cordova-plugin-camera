@@ -20,6 +20,36 @@
 -->
 # Release Notes
 
+### 2.0.0 (Nov 18, 2015)
+* CB-10035 Updated `RELEASENOTES` to be newest to oldest
+* CB-8863 correct block usage for `async` calls
+* CB-5479 changed `saveToPhotoAlbum` to save uncompressed images for **Android**
+* CB-9169 Fixed `filetype` for uncompressed images and added quirk for **Android**
+* CB-9446 Removing `CordovaResource` library code in favour of the code we're supposed to be deprecating because that at least works.
+* CB-9942 Normalize line endings in Camera plugin docs
+* CB-9910 Add permission request for some gallery requests for **Android**
+* CB-7668 Adding a sterner warning for `allowedit` on **Android**
+* Fixing contribute link.
+* Using the `CordovaResourceApi` to fine paths of files in the background thread.  If the file doesn't exist, return the content `URI`. 
+* Add engine tag for **Cordova-Android 5.0.x**
+* CB-9583: Added support for **Marshmallow** permissions (**Android 6.0**)
+* Try to use `realpath` filename instead of default `modified.jpg`
+* CB-6190 **iOS** camera plugin ignores quality parameter
+* CB-9633 **iOS** Taking a Picture With Option `destinationType:NATIVE_URI` doesn't show image
+* CB-9745 Camera plugin docs should be generated from the source
+* CB-9622 **WP8** Camera Option `destinationType:NATIVE_URI` is a `NO-OP`
+* CB-9623 Fixes various issues when `encodingType` set to `png`
+* CB-9591 Retaining aspect ratio when resizing
+* CB-9443 Pick correct `maxResolution` 
+* CB-9151 Trigger `captureAction` only once
+* CB-9413 Close `RandomAccessStream` once copied
+* CB-5661 Remove outdated **iOS** quirks about memory
+* CB-9349 Focus control and nice UI
+* CB-9259 Forgot to add another check on which `URI` we're using when fixing this thing the first time
+* CB-9247 Added macro to conditionally add `NSData+Base64.h`
+* CB-9247 Fixes compilation errors with **cordova-ios 4.x**
+* Fix returning native url on **Windows**.
+
 ### 1.2.0 (Jun 17, 2015)
 * Closing stale pull request: close #84
 * Closing stale pull request: close #66
