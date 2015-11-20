@@ -332,18 +332,18 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
         // Create fullscreen preview
         // z-order style element for capturePreview and cameraCancelButton elts
         // is necessary to avoid overriding by another page elements, -1 sometimes is not enough
-        capturePreview = document.createElement("video");
-        capturePreview.style.cssText = "position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: HIGHEST_POSSIBLE_Z_INDEX -1;";
+       capturePreview = document.createElement("video");
+        capturePreview.style.cssText = "position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: " + (HIGHEST_POSSIBLE_Z_INDEX - 1) + ";";
 
         // Create capture button
         cameraCaptureButton = document.createElement("button");
         cameraCaptureButton.innerText = "Take";
-        cameraCaptureButton.style.cssText = buttonStyle + "position: fixed; left: 0; bottom: 0; margin: 20px; z-index: HIGHEST_POSSIBLE_Z_INDEX";
+        cameraCaptureButton.style.cssText = buttonStyle + "position: fixed; left: 0; bottom: 0; margin: 20px; z-index: " + HIGHEST_POSSIBLE_Z_INDEX + ";";
 
         // Create cancel button
         cameraCancelButton = document.createElement("button");
         cameraCancelButton.innerText = "Cancel";
-        cameraCancelButton.style.cssText = buttonStyle + "position: fixed; right: 0; bottom: 0; margin: 20px; z-index: HIGHEST_POSSIBLE_Z_INDEX";
+        cameraCancelButton.style.cssText = buttonStyle + "position: fixed; right: 0; bottom: 0; margin: 20px; z-index: " + HIGHEST_POSSIBLE_Z_INDEX + ";";
 
         capture = new CaptureNS.MediaCapture();
 
