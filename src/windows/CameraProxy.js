@@ -73,6 +73,9 @@ var windowsPhoneVideoContainers =  [".avi", ".3gp", ".3g2", ".wmv", ".3gp", ".3g
 // Default aspect ratio 1.78 (16:9 hd video standard)
 var DEFAULT_ASPECT_RATIO = '1.8';
 
+// Highest possible z-index supported across browsers. Anything used above is converted to this value.
+var HIGHEST_POSSIBLE_Z_INDEX = 2147483647;
+
 // Resize method
 function resizeImage(successCallback, errorCallback, file, targetWidth, targetHeight, encodingType) {
     var tempPhotoFileName = "";
@@ -330,17 +333,17 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
         // z-order style element for capturePreview and cameraCancelButton elts
         // is necessary to avoid overriding by another page elements, -1 sometimes is not enough
         capturePreview = document.createElement("video");
-        capturePreview.style.cssText = "position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: 2147483646;";
+        capturePreview.style.cssText = "position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: HIGHEST_POSSIBLE_Z_INDEX -1;";
 
         // Create capture button
         cameraCaptureButton = document.createElement("button");
         cameraCaptureButton.innerText = "Take";
-        cameraCaptureButton.style.cssText = buttonStyle + "position: fixed; left: 0; bottom: 0; margin: 20px; z-index: 2147483647";
+        cameraCaptureButton.style.cssText = buttonStyle + "position: fixed; left: 0; bottom: 0; margin: 20px; z-index: HIGHEST_POSSIBLE_Z_INDEX";
 
         // Create cancel button
         cameraCancelButton = document.createElement("button");
         cameraCancelButton.innerText = "Cancel";
-        cameraCancelButton.style.cssText = buttonStyle + "position: fixed; right: 0; bottom: 0; margin: 20px; z-index: 2147483647";
+        cameraCancelButton.style.cssText = buttonStyle + "position: fixed; right: 0; bottom: 0; margin: 20px; z-index: HIGHEST_POSSIBLE_Z_INDEX";
 
         capture = new CaptureNS.MediaCapture();
 
