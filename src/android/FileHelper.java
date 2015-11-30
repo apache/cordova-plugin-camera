@@ -79,30 +79,59 @@ public class FileHelper {
     @SuppressLint("NewApi")
     public static String getRealPathFromURI_API19(Context context, Uri uri) {
         String filePath = "";
-        try {
-            String wholeID = DocumentsContract.getDocumentId(uri);
 
-            // Split at colon, use second item in the array
-            String id = wholeID.indexOf(":") > -1 ? wholeID.split(":")[1] : wholeID.indexOf(";") > -1 ? wholeID
-                    .split(";")[1] : wholeID;
+        try {
+            String id;
+
+            if (DocumentsContract.isDocumentUri(context, uri)) {
+                String wholeID = DocumentsContract.getDocumentId(uri);
+
+                // Split at colon, use second item in the array
+                id = wholeID.indexOf(":") > -1
+                        ? wholeID.split(":")[1]
+                        : wholeID.indexOf(";") > -1
+                        ? wholeID.split(";")[1]
+                        : wholeID;
+            } else {
+                final String uriStr = uri.toString();
+
+                if (
+                        uriStr.startsWith(
+                                MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString()
+                        )
+                ) {
+                    id = uriStr.substring(uriStr.lastIndexOf("/") + 1);
+                } else {
+                    throw new IllegalArgumentException(
+                            "Cannot get real path from uri: " + uriStr
+                    );
+                }
+            }
 
             String[] column = { MediaStore.Images.Media.DATA };
 
             // where id is equal to
             String sel = MediaStore.Images.Media._ID + "=?";
 
-            Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, column,
-                    sel, new String[] { id }, null);
+            Cursor cursor = context.getContentResolver().query(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    column,
+                    sel,
+                    new String[] { id },
+                    null
+            );
 
             int columnIndex = cursor.getColumnIndex(column[0]);
 
             if (cursor.moveToFirst()) {
                 filePath = cursor.getString(columnIndex);
             }
+
             cursor.close();
         } catch (Exception e) {
             filePath = "";
         }
+
         return filePath;
     }
 
@@ -209,7 +238,7 @@ public class FileHelper {
         }
         return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
     }
-    
+
     /**
      * Returns the mime type of the data specified by the given URI string.
      *
