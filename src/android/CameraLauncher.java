@@ -238,10 +238,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @param returnType        Set the type of image to return.
      */
     public void callTakePicture(int returnType, int encodingType) {
-        if (cordova.hasPermission(permissions[TAKE_PIC_SEC])) {
+        if (cordova.hasPermission(permissions[TAKE_PIC_SEC]) && cordova.hasPermission(permissions[SAVE_TO_ALBUM_SEC])) {
             takePicture(returnType, encodingType);
         } else {
-            getReadPermission(TAKE_PIC_SEC);
+            cordova.requestPermissions(this, TAKE_PIC_SEC, permissions);
         }
     }
 
