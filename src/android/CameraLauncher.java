@@ -105,7 +105,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private boolean orientationCorrected;   // Has the picture's orientation been corrected
     private boolean allowEdit;              // Should we allow the user to crop the image.
 
-    protected final static String[] permissions = { Manifest.permission.READ_EXTERNAL_STORAGE };
+    protected final static String[] permissions = { Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE };
 
     public CallbackContext callbackContext;
     private int numPics;
@@ -117,7 +117,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
     protected void getReadPermission(int requestCode)
     {
-        cordova.requestPermission(this, requestCode, Manifest.permission.READ_EXTERNAL_STORAGE);
+        cordova.requestPermission(this, requestCode, permissions[requestCode]);
     }
 
     /**
@@ -178,7 +178,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     // preserve the original exif data and filename in the modified file that is
                     // created
                     if(this.mediaType == PICTURE && (this.destType == FILE_URI || this.destType == NATIVE_URI)
-                            && fileWillBeModified() && !cordova.hasPermission(permissions[0])) {
+                            && fileWillBeModified() && !cordova.hasPermission(permissions[SAVE_TO_ALBUM_SEC])) {
                         getReadPermission(SAVE_TO_ALBUM_SEC);
                     } else {
                         this.getImage(this.srcType, destType, encodingType);
@@ -238,7 +238,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @param returnType        Set the type of image to return.
      */
     public void callTakePicture(int returnType, int encodingType) {
-        if (cordova.hasPermission(permissions[0])) {
+        if (cordova.hasPermission(permissions[TAKE_PIC_SEC])) {
             takePicture(returnType, encodingType);
         } else {
             getReadPermission(TAKE_PIC_SEC);
