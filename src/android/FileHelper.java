@@ -90,20 +90,16 @@ public class FileHelper {
                 id = wholeID.indexOf(":") > -1
                         ? wholeID.split(":")[1]
                         : wholeID.indexOf(";") > -1
-                        ? wholeID.split(";")[1]
-                        : wholeID;
+                            ? wholeID.split(";")[1]
+                            : wholeID;
             } else {
                 final String uriStr = uri.toString();
 
-                if (
-                        uriStr.startsWith(
-                                MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString()
-                        )
-                ) {
+                if (uriStr.startsWith(MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString())) {
                     id = uriStr.substring(uriStr.lastIndexOf("/") + 1);
                 } else {
                     throw new IllegalArgumentException(
-                            "Cannot get real path from uri: " + uriStr
+                        "Cannot get real path from uri: " + uriStr
                     );
                 }
             }
@@ -113,13 +109,8 @@ public class FileHelper {
             // where id is equal to
             String sel = MediaStore.Images.Media._ID + "=?";
 
-            Cursor cursor = context.getContentResolver().query(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    column,
-                    sel,
-                    new String[] { id },
-                    null
-            );
+            Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, column,
+                    sel, new String[] { id }, null);
 
             int columnIndex = cursor.getColumnIndex(column[0]);
 
