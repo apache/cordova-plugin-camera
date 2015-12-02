@@ -25,7 +25,7 @@ function takePicture(success, error, opts) {
     } else {
         var input = document.createElement('input');
         input.style.position = 'relative';
-        input.style.zIndex = 99999;
+        input.style.zIndex = 2147483647;
         input.type = 'file';
         input.name = 'files[]';
 
@@ -55,7 +55,7 @@ function capture(success, errorCallback) {
     var button = document.createElement('button');
     var parent = document.createElement('div');
     parent.style.position = 'relative';
-    parent.style.zIndex = 99999;
+    parent.style.zIndex = 2147483647;
     parent.appendChild(video);
     parent.appendChild(button);
 
