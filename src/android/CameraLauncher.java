@@ -58,6 +58,9 @@ import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
 import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.PermissionInfo;
+
 /**
  * This class launches the camera view, allows the user to take a picture, closes the camera view,
  * and returns the captured image.  When the camera view is closed, the screen displayed before
@@ -237,13 +240,40 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @param returnType        Set the type of image to return.
      */
     public void callTakePicture(int returnType, int encodingType) {
-        if (cordova.hasPermission(permissions[TAKE_PIC_SEC]) && cordova.hasPermission(permissions[SAVE_TO_ALBUM_SEC])) {
+		boolean takePicturePermission = cordova.hasPermission(permissions[TAKE_PIC_SEC]);
+
+		if (!takePicturePermission) {
+			takePicturePermission = true; // This permission is not required, unless we find android.permission.CAMERA in the package
+			try {
+				PackageManager packageManager = this.cordova.getActivity().getPackageManager();
+				String[] permissionsInPackage = packageManager.getPackageInfo(this.cordova.getActivity().getPackageName(), PackageManager.GET_PERMISSIONS).requestedPermissions;
+				if (permissionsInPackage != null) {
+					for (String permission : permissionsInPackage) {
+						if (permission.equals(Manifest.permission.CAMERA)) {
+							takePicturePermission = false;
+							break;
+						}
+					}
+				}
+			} catch (NameNotFoundException e) {	} 			
+		}
+
+		boolean saveAlbumPermission = cordova.hasPermission(permissions[SAVE_TO_ALBUM_SEC]);
+        if (takePicturePermission && saveAlbumPermission) {
             takePicture(returnType, encodingType);
         } else {
-            cordova.requestPermissions(this, TAKE_PIC_SEC, permissions);
+			if (saveAlbumPermission && !takePicturePermission) {
+				cordova.requestPermission(this, TAKE_PIC_SEC, permissions[TAKE_PIC_SEC]);
+			}
+			else if (!saveAlbumPermission && takePicturePermission) {
+				cordova.requestPermission(this, TAKE_PIC_SEC, permissions[SAVE_TO_ALBUM_SEC]);
+			}
+			else
+			{
+				cordova.requestPermissions(this, TAKE_PIC_SEC, permissions);
+			}
         }
     }
-
 
     public void takePicture(int returnType, int encodingType)
     {
