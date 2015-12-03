@@ -25,6 +25,7 @@ import android.os.Build;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.webkit.MimeTypeMap;
+import android.webkit.URLUtil;
 
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.LOG;
@@ -32,7 +33,9 @@ import org.apache.cordova.LOG;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLDecoder;
 import java.util.Locale;
+import java.util.Scanner;
 
 public class FileHelper {
     private static final String LOG_TAG = "FileUtils";
@@ -76,14 +79,31 @@ public class FileHelper {
         return FileHelper.getRealPath(Uri.parse(uriString), cordova);
     }
 
+    private static String extractDocumentIdFromExternalContentURI(String uri) {
+        final String externalContentURI = MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString();
+
+        return new Scanner(
+            uri.substring(
+                externalContentURI.indexOf(externalContentURI) + externalContentURI.length()
+            )
+        ).useDelimiter("[^0-9]+").next();
+    }
+
     @SuppressLint("NewApi")
     public static String getRealPathFromURI_API19(Context context, Uri uri) {
         String filePath = "";
 
         try {
-            String id;
+            String id = null;
+            String uriStr = uri.toString();
 
-            if (DocumentsContract.isDocumentUri(context, uri)) {
+            if (URLUtil.isFileUrl(uri.toString())) {
+                // case 1: the uri is already path to file system
+
+                return URLDecoder.decode(uriStr, "UTF-8");
+            } else if (DocumentsContract.isDocumentUri(context, uri)) {
+                // case 2: uri is the a documentUri
+
                 String wholeID = DocumentsContract.getDocumentId(uri);
 
                 // Split at colon, use second item in the array
@@ -92,16 +112,28 @@ public class FileHelper {
                         : wholeID.indexOf(";") > -1
                             ? wholeID.split(";")[1]
                             : wholeID;
-            } else {
-                final String uriStr = uri.toString();
+            } else if (uriStr.startsWith(MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString())) {
+                // case 3: uri is an external content uri
 
-                if (uriStr.startsWith(MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString())) {
-                    id = uriStr.substring(uriStr.lastIndexOf("/") + 1);
-                } else {
-                    throw new IllegalArgumentException(
-                        "Cannot get real path from uri: " + uriStr
-                    );
+                id = extractDocumentIdFromExternalContentURI(uriStr);
+            } else if (uriStr.lastIndexOf("content%3A%2F") > 0) {
+                uriStr = URLDecoder.decode(
+                    uriStr.substring(uriStr.lastIndexOf("content%3A%2F")),
+                    "UTF-8"
+                );
+
+                if (
+                    uriStr.startsWith(MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString())
+                ) {
+                    // case 4: uri has an embedded external content uri
+                    id = extractDocumentIdFromExternalContentURI(uriStr);
                 }
+            }
+
+            if (id == null) {
+                throw new IllegalArgumentException(
+                    "Cannot get real path from uri: " + uri
+                );
             }
 
             String[] column = { MediaStore.Images.Media.DATA };
@@ -109,8 +141,13 @@ public class FileHelper {
             // where id is equal to
             String sel = MediaStore.Images.Media._ID + "=?";
 
-            Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, column,
-                    sel, new String[] { id }, null);
+            Cursor cursor = context.getContentResolver().query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                column,
+                sel,
+                new String[] { id },
+                null
+            );
 
             int columnIndex = cursor.getColumnIndex(column[0]);
 
