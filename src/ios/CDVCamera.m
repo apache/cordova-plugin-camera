@@ -518,7 +518,7 @@ static NSString* toBase64(NSData* data) {
     
     dispatch_block_t invoke = ^ (void) {
         CDVPluginResult* result;
-        if ([ALAssetsLibrary authorizationStatus] == ALAuthorizationStatusAuthorized) {
+        if (picker.sourceType == UIImagePickerControllerSourceTypeCamera || [ALAssetsLibrary authorizationStatus] == ALAuthorizationStatusAuthorized) {
             result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"no image selected"];
         } else {
             result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"has no access to assets"];
