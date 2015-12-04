@@ -77,7 +77,12 @@ scenario, the image may not appear when the cordova activity is restored.
 
 Android uses intents to launch the camera activity on the device to capture
 images, and on phones with low memory, the Cordova activity may be killed.  In this
-scenario, the image may not appear when the Cordova activity is restored.
+scenario, the result from the plugin call will be delivered via the resume event.
+See [the Android Lifecycle guide](http://cordova.apache.org/docs/en/dev/guide/platforms/android/lifecycle.html)
+for more information. The `pendingResult.result` value will contain the value that
+would be passed to the callbacks (either the URI/URL or an error message). Check
+the `pendingResult.pluginStatus` to determine whether or not the call was
+successful.
 
 #### Browser Quirks
 
