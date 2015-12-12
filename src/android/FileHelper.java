@@ -79,50 +79,72 @@ public class FileHelper {
     @SuppressLint("NewApi")
     public static String getRealPathFromURI_API19(Context context, Uri uri) {
         String filePath = "";
+	Cursor cursor = null;
+
         try {
-            String wholeID = DocumentsContract.getDocumentId(uri);
+             String wholeID = DocumentsContract.getDocumentId(uri);
 
             // Split at colon, use second item in the array
             String id = wholeID.indexOf(":") > -1 ? wholeID.split(":")[1] : wholeID.indexOf(";") > -1 ? wholeID
                     .split(";")[1] : wholeID;
 
-            String[] column = { MediaStore.Images.Media.DATA };
+	    // 20151210 DLL Get type to check wheter is image or video
+	    String type = wholeID.indexOf(":") > -1 ? wholeID.split(":")[0] : wholeID.indexOf(";") > -1 ? wholeID
+                    .split(";")[0] : wholeID;
 
-            // where id is equal to
-            String sel = MediaStore.Images.Media._ID + "=?";
+	    Uri contentUri = null;
+            if ("image".equals(type)) {
+                contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+            } else if ("video".equals(type)) {
+                contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+            } else if ("audio".equals(type)) {
+                contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+            }
 
-            Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, column,
+	    String[] column = { "_data" };
+
+	    // where id is equal to
+            String sel = "_id=?";
+
+            cursor = context.getContentResolver().query(contentUri, column,
                     sel, new String[] { id }, null);
 
             int columnIndex = cursor.getColumnIndex(column[0]);
 
             if (cursor.moveToFirst()) {
                 filePath = cursor.getString(columnIndex);
-            }
-            cursor.close();
+            }            
         } catch (Exception e) {
             filePath = "";
-        }
+        } finally {
+            if (cursor != null)
+                cursor.close();
+	}
         return filePath;
     }
 
     @SuppressLint("NewApi")
     public static String getRealPathFromURI_API11to18(Context context, Uri contentUri) {
-        String[] proj = { MediaStore.Images.Media.DATA };
-        String result = null;
+	// 20151210 DLL Make it works for uri likes 'content://media/external/images/media/350259' and video
+	String result = null;
+	Cursor cursor = null;
+	String column = "_data";
+    	String[] projection = { column };
 
-        try {
-            CursorLoader cursorLoader = new CursorLoader(context, contentUri, proj, null, null, null);
-            Cursor cursor = cursorLoader.loadInBackground();
+	try {
+	    cursor = context.getContentResolver().query(contentUri, projection, null, null, null);
 
-            if (cursor != null) {
-                int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-                cursor.moveToFirst();
-                result = cursor.getString(column_index);
+ 	    if (cursor != null && cursor.moveToFirst()) {
+            	int index = cursor.getColumnIndexOrThrow(column);
+                result = cursor.getString(index);
             }
-        } catch (Exception e) {
+ 	} catch (Exception e) {
             result = null;
-        }
+        } finally {
+            if (cursor != null)
+                cursor.close();
+	}
+    
         return result;
     }
 
