@@ -88,7 +88,7 @@ public class FileHelper {
             String id = wholeID.indexOf(":") > -1 ? wholeID.split(":")[1] : wholeID.indexOf(";") > -1 ? wholeID
                     .split(";")[1] : wholeID;
 
-	    // 20151210 DLL Get type to check wheter is image or video
+	    // @dlogo 20151210 Get type to check wheter is image or video
 	    String type = wholeID.indexOf(":") > -1 ? wholeID.split(":")[0] : wholeID.indexOf(";") > -1 ? wholeID
                     .split(";")[0] : wholeID;
 
@@ -125,7 +125,7 @@ public class FileHelper {
 
     @SuppressLint("NewApi")
     public static String getRealPathFromURI_API11to18(Context context, Uri contentUri) {
-	// 20151210 DLL Make it works for uri likes 'content://media/external/images/media/350259' and video
+	// @dlogo 20151210 Make it works for uri likes 'content://media/external/images/media/350259' and video
 	String result = null;
 	Cursor cursor = null;
 	String column = "_data";
