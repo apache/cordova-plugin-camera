@@ -22,13 +22,17 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:rim="http://www.blackberry.com/ns/widgets"
     id="cordova-plugin-camera"
-    version="1.2.1-dev">
+    version="2.0.1-dev">
     <name>Camera</name>
     <description>Cordova Camera Plugin</description>
     <license>Apache 2.0</license>
     <keywords>cordova,camera</keywords>
     <repo>https://git-wip-us.apache.org/repos/asf/cordova-plugin-camera.git</repo>
     <issue>https://issues.apache.org/jira/browse/CB/component/12320645</issue>
+
+    <engines>
+      <engine name="cordova-android" version=">=5.0.0-dev" />
+    </engines>
 
     <js-module src="www/CameraConstants.js" name="Camera">
         <clobbers target="Camera" />
