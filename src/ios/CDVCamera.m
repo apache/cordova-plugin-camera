@@ -163,9 +163,12 @@ static NSString* toBase64(NSData* data) {
             if (authStatus == AVAuthorizationStatusDenied ||
                 authStatus == AVAuthorizationStatusRestricted) {
                 // If iOS 8+, offer a link to the Settings app
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wtautological-pointer-compare"
                 NSString* settingsButton = (&UIApplicationOpenSettingsURLString != NULL)
                     ? NSLocalizedString(@"Settings", nil)
                     : nil;
+#pragma clang diagnostic pop
 
                 // Denied; show an alert
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -216,7 +219,12 @@ static NSString* toBase64(NSData* data) {
 {
     // If Settings button (on iOS 8), open the settings app
     if (buttonIndex == 1) {
-        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wtautological-pointer-compare"
+        if (&UIApplicationOpenSettingsURLString != NULL) {
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
+        }
+#pragma clang diagnostic pop
     }
 
     // Dismiss the view
