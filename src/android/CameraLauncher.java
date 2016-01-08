@@ -29,6 +29,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.lang.Class.getMethod;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
@@ -114,10 +115,44 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private Uri scanMe;                     // Uri of image to be added to content store
     private Uri croppedUri;
 
+	protected boolean checkPermission(String permission) 
+	{
+		Method hP;
+		try {
+			Class[] cArg = new Class[1];
+			cArg[0] = String.class;
+			hP = cordova.getMethod("hasPermission", cArg.class);
+		} catch (Exception e) {
+			hP = null;
+		}
+		if (hP) {
+			return hP(permission);
+		} else {
+			return true;
+		}
+	}
 
     protected void getReadPermission(int requestCode)
     {
-        cordova.requestPermission(this, requestCode, Manifest.permission.READ_EXTERNAL_STORAGE);
+		Method rP;
+		try {
+			Class[] cArg = new Class[3];
+			cArg[0] = Class.class;
+			cArg[1] = Integer.class;
+			cArg[2] = String.class;
+			hP = cordova.getMethod("requestPermission", cArg.class);
+		} catch (Exception e) {
+			rP = null;
+		}
+		if (rP) {
+			rP(this, requestCode, Manifest.permission.READ_EXTERNAL_STORAGE);
+		} else {
+			String[] permissions = new String[1];
+			permissions[0] = Manifest.permission.READ_EXTERNAL_STORAGE;
+            int[] grantResults = new int[1];
+			grantResults[0] = PackageManager.PERMISSION_GRANTED;
+			this.onRequestPermissionResult(requestCode, permissions, grantResults);
+		}
     }
 
     /**
@@ -178,7 +213,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     // preserve the original exif data and filename in the modified file that is
                     // created
                     if(this.mediaType == PICTURE && (this.destType == FILE_URI || this.destType == NATIVE_URI)
-                            && fileWillBeModified() && !cordova.hasPermission(permissions[0])) {
+                            && fileWillBeModified() && !checkPermission(permissions[0])) {
                         getReadPermission(SAVE_TO_ALBUM_SEC);
                     } else {
                         this.getImage(this.srcType, destType, encodingType);
@@ -238,7 +273,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @param returnType        Set the type of image to return.
      */
     public void callTakePicture(int returnType, int encodingType) {
-        if (cordova.hasPermission(permissions[0])) {
+        if (checkPermission(permissions[0])) {
             takePicture(returnType, encodingType);
         } else {
             getReadPermission(TAKE_PIC_SEC);
