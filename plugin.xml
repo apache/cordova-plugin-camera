@@ -54,12 +54,12 @@
             <feature name="Camera">
                 <param name="firefoxos-package" value="Camera" />
             </feature>
-        </config-file>                                         
-        
+        </config-file>
+
         <js-module src="src/firefoxos/CameraProxy.js" name="CameraProxy">
           <runs />
         </js-module>
-    </platform>  
+    </platform>
 
     <!-- android -->
     <platform name="android">
@@ -79,6 +79,8 @@
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />
         </js-module>
+
+        <framework src="com.android.support:support-v4:23+" />
 
      </platform>
 
@@ -102,7 +104,7 @@
         </js-module>
 
      </platform>
-     
+
      <!-- ubuntu -->
      <platform name="ubuntu">
          <config-file target="config.xml" parent="/*">
@@ -151,11 +153,11 @@
          <framework src="MobileCoreServices.framework" />
          <framework src="CoreGraphics.framework" />
          <framework src="AVFoundation.framework" />
-         
+
          <config-file target="*-Info.plist" parent="NSLocationWhenInUseUsageDescription">
              <string></string>
          </config-file>
-                  
+
      </platform>
 
     <!-- blackberry10 -->

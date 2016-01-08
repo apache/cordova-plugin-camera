@@ -58,6 +58,9 @@ import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
 import android.content.pm.PackageManager;
+
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 /**
  * This class launches the camera view, allows the user to take a picture, closes the camera view,
  * and returns the captured image.  When the camera view is closed, the screen displayed before
@@ -117,7 +120,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
     protected void getReadPermission(int requestCode)
     {
-        cordova.requestPermission(this, requestCode, Manifest.permission.READ_EXTERNAL_STORAGE);
+        ActivityCompat.requestPermissions(cordova.getActivity(),
+                new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                requestCode);
     }
 
     /**
@@ -178,7 +183,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     // preserve the original exif data and filename in the modified file that is
                     // created
                     if(this.mediaType == PICTURE && (this.destType == FILE_URI || this.destType == NATIVE_URI)
-                            && fileWillBeModified() && !cordova.hasPermission(permissions[0])) {
+                            && fileWillBeModified() && !(ContextCompat.checkSelfPermission(cordova.getActivity(), permissions[0]) == PackageManager.PERMISSION_GRANTED)) {
                         getReadPermission(SAVE_TO_ALBUM_SEC);
                     } else {
                         this.getImage(this.srcType, destType, encodingType);
@@ -238,7 +243,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @param returnType        Set the type of image to return.
      */
     public void callTakePicture(int returnType, int encodingType) {
-        if (cordova.hasPermission(permissions[0])) {
+        if (ContextCompat.checkSelfPermission(cordova.getActivity(), permissions[0]) == PackageManager.PERMISSION_GRANTED) {
             takePicture(returnType, encodingType);
         } else {
             getReadPermission(TAKE_PIC_SEC);
