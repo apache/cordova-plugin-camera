@@ -181,4 +181,24 @@ cameraExport.cleanup = function(successCallback, errorCallback) {
     exec(successCallback, errorCallback, "Camera", "cleanup", []);
 };
 
+/**
+* @TanaseButcaru 20160111 - getVideo() support
+*/
+cameraExport.getVideo = function(successCallback, errorCallback, options) {
+    argscheck.checkArgs('fFO', 'Camera.getVideo', arguments);
+    options = options || {};
+    var getValue = argscheck.getValue;
+
+    var quality = getValue(options.quality, Camera.VideoQuality.HIGH);
+    var sourceType = getValue(options.sourceType, Camera.VideoSourceType.CAMERA);
+    var encodingType = getValue(options.encodingType, Camera.EncodingType.MP4);
+    var mediaType = getValue(options.mediaType, Camera.MediaType.VIDEO);
+    var mediaDurationLimit = getValue(options.mediaDurationLimit, 0);
+    var mediaSizeLimit = getValue(options.mediaSizeLimit, 0);
+
+    var args = [quality, sourceType, encodingType, mediaType, mediaDurationLimit, mediaSizeLimit];
+
+    exec(successCallback, errorCallback, "Camera", "takeVideo", args);
+};
+
 module.exports = cameraExport;

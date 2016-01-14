@@ -41,7 +41,17 @@ module.exports = {
     /** Return JPEG encoded image */
     JPEG: 0,
     /** Return PNG encoded image */
-    PNG: 1
+    PNG: 1,
+    
+    /* @TanaseButcaru 20160111 - getVideo() support */
+    /** Return 3GP encoded video */
+    GPP: 2,
+    /** Return MP4 encoded video */
+    MP4: 3,
+    /** Return WEBM encoded video */
+    WEBM: 4,
+    /** Return MKV encoded video */
+    MKV: 5
   },
   /**
    * @enum {number}
@@ -64,6 +74,25 @@ module.exports = {
     CAMERA : 1,
     /** Choose image from picture library (same as PHOTOLIBRARY for Android) */
     SAVEDPHOTOALBUM : 2
+  },
+  /**
+   * @TanaseButcaru 20160111 - getVideo() support
+   * @enum {number}
+   */
+  VideoSourceType:{
+    /** Take video from camera */
+    CAMERA : 1
+    /** TODO: Take video from library; remove VIDEO mediaType support from getPicture() and add it here. */
+  },
+  /**
+   * @TanaseButcaru 20160111 - getVideo() support
+   * @enum {number}
+   */
+  VideoQuality:{
+    /**  Low quality, suitable for MMS messages */
+    LOW : 0,
+    /** High quality */
+    HIGH: 1
   },
   /**
    * Matches iOS UIPopoverArrowDirection constants to specify arrow location on popover.

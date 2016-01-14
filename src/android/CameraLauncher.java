@@ -114,6 +114,21 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private Uri scanMe;                     // Uri of image to be added to content store
     private Uri croppedUri;
 
+    //@TanaseButcaru 20160111 - getVideo() support
+    private static final int VIDEO_CAPTURE = 101;
+    private static final int GPP = 2;
+    private static final int MP4 = 3;
+    private static final int WEBM = 4;
+    private static final int MKV = 5;
+    private Uri videoUri;
+    private int mediaDurationLimit;
+    private int mediaSizeLimit;
+
+    protected void getReadPermission(int requestCode)
+    {
+        cordova.requestPermission(this, requestCode, Manifest.permission.READ_EXTERNAL_STORAGE);
+    }
+
     /**
      * Executes the request and returns PluginResult.
      *
@@ -193,6 +208,36 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
             return true;
         }
+
+        //@TanaseButcaru 20160111 - getVideo() support
+        else if(action.equals("takeVideo")){
+            this.mQuality = args.getInt(0);
+            this.srcType = args.getInt(1);
+            this.encodingType = args.getInt(2);
+            this.mediaType = args.getInt(3);
+            this.mediaDurationLimit = args.getInt(4);
+            this.mediaSizeLimit = args.getInt(5);
+
+            if(this.srcType == CAMERA) {
+                this.callTakeVideo(encodingType);
+            }
+            else {
+                //no 'select from library' option for getVideo() method.
+                //the plugin should separate picture and video operations in the future:
+                //...getPicture() - only for image selection/creation;
+                //...getVideo() - only for video selection/creation.
+                callbackContext.error("Illegal Argument Exception");
+                PluginResult r = new PluginResult(PluginResult.Status.ERROR);
+                callbackContext.sendPluginResult(r);
+                return true;
+            }
+
+            PluginResult r = new PluginResult(PluginResult.Status.NO_RESULT);
+            r.setKeepCallback(true);
+            callbackContext.sendPluginResult(r);
+            return true;
+        }
+
         return false;
     }
 
@@ -271,6 +316,51 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     }
 
     /**
+     * @TanaseButcaru 20160111 - getVideo() support
+     *
+     * Take a video with the camera.
+     * When a video is captured or the camera view is cancelled, the result is returned
+     * in CordovaActivity.onActivityResult, which forwards the result to this.onActivityResult.
+     *
+     * The video will always be returned as a URI that points to the file.
+     *
+     */
+    public void callTakeVideo(int encodingType) {
+        if (cordova.hasPermission(permissions[0])) {
+            takeVideo(encodingType);
+        } else {
+            getReadPermission(TAKE_PIC_SEC);
+        }
+    }
+
+    public void takeVideo(int encodingType)
+    {
+        // Let's use the intent and see what happens
+        Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+
+        // Specify file so that large video is captured and returned
+        File video = createCaptureFile(encodingType, "VID_" + System.currentTimeMillis());
+        intent.putExtra(android.provider.MediaStore.EXTRA_VIDEO_QUALITY, this.mQuality);
+        if(this.mediaDurationLimit != 0) intent.putExtra(android.provider.MediaStore.EXTRA_DURATION_LIMIT, this.mediaDurationLimit);
+        if(this.mediaSizeLimit != 0) intent.putExtra(android.provider.MediaStore.EXTRA_SIZE_LIMIT, this.mediaSizeLimit * 1024 * 1024); //bytes; 1MB = 1024 * 1024
+        intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, Uri.fromFile(video));
+        this.videoUri = Uri.fromFile(video);
+
+        if (this.cordova != null) {
+            // Let's check to make sure the camera is actually installed. (Legacy Nexus 7 code)
+            PackageManager mPm = this.cordova.getActivity().getPackageManager();
+            if(intent.resolveActivity(mPm) != null)
+            {
+                this.cordova.startActivityForResult((CordovaPlugin) this, intent, VIDEO_CAPTURE);
+            }
+            else
+            {
+                LOG.d(LOG_TAG, "Error: You don't have a default camera.  Your device may not be CTS complaint.");
+            }
+        }
+    }
+
+    /**
      * Create a file in the applications temporary directory based upon the supplied encoding.
      *
      * @param encodingType of the image to be taken
@@ -296,6 +386,18 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             fileName = fileName + ".jpg";
         } else if (encodingType == PNG) {
             fileName = fileName + ".png";
+        }
+        //@TanaseButcaru 20160111 - getVideo() support
+        //Supported formats: http://developer.android.com/guide/appendix/media-formats.html
+        //TODO: check android version and encodingType compatibility
+        else if (encodingType == GPP){
+            fileName = fileName + ".3gp";
+        } else if (encodingType == MP4){
+            fileName = fileName + ".mp4";
+        } else if (encodingType == WEBM){
+            fileName = fileName + ".webm";
+        } else if (encodingType == MKV){
+            fileName = fileName + ".mkv";
         } else {
             throw new IllegalArgumentException("Invalid Encoding Type: " + encodingType);
         }
@@ -718,8 +820,18 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         int srcType = (requestCode / 16) - 1;
         int destType = (requestCode % 16) - 1;
 
+        //@TanaseButcaru 20160111 - getVideo() support
+        if (requestCode == VIDEO_CAPTURE) {
+            if (resultCode == Activity.RESULT_OK) {
+                this.callbackContext.success(intent.getData().toString());
+            } else if (resultCode == Activity.RESULT_CANCELED) {
+                this.callbackContext.error("Video recording cancelled.");
+            } else {
+                this.callbackContext.error("Failed to record video");
+            }
+        }
         // If Camera Crop
-        if (requestCode >= CROP_CAMERA) {
+        else if (requestCode >= CROP_CAMERA) {
             if (resultCode == Activity.RESULT_OK) {
 
                 // Because of the inability to pass through multiple intents, this hack will allow us
