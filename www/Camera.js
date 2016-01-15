@@ -1,4 +1,3 @@
-cordova.define("cordova-plugin-camera.camera", function(require, exports, module) {
 /*
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -204,4 +203,3 @@ cameraExport.getVideo = function(successCallback, errorCallback, options) {
 };
 
 module.exports = cameraExport;
-});
