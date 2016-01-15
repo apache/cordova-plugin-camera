@@ -1,3 +1,4 @@
+cordova.define("cordova-plugin-camera.Camera", function(require, exports, module) {
 /*
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -41,9 +42,13 @@ module.exports = {
     /** Return JPEG encoded image */
     JPEG: 0,
     /** Return PNG encoded image */
-    PNG: 1,
-    
-    /* @TanaseButcaru 20160111 - getVideo() support */
+    PNG: 1
+  },
+  /**
+   * @TanaseButcaru 20160111 - getVideo() support
+   * @enum {number}
+   */
+  VideoEncodingType:{
     /** Return 3GP encoded video */
     GPP: 2,
     /** Return MP4 encoded video */
@@ -65,6 +70,15 @@ module.exports = {
     ALLMEDIA : 2
   },
   /**
+   * @TanaseButcaru 20160111 - getVideo() support
+   * @enum {number}
+   */
+  MediaThumbnail:{
+    NONE: 0,
+    MINI_KIND: 1,
+    MICRO_KIND: 2
+  },
+  /**
    * @enum {number}
    */
   PictureSourceType:{
@@ -80,9 +94,10 @@ module.exports = {
    * @enum {number}
    */
   VideoSourceType:{
+    /** Choose video from video library */
+    VIDEOLIBRARY : 0,
     /** Take video from camera */
     CAMERA : 1
-    /** TODO: Take video from library; remove VIDEO mediaType support from getPicture() and add it here. */
   },
   /**
    * @TanaseButcaru 20160111 - getVideo() support
@@ -115,3 +130,5 @@ module.exports = {
       FRONT: 1
   }
 };
+
+});

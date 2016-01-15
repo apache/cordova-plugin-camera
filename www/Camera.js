@@ -1,3 +1,4 @@
+cordova.define("cordova-plugin-camera.camera", function(require, exports, module) {
 /*
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -191,14 +192,16 @@ cameraExport.getVideo = function(successCallback, errorCallback, options) {
 
     var quality = getValue(options.quality, Camera.VideoQuality.HIGH);
     var sourceType = getValue(options.sourceType, Camera.VideoSourceType.CAMERA);
-    var encodingType = getValue(options.encodingType, Camera.EncodingType.MP4);
+    var encodingType = getValue(options.encodingType, Camera.VideoEncodingType.MP4);
     var mediaType = getValue(options.mediaType, Camera.MediaType.VIDEO);
+    var mediaThumbnail = getValue(options.mediaThumbnail, Camera.MediaThumbnail.NONE);
     var mediaDurationLimit = getValue(options.mediaDurationLimit, 0);
     var mediaSizeLimit = getValue(options.mediaSizeLimit, 0);
 
-    var args = [quality, sourceType, encodingType, mediaType, mediaDurationLimit, mediaSizeLimit];
+    var args = [quality, sourceType, encodingType, mediaType, mediaThumbnail, mediaDurationLimit, mediaSizeLimit];
 
     exec(successCallback, errorCallback, "Camera", "takeVideo", args);
 };
 
 module.exports = cameraExport;
+});

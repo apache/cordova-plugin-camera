@@ -58,6 +58,11 @@ import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
 import android.content.pm.PackageManager;
+
+//@TanaseButcaru 20160111 - getVideo() support
+import android.media.ThumbnailUtils;
+import android.provider.MediaStore.Video.Thumbnails;
+
 /**
  * This class launches the camera view, allows the user to take a picture, closes the camera view,
  * and returns the captured image.  When the camera view is closed, the screen displayed before
@@ -120,9 +125,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private static final int MP4 = 3;
     private static final int WEBM = 4;
     private static final int MKV = 5;
-    private Uri videoUri;
     private int mediaDurationLimit;
     private int mediaSizeLimit;
+    private int mediaThumbnail;
+    private Uri videoUri;
 
     protected void getReadPermission(int requestCode)
     {
@@ -215,8 +221,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             this.srcType = args.getInt(1);
             this.encodingType = args.getInt(2);
             this.mediaType = args.getInt(3);
-            this.mediaDurationLimit = args.getInt(4);
-            this.mediaSizeLimit = args.getInt(5);
+            this.mediaThumbnail = args.getInt(4);
+            this.mediaDurationLimit = args.getInt(5);
+            this.mediaSizeLimit = args.getInt(6);
 
             if(this.srcType == CAMERA) {
                 this.callTakeVideo(encodingType);
@@ -823,7 +830,20 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         //@TanaseButcaru 20160111 - getVideo() support
         if (requestCode == VIDEO_CAPTURE) {
             if (resultCode == Activity.RESULT_OK) {
-                this.callbackContext.success(intent.getData().toString());
+                if(this.mediaThumbnail == 0) this.callbackContext.success(intent.getData().toString());
+                else {
+                    int ThumbnailKind = ((this.mediaThumbnail == 1) ? Thumbnails.MINI_KIND : Thumbnails.MICRO_KIND);
+                    this.videoUri = intent.getData();
+                    String filePath = this.videoUri.toString().replace(this.videoUri.getScheme() + ":", "");
+                    Bitmap videoThumbnail = ThumbnailUtils.createVideoThumbnail(filePath, ThumbnailKind);
+
+                    ByteArrayOutputStream byteArrayData = new ByteArrayOutputStream();  
+                    videoThumbnail.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayData);
+                    byte[] byteData = byteArrayData.toByteArray();
+                    String encodedVideoThumbnail = Base64.encodeToString(byteData, Base64.DEFAULT);
+
+                    this.callbackContext.success(encodedVideoThumbnail);
+                }
             } else if (resultCode == Activity.RESULT_CANCELED) {
                 this.callbackContext.error("Video recording cancelled.");
             } else {
