@@ -103,17 +103,30 @@ h1 {
     margin: 6px 18px 6px 0;
     vertical-align: baseline;
 }
-.testResult > span {
-    color: #b71c1c;
-    display: inline-block;
-    font-size: 14px;
-    font-weight: bold;
-    margin: 6px 0;
+.resultProp {
+    display: block;
+    margin-bottom: 5px;
+    padding: 5px 0;
 }
-#fileUriValue {
+.resultPropTitle {
+    background-color: #009688;
+    color: #fff;
+    display: block;
+    font-size: 15px;
+    padding: 5px;
+    text-align: left;
+}
+.resultPropValue {
     color: green;
     display: inline-block;
+    padding: 5px 0;
+    text-align: center;
     word-break: break-all;
+}
+.resultPropValue img {
+    display: inline-block;
+    vertical-align: top;
+    max-width: 100%;
 }
 .option {
     display: block;

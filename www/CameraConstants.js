@@ -44,7 +44,7 @@ module.exports = {
     PNG: 1
   },
   /**
-   * @TanaseButcaru 20160111 - getVideo() support
+   * Author: @TanaseButcaru, 20160111; getVideo() support
    * @enum {number}
    */
   VideoEncodingType:{
@@ -69,7 +69,7 @@ module.exports = {
     ALLMEDIA : 2
   },
   /**
-   * @TanaseButcaru 20160111 - getVideo() support
+   * Author: @TanaseButcaru, 20160111; getVideo() support
    * @enum {number}
    */
   MediaThumbnail:{
@@ -89,7 +89,7 @@ module.exports = {
     SAVEDPHOTOALBUM : 2
   },
   /**
-   * @TanaseButcaru 20160111 - getVideo() support
+   * Author: @TanaseButcaru, 20160111; getVideo() support
    * @enum {number}
    */
   VideoSourceType:{
@@ -99,7 +99,7 @@ module.exports = {
     CAMERA : 1
   },
   /**
-   * @TanaseButcaru 20160111 - getVideo() support
+   * Author: @TanaseButcaru, 20160111; getVideo() support
    * @enum {number}
    */
   VideoQuality:{

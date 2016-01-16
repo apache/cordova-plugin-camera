@@ -59,9 +59,10 @@ import android.util.Base64;
 import android.util.Log;
 import android.content.pm.PackageManager;
 
-//@TanaseButcaru 20160111 - getVideo() support
+//@TanaseButcaru, 20160111; getVideo() support
 import android.media.ThumbnailUtils;
 import android.provider.MediaStore.Video.Thumbnails;
+import org.json.JSONObject;
 
 /**
  * This class launches the camera view, allows the user to take a picture, closes the camera view,
@@ -119,7 +120,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private Uri scanMe;                     // Uri of image to be added to content store
     private Uri croppedUri;
 
-    //@TanaseButcaru 20160111 - getVideo() support
+    //@TanaseButcaru, 20160111; getVideo() support
     private static final int VIDEO_CAPTURE = 101;
     private static final int GPP = 2;
     private static final int MP4 = 3;
@@ -215,7 +216,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             return true;
         }
 
-        //@TanaseButcaru 20160111 - getVideo() support
+        //@TanaseButcaru, 20160111; getVideo() support
         else if(action.equals("takeVideo")){
             this.mQuality = args.getInt(0);
             this.srcType = args.getInt(1);
@@ -323,14 +324,12 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     }
 
     /**
-     * @TanaseButcaru 20160111 - getVideo() support
-     *
      * Take a video with the camera.
      * When a video is captured or the camera view is cancelled, the result is returned
      * in CordovaActivity.onActivityResult, which forwards the result to this.onActivityResult.
      *
      * The video will always be returned as a URI that points to the file.
-     *
+     * @author: @TanaseButcaru, 20160111.
      */
     public void callTakeVideo(int encodingType) {
         if (cordova.hasPermission(permissions[0])) {
@@ -394,9 +393,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         } else if (encodingType == PNG) {
             fileName = fileName + ".png";
         }
-        //@TanaseButcaru 20160111 - getVideo() support
+
+        //@TanaseButcaru, 20160111; getVideo() support
         //Supported formats: http://developer.android.com/guide/appendix/media-formats.html
-        //TODO: check android version and encodingType compatibility
+        //TODO-maybe: check android version and encodingType compatibility
         else if (encodingType == GPP){
             fileName = fileName + ".3gp";
         } else if (encodingType == MP4){
@@ -412,7 +412,38 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         return new File(getTempDirectoryPath(), fileName);
     }
 
+    /**
+     * Create a thumbnail from a media file.
+     *
+     * The thumbnail will always be returned as DATA_URL.
+     * @author: @TanaseButcaru, 20160111.
+     */
+    private String createMediaThumbnail(Uri fileUri){
+        String mediaThumbResult = "";
+        String filePath = fileUri.toString().replace(fileUri.getScheme() + ":", "");
+        int ThumbnailKind = ((this.mediaThumbnail == 1) ? Thumbnails.MINI_KIND : Thumbnails.MICRO_KIND);
 
+        if(this.mediaType == VIDEO) {
+            Bitmap videoThumbnail = ThumbnailUtils.createVideoThumbnail(filePath, ThumbnailKind);
+            mediaThumbResult = encodeTobase64(videoThumbnail);
+        }
+        else {
+            throw new IllegalArgumentException("Invalid Media Type for thumbnail creation: " + this.mediaType);
+        }
+
+        return mediaThumbResult;
+    }
+
+    private static String encodeTobase64(Bitmap image) {
+        Bitmap bmImage = image;
+
+        ByteArrayOutputStream byteArrayData = new ByteArrayOutputStream();  
+        bmImage.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayData);
+        byte[] byteData = byteArrayData.toByteArray();
+        String encodedImage = Base64.encodeToString(byteData, Base64.DEFAULT);
+
+        return encodedImage;
+    }
 
     /**
      * Get image from photo library.
@@ -827,23 +858,24 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         int srcType = (requestCode / 16) - 1;
         int destType = (requestCode % 16) - 1;
 
-        //@TanaseButcaru 20160111 - getVideo() support
+        //@TanaseButcaru, 20160111; getVideo() support
         if (requestCode == VIDEO_CAPTURE) {
             if (resultCode == Activity.RESULT_OK) {
-                if(this.mediaThumbnail == 0) this.callbackContext.success(intent.getData().toString());
-                else {
-                    int ThumbnailKind = ((this.mediaThumbnail == 1) ? Thumbnails.MINI_KIND : Thumbnails.MICRO_KIND);
-                    this.videoUri = intent.getData();
-                    String filePath = this.videoUri.toString().replace(this.videoUri.getScheme() + ":", "");
-                    Bitmap videoThumbnail = ThumbnailUtils.createVideoThumbnail(filePath, ThumbnailKind);
+                JSONObject getVideoResult = new JSONObject();
+                String filePath = intent.getData().toString();
+                String fileThumb = "";
 
-                    ByteArrayOutputStream byteArrayData = new ByteArrayOutputStream();  
-                    videoThumbnail.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayData);
-                    byte[] byteData = byteArrayData.toByteArray();
-                    String encodedVideoThumbnail = Base64.encodeToString(byteData, Base64.DEFAULT);
+                if(this.mediaThumbnail != 0)
+                    fileThumb = createMediaThumbnail(intent.getData());
 
-                    this.callbackContext.success(encodedVideoThumbnail);
+                try {
+                    getVideoResult.put("fileURI", filePath);
+                    if( ! fileThumb.isEmpty()) getVideoResult.put("fileThumb", fileThumb);
+                    this.callbackContext.success(getVideoResult);
+                } catch (JSONException e) {       
+                    this.callbackContext.error("Could not create response.");
                 }
+
             } else if (resultCode == Activity.RESULT_CANCELED) {
                 this.callbackContext.error("Video recording cancelled.");
             } else {

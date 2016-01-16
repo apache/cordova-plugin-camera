@@ -181,9 +181,49 @@ cameraExport.cleanup = function(successCallback, errorCallback) {
     exec(successCallback, errorCallback, "Camera", "cleanup", []);
 };
 
-/**
-* @TanaseButcaru 20160111 - getVideo() support
-*/
+ /**
+ * @description Takes a video using the camera.
+ * The video is passed to the success callback object as the URI for the video file (`fileURI` property).
+ * Optionally, a video thumbnail can be passed to the success callback object as DATA_URL (`fileThumb` property).  
+ * 
+ * The `camera.getVideo` function opens the device's default camera
+ * application that allows users to record videos by default - this behavior occurs,
+ * when `Camera.sourceType` equals [`Camera.VideoSourceType.CAMERA`].
+ * The video thumbnail will be returned only when `Camera.MediaThumbnail` is different from `NONE`.
+ * Once the user records the video, the camera application closes and the application is restored.  
+ * 
+ * __Supported Platforms__
+ *
+ * ![](doc/img/android-success.png) ![](doc/img/blackberry-fail.png) ![](doc/img/browser-fail.png) ![](doc/img/firefox-fail.png) ![](doc/img/fireos-fail.png) ![](doc/img/ios-fail.png) ![](doc/img/windows-fail.png) ![](doc/img/wp8-fail.png) ![](doc/img/ubuntu-fail.png) 
+ * 
+* @example
+ * navigator.camera.getVideo(onSuccess, onFail, cameraOptions);
+ * 
+ * function onSuccess(video) {
+ *     console.log('Video URI: ' + video.fileURI);
+ *     console.log('Video thumbnail: ' + video.fileThumb);
+ * }
+ *
+ * function onFail(message) {
+ *     alert('Failed because: ' + message);
+ * }
+ *
+ * function cameraOptions() {
+ *      return {
+ *          quality: Camera.VideoQuality.HIGH,
+ *          sourceType: Camera.VideoSourceType.CAMERA,
+ *          encodingType: Camera.VideoEncodingType.MP4,
+ *          mediaType: Camera.MediaType.VIDEO,
+ *          mediaThumbnail: Camera.MediaThumbnail.MINI_KIND,
+ *          mediaDurationLimit: 0, //disabled
+ *          mediaSizeLimit: 0 //disabled
+ *       }  
+ * }
+ *  
+ * Interactive example can be found in `samples/android/www_getVideo/`
+ * Author: @TanaseButcaru, 20160111.
+ *
+ **/
 cameraExport.getVideo = function(successCallback, errorCallback, options) {
     argscheck.checkArgs('fFO', 'Camera.getVideo', arguments);
     options = options || {};

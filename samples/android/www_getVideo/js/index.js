@@ -62,14 +62,22 @@ var app = {
         navigator.camera.getVideo(cameraSuccess, cameraError, cameraOptions);
 
         //video recording success
-        function cameraSuccess(file){
-            //show response in page;
-            $('#fileUriValue').text(file);
+        function cameraSuccess(video){
+            //we should always have the `fileURI` property
+            $('#fileURI').text(video.fileURI);
+
+            //optionally, show video thumbnail if returned
+            if(video.hasOwnProperty('fileThumb')){
+                var fileThumb = document.createElement("IMG");
+                fileThumb.src = "data:image/jpeg;base64," + video.fileThumb;
+                $('#fileThumb').html(fileThumb);
+            }
+            else $('#fileThumb').html('-');
         }
 
         //video recording error
         function cameraError(msg){
-            $('#fileUriValue').text(msg);
+            $('.resultPropValue').text(msg);
         }
     }
 };
