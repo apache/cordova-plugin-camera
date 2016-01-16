@@ -73,8 +73,11 @@ module.exports = {
    * @enum {number}
    */
   MediaThumbnail:{
+    /** Media thumbnail disabled */
     NONE: 0,
+    /** Creates a thumbnail of 512x384 px */
     MINI_KIND: 1,
+    /** Creates a thumbnail of 96x96 px */
     MICRO_KIND: 2
   },
   /**
