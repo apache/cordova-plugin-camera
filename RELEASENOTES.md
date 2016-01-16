@@ -20,6 +20,13 @@
 -->
 # Release Notes
 
+### 2.1.0 (Jan 15, 2016)
+* added `.ratignore`
+* CB-10319 **Android** Adding reflective helper methods for permission requests
+* CB-9189 **Android** Implementing `save/restore` API to handle Activity destruction
+* CB-10241 App Crash cause by Camera Plugin **iOS 7**
+* CB-8940 Setting `z-index` values to maximum for UI buttons.
+
 ### 2.0.0 (Nov 18, 2015)
 * [CB-10035](https://issues.apache.org/jira/browse/CB-10035) Updated `RELEASENOTES` to be newest to oldest
 * [CB-8863](https://issues.apache.org/jira/browse/CB-8863) correct block usage for `async` calls
