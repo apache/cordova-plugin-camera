@@ -229,6 +229,7 @@ Optional parameters to customize the camera settings.
 | saveToPhotoAlbum | <code>Boolean</code> |  | Save the image to the photo album on the device after capture. |
 | popoverOptions | <code>[CameraPopoverOptions](#module_CameraPopoverOptions)</code> |  | iOS-only options that specify popover location in iPad. |
 | cameraDirection | <code>[Direction](#module_Camera.Direction)</code> | <code>BACK</code> | Choose the camera to use (front- or back-facing). |
+| useGeolocation | <code>Boolean</code> | <code>set by CameraUsesGeolocation preference</code> | For capturing JPEGs, set to true to get geolocation data in the EXIF header. This will trigger a request for geolocation permissions if set to true. |
 
 ---
 
