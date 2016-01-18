@@ -66,7 +66,8 @@ function capture(success, errorCallback) {
         imageData = imageData.replace('data:image/png;base64,', '');
 
         // stop video stream, remove video and button
-        localMediaStream.getVideoStreams()[0].stop();
+        console.log(localMediaStream);
+        //localMediaStream.getVideoStreams()[0].stop();
         
         video.parentNode.removeChild(video);
         button.parentNode.removeChild(button);
