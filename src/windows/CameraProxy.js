@@ -381,7 +381,7 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
 
             if (FocusControl.supported === true) {
                 capturePreview.addEventListener('click', function () {
-                    // Make sure user can't click more than once
+                    // Make sure function isn't called again before previous focus is completed
                     if (this.getAttribute('clicked') === '1') {
                         return false;
                     } else {
@@ -390,6 +390,7 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
                     var preset = Windows.Media.Devices.FocusPreset.autoNormal;
                     var parent = this;
                     FocusControl.setPresetAsync(preset).done(function () {
+                        // set the clicked attribute back to '0' to allow focus again
                         parent.setAttribute('clicked', '0');
                     });
                 });
