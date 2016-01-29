@@ -50,7 +50,17 @@ public class FileHelper {
     public static String getRealPath(Uri uri, CordovaInterface cordova) {
         String realPath = null;
 
-        if (Build.VERSION.SDK_INT < 11)
+        if (uri.getScheme().equals("file")) {
+            String path = uri.getPath();
+            if (!path.startsWith("/android_asset/")) {
+                return path;
+            } else {
+                LOG.d(LOG_TAG, "Cannot get real path of an android_asset URI");
+                return null;
+            }
+        }
+
+        else if (Build.VERSION.SDK_INT < 11)
             realPath = FileHelper.getRealPathFromURI_BelowAPI11(cordova.getActivity(), uri);
 
         // SDK >= 11 && SDK < 19
@@ -209,7 +219,7 @@ public class FileHelper {
         }
         return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
     }
-    
+
     /**
      * Returns the mime type of the data specified by the given URI string.
      *
