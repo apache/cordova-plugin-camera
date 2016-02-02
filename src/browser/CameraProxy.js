@@ -37,7 +37,7 @@ function takePicture(success, error, opts) {
                 var imageData = readerEvent.target.result;
 
                 return success(imageData.substr(imageData.indexOf(',') + 1));
-            }
+            };
 
             reader.readAsDataURL(inputEvent.target.files[0]);
         };
@@ -60,18 +60,25 @@ function capture(success, errorCallback) {
         // create a canvas and capture a frame from video stream
         var canvas = document.createElement('canvas');
         canvas.getContext('2d').drawImage(video, 0, 0, 320, 240);
-        
+
         // convert image stored in canvas to base64 encoded image
         var imageData = canvas.toDataURL('img/png');
         imageData = imageData.replace('data:image/png;base64,', '');
 
-        // stop video stream, remove video and button
-        localMediaStream.stop();
+        // stop video stream, remove video and button.
+        // Note that MediaStream.stop() is deprecated as of Chrome 47.
+        if (localMediaStream.stop) {
+            localMediaStream.stop();
+        } else {
+            localMediaStream.getTracks().forEach(function (track) {
+                track.stop();
+            });
+        }
         video.parentNode.removeChild(video);
         button.parentNode.removeChild(button);
 
         return success(imageData);
-    }
+    };
 
     navigator.getUserMedia = navigator.getUserMedia ||
                              navigator.webkitGetUserMedia ||
@@ -85,7 +92,7 @@ function capture(success, errorCallback) {
 
         document.body.appendChild(video);
         document.body.appendChild(button);
-    }
+    };
 
     if (navigator.getUserMedia) {
         navigator.getUserMedia({video: true, audio: true}, successCallback, errorCallback);
