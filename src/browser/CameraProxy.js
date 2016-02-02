@@ -19,11 +19,15 @@
  *
  */
 
+var HIGHEST_POSSIBLE_Z_INDEX = 2147483647;
+
 function takePicture(success, error, opts) {
     if (opts && opts[2] === 1) {
         capture(success, error);
     } else {
         var input = document.createElement('input');
+        input.style.position = 'relative';
+        input.style.zIndex = HIGHEST_POSSIBLE_Z_INDEX;
         input.type = 'file';
         input.name = 'files[]';
 
@@ -51,6 +55,11 @@ function capture(success, errorCallback) {
 
     var video = document.createElement('video');
     var button = document.createElement('button');
+    var parent = document.createElement('div');
+    parent.style.position = 'relative';
+    parent.style.zIndex = HIGHEST_POSSIBLE_Z_INDEX;
+    parent.appendChild(video);
+    parent.appendChild(button);
 
     video.width = 320;
     video.height = 240;
@@ -74,8 +83,7 @@ function capture(success, errorCallback) {
                 track.stop();
             });
         }
-        video.parentNode.removeChild(video);
-        button.parentNode.removeChild(button);
+        parent.parentNode.removeChild(parent);
 
         return success(imageData);
     };
@@ -90,8 +98,7 @@ function capture(success, errorCallback) {
         video.src = window.URL.createObjectURL(localMediaStream);
         video.play();
 
-        document.body.appendChild(video);
-        document.body.appendChild(button);
+        document.body.appendChild(parent);
     };
 
     if (navigator.getUserMedia) {
