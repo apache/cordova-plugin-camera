@@ -121,8 +121,8 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             url = "data:image/jpeg;base64," + url;
         } catch (e) {
             // not DATA_URL
-            log('URL: ' + url.slice(0, 100));
         }
+        log('URL: "' + url.slice(0, 90) + '"');
 
         pictureUrl = url;
         var img = document.getElementById('camera_image');
@@ -141,10 +141,11 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     function getPictureWin(data) {
         setPicture(data);
         // TODO: Fix resolveLocalFileSystemURI to work with native-uri.
-        if (pictureUrl.indexOf('file:') == 0 || pictureUrl.indexOf('content:') == 0 || pictureUrl.indexOf('ms-appdata:') === 0) {
+        if (pictureUrl.indexOf('file:') == 0 || pictureUrl.indexOf('content:') == 0 || pictureUrl.indexOf('ms-appdata:') === 0 || pictureUrl.indexOf('assets-library:') === 0) {
             resolveLocalFileSystemURI(data, function (e) {
                 fileEntry = e;
                 logCallback('resolveLocalFileSystemURI()', true)(e.toURL());
+                readFile();
             }, logCallback('resolveLocalFileSystemURI()', false));
         } else if (pictureUrl.indexOf('data:image/jpeg;base64') == 0) {
             // do nothing
@@ -217,6 +218,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
                 log('FileReader.readAsDataURL() - length = ' + reader.result.length);
             };
             reader.onerror = logCallback('FileReader.readAsDataURL', false);
+            reader.onloadend = onFileReadAsDataURL;
             reader.readAsDataURL(file);
         };
         // Test out onFileReceived when the file object was set via a native <input> elements.
@@ -361,7 +363,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
 
     function createOptionsEl(name, values, selectionDefault) {
         var openDiv = '<div style="display: inline-block">' + name + ': ';
-        var select = '<select name=' + name + '>';
+        var select = '<select name=' + name + ' id="' + name + '">';
 
         var defaultOption = '';
         if (selectionDefault == undefined) {
