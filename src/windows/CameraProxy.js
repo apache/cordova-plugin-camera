@@ -710,7 +710,10 @@ function takePictureFromCameraWindows(successCallback, errorCallback, args) {
     var UIMaxRes = WMCapture.CameraCaptureUIMaxPhotoResolution;
     var totalPixels = targetWidth * targetHeight;
 
-    if (totalPixels <= 320 * 240) {
+    if (targetWidth == -1 && targetHeight == -1) {
+        maxRes = UIMaxRes.highestAvailable;
+    }
+    else if (totalPixels <= 320 * 240) {
         maxRes = UIMaxRes.verySmallQvga;
     } else if (totalPixels <= 640 * 480) {
         maxRes = UIMaxRes.smallVga;
