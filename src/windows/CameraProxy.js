@@ -713,8 +713,9 @@ function takePictureFromCameraWindows(successCallback, errorCallback, args) {
     if (targetWidth == -1 && targetHeight == -1) {
         maxRes = UIMaxRes.highestAvailable;
     }
-    else if (totalPixels <= 320 * 240) {
-        maxRes = UIMaxRes.verySmallQvga;
+    // Temp fix for CB-10539
+    /*else if (totalPixels <= 320 * 240) {
+        maxRes = UIMaxRes.verySmallQvga;*/
     } else if (totalPixels <= 640 * 480) {
         maxRes = UIMaxRes.smallVga;
     } else if (totalPixels <= 1024 * 768) {
