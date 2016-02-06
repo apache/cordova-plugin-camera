@@ -46,7 +46,7 @@
     "gen-docs": "jsdoc2md --template \"jsdoc2md/TEMPLATE.md\" \"www/**/*.js\" --plugin \"dmd-plugin-cordova-plugin\" > README.md"
   },
   "author": "Apache Software Foundation",
-  "license": "Apache 2.0",
+  "license": "Apache-2.0",
   "devDependencies": {
     "dmd-plugin-cordova-plugin": "^0.1.0",
     "husky": "^0.10.1",
