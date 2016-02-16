@@ -78,7 +78,7 @@ public class FileHelper {
 
     @SuppressLint("NewApi")
     public static String getRealPathFromURI_API19(Context context, Uri uri) {
-        String filePath = "";
+        String filePath = null;
         try {
             String wholeID = DocumentsContract.getDocumentId(uri);
 
@@ -101,7 +101,7 @@ public class FileHelper {
             }
             cursor.close();
         } catch (Exception e) {
-            filePath = "";
+            filePath = null;
         }
         return filePath;
     }
