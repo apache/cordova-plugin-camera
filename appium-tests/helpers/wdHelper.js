@@ -16,9 +16,12 @@ module.exports.getDriver = function (platform, callback) {
             platformVersion: global.PLATFORM_VERSION || '',
             deviceName: global.DEVICE_NAME || '',
             app: global.PACKAGE_PATH,
-            autoAcceptAlerts: true
+            autoAcceptAlerts: true,
         };
 
+    if (process.env.CHROMEDRIVER_EXECUTABLE) {
+        driverConfig.chromedriverExecutable = process.env.CHROMEDRIVER_EXECUTABLE;
+    }
     driver = wd.promiseChainRemote(serverConfig);
     module.exports.configureLogging(driver);
     driver.init(driverConfig).setImplicitWaitTimeout(10000)
