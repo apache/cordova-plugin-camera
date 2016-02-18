@@ -42,7 +42,7 @@ static NSString* toBase64(NSData* data) {
     SEL s1 = NSSelectorFromString(@"cdv_base64EncodedString");
     SEL s2 = NSSelectorFromString(@"base64EncodedString");
     SEL s3 = NSSelectorFromString(@"base64EncodedStringWithOptions:");
-    
+
     if ([data respondsToSelector:s1]) {
         NSString* (*func)(id, SEL) = (void *)[data methodForSelector:s1];
         return func(data, s1);
@@ -108,7 +108,7 @@ static NSString* toBase64(NSData* data) {
  - metadata for captured image
  - metadata for gallery image
  - when saving to album, save metadata too
- 
+
  Metadata must take into account orientation fixes and resize
  */
 
@@ -119,7 +119,7 @@ static NSString* toBase64(NSData* data) {
     pictureOptions.quality = [command argumentAtIndex:0 withDefault:@(50)];
     pictureOptions.destinationType = [[command argumentAtIndex:1 withDefault:@(DestinationTypeFileUri)] unsignedIntegerValue];
     pictureOptions.sourceType = [[command argumentAtIndex:2 withDefault:@(UIImagePickerControllerSourceTypeCamera)] unsignedIntegerValue];
-    
+
     NSNumber* targetWidth = [command argumentAtIndex:3 withDefault:nil];
     NSNumber* targetHeight = [command argumentAtIndex:4 withDefault:nil];
     pictureOptions.targetSize = CGSizeMake(0, 0);
@@ -134,10 +134,10 @@ static NSString* toBase64(NSData* data) {
     pictureOptions.saveToPhotoAlbum = [[command argumentAtIndex:9 withDefault:@(NO)] boolValue];
     pictureOptions.popoverOptions = [command argumentAtIndex:10 withDefault:nil];
     pictureOptions.cameraDirection = [[command argumentAtIndex:11 withDefault:@(UIImagePickerControllerCameraDeviceRear)] unsignedIntegerValue];
-    
+
     pictureOptions.popoverSupported = NO;
     pictureOptions.usesGeolocation = NO;
-    
+
     return pictureOptions;
 }
 
@@ -162,7 +162,7 @@ static NSString* toBase64(NSData* data) {
 - (NSURL*) urlTransformer:(NSURL*)url
 {
     NSURL* urlToTransform = url;
-    
+
     // for backwards compatibility - we check if this property is there
     SEL sel = NSSelectorFromString(@"urlTransformer");
     if ([self.commandDelegate respondsToSelector:sel]) {
@@ -173,7 +173,7 @@ static NSString* toBase64(NSData* data) {
             urlToTransform = urlTransformer(url);
         }
     }
-    
+
     return urlToTransform;
 }
 
@@ -192,13 +192,13 @@ static NSString* toBase64(NSData* data) {
 - (void)takePicture:(CDVInvokedUrlCommand*)command
 {
     self.hasPendingOperation = YES;
-    
+
     __weak CDVCamera* weakSelf = self;
 
     [self.commandDelegate runInBackground:^{
-        
+
         CDVPictureOptions* pictureOptions = [CDVPictureOptions createFromTakePictureArguments:command];
-        
+
         /*
          FIXME #1
          What to do about quality?
@@ -213,13 +213,13 @@ static NSString* toBase64(NSData* data) {
          */
         // Check for option compatibility
         BOOL isDestinationNativeUri = (pictureOptions.destinationType == DestinationTypeNativeUri);
-        
+
         BOOL needsResize = [self needsResize:pictureOptions];
         BOOL needsOrientationCorrection = pictureOptions.correctOrientation;
         BOOL isSourceCamera = (pictureOptions.sourceType == UIImagePickerControllerSourceTypeCamera);
         BOOL allowsEditing = pictureOptions.allowsEditing;
         BOOL needsSavingToPhotoAlbum = (isSourceCamera || needsResize || needsOrientationCorrection || allowsEditing);
-        
+
         // if one wants an edited image and a NATIVE_URI, the edited image must be in the assets library therefore one must set the saveToPhotoAlbum option to true.
         if (!pictureOptions.saveToPhotoAlbum && isDestinationNativeUri && needsSavingToPhotoAlbum) {
             NSLog(@"Incompatible options, cannot return native URI if image is not in the assets library");
@@ -227,10 +227,10 @@ static NSString* toBase64(NSData* data) {
             [weakSelf.commandDelegate sendPluginResult:result callbackId:command.callbackId];
             return;
         }
-        
+
         pictureOptions.popoverSupported = [weakSelf popoverSupported];
         pictureOptions.usesGeolocation = [weakSelf usesGeolocation];
-        
+
         BOOL hasCamera = [UIImagePickerController isSourceTypeAvailable:pictureOptions.sourceType];
         if (!hasCamera) {
             NSLog(@"Camera.getPicture: source type %lu not available.", (unsigned long)pictureOptions.sourceType);
@@ -266,12 +266,12 @@ static NSString* toBase64(NSData* data) {
 
         CDVCameraPicker* cameraPicker = [CDVCameraPicker createFromPictureOptions:pictureOptions];
         weakSelf.pickerController = cameraPicker;
-        
+
         cameraPicker.delegate = weakSelf;
         cameraPicker.callbackId = command.callbackId;
         // we need to capture this state for memory warnings that dealloc this object
         cameraPicker.webView = weakSelf.webView;
-        
+
         // Perform UI operations on the main thread
         dispatch_async(dispatch_get_main_queue(), ^{
             // If a popover is already open, close it; we only want one at a time.
@@ -369,7 +369,7 @@ static NSString* toBase64(NSData* data) {
 {
     if([navigationController isKindOfClass:[UIImagePickerController class]]){
         UIImagePickerController* cameraPicker = (UIImagePickerController*)navigationController;
-        
+
         if(![cameraPicker.mediaTypes containsObject:(NSString*)kUTTypeImage]){
             [viewController.navigationItem setTitle:NSLocalizedString(@"Videos", nil)];
         }
@@ -431,13 +431,13 @@ static NSString* toBase64(NSData* data) {
     NSString* docsPath = [NSTemporaryDirectory()stringByStandardizingPath];
     NSFileManager* fileMgr = [[NSFileManager alloc] init]; // recommended by Apple (vs [NSFileManager defaultManager]) to be threadsafe
     NSString* filePath;
-    
+
     // generate unique file name
     int i = 1;
     do {
         filePath = [NSString stringWithFormat:@"%@/%@%03d.%@", docsPath, CDV_PHOTO_PREFIX, i++, extension];
     } while ([fileMgr fileExistsAtPath:filePath]);
-    
+
     return filePath;
 }
 
@@ -472,7 +472,7 @@ static NSString* toBase64(NSData* data) {
      */
     BOOL isSourceCamera = options.sourceType == UIImagePickerControllerSourceTypeCamera;
     BOOL saveToPhotoAlbum = options.saveToPhotoAlbum && ([self needsEdit:image options:options] || isSourceCamera);
-    
+
     return saveToPhotoAlbum;
 }
 
@@ -481,7 +481,7 @@ static NSString* toBase64(NSData* data) {
  - source: gallery
  - destination: NATIVE_URI
  - no edit (not orientation and not resize and not allowEdits)
- 
+
  otherwise, it can be found:
  - source: camera
  => UIImagePickerControllerMediaMetadata
@@ -504,7 +504,7 @@ static NSString* toBase64(NSData* data) {
 - (void)didReceiveImage:(CDVPictureOptions*)options info:(NSDictionary*)info
 {
     UIImage* image = [self retrieveImage:info options:options];
-    
+
     /*
      We can send the result immediately if:
      - we fetch the picture from the PhotoLibrary or the SavedPhotoAlbum,
@@ -522,7 +522,7 @@ static NSString* toBase64(NSData* data) {
         [self sendResult:result];
         return;
     }
-    
+
     __weak CDVCamera* weakSelf = self;
     CDVCameraReadMetadataCompletionBlock metadataCompletionBlock;
     metadataCompletionBlock = ^(UIImage *image, NSDictionary *metadata, CDVPictureOptions *options){
@@ -566,14 +566,14 @@ static NSString* toBase64(NSData* data) {
 {
     CGRect cropRect = [[info objectForKey:UIImagePickerControllerCropRect] CGRectValue];
     NSMutableDictionary* mutableMetadata = [metadata mutableCopy];
-    
+
     [mutableMetadata setValue:[NSNumber numberWithFloat:cropRect.size.width] forKey:(NSString*)kCGImagePropertyPixelWidth];
     [mutableMetadata setValue:[NSNumber numberWithFloat:cropRect.size.height] forKey:(NSString*)kCGImagePropertyPixelHeight];
     // orientation: 1 == TopLeft
     // allowsEditing simply allows to crop the image into a square..
     // front facing camera seemingly flips the picture..
     [mutableMetadata setValue:[NSNumber numberWithInt:1] forKey:(NSString*)kCGImagePropertyOrientation];
-    
+
     return mutableMetadata;
 }
 
@@ -603,13 +603,13 @@ static NSString* toBase64(NSData* data) {
         ];
         return;
     }
-    
+
     NSDictionary* metadata = [info objectForKey:UIImagePickerControllerMediaMetadata];
-    
+
     if (options.allowsEditing) {
         metadata = [self fixMetadataForEdited:metadata info:info];
     }
-    
+
     completionBlock(image, metadata, options);
 }
 
@@ -626,31 +626,31 @@ static NSString* toBase64(NSData* data) {
 - (void)fixOrientation:(UIImage**)image metadata:(NSDictionary**)metadata
 {
     NSMutableDictionary *mutableMetadata = [*metadata mutableCopy];
-    
+
     // Get image width and height before orientation correction...
     NSNumber *pixelWidth = [mutableMetadata valueForKey:(NSString*)kCGImagePropertyPixelWidth];
     NSNumber *pixelHeight = [mutableMetadata valueForKey:(NSString*)kCGImagePropertyPixelHeight];
     // ...as well as orientation
     long oldOrientation = [(NSNumber*)[mutableMetadata valueForKey:(NSString*)kCGImagePropertyOrientation] integerValue];
-    
+
     // Do the orientation correction
     *image = [*image imageCorrectedForCaptureOrientation];
-    
+
     // Reflect orientation correction (1 means default orientation)
     [mutableMetadata setValue:[NSNumber numberWithInt:1] forKey:(__bridge NSString*)kCGImagePropertyOrientation];
-    
+
     BOOL needsDimensionsInverting = (oldOrientation >=5 && oldOrientation <= 8);
     // If orientation correction inverted width and height dimensions, reflect that on metadata
     if (needsDimensionsInverting) {
         if (pixelHeight != nil) {
             [mutableMetadata setValue:pixelHeight forKey:(NSString*)kCGImagePropertyPixelWidth];
         }
-        
+
         if (pixelWidth != nil) {
             [mutableMetadata setValue:pixelWidth forKey:(NSString*)kCGImagePropertyPixelHeight];
         }
     }
-    
+
     *metadata = [NSDictionary dictionaryWithDictionary:mutableMetadata];
 }
 
@@ -658,15 +658,15 @@ static NSString* toBase64(NSData* data) {
 {
     UIImage* scaledImage = [*image imageByScalingNotCroppingForSize:size];
     NSMutableDictionary *mutableMetadata = [*metadata mutableCopy];
-    
+
     // Reflect dimensions change on metadata
     if (scaledImage != nil && mutableMetadata != nil) {
         [mutableMetadata setValue:[NSNumber numberWithFloat:(*image).size.width] forKey:(NSString*)kCGImagePropertyPixelWidth];
         [mutableMetadata setValue:[NSNumber numberWithFloat:(*image).size.height] forKey:(NSString*)kCGImagePropertyPixelHeight];
     }
-    
+
     *metadata = [NSDictionary dictionaryWithDictionary:mutableMetadata];
-    
+
     if (scaledImage != nil) {
         *image = scaledImage;
     }
@@ -683,15 +683,15 @@ static NSString* toBase64(NSData* data) {
     if ([self needsOrientationCorrection:image options:options]) {
         [self fixOrientation:&image metadata:&metadata];
     }
-    
+
     if ([self needsResize:options]) {
         [self resizeImage:&image metadata:&metadata size:options.targetSize];
     }
-    
+
     if ([self needsSavingToPhotoAlbum:image options:options]) {
         BOOL isSourceCamera = options.sourceType == UIImagePickerControllerSourceTypeCamera;
         BOOL isDestinationNativeUri = options.destinationType == DestinationTypeNativeUri;
-        
+
         ALAssetsLibraryWriteImageCompletionBlock librarySaveCompletionBlock = nil;
         // if source is camera and destination is NATIVE_URI:
         // we need to return the url of the asset we've just created.. otherwise we can't return a NATIVE_URI
@@ -707,22 +707,22 @@ static NSString* toBase64(NSData* data) {
                 resultBlock(nil, nil, assetURL);
             };
         }
-        
+
         [self saveToPhotoAlbum:image metadata:metadata completionBlock:librarySaveCompletionBlock];
-    
+
         // if there is a completion block we know we will send the result at some point (ie the completionBlock has fired) so stop here..
         if (librarySaveCompletionBlock != nil) {
             return;
         }
     }
-    
+
     resultBlock(image, metadata, nil);
 }
 
 - (NSData*)imageToData:(UIImage*)image metadata:(NSDictionary*)metadata options:(CDVPictureOptions*)options
 {
     NSData *imageData = UIImageJPEGRepresentation(image, [options.quality floatValue] / 100.0f);
-    
+
     // Create source image reference
     CGImageSourceRef source;
     source = CGImageSourceCreateWithData((CFDataRef)imageData, NULL);
@@ -730,10 +730,10 @@ static NSString* toBase64(NSData* data) {
         NSLog(@"***Could not create source destination ***");
         return imageData;
     }
-    
+
     // Get image type
     CFStringRef UTI = CGImageSourceGetType(source);
-    
+
     // Create destination image reference using mutable data
     NSMutableData *mutableDestinationData = [NSMutableData data];
     CGImageDestinationRef destination;
@@ -742,20 +742,20 @@ static NSString* toBase64(NSData* data) {
         NSLog(@"***Could not create image destination ***");
         return imageData;
     }
-    
+
     CGImageDestinationAddImageFromSource(destination, source, 0, (CFDictionaryRef)metadata);
-    
+
     BOOL success = NO;
     success = CGImageDestinationFinalize(destination);
     if (!success) {
         NSLog(@"***Could not create data from image destination ***");
         return imageData;
     }
-    
+
     // Cleanup
     CFRelease(destination);
     CFRelease(source);
-    
+
     // Return a non-mutable copy of the destination image data
     return [NSData dataWithData:(NSData *)mutableDestinationData];
 }
@@ -812,7 +812,7 @@ static NSString* toBase64(NSData* data) {
         NSString* extension = options.encodingType == EncodingTypePNG ? @"png" : @"jpg";
         NSString* filePath = [self tempFilePath:extension];
         NSError* err = nil;
-        
+
         // save file
         if (![imageData writeToFile:filePath options:NSAtomicWrite error:&err]) {
             result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
@@ -844,7 +844,7 @@ static NSString* toBase64(NSData* data) {
     if (result) {
         [self.commandDelegate sendPluginResult:result callbackId:self.pickerController.callbackId];
     }
-    
+
     self.hasPendingOperation = NO;
     self.pickerController = nil;
     self.image = nil;
@@ -861,34 +861,20 @@ static NSString* toBase64(NSData* data) {
 {
     __weak CDVCameraPicker* cameraPicker = (CDVCameraPicker*)picker;
     __weak CDVCamera* weakSelf = self;
-    
+
     dispatch_block_t invoke = ^(void) {
         __block CDVPluginResult* result = nil;
-        
+
         NSString* mediaType = [info objectForKey:UIImagePickerControllerMediaType];
         if ([mediaType isEqualToString:(NSString*)kUTTypeImage]) {
-<<<<<<< a060fb36f38b5dcf9daab64bbbfcda0b1646a817
-            [weakSelf resultForImage:cameraPicker.pictureOptions info:info completion:^(CDVPluginResult* res) {
-                [weakSelf.commandDelegate sendPluginResult:res callbackId:cameraPicker.callbackId];
-                weakSelf.hasPendingOperation = NO;
-                weakSelf.pickerController = nil;
-            }];
-        }
-        else {
-            result = [weakSelf resultForVideo:info];
-            [weakSelf.commandDelegate sendPluginResult:result callbackId:cameraPicker.callbackId];
-            weakSelf.hasPendingOperation = NO;
-            weakSelf.pickerController = nil;
-=======
             [weakSelf didReceiveImage:cameraPicker.pictureOptions info:info];
         }
         else {
             result = [self resultForVideo:info];
             [weakSelf sendResult:result];
->>>>>>> Major refactor
         }
     };
-    
+
     if (cameraPicker.pictureOptions.popoverSupported && (cameraPicker.pickerPopoverController != nil)) {
         [cameraPicker.pickerPopoverController dismissPopoverAnimated:YES];
         cameraPicker.pickerPopoverController.delegate = nil;
@@ -911,7 +897,7 @@ static NSString* toBase64(NSData* data) {
 {
     __weak CDVCameraPicker* cameraPicker = (CDVCameraPicker*)picker;
     __weak CDVCamera* weakSelf = self;
-    
+
     dispatch_block_t invoke = ^ (void) {
         CDVPluginResult* result;
         if ([ALAssetsLibrary authorizationStatus] == ALAuthorizationStatusAuthorized) {
@@ -919,9 +905,9 @@ static NSString* toBase64(NSData* data) {
         } else {
             result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"has no access to assets"];
         }
-        
+
         [weakSelf.commandDelegate sendPluginResult:result callbackId:cameraPicker.callbackId];
-        
+
         weakSelf.hasPendingOperation = NO;
         weakSelf.pickerController = nil;
     };
@@ -934,11 +920,11 @@ static NSString* toBase64(NSData* data) {
 	if (locationManager != nil) {
 		return locationManager;
 	}
-    
+
 	locationManager = [[CLLocationManager alloc] init];
 	[locationManager setDesiredAccuracy:kCLLocationAccuracyNearestTenMeters];
 	[locationManager setDelegate:self];
-    
+
 	return locationManager;
 }
 
@@ -947,15 +933,15 @@ static NSString* toBase64(NSData* data) {
     if (locationManager == nil) {
         return;
     }
-    
+
     [self.locationManager stopUpdatingLocation];
     self.locationManager = nil;
-    
+
     NSMutableDictionary *GPSDictionary = [[NSMutableDictionary dictionary] init];
-    
+
     CLLocationDegrees latitude  = newLocation.coordinate.latitude;
     CLLocationDegrees longitude = newLocation.coordinate.longitude;
-    
+
     // latitude
     if (latitude < 0.0) {
         latitude = latitude * -1.0f;
@@ -964,7 +950,7 @@ static NSString* toBase64(NSData* data) {
         [GPSDictionary setObject:@"N" forKey:(NSString*)kCGImagePropertyGPSLatitudeRef];
     }
     [GPSDictionary setObject:[NSNumber numberWithFloat:latitude] forKey:(NSString*)kCGImagePropertyGPSLatitude];
-    
+
     // longitude
     if (longitude < 0.0) {
         longitude = longitude * -1.0f;
@@ -974,7 +960,7 @@ static NSString* toBase64(NSData* data) {
         [GPSDictionary setObject:@"E" forKey:(NSString*)kCGImagePropertyGPSLongitudeRef];
     }
     [GPSDictionary setObject:[NSNumber numberWithFloat:longitude] forKey:(NSString*)kCGImagePropertyGPSLongitude];
-    
+
     // altitude
     CGFloat altitude = newLocation.altitude;
     if (!isnan(altitude)){
@@ -986,7 +972,7 @@ static NSString* toBase64(NSData* data) {
         }
         [GPSDictionary setObject:[NSNumber numberWithFloat:altitude] forKey:(NSString *)kCGImagePropertyGPSAltitude];
     }
-    
+
     // Time and date
     NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
     [formatter setDateFormat:@"HH:mm:ss.SSSSSS"];
@@ -994,11 +980,11 @@ static NSString* toBase64(NSData* data) {
     [GPSDictionary setObject:[formatter stringFromDate:newLocation.timestamp] forKey:(NSString *)kCGImagePropertyGPSTimeStamp];
     [formatter setDateFormat:@"yyyy:MM:dd"];
     [GPSDictionary setObject:[formatter stringFromDate:newLocation.timestamp] forKey:(NSString *)kCGImagePropertyGPSDateStamp];
-    
+
     NSMutableDictionary* mutableMetadata = [self.metadata mutableCopy];
-    
+
     [mutableMetadata setObject:GPSDictionary forKey:(NSString *)kCGImagePropertyGPSDictionary];
-    
+
     __weak CDVCamera* weakSelf = self;
     [self
      processImage:self.image
@@ -1027,7 +1013,7 @@ static NSString* toBase64(NSData* data) {
 
     [self.locationManager stopUpdatingLocation];
     self.locationManager = nil;
-    
+
     __weak CDVCamera* weakSelf = self;
     [self
      processImage:self.image
@@ -1061,14 +1047,14 @@ static NSString* toBase64(NSData* data) {
 {
     return nil;
 }
-    
+
 - (void)viewWillAppear:(BOOL)animated
 {
     SEL sel = NSSelectorFromString(@"setNeedsStatusBarAppearanceUpdate");
     if ([self respondsToSelector:sel]) {
         [self performSelector:sel withObject:nil afterDelay:0];
     }
-    
+
     [super viewWillAppear:animated];
 }
 
@@ -1078,7 +1064,7 @@ static NSString* toBase64(NSData* data) {
     cameraPicker.pictureOptions = pictureOptions;
     cameraPicker.sourceType = pictureOptions.sourceType;
     cameraPicker.allowsEditing = pictureOptions.allowsEditing;
-    
+
     if (cameraPicker.sourceType == UIImagePickerControllerSourceTypeCamera) {
         // We only allow taking pictures (no video) in this API.
         cameraPicker.mediaTypes = @[(NSString*)kUTTypeImage];
@@ -1090,7 +1076,7 @@ static NSString* toBase64(NSData* data) {
         NSArray* mediaArray = @[(NSString*)(pictureOptions.mediaType == MediaTypeVideo ? kUTTypeMovie : kUTTypeImage)];
         cameraPicker.mediaTypes = mediaArray;
     }
-    
+
     return cameraPicker;
 }
 
