@@ -1,5 +1,7 @@
 {{>cdv-license~}}
 
+[![Build Status](https://travis-ci.org/apache/cordova-plugin-camera.svg?branch=master)](https://travis-ci.org/apache/cordova-plugin-camera)
+
 # cordova-plugin-camera
 
 This plugin defines a global `navigator.camera` object, which provides an API for taking pictures and for choosing images from
