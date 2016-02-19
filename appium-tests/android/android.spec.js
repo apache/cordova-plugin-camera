@@ -16,8 +16,15 @@ var cameraHelper = require('../helpers/cameraHelper');
 describe('Camera tests Android.', function () {
     var driver,
         startingMessage = 'Ready for action!',
-        isTestPictureSaved = false, // this indicates if device library has test picture
-        stopFlag = false; // this indecates that there was critical error and tests cannot go on
+        // the name of webview context, it will be changed to match needed context if there are named ones:
+        webviewContext = 'WEBVIEW',
+        // this indicates if device library has test picture:
+        isTestPictureSaved = false,
+        // this indecates that there was critical error and tests cannot continue:
+        stopFlag = false,
+        // we need to know the screen width and height to properly click on the first image in the gallery
+        screenWidth = 360,
+        screenHeight = 567;
 
     function win() {
         expect(true).toBe(true);
@@ -65,7 +72,7 @@ describe('Camera tests Android.', function () {
         var command = "navigator.camera.getPicture(function (result) { document.getElementById('info').innerHTML = result.slice(0, 100); }, " +
                       "function (err) { document.getElementById('info').innerHTML = 'ERROR: ' + err; }," + JSON.stringify(options) + ");";
         return driver
-            .context('WEBVIEW')
+            .context(webviewContext)
             .execute(command)
             .sleep(5000)
             .context('NATIVE_APP')
@@ -78,11 +85,14 @@ describe('Camera tests Android.', function () {
                         options.sourceType === cameraConstants.PictureSourceType.SAVEDPHOTOALBUM)) {
                     var touchTile = new wd.TouchAction(),
                         swipeRight = new wd.TouchAction();
-                    touchTile.press({x: 50, y: 50}).release();
-                    swipeRight.press({x: 3, y: 100}).moveTo({x: 100, y: 100}).release();
+                    touchTile.press({x: Math.round(screenWidth / 4), y: Math.round(screenHeight / 5)}).release();
+                    swipeRight.press({x: 10, y: Math.round(screenHeight / 2)})
+                        .wait(300)
+                        .moveTo({x: Math.round(screenWidth / 2), y: Math.round(screenHeight / 2)})
+                        .release();
                     return driver
                         .performTouchAction(swipeRight)
-                        .sleep(1000)
+                        .sleep(3000)
                         .elementByXPath('//*[@text="Gallery"]')
                         .then(function (element) {
                             return element.click().sleep(5000);
@@ -118,14 +128,20 @@ describe('Camera tests Android.', function () {
     function enterTest() {
         if (stopFlag) {
             return driver
-                .context('WEBVIEW')
+                .context(webviewContext)
                 .then(function () {
                     throw 'stopFlag is on!';
                 });
         }
         return driver
             // trying to determine where we are
-            .context('WEBVIEW')
+            .context(webviewContext)
+            .then(function (result) {
+                console.log(result);
+            })
+            .fail(function (error) {
+                expect(true).toFailWithMessage(error);
+            })
             .elementById('info')
             .then(function () {
                 return driver; //we're already on the test screen
@@ -155,7 +171,7 @@ describe('Camera tests Android.', function () {
 
     function checkPicture(shouldLoad) {
         return driver
-            .context('WEBVIEW')
+            .context(webviewContext)
             .elementById('info')
             .getAttribute('innerHTML')
             .then(function (html) {
@@ -188,7 +204,7 @@ describe('Camera tests Android.', function () {
 
     function deleteImage() {
         var holdTile = new wd.TouchAction();
-        holdTile.press({x: 50, y: 50}).wait(1000).release();
+        holdTile.press({x: Math.round(screenWidth / 3), y: Math.round(screenHeight / 5)}).wait(1000).release();
         return driver
             .performTouchAction(holdTile)
             .elementByXPath('//android.widget.TextView[@text="Delete"]')
@@ -229,17 +245,63 @@ describe('Camera tests Android.', function () {
                 .sleep(10000)
                 .finally(done);
         });
-    }, 240000);
+    }, 320000);
+
+    it('camera.ui.util determine webview context name', function (done) {
+        var i = 0;
+        return driver
+            .contexts(function (err, contexts) {
+                if (err) {
+                    console.log(err);
+                }
+                for (i = 0; i < contexts.length; i++) {
+                    if (contexts[i].indexOf('mobilespec') >= 0) {
+                        webviewContext = contexts[i];
+                    }
+                }
+                done();
+            });
+    }, 30000);
+
+    it('camera.ui.util determine screen dimensions', function (done) {
+        return enterTest()
+            .execute('document.getElementById(\'info\').innerHTML = window.innerWidth;')
+            .sleep(5000)
+            .elementById('info')
+            .getAttribute('innerHTML')
+            .then(function (html) {
+                if (html !== startingMessage) {
+                    screenWidth = Number(html);
+                }
+            })
+            .execute('document.getElementById(\'info\').innerHTML = \'' + startingMessage + '\';')
+            .execute('document.getElementById(\'info\').innerHTML = window.innerHeight;')
+            .sleep(5000)
+            .elementById('info')
+            .getAttribute('innerHTML')
+            .then(function (html) {
+                if (html !== startingMessage) {
+                    screenHeight = Number(html);
+                }
+                done();
+            });
+    }, 60000);
 
     describe('Specs.', function () {
         beforeEach(function (done) {
             if (!stopFlag) {
                 return driver
-                    .context('WEBVIEW')
+                    .context(webviewContext)
+                    .then(function () {
+                        return driver; // no-op
+                    }, function (error) {
+                        expect(true).toFailWithMessage(error);
+                    })
                     .execute('document.getElementById("info").innerHTML = "' + startingMessage + '";')
                     .finally(done);
             }
-        }, 20000);
+            done();
+        }, 600000);
 
         // getPicture() with saveToPhotoLibrary = true
         it('camera.ui.spec.1 Saving the picture to photo library', function (done) {
@@ -250,7 +312,7 @@ describe('Camera tests Android.', function () {
                 saveToPhotoAlbum: true
             };
             enterTest()
-                .context('WEBVIEW')
+                .context(webviewContext)
                 .then(function () {
                     return getPicture(options);
                 })
@@ -276,7 +338,7 @@ describe('Camera tests Android.', function () {
                     return getPicture(options, true);
                 })
                 .sleep(5000)
-                .context('WEBVIEW')
+                .context(webviewContext)
                 .elementById('info')
                 .getAttribute('innerHTML')
                 .then(function (html) {
@@ -336,7 +398,7 @@ describe('Camera tests Android.', function () {
                             sourceType: cameraConstants.PictureSourceType.CAMERA,
                             destinationType: cameraConstants.DestinationType.FILE_URI };
             enterTest()
-                .context('WEBVIEW')
+                .context(webviewContext)
                 .then(function () {
                     return getPicture(options, true);
                 })
@@ -344,7 +406,7 @@ describe('Camera tests Android.', function () {
                 .context("NATIVE_APP")
                 .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'cancel\')]')
                 .click()
-                .context('WEBVIEW')
+                .context(webviewContext)
                 .then(function () {
                     return driver
                         .elementByXPath('//*[contains(text(),"Camera cancelled")]')
@@ -371,7 +433,7 @@ describe('Camera tests Android.', function () {
                             sourceType: cameraConstants.PictureSourceType.CAMERA,
                             destinationType: cameraConstants.DestinationType.FILE_URI };
             enterTest()
-                .context('WEBVIEW')
+                .context(webviewContext)
                 .then(function () {
                     return getPicture(options, true);
                 })
@@ -384,7 +446,7 @@ describe('Camera tests Android.', function () {
                 .elementByXPath('//*[contains(@resource-id,\'discard\')]')
                 .click()
                 .sleep(5000)
-                .context('WEBVIEW')
+                .context(webviewContext)
                 .then(function () {
                     return driver
                         .elementByXPath('//*[contains(text(),"Camera cancelled")]')
