@@ -245,6 +245,9 @@ module.exports = {
 
                                 data = canvas.toDataURL('image/jpeg');
                                 data = data.slice(data.indexOf(",") + 1);
+
+                                canvas = null;
+                                img = null;
                                 result.callbackOk(data, false);
                             }
 
