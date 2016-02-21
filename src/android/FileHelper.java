@@ -24,6 +24,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.provider.BaseColumns;
 import android.webkit.MimeTypeMap;
 
 import org.apache.cordova.CordovaInterface;
