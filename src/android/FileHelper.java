@@ -24,6 +24,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.provider.BaseColumns;
 import android.webkit.MimeTypeMap;
 
 import org.apache.cordova.CordovaInterface;
@@ -36,7 +37,8 @@ import java.util.Locale;
 
 public class FileHelper {
     private static final String LOG_TAG = "FileUtils";
-    private static final String _DATA = "_data";
+    // @dlogo 20160221 Not used
+    //private static final String _DATA = "_data";
 
     /**
      * Returns the real path of the given URI string.
@@ -79,6 +81,8 @@ public class FileHelper {
     @SuppressLint("NewApi")
     public static String getRealPathFromURI_API19(Context context, Uri uri) {
         String filePath = "";
+        Cursor cursor = null;
+
         try {
             String wholeID = DocumentsContract.getDocumentId(uri);
 
@@ -86,43 +90,63 @@ public class FileHelper {
             String id = wholeID.indexOf(":") > -1 ? wholeID.split(":")[1] : wholeID.indexOf(";") > -1 ? wholeID
                     .split(";")[1] : wholeID;
 
-            String[] column = { MediaStore.Images.Media.DATA };
+            // @dlogo 20151210 Get type to check wheter is image or video
+            String type = wholeID.indexOf(":") > -1 ? wholeID.split(":")[0] : wholeID.indexOf(";") > -1 ? wholeID
+                    .split(";")[0] : wholeID;
+
+            Uri contentUri = null;
+            if ("image".equals(type)) {
+                contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+            } else if ("video".equals(type)) {
+                contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+            } else if ("audio".equals(type)) {
+                contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+            }
+
+            // @dlogo 20160221 Replaced _data and _id harcoded value for constant (@riknoll)
+            String[] column = { MediaStore.MediaColumns.DATA };
 
             // where id is equal to
-            String sel = MediaStore.Images.Media._ID + "=?";
+            String sel = BaseColumns._ID + "=?";
 
-            Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, column,
-                    sel, new String[] { id }, null);
+            cursor = context.getContentResolver().query(contentUri, column, sel, new String[] { id }, null);
 
             int columnIndex = cursor.getColumnIndex(column[0]);
 
             if (cursor.moveToFirst()) {
                 filePath = cursor.getString(columnIndex);
             }
-            cursor.close();
         } catch (Exception e) {
             filePath = "";
+        } finally {
+            if (cursor != null)
+                cursor.close();
         }
         return filePath;
     }
 
     @SuppressLint("NewApi")
     public static String getRealPathFromURI_API11to18(Context context, Uri contentUri) {
-        String[] proj = { MediaStore.Images.Media.DATA };
+        // @dlogo 20151210 Make it works for uri likes 'content://media/external/images/media/350259' and video
         String result = null;
+        Cursor cursor = null;
+        // @dlogo 20160221 Replaced _data harcoded value for constant (@riknoll)
+        String column = MediaStore.MediaColumns.DATA;
+        String[] projection = { column };
 
         try {
-            CursorLoader cursorLoader = new CursorLoader(context, contentUri, proj, null, null, null);
-            Cursor cursor = cursorLoader.loadInBackground();
+	    cursor = context.getContentResolver().query(contentUri, projection, null, null, null);
 
-            if (cursor != null) {
-                int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-                cursor.moveToFirst();
-                result = cursor.getString(column_index);
+ 	    if (cursor != null && cursor.moveToFirst()) {
+                int index = cursor.getColumnIndexOrThrow(column);
+                result = cursor.getString(index);
             }
         } catch (Exception e) {
             result = null;
-        }
+        } finally {
+            if (cursor != null)
+                cursor.close();
+	}
         return result;
     }
 
@@ -209,7 +233,7 @@ public class FileHelper {
         }
         return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
     }
-    
+
     /**
      * Returns the mime type of the data specified by the given URI string.
      *
