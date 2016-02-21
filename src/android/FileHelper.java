@@ -128,19 +128,19 @@ public class FileHelper {
     public static String getRealPathFromURI_API11to18(Context context, Uri contentUri) {
         // @dlogo 20151210 Make it works for uri likes 'content://media/external/images/media/350259' and video
         String result = null;
-	Cursor cursor = null;
+        Cursor cursor = null;
         // @dlogo 20160221 Replaced _data harcoded value for constant (@riknoll)
-	String column = MediaStore.MediaColumns.DATA;
+        String column = MediaStore.MediaColumns.DATA;
         String[] projection = { column };
 
-	try {
+        try {
 	    cursor = context.getContentResolver().query(contentUri, projection, null, null, null);
 
  	    if (cursor != null && cursor.moveToFirst()) {
                 int index = cursor.getColumnIndexOrThrow(column);
                 result = cursor.getString(index);
             }
- 	} catch (Exception e) {
+        } catch (Exception e) {
             result = null;
         } finally {
             if (cursor != null)
