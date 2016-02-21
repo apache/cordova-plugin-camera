@@ -36,7 +36,8 @@ import java.util.Locale;
 
 public class FileHelper {
     private static final String LOG_TAG = "FileUtils";
-    private static final String _DATA = "_data";
+    // @dlogo 20160221 Not used
+    //private static final String _DATA = "_data";
 
     /**
      * Returns the real path of the given URI string.
@@ -79,20 +80,20 @@ public class FileHelper {
     @SuppressLint("NewApi")
     public static String getRealPathFromURI_API19(Context context, Uri uri) {
         String filePath = "";
-	Cursor cursor = null;
+        Cursor cursor = null;
 
         try {
-             String wholeID = DocumentsContract.getDocumentId(uri);
+            String wholeID = DocumentsContract.getDocumentId(uri);
 
             // Split at colon, use second item in the array
             String id = wholeID.indexOf(":") > -1 ? wholeID.split(":")[1] : wholeID.indexOf(";") > -1 ? wholeID
                     .split(";")[1] : wholeID;
 
-	    // @dlogo 20151210 Get type to check wheter is image or video
-	    String type = wholeID.indexOf(":") > -1 ? wholeID.split(":")[0] : wholeID.indexOf(";") > -1 ? wholeID
+            // @dlogo 20151210 Get type to check wheter is image or video
+            String type = wholeID.indexOf(":") > -1 ? wholeID.split(":")[0] : wholeID.indexOf(";") > -1 ? wholeID
                     .split(";")[0] : wholeID;
 
-	    Uri contentUri = null;
+            Uri contentUri = null;
             if ("image".equals(type)) {
                 contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
             } else if ("video".equals(type)) {
@@ -101,41 +102,42 @@ public class FileHelper {
                 contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
             }
 
-	    String[] column = { "_data" };
+            // @dlogo 20160221 Replaced _data and _id harcoded value for constant (@riknoll)
+            String[] column = { MediaStore.MediaColumns.DATA };
 
-	    // where id is equal to
-            String sel = "_id=?";
+            // where id is equal to
+            String sel = BaseColumns._ID + "=?";
 
-            cursor = context.getContentResolver().query(contentUri, column,
-                    sel, new String[] { id }, null);
+            cursor = context.getContentResolver().query(contentUri, column, sel, new String[] { id }, null);
 
             int columnIndex = cursor.getColumnIndex(column[0]);
 
             if (cursor.moveToFirst()) {
                 filePath = cursor.getString(columnIndex);
-            }            
+            }
         } catch (Exception e) {
             filePath = "";
         } finally {
             if (cursor != null)
                 cursor.close();
-	}
+        }
         return filePath;
     }
 
     @SuppressLint("NewApi")
     public static String getRealPathFromURI_API11to18(Context context, Uri contentUri) {
-	// @dlogo 20151210 Make it works for uri likes 'content://media/external/images/media/350259' and video
-	String result = null;
+        // @dlogo 20151210 Make it works for uri likes 'content://media/external/images/media/350259' and video
+        String result = null;
 	Cursor cursor = null;
-	String column = "_data";
-    	String[] projection = { column };
+        // @dlogo 20160221 Replaced _data harcoded value for constant (@riknoll)
+	String column = MediaStore.MediaColumns.DATA;
+        String[] projection = { column };
 
 	try {
 	    cursor = context.getContentResolver().query(contentUri, projection, null, null, null);
 
  	    if (cursor != null && cursor.moveToFirst()) {
-            	int index = cursor.getColumnIndexOrThrow(column);
+                int index = cursor.getColumnIndexOrThrow(column);
                 result = cursor.getString(index);
             }
  	} catch (Exception e) {
@@ -144,7 +146,6 @@ public class FileHelper {
             if (cursor != null)
                 cursor.close();
 	}
-    
         return result;
     }
 
@@ -231,7 +232,7 @@ public class FileHelper {
         }
         return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
     }
-    
+
     /**
      * Returns the mime type of the data specified by the given URI string.
      *
