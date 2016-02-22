@@ -71,20 +71,20 @@ Documentation consists of template and API docs produced from the plugin JS code
 
 
 * [camera](#module_camera)
-  * [.getPicture(successCallback, errorCallback, options)](#module_camera.getPicture)
-  * [.cleanup()](#module_camera.cleanup)
-  * [.onError](#module_camera.onError) : <code>function</code>
-  * [.onSuccess](#module_camera.onSuccess) : <code>function</code>
-  * [.CameraOptions](#module_camera.CameraOptions) : <code>Object</code>
+    * [.getPicture(successCallback, errorCallback, options)](#module_camera.getPicture)
+    * [.cleanup()](#module_camera.cleanup)
+    * [.onError](#module_camera.onError) : <code>function</code>
+    * [.onSuccess](#module_camera.onSuccess) : <code>function</code>
+    * [.CameraOptions](#module_camera.CameraOptions) : <code>Object</code>
 
 
 * [Camera](#module_Camera)
-  * [.DestinationType](#module_Camera.DestinationType) : <code>enum</code>
-  * [.EncodingType](#module_Camera.EncodingType) : <code>enum</code>
-  * [.MediaType](#module_Camera.MediaType) : <code>enum</code>
-  * [.PictureSourceType](#module_Camera.PictureSourceType) : <code>enum</code>
-  * [.PopoverArrowDirection](#module_Camera.PopoverArrowDirection) : <code>enum</code>
-  * [.Direction](#module_Camera.Direction) : <code>enum</code>
+    * [.DestinationType](#module_Camera.DestinationType) : <code>enum</code>
+    * [.EncodingType](#module_Camera.EncodingType) : <code>enum</code>
+    * [.MediaType](#module_Camera.MediaType) : <code>enum</code>
+    * [.PictureSourceType](#module_Camera.PictureSourceType) : <code>enum</code>
+    * [.PopoverArrowDirection](#module_Camera.PopoverArrowDirection) : <code>enum</code>
+    * [.Direction](#module_Camera.Direction) : <code>enum</code>
 
 * [CameraPopoverHandle](#module_CameraPopoverHandle)
 * [CameraPopoverOptions](#module_CameraPopoverOptions)
@@ -97,11 +97,11 @@ Documentation consists of template and API docs produced from the plugin JS code
 ### camera.getPicture(successCallback, errorCallback, options)
 Takes a photo using the camera, or retrieves a photo from the device's
 image gallery.  The image is passed to the success callback as a
-base64-encoded `String`, or as the URI for the image file.  
+base64-encoded `String`, or as the URI for the image file.
 
 The `camera.getPicture` function opens the device's default camera
 application that allows users to snap pictures by default - this behavior occurs,
-when `Camera.sourceType` equals [`Camera.PictureSourceType.CAMERA`](#module_Camera.PictureSourceType).  
+when `Camera.sourceType` equals [`Camera.PictureSourceType.CAMERA`](#module_Camera.PictureSourceType).
 Once the user snaps the photo, the camera application closes and the application is restored.
 
 If `Camera.sourceType` is `Camera.PictureSourceType.PHOTOLIBRARY` or
@@ -136,11 +136,17 @@ than `DATA_URL`.
 
 __Supported Platforms__
 
-![](doc/img/android-success.png) ![](doc/img/blackberry-success.png) ![](doc/img/browser-success.png) ![](doc/img/firefox-success.png) ![](doc/img/fireos-success.png) ![](doc/img/ios-success.png) ![](doc/img/windows-success.png) ![](doc/img/wp8-success.png) ![](doc/img/ubuntu-success.png)
+- Android
+- BlackBerry
+- Browser
+- Firefox
+- FireOS
+- iOS
+- Windows
+- WP8
+- Ubuntu
 
-* [More examples](#camera-getPicture-examples)
-
-* [Quirks](#camera-getPicture-quirks)
+More examples [here](#camera-getPicture-examples). Quirks [here](#camera-getPicture-quirks).
 
 **Kind**: static method of <code>[camera](#module_camera)</code>  
 
@@ -163,7 +169,7 @@ after calling [`camera.getPicture`](#module_camera.getPicture). Applies only whe
 
 __Supported Platforms__
 
-![](doc/img/android-fail.png) ![](doc/img/blackberry-fail.png) ![](doc/img/browser-fail.png) ![](doc/img/firefox-fail.png) ![](doc/img/fireos-fail.png) ![](doc/img/ios-success.png) ![](doc/img/windows-fail.png) ![](doc/img/wp8-fail.png) ![](doc/img/ubuntu-fail.png)
+- iOS
 
 **Kind**: static method of <code>[camera](#module_camera)</code>  
 **Example**  
@@ -331,12 +337,12 @@ A handle to an image picker popover.
 
 __Supported Platforms__
 
-![](doc/img/android-fail.png) ![](doc/img/blackberry-fail.png) ![](doc/img/browser-fail.png) ![](doc/img/firefox-fail.png) ![](doc/img/fireos-fail.png) ![](doc/img/ios-success.png) ![](doc/img/windows-fail.png) ![](doc/img/wp8-fail.png) ![](doc/img/ubuntu-fail.png)
+- iOS
 
 **Example**  
 ```js
 var cameraPopoverHandle = navigator.camera.getPicture(onSuccess, onFail,
-{ 
+{
     destinationType: Camera.DestinationType.FILE_URI,
     sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
     popoverOptions: new CameraPopoverOptions(300, 300, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY)
