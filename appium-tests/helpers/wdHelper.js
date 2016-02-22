@@ -1,4 +1,4 @@
-/*jslint node: true, plusplus: true */
+/* jshint node: true */
 'use strict';
 
 var wd = global.WD || require('wd');
@@ -24,11 +24,10 @@ module.exports.getDriver = function (platform, callback) {
     }
     driver = wd.promiseChainRemote(serverConfig);
     module.exports.configureLogging(driver);
-    driver.init(driverConfig).setImplicitWaitTimeout(10000)
+
+    return driver.init(driverConfig).setImplicitWaitTimeout(10000)
         .sleep(20000) // wait for the app to load
         .then(callback);
-
-    return driver;
 };
 
 module.exports.getWD = function () {
