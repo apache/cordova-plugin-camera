@@ -550,6 +550,9 @@ private String getPicutresPath()
     String imageFileName = "IMG_" + timeStamp + (this.encodingType == JPEG ? ".jpg" : ".png");
     File storageDir = Environment.getExternalStoragePublicDirectory(
             Environment.DIRECTORY_PICTURES);
+    if (!storageDir.exists() && !storageDir.mkdir()) {
+        Log.e(LOG_TAG, "Error creating directory: " + storageDir.toURI().toASCIIString());
+    }
     String galleryPath = storageDir.getAbsolutePath() + "/" + imageFileName;
     return galleryPath;
 }
