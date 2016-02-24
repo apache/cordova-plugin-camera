@@ -117,10 +117,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private Uri scanMe;                     // Uri of image to be added to content store
     private Uri croppedUri;
 
-    protected void getReadPermission(int requestCode)
-    {
-        cordova.requestPermission(this, requestCode, permissions[requestCode]);
-    }
 
     /**
      * Executes the request and returns PluginResult.
@@ -237,38 +233,40 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @param returnType        Set the type of image to return.
      */
     public void callTakePicture(int returnType, int encodingType) {
-		boolean takePicturePermission = cordova.hasPermission(permissions[TAKE_PIC_SEC]);
+        boolean saveAlbumPermission = PermissionHelper.hasPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
+        boolean takePicturePermission = PermissionHelper.hasPermission(this, Manifest.permission.CAMERA);
 
-		if (!takePicturePermission) {
-			takePicturePermission = true; // This permission is not required, unless we find android.permission.CAMERA in the package
-			try {
-				PackageManager packageManager = this.cordova.getActivity().getPackageManager();
-				String[] permissionsInPackage = packageManager.getPackageInfo(this.cordova.getActivity().getPackageName(), PackageManager.GET_PERMISSIONS).requestedPermissions;
-				if (permissionsInPackage != null) {
-					for (String permission : permissionsInPackage) {
-						if (permission.equals(Manifest.permission.CAMERA)) {
-							takePicturePermission = false;
-							break;
-						}
-					}
-				}
-			} catch (NameNotFoundException e) {	}
-		}
+        // CB-10120: The CAMERA permission does not need to be requested unless it is declared
+        // in AndroidManifest.xml. This plugin does not declare it, but others may and so we must
+        // check the package info to determine if the permission is present.
 
-		boolean saveAlbumPermission = cordova.hasPermission(permissions[SAVE_TO_ALBUM_SEC]);
+        if (!takePicturePermission) {
+            takePicturePermission = true;
+            try {
+                PackageManager packageManager = this.cordova.getActivity().getPackageManager();
+                String[] permissionsInPackage = packageManager.getPackageInfo(this.cordova.getActivity().getPackageName(), PackageManager.GET_PERMISSIONS).requestedPermissions;
+                if (permissionsInPackage != null) {
+                    for (String permission : permissionsInPackage) {
+                        if (permission.equals(Manifest.permission.CAMERA)) {
+                            takePicturePermission = false;
+                            break;
+                        }
+                    }
+                }
+            } catch (NameNotFoundException e) {
+                // We are requesting the info for our package, so this should
+                // never be caught
+            }
+        }
+
         if (takePicturePermission && saveAlbumPermission) {
             takePicture(returnType, encodingType);
+        } else if (saveAlbumPermission && !takePicturePermission) {
+            PermissionHelper.requestPermission(this, TAKE_PIC_SEC, Manifest.permission.CAMERA);
+        } else if (!saveAlbumPermission && takePicturePermission) {
+            PermissionHelper.requestPermission(this, TAKE_PIC_SEC, Manifest.permission.READ_EXTERNAL_STORAGE);
         } else {
-			if (saveAlbumPermission && !takePicturePermission) {
-				cordova.requestPermission(this, TAKE_PIC_SEC, permissions[TAKE_PIC_SEC]);
-			}
-			else if (!saveAlbumPermission && takePicturePermission) {
-				cordova.requestPermission(this, TAKE_PIC_SEC, permissions[SAVE_TO_ALBUM_SEC]);
-			}
-			else
-			{
-				cordova.requestPermissions(this, TAKE_PIC_SEC, permissions);
-			}
+            PermissionHelper.requestPermissions(this, TAKE_PIC_SEC, permissions);
         }
     }
 
