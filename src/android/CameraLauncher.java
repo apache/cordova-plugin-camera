@@ -117,10 +117,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private Uri scanMe;                     // Uri of image to be added to content store
     private Uri croppedUri;
 
-    protected void getReadPermission(int requestCode)
-    {
-        cordova.requestPermission(this, requestCode, permissions[requestCode]);
-    }
 
     /**
      * Executes the request and returns PluginResult.
@@ -180,8 +176,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     // preserve the original exif data and filename in the modified file that is
                     // created
                     if(this.mediaType == PICTURE && (this.destType == FILE_URI || this.destType == NATIVE_URI)
-                            && fileWillBeModified() && !cordova.hasPermission(permissions[SAVE_TO_ALBUM_SEC])) {
-                        getReadPermission(SAVE_TO_ALBUM_SEC);
+                            && fileWillBeModified() && !PermissionHelper.hasPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                        PermissionHelper.requestPermission(this, SAVE_TO_ALBUM_SEC, Manifest.permission.READ_EXTERNAL_STORAGE);
                     } else {
                         this.getImage(this.srcType, destType, encodingType);
                     }
@@ -240,38 +236,36 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @param returnType        Set the type of image to return.
      */
     public void callTakePicture(int returnType, int encodingType) {
-		boolean takePicturePermission = cordova.hasPermission(permissions[TAKE_PIC_SEC]);
+        boolean takePicturePermission = PermissionHelper.hasPermission(this, Manifest.permission.CAMERA);
 
-		if (!takePicturePermission) {
-			takePicturePermission = true; // This permission is not required, unless we find android.permission.CAMERA in the package
-			try {
-				PackageManager packageManager = this.cordova.getActivity().getPackageManager();
-				String[] permissionsInPackage = packageManager.getPackageInfo(this.cordova.getActivity().getPackageName(), PackageManager.GET_PERMISSIONS).requestedPermissions;
-				if (permissionsInPackage != null) {
-					for (String permission : permissionsInPackage) {
-						if (permission.equals(Manifest.permission.CAMERA)) {
-							takePicturePermission = false;
-							break;
-						}
-					}
-				}
-			} catch (NameNotFoundException e) {	} 			
-		}
+        if (!takePicturePermission) {
+            takePicturePermission = true; // This permission is not required, unless we find android.permission.CAMERA in the package
+            try {
+                PackageManager packageManager = this.cordova.getActivity().getPackageManager();
+                String[] permissionsInPackage = packageManager.getPackageInfo(this.cordova.getActivity().getPackageName(), PackageManager.GET_PERMISSIONS).requestedPermissions;
+                if (permissionsInPackage != null) {
+                    for (String permission : permissionsInPackage) {
+                        if (permission.equals(Manifest.permission.CAMERA)) {
+                            takePicturePermission = false;
+                            break;
+                        }
+                    }
+                }
+            } catch (NameNotFoundException e) {
+                // We are requesting the info for our package, so this should
+                // never be caught
+            }
+        }
 
-		boolean saveAlbumPermission = cordova.hasPermission(permissions[SAVE_TO_ALBUM_SEC]);
+        boolean saveAlbumPermission = PermissionHelper.hasPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
         if (takePicturePermission && saveAlbumPermission) {
             takePicture(returnType, encodingType);
+        } else if (saveAlbumPermission && !takePicturePermission) {
+            PermissionHelper.requestPermission(this, TAKE_PIC_SEC, Manifest.permission.CAMERA);
+        } else if (!saveAlbumPermission && takePicturePermission) {
+            PermissionHelper.requestPermission(this, TAKE_PIC_SEC, Manifest.permission.READ_EXTERNAL_STORAGE);
         } else {
-			if (saveAlbumPermission && !takePicturePermission) {
-				cordova.requestPermission(this, TAKE_PIC_SEC, permissions[TAKE_PIC_SEC]);
-			}
-			else if (!saveAlbumPermission && takePicturePermission) {
-				cordova.requestPermission(this, TAKE_PIC_SEC, permissions[SAVE_TO_ALBUM_SEC]);
-			}
-			else
-			{
-				cordova.requestPermissions(this, TAKE_PIC_SEC, permissions);
-			}
+            PermissionHelper.requestPermissions(this, TAKE_PIC_SEC, permissions);
         }
     }
 
