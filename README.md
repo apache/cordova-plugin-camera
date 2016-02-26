@@ -502,8 +502,6 @@ Tizen only supports a `destinationType` of
 
 - When using `destinationType.FILE_URI`, photos are saved in the application's temporary directory. The contents of the application's temporary directory is deleted when the application ends.
 
-- When using `destinationType.NATIVE_URI` and `sourceType.CAMERA`, photos are saved in the saved photo album regardless on the value of `saveToPhotoAlbum` parameter.
-
 #### Tizen Quirks
 
 - options not supported
