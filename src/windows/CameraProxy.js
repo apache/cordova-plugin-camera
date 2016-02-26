@@ -731,21 +731,32 @@ function takePictureFromCameraWindows(successCallback, errorCallback, args) {
 
     cameraCaptureUI.photoSettings.maxResolution = maxRes;
 
-    cameraCaptureUI.captureFileAsync(WMCapture.CameraCaptureUIMode.photo).done(function(picture) {
-        if (!picture) {
-            errorCallback("User didn't capture a photo.");
-            return;
-        }
+    var cameraPicture;
+    var savePhotoOnFocus = function() {
 
-        savePhoto(picture, {
+        window.removeEventListener("focus", savePhotoOnFocus);
+        // call only when the app is in focus again
+        savePhoto(cameraPicture, {
             destinationType: destinationType,
             targetHeight: targetHeight,
             targetWidth: targetWidth,
             encodingType: encodingType,
             saveToPhotoAlbum: saveToPhotoAlbum
         }, successCallback, errorCallback);
+    }
+
+    // add and delete focus eventHandler to capture the focus back from cameraUI to app 
+    window.addEventListener("focus", savePhotoOnFocus);
+    cameraCaptureUI.captureFileAsync(WMCapture.CameraCaptureUIMode.photo).done(function(picture) {
+        if (!picture) {
+            errorCallback("User didn't capture a photo.");
+            window.removeEventListener("focus", savePhotoOnFocus);
+            return;
+        }
+        cameraPicture = picture;
     }, function() {
         errorCallback("Fail to capture a photo.");
+        window.removeEventListener("focus", savePhotoOnFocus);
     });
 }
 
