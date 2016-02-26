@@ -444,19 +444,23 @@ static NSString* toBase64(NSData* data) {
             // If, for example, we use sourceType = Camera, URL might be nil because image is stored in memory.
             // In this case we must save image to device before obtaining an URI.
             if (url == nil) {
+                // Test1: take pic
+                // Test2: select existing pic
                 image = [self retrieveImage:info options:options];
-                ALAssetsLibrary* library = [ALAssetsLibrary new];
-                [library writeImageToSavedPhotosAlbum:image.CGImage orientation:(ALAssetOrientation)(image.imageOrientation) completionBlock:^(NSURL *assetURL, NSError *error) {
-                    CDVPluginResult* resultToReturn = nil;
-                    if (error) {
-                        resultToReturn = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[error localizedDescription]];
+                NSData* data = [self processImage:image info:info options:options];
+                if (data) {
+                    
+                    NSString* extension = options.encodingType == EncodingTypePNG? @"png" : @"jpg";
+                    NSString* filePath = [self tempFilePath:extension];
+                    NSError* err = nil;
+                    
+                    // save file
+                    if (![data writeToFile:filePath options:NSAtomicWrite error:&err]) {
+                        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
                     } else {
-                        NSString* nativeUri = [[self urlTransformer:assetURL] absoluteString];
-                        resultToReturn = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:nativeUri];
+                        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[[self urlTransformer:[NSURL fileURLWithPath:filePath]] absoluteString]];
                     }
-                    completion(resultToReturn);
-                }];
-                return;
+                }
             } else {
                 NSString* nativeUri = [[self urlTransformer:url] absoluteString];
                 result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:nativeUri];
