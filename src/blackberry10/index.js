@@ -198,6 +198,7 @@ module.exports = {
 
                                 var ratiox = canvas.height/this.width;
                                 var ratioy = canvas.width/this.height;
+                                var toWidth, toHeight, toLeft, toTop;
 
                                 // front camera used, assumed on photo size, it works with BB Z10
                                 // @todo use exif informations to get more information about the picture
@@ -205,17 +206,17 @@ module.exports = {
 
                                     // source is wider than destination
                                     if (ratiox > ratioy) {
-                                        var toWidth = canvas.height;
-                                        var toHeight = (this.height/this.width)*canvas.height;
-                                        var toTop = (canvas.width-toHeight)/2;
-                                        var toLeft = -canvas.height;
+                                        toWidth = canvas.height;
+                                        toHeight = (this.height/this.width)*canvas.height;
+                                        toTop = (canvas.width-toHeight)/2;
+                                        toLeft = -canvas.height;
                                     }
                                     // source is higher than destination
                                     else {
-                                        var toHeight = canvas.width;
-                                        var toWidth = (this.width/this.height)*canvas.width;
-                                        var toTop = 0;
-                                        var toLeft = (canvas.height + (toWidth-canvas.height)/2)*-1;
+                                        toHeight = canvas.width;
+                                        toWidth = (this.width/this.height)*canvas.width;
+                                        toTop = 0;
+                                        toLeft = (canvas.height + (toWidth-canvas.height)/2)*-1;
                                     }
 
                                     ctx.rotate(-90*Math.PI/180);
@@ -226,17 +227,17 @@ module.exports = {
                                     // source is wider than destination
                                     if (ratiox > ratioy) {
                                         console.log('first 2');
-                                        var toWidth = canvas.height;
-                                        var toHeight = (this.height/this.width)*canvas.height;
-                                        var toTop = (canvas.width+ ((toHeight-canvas.width)/2))*-1;
-                                        var toLeft = 0;//(canvas.width-toHeight)/2;
+                                        toWidth = canvas.height;
+                                        toHeight = (this.height/this.width)*canvas.height;
+                                        toTop = (canvas.width+ ((toHeight-canvas.width)/2))*-1;
+                                        toLeft = 0;//(canvas.width-toHeight)/2;
                                     }
                                     // source is higher than destination
                                     else {
-                                        var toHeight = canvas.width;
-                                        var toWidth = (this.width/this.height)*canvas.width;
-                                        var toTop = -canvas.width; //
-                                        var toLeft = (canvas.height-toWidth)/2;
+                                        toHeight = canvas.width;
+                                        toWidth = (this.width/this.height)*canvas.width;
+                                        toTop = -canvas.width; //
+                                        toLeft = (canvas.height-toWidth)/2;
                                     }
 
                                     ctx.rotate(90*Math.PI/180);
@@ -249,7 +250,7 @@ module.exports = {
                                 canvas = null;
                                 img = null;
                                 result.callbackOk(data, false);
-                            }
+                            };
 
                             img.src = data;
 
