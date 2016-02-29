@@ -743,7 +743,7 @@ function takePictureFromCameraWindows(successCallback, errorCallback, args) {
             encodingType: encodingType,
             saveToPhotoAlbum: saveToPhotoAlbum
         }, successCallback, errorCallback);
-    }
+    };
 
     // add and delete focus eventHandler to capture the focus back from cameraUI to app 
     window.addEventListener("focus", savePhotoOnFocus);
