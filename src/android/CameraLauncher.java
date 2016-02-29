@@ -472,7 +472,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 bitmap = getRotatedBitmap(rotate, bitmap, exif);
             }
 
-            this.processPicture(bitmap, this.encodingType);
+            this.processPicture(bitmap, this.encodingType, null);
 
             if (!this.saveToPhotoAlbum) {
                 checkForDuplicateImage(DATA_URL);
@@ -623,6 +623,38 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         String fileLocation = FileHelper.getRealPath(uri, this.cordova);
         Log.d(LOG_TAG, "File locaton is: " + fileLocation);
 
+        if (destType == DATA_URL) {
+            try
+            {
+                final String uriStringLower = uri.toString().toLowerCase();
+                if (!uriStringLower.endsWith(".png") && !uriStringLower.endsWith(".jpg") && !uriStringLower.endsWith(".jpeg") && !uriStringLower.endsWith(".gif")) {
+                    final String uriString = uri.toString();
+                    final String filename = uriString.substring(uriString.lastIndexOf('/') + 1);
+                    byte[] data = new byte[0];
+                    try {
+                        data = getAnyOtherFile(uri.toString());
+                    } catch (IOException e) {
+                        this.failPicture("Read file error.");
+                        return;
+                    }
+                    if (data.length != 0) {
+                        byte[] output = Base64.encode(data, Base64.NO_WRAP);
+                        String js_out = new String(output);
+                        this.callbackContext.success(filename + "?" + js_out);
+                        js_out = null;
+                        output = null;
+                        data = null;
+                        return;
+                    }
+                }
+            }
+            catch (OutOfMemoryError oom)
+            {
+                this.failPicture("File too big.");
+                return;
+            }
+        }
+
         // If you ask for video or all media type you will automatically get back a file URI
         // and there will be no attempt to resize any returned data
         if (this.mediaType != PICTURE) {
@@ -672,7 +704,8 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
 
                 // If sending base64 image back
                 if (destType == DATA_URL) {
-                    this.processPicture(bitmap, this.encodingType);
+                    final String filename = uriString.substring(uriString.lastIndexOf('/') + 1);
+                    this.processPicture(bitmap, this.encodingType, filename);
                 }
 
                 // If sending filename back
@@ -702,6 +735,38 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                 System.gc();
             }
         }
+    }
+
+    /**
+     * Return any file
+     *
+     * @throws IOException
+     */
+    private byte[] getAnyOtherFile(String imageUrl) throws IOException {
+        InputStream fileStream = null;
+        byte[] ret;
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            fileStream = FileHelper.getInputStreamFromUriString(imageUrl, cordova);
+            byte[] buffer = new byte[1024];
+            while (true) {
+                int r = fileStream.read(buffer);
+                if (r == -1) break;
+                out.write(buffer, 0, r);
+            }
+
+            ret = out.toByteArray();
+        } finally {
+            if (fileStream != null) {
+                try {
+                    fileStream.close();
+                } catch (IOException e) {
+                    LOG.d(LOG_TAG,"Exception while closing file input stream.");
+                }
+            }
+        }
+
+        return ret;
     }
 
     /**
@@ -886,6 +951,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
      */
     private Uri getUriFromMediaStore() {
         ContentValues values = new ContentValues();
+        values.put(android.provider.MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
         Uri uri;
         try {
             uri = this.cordova.getActivity().getContentResolver().insert(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
@@ -1127,7 +1193,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
      *
      * @param bitmap
      */
-    public void processPicture(Bitmap bitmap, int encodingType) {
+    public void processPicture(Bitmap bitmap, int encodingType, String filename) {
         ByteArrayOutputStream jpeg_data = new ByteArrayOutputStream();
         CompressFormat compressFormat = encodingType == JPEG ?
                 CompressFormat.JPEG :
@@ -1138,7 +1204,11 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                 byte[] code = jpeg_data.toByteArray();
                 byte[] output = Base64.encode(code, Base64.NO_WRAP);
                 String js_out = new String(output);
-                this.callbackContext.success(js_out);
+                if (filename == null) {
+                    this.callbackContext.success(js_out);
+                } else {
+                    this.callbackContext.success(filename + "?" + js_out);
+                }
                 js_out = null;
                 output = null;
                 code = null;

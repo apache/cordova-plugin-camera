@@ -1,9 +1,9 @@
 {
-  "name": "cordova-plugin-camera",
-  "version": "2.1.1-dev",
-  "description": "Cordova Camera Plugin",
+  "name": "cordova-plugin-camera-all-files",
+  "version": "2.1.14-dev",
+  "description": "Cordova Camera Plugin (Custom)",
   "cordova": {
-    "id": "cordova-plugin-camera",
+    "id": "cordova-plugin-camera-all-files",
     "platforms": [
       "firefoxos",
       "android",
@@ -20,7 +20,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apache/cordova-plugin-camera"
+    "url": "https://github.com/schweighart/cordova-plugin-camera"
   },
   "keywords": [
     "cordova",
