@@ -688,6 +688,7 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
 }
 
 function takePictureFromCameraWindows(successCallback, errorCallback, args) {
+
     var destinationType = args[1],
         targetWidth = args[3],
         targetHeight = args[4],
@@ -731,22 +732,29 @@ function takePictureFromCameraWindows(successCallback, errorCallback, args) {
 
     cameraCaptureUI.photoSettings.maxResolution = maxRes;
 
-    cameraCaptureUI.captureFileAsync(WMCapture.CameraCaptureUIMode.photo).done(function(picture) {
-        if (!picture) {
-            errorCallback("User didn't capture a photo.");
-            return;
-        }
+    cameraCaptureUI.captureFileAsync(WMCapture.CameraCaptureUIMode.photo).done(
 
-        savePhoto(picture, {
-            destinationType: destinationType,
-            targetHeight: targetHeight,
-            targetWidth: targetWidth,
-            encodingType: encodingType,
-            saveToPhotoAlbum: saveToPhotoAlbum
-        }, successCallback, errorCallback);
-    }, function() {
-        errorCallback("Fail to capture a photo.");
-    });
+        function(picture) {
+
+            if (!picture) {
+                errorCallback("User didn't capture a photo.");
+                return;
+            }
+
+            savePhoto(picture, {
+                destinationType: destinationType,
+                targetHeight: targetHeight,
+                targetWidth: targetWidth,
+                encodingType: encodingType,
+                saveToPhotoAlbum: saveToPhotoAlbum
+                }, successCallback, errorCallback
+            );
+
+        }, function() {
+
+            errorCallback("Fail to capture a photo.");
+        }
+    );
 }
 
 function savePhoto(picture, options, successCallback, errorCallback) {
