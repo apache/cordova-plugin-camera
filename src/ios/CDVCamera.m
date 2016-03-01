@@ -78,7 +78,12 @@ static NSString* toBase64(NSData* data) {
     pictureOptions.mediaType = [[command argumentAtIndex:6 withDefault:@(MediaTypePicture)] unsignedIntegerValue];
     pictureOptions.allowsEditing = [[command argumentAtIndex:7 withDefault:@(NO)] boolValue];
     pictureOptions.correctOrientation = [[command argumentAtIndex:8 withDefault:@(NO)] boolValue];
-    pictureOptions.saveToPhotoAlbum = [[command argumentAtIndex:9 withDefault:@(NO)] boolValue];
+    if (pictureOptions.sourceType == UIImagePickerControllerSourceTypePhotoLibrary) {
+        pictureOptions.saveToPhotoAlbum = NO;
+    }
+    else {
+        pictureOptions.saveToPhotoAlbum = [[command argumentAtIndex:9 withDefault:@(NO)] boolValue];
+    }
     pictureOptions.popoverOptions = [command argumentAtIndex:10 withDefault:nil];
     pictureOptions.cameraDirection = [[command argumentAtIndex:11 withDefault:@(UIImagePickerControllerCameraDeviceRear)] unsignedIntegerValue];
     
