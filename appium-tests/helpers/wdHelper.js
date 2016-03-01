@@ -11,7 +11,7 @@ module.exports.getDriver = function (platform, callback) {
     },
         driverConfig = {
             browserName: '',
-            'appium-version': '1.3',
+            'appium-version': '1.5',
             platformName: platform,
             platformVersion: global.PLATFORM_VERSION || '',
             deviceName: global.DEVICE_NAME || '',

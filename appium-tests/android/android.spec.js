@@ -26,9 +26,11 @@ describe('Camera tests Android.', function () {
     var webviewContext = DEFAULT_WEBVIEW_CONTEXT;
     // this indicates that the device library has the test picture:
     var isTestPictureSaved = false;
-    // this indicates that there was a critical error and tests cannot continue:
+    // this indicates that there was a critical error and we should try to recover:
+    var errorFlag = false;
+    // this indicates that we couldn't restore Appium session and should fail fast:
     var stopFlag = false;
-    // we need to know the screen width and height to properly click on an image in the gallery
+    // we need to know the screen width and height to properly click on an image in the gallery:
     var screenWidth = DEFAULT_SCREEN_WIDTH;
     var screenHeight = DEFAULT_SCREEN_HEIGHT;
 
@@ -168,7 +170,7 @@ describe('Camera tests Android.', function () {
                             .execute('window.location = "../index.html"')
                             .sleep(5000)
                             .fail(function () {
-                                stopFlag = true;
+                                errorFlag = true;
                                 throw 'Couldn\'t find start page.';
                             });
                     }, function () {
@@ -261,7 +263,7 @@ describe('Camera tests Android.', function () {
                         // we should try to recreate the session for the following tests
                         if (msg.indexOf('Error response status: 6') >= 0 ||
                             msg.indexOf('Error response status: 7') >= 0) {
-                            stopFlag = true;
+                            errorFlag = true;
                         }
                         return result;
                     }
@@ -271,7 +273,13 @@ describe('Camera tests Android.', function () {
     });
 
     it('camera.ui.util configuring driver and starting a session', function (done) {
-        getDriver().then(done);
+        stopFlag = true; // just in case of timeout
+        getDriver().then(function () {
+            stopFlag = false;
+        }, function (error) {
+            fail(error);
+        })
+        .finally(done);
     }, 5 * MINUTE);
 
     it('camera.ui.util determine webview context name', function (done) {
@@ -316,19 +324,14 @@ describe('Camera tests Android.', function () {
 
     describe('Specs.', function () {
         beforeEach(function (done) {
+            // prepare the app for the test
             if (!stopFlag) {
                 return driver
                     .context(webviewContext)
                     .then(function () {
                         return driver; // no-op
                     }, function (error) {
-                        if (error.message.indexOf('Error response status: 6') >= 0) {
-                            // the session has expired but we can fix this!
-                            console.log('The session has expired. Trying to start a new one...');
-                            return getDriver();
-                        } else {
-                            expect(true).toFailWithMessage(error);
-                        }
+                        expect(true).toFailWithMessage(error);
                     })
                     .execute('document.getElementById("info").innerHTML = "' + STARTING_MESSAGE + '";')
                     .finally(done);
@@ -337,20 +340,30 @@ describe('Camera tests Android.', function () {
         }, 3 * MINUTE);
 
         afterEach(function (done) {
-            if (!stopFlag) {
+            if (!errorFlag || stopFlag) {
+                // either there's no error or we've failed irrecoverably
+                // nothing to worry about!
                 done();
                 return;
             }
-            // recreate the session if there was a critical error in the spec
+            // recreate the session if there was a critical error in a previous spec
+            stopFlag = true; // we're going to set this to false if we're able to restore the session
             return driver
                 .quit()
                 .then(function () {
                     return getDriver()
                         .then(function () {
+                            errorFlag = false;
                             stopFlag = false;
-                            done();
+                        }, function (error) {
+                            fail(error);
+                            stopFlag = true;
                         });
-                });
+                }, function (error) {
+                    fail(error);
+                    stopFlag = true;
+                })
+                .finally(done);
         }, 3 * MINUTE);
 
         // getPicture() with saveToPhotoLibrary = true
