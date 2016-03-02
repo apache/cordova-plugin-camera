@@ -99,7 +99,7 @@ Documentation consists of template and API docs produced from the plugin JS code
 ### camera.getPicture(successCallback, errorCallback, options)
 Takes a photo using the camera, or retrieves a photo from the device's
 image gallery.  The image is passed to the success callback as a
-base64-encoded `String`, or as the URI for the image file.
+Base64-encoded `String`, or as the URI for the image file.
 
 The `camera.getPicture` function opens the device's default camera
 application that allows users to snap pictures by default - this behavior occurs,
@@ -117,7 +117,7 @@ The return value is sent to the [`cameraSuccess`](#module_camera.onSuccess) call
 one of the following formats, depending on the specified
 `cameraOptions`:
 
-- A `String` containing the base64-encoded photo image.
+- A `String` containing the Base64-encoded photo image.
 
 - A `String` representing the image file location on local storage (default).
 
@@ -363,7 +363,7 @@ window.onorientationchange = function() {
 
 #### Example <a name="camera-getPicture-examples"></a>
 
-Take a photo and retrieve it as a base64-encoded image:
+Take a photo and retrieve it as a Base64-encoded image:
 
     navigator.camera.getPicture(onSuccess, onFail, { quality: 50,
         destinationType: Camera.DestinationType.DATA_URL
@@ -402,14 +402,14 @@ Take a photo and retrieve the image's file location:
 
 Amazon Fire OS uses intents to launch the camera activity on the device to capture
 images, and on phones with low memory, the Cordova activity may be killed.  In this
-scenario, the image may not appear when the cordova activity is restored.
+scenario, the image may not appear when the Cordova activity is restored.
 
 #### Android Quirks
 
 Android uses intents to launch the camera activity on the device to capture
 images, and on phones with low memory, the Cordova activity may be killed.  In this
 scenario, the result from the plugin call will be delivered via the resume event.
-See [the Android Lifecycle guide](http://cordova.apache.org/docs/en/dev/guide/platforms/android/lifecycle.html)
+See [the Android Lifecycle guide][android_lifecycle]
 for more information. The `pendingResult.result` value will contain the value that
 would be passed to the callbacks (either the URI/URL or an error message). Check
 the `pendingResult.pluginStatus` to determine whether or not the call was
@@ -417,11 +417,11 @@ successful.
 
 #### Browser Quirks
 
-Can only return photos as base64-encoded image.
+Can only return photos as Base64-encoded image.
 
 #### Firefox OS Quirks
 
-Camera plugin is currently implemented using [Web Activities](https://hacks.mozilla.org/2013/01/introducing-web-activities/).
+Camera plugin is currently implemented using [Web Activities][web_activities].
 
 #### iOS Quirks
 
@@ -518,7 +518,11 @@ Tizen only supports a `destinationType` of
 
 - Ignores the `cameraDirection` parameter.
 
-- Ignores the `saveToPhotoAlbum` parameter.  IMPORTANT: All images taken with the wp7/8 cordova camera API are always copied to the phone's camera roll.  Depending on the user's settings, this could also mean the image is auto-uploaded to their OneDrive.  This could potentially mean the image is available to a wider audience than your app intended.  If this a blocker for your application, you will need to implement the CameraCaptureTask as documented on msdn : [http://msdn.microsoft.com/en-us/library/windowsphone/develop/hh394006.aspx](http://msdn.microsoft.com/en-us/library/windowsphone/develop/hh394006.aspx)
-You may also comment or up-vote the related issue in the [issue tracker](https://issues.apache.org/jira/browse/CB-2083)
+- Ignores the `saveToPhotoAlbum` parameter.  IMPORTANT: All images taken with the WP8/8 Cordova camera API are always copied to the phone's camera roll.  Depending on the user's settings, this could also mean the image is auto-uploaded to their OneDrive.  This could potentially mean the image is available to a wider audience than your app intended. If this is a blocker for your application, you will need to implement the CameraCaptureTask as [documented on MSDN][msdn_wp8_docs]. You may also comment or up-vote the related issue in the [issue tracker][wp8_bug].
 
 - Ignores the `mediaType` property of `cameraOptions` as the Windows Phone SDK does not provide a way to choose videos from PHOTOLIBRARY.
+
+[android_lifecycle]: http://cordova.apache.org/docs/en/dev/guide/platforms/android/lifecycle.html
+[web_activities]: https://hacks.mozilla.org/2013/01/introducing-web-activities/
+[wp8_bug]: https://issues.apache.org/jira/browse/CB-2083
+[msdn_wp8_docs]: http://msdn.microsoft.com/en-us/library/windowsphone/develop/hh394006.aspx
