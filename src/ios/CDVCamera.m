@@ -59,59 +59,50 @@ static NSString* toBase64(NSData* data) {
 
 @implementation CDVPictureOptions
 
-/*
- API:
- Camera:
- - CameraPopoverHandle:
- - setPosition(popoverOptions) => ()
- - getPicture(success, failure, options) => CameraPopoverHandle
- - options:
- - quality (number [0-100])
- - destinationType (number):
- 0: DATA_URL
- 1: FILE_URI
- 2: NATIVE_URI
- - sourceType (number):
- 0: PHOTOLIBRARY
- 1: CAMERA
- 2: SAVEDPHOTOALBUM
- - allowEdit (bool)
- - encodingType (number):
- 0: JPEG
- 1: PNG
- - targetWidth/targetHeight (number)
- - mediaType (number):
- 0: PICTURE
- 1: VIDEO
- 2: ALLMEDIA
- - correctOrientation (bool)
- - saveToPhotoAlbum (bool)
- - cameraDirection (number)
- 0: BACK
- 1: FRONT
- - popoverOptions (dictionnary) [iPad only]:
- - x (number)
- - y (number)
- - width (number)
- - height (number)
- - arrowDir (number):
- 1: ARROW_UP
- 2: ARROW_DOWN
- 4: ARROW_LEFT
- 8: ARROW_RIGHT
- 15: ARROW_ANY
- - cleanup => ()
- */
 
 /*
- TODO:
- - metadata for captured image
- - metadata for gallery image
- - when saving to album, save metadata too
- 
- Metadata must take into account orientation fixes and resize
+ *  API:
+ *  Camera:
+ *    - CameraPopoverHandle:
+ *      - setPosition(popoverOptions) => ()
+ *    - getPicture(success, failure, options) => CameraPopoverHandle
+ *      - options:
+ *        - quality (number [0-100])
+ *        - destinationType (number):
+ *          0: DATA_URL => Returns a Base64 image
+ *          1: FILE_URI => Returns a file URI
+ *          2: NATIVE_URI => Returns a native URI (asset-library://...)
+ *        - sourceType (number):
+ *          0: PHOTOLIBRARY
+ *          1: CAMERA
+ *          2: SAVEDPHOTOALBUM
+ *        - allowEdit (bool)
+ *        - encodingType (number):
+ *          0: JPEG
+ *          1: PNG
+ *        - targetWidth/targetHeight (number)
+ *        - mediaType (number):
+ *          0: PICTURE
+ *          1: VIDEO
+ *          2: ALLMEDIA
+ *        - correctOrientation (bool)
+ *        - saveToPhotoAlbum (bool)
+ *        - cameraDirection (number)
+ *          0: BACK
+ *          1: FRONT
+ *        - popoverOptions (dictionnary) [iPad only]:
+ *          - x (number)
+ *          - y (number)
+ *          - width (number)
+ *          - height (number)
+ *          - arrowDir (number):
+ *            1: ARROW_UP
+ *            2: ARROW_DOWN
+ *            4: ARROW_LEFT
+ *            8: ARROW_RIGHT
+ *            15: ARROW_ANY
+ *    - cleanup => ()
  */
-
 + (instancetype) createFromTakePictureArguments:(CDVInvokedUrlCommand*)command
 {
     CDVPictureOptions* pictureOptions = [[CDVPictureOptions alloc] init];
