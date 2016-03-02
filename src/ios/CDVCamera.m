@@ -123,6 +123,12 @@ static NSString* toBase64(NSData* data) {
     pictureOptions.allowsEditing = [[command argumentAtIndex:7 withDefault:@(NO)] boolValue];
     pictureOptions.correctOrientation = [[command argumentAtIndex:8 withDefault:@(NO)] boolValue];
 
+    /*
+    As per the doc :
+    When using destinationType.NATIVE_URI and sourceType.CAMERA, photos are
+    saved in the saved photo album regardless on the value of saveToPhotoAlbum
+    parameter.
+    */
     BOOL isDestinationNativeUri = (pictureOptions.destinationType == DestinationTypeNativeUri);
     BOOL isSourceCamera = (pictureOptions.sourceType == UIImagePickerControllerSourceTypeCamera);
     pictureOptions.saveToPhotoAlbum = [[command argumentAtIndex:9 withDefault:@(NO)] boolValue] || (isDestinationNativeUri && isSourceCamera);
