@@ -814,10 +814,10 @@ static NSString* toBase64(NSData* data) {
     self.metadata = nil;
 }
 
-- (CDVPluginResult*)resultForVideo:(NSDictionary*)info
+- (CDVPluginResult*)didReceiveVideo:(NSDictionary*)info
 {
     NSString* moviePath = [[info objectForKey:UIImagePickerControllerMediaURL] absoluteString];
-    return [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:moviePath];
+    [self sendResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:moviePath]];
 }
 
 - (void)imagePickerController:(UIImagePickerController*)picker didFinishPickingMediaWithInfo:(NSDictionary*)info
@@ -833,8 +833,7 @@ static NSString* toBase64(NSData* data) {
             [weakSelf didReceiveImage:cameraPicker.pictureOptions info:info];
         }
         else {
-            result = [self resultForVideo:info];
-            [weakSelf sendResult:result];
+            [weakSelf didReceiveVideo:info];
         }
     };
     
