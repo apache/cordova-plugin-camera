@@ -464,31 +464,6 @@ static NSString* toBase64(NSData* data) {
     return saveToPhotoAlbum;
 }
 
-/*
- Metadata is not needed for:
- - source: gallery
- - destination: NATIVE_URI
- - no edit (not orientation and not resize and not allowEdits)
- 
- otherwise, it can be found:
- - source: camera
- => UIImagePickerControllerMediaMetadata
- - source: gallery
- => CGImage thingy
- */
-
-// resultForImage:
-//      retrieve image, OK
-//      edit image (orientation + resize) and metadata OK
-//      if (geoLoc)
-//          save on self.{data, metadata}
-//          wait for geoLoc
-//      else
-//          saveAndResult
-//
-// saveAndResult:
-//      saveToPhotoAlbum if needed (options.saveToPhotoAlbum && !(gallery && NATIVE_URI))
-//      send back the image URI
 - (void)didReceiveImage:(CDVPictureOptions*)options info:(NSDictionary*)info
 {
     UIImage* image = [self retrieveImage:info options:options];
