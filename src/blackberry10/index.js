@@ -187,8 +187,76 @@ module.exports = {
                 } else {
                     encodeBase64(data, function (data) {
                         if (/^data:/.test(data)) {
-                            data = data.slice(data.indexOf(",") + 1);
-                            result.callbackOk(data, false);
+                            
+                            var img = new Image();
+
+                            img.onload = function() {
+
+                                var canvas=document.createElement("canvas");
+                                var ctx = canvas.getContext('2d');
+
+                                // use the required picture size, from the parameters
+                                canvas.width = args[3];
+                                canvas.height = args[4];
+
+                                var ratiox = canvas.height/this.width;
+                                var ratioy = canvas.width/this.height;
+                                var toWidth, toHeight, toLeft, toTop;
+
+                                // front camera used, assumed on photo size, it works with BB Z10
+                                // @todo use exif informations to get more information about the picture
+                                if ( this.width < 2000 && this.height < 1000) {
+
+                                    // source is wider than destination
+                                    if (ratiox > ratioy) {
+                                        toWidth = canvas.height;
+                                        toHeight = (this.height/this.width)*canvas.height;
+                                        toTop = (canvas.width-toHeight)/2;
+                                        toLeft = -canvas.height;
+                                    }
+                                    // source is higher than destination
+                                    else {
+                                        toHeight = canvas.width;
+                                        toWidth = (this.width/this.height)*canvas.width;
+                                        toTop = 0;
+                                        toLeft = (canvas.height + (toWidth-canvas.height)/2)*-1;
+                                    }
+
+                                    ctx.rotate(-90*Math.PI/180);
+                                    ctx.drawImage(this, toLeft, toTop, toWidth, toHeight);
+                                }
+                                else {
+
+                                    // source is wider than destination
+                                    if (ratiox > ratioy) {
+                                        console.log('first 2');
+                                        toWidth = canvas.height;
+                                        toHeight = (this.height/this.width)*canvas.height;
+                                        toTop = (canvas.width+ ((toHeight-canvas.width)/2))*-1;
+                                        toLeft = 0;//(canvas.width-toHeight)/2;
+                                    }
+                                    // source is higher than destination
+                                    else {
+                                        toHeight = canvas.width;
+                                        toWidth = (this.width/this.height)*canvas.width;
+                                        toTop = -canvas.width; //
+                                        toLeft = (canvas.height-toWidth)/2;
+                                    }
+
+                                    ctx.rotate(90*Math.PI/180);
+                                    ctx.drawImage(this, toLeft, toTop, toWidth, toHeight);
+                                }
+
+                                data = canvas.toDataURL('image/jpeg');
+                                data = data.slice(data.indexOf(",") + 1);
+
+                                canvas = null;
+                                img = null;
+                                result.callbackOk(data, false);
+                            };
+
+                            img.src = data;
+
                         } else {
                             result.callbackError(data, false);
                         }
