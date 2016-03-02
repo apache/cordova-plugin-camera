@@ -437,20 +437,8 @@ static NSString* toBase64(NSData* data) {
     do {
         filePath = [NSString stringWithFormat:@"%@/%@%03d.%@", docsPath, CDV_PHOTO_PREFIX, i++, extension];
     } while ([fileMgr fileExistsAtPath:filePath]);
-    
+
     return filePath;
-}
-
-// This is not absolute, but more mightNeedOrientationCorrection
-- (BOOL) needsOrientationCorrection:(UIImage*)image options:(CDVPictureOptions*)options
-{
-    // TODO use image to detect if it needs an orientation correction
-
-    // See FIXME #2
-    //    if (options.sourceType != UIImagePickerControllerSourceTypeCamera) {
-    //        return false;
-    //    }
-    return options.correctOrientation;
 }
 
 - (BOOL) needsResize:(CDVPictureOptions*)options
@@ -460,7 +448,7 @@ static NSString* toBase64(NSData* data) {
 
 - (BOOL) needsEdit:(UIImage*)image options:(CDVPictureOptions*)options
 {
-    return [self needsOrientationCorrection:image options:options] || [self needsResize:options];
+    return options.correctOrientation || [self needsResize:options];
 }
 
 - (BOOL) needsSavingToPhotoAlbum:(UIImage*)image options:(CDVPictureOptions*)options
@@ -680,7 +668,7 @@ static NSString* toBase64(NSData* data) {
 
 - (void)processImage:(UIImage*)image metadata:(NSDictionary*)metadata options:(CDVPictureOptions*)options resultBlock:(CDVCameraProcessImageResultBlock)resultBlock failureBlock:(CDVCameraProcessImageFailureBlock)failureBlock
 {
-    if ([self needsOrientationCorrection:image options:options]) {
+    if (options.correctOrientation) {
         [self fixOrientation:&image metadata:&metadata];
     }
     
