@@ -101,7 +101,7 @@ describe('Camera tests Android.', function () {
                     var touchTile = new wd.TouchAction(),
                         swipeRight = new wd.TouchAction();
                     touchTile.press({x: Math.round(screenWidth / 4), y: Math.round(screenHeight / 5)}).release();
-                    swipeRight.press({x: 10, y: Math.round(screenHeight / 2)})
+                    swipeRight.press({x: 10, y: Math.round(screenHeight * 0.8)})
                         .wait(300)
                         .moveTo({x: Math.round(screenWidth / 2), y: Math.round(screenHeight / 2)})
                         .release();
