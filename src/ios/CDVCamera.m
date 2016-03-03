@@ -85,6 +85,9 @@ static NSString* toBase64(NSData* data) {
     pictureOptions.popoverSupported = NO;
     pictureOptions.usesGeolocation = NO;
     
+    // Only if source is Camera && opt set
+    pictureOptions.showLibraryButton = (pictureOptions.sourceType == UIImagePickerControllerSourceTypeCamera) &&
+        [[command argumentAtIndex:12 withDefault:@(NO)] boolValue];
     return pictureOptions;
 }
 
@@ -365,7 +368,7 @@ static NSString* toBase64(NSData* data) {
                         self.metadata = [[NSMutableDictionary alloc] init];
                         
                         NSMutableDictionary* EXIFDictionary = [[controllerMetadata objectForKey:(NSString*)kCGImagePropertyExifDictionary]mutableCopy];
-                        if (EXIFDictionary)	{
+                        if (EXIFDictionary) {
                             [self.metadata setObject:EXIFDictionary forKey:(NSString*)kCGImagePropertyExifDictionary];
                         }
                         
@@ -578,15 +581,15 @@ static NSString* toBase64(NSData* data) {
 
 - (CLLocationManager*)locationManager
 {
-	if (locationManager != nil) {
-		return locationManager;
-	}
+    if (locationManager != nil) {
+        return locationManager;
+    }
     
-	locationManager = [[CLLocationManager alloc] init];
-	[locationManager setDesiredAccuracy:kCLLocationAccuracyNearestTenMeters];
-	[locationManager setDelegate:self];
+    locationManager = [[CLLocationManager alloc] init];
+    [locationManager setDesiredAccuracy:kCLLocationAccuracyNearestTenMeters];
+    [locationManager setDelegate:self];
     
-	return locationManager;
+    return locationManager;
 }
 
 - (void)locationManager:(CLLocationManager*)manager didUpdateToLocation:(CLLocation*)newLocation fromLocation:(CLLocation*)oldLocation
@@ -737,7 +740,205 @@ static NSString* toBase64(NSData* data) {
         [self performSelector:sel withObject:nil afterDelay:0];
     }
     
+    if (self.pictureOptions.showLibraryButton) {
+        // Register for notifications when the user captures an image
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(handleNotification:) name:@"_UIImagePickerControllerUserDidCaptureItem"
+                                                   object:nil];
+        
+        // Register for notifications when the user returns to the camera view to take another picture
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(handleNotification:)
+                                                     name:@"_UIImagePickerControllerUserDidRejectItem"
+                                                   object:nil];
+    }
+   
     [super viewWillAppear:animated];
+}
+
+- (void)viewDidDisappear:(BOOL)animated {
+    if (self.pictureOptions.showLibraryButton) {
+        [[NSNotificationCenter defaultCenter] removeObserver:self];
+    }
+    
+    [super viewDidDisappear:animated];
+}
+
+- (void)handleNotification:(NSNotification*)notification {
+    if ([[notification name] isEqualToString:@"_UIImagePickerControllerUserDidCaptureItem"]) {
+        // Remove overlay, so that it is not available on the preview view;
+        [self.cameraOverlayView setHidden:YES];
+    }
+    else if ([[notification name] isEqualToString:@"_UIImagePickerControllerUserDidRejectItem"]) {
+        // Retake button pressed on preview. Add overlay, so that is available on the camera again
+        [self.cameraOverlayView setHidden:NO];
+    }
+}
+
+// Create an overlay view that include a button allowing quick access to choose an image from the library
+- (UIView*)createOverlayView {
+    UIView* overlay = [[UIView alloc] initWithFrame:self.view.bounds];
+    
+    // Make the background transparent so the existing UI shows through
+    overlay.opaque = NO;
+    overlay.backgroundColor = [UIColor clearColor];
+    
+    // Make sure the view auto-resizes when the orientation changes
+    overlay.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
+    
+    // Add a button to allow access to the camera roll
+    UIButton *libraryButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    libraryButton.backgroundColor = [UIColor clearColor];
+    
+    // For now, set the title to (localized) "Library" so it appears even if we can't get the most recent picture
+    [libraryButton setTitle:NSLocalizedString(@"Library", nil) forState:UIControlStateNormal];
+    libraryButton.imageView.contentMode = UIViewContentModeScaleAspectFill;
+    
+    [libraryButton addTarget:self
+                      action:@selector(switchToCameraRoll)
+            forControlEvents:UIControlEventTouchUpInside];
+    
+    [libraryButton setTranslatesAutoresizingMaskIntoConstraints:NO];
+
+    // Set the image to the most recent one in the Camera Roll
+    [self setImageFromCameraRoll:libraryButton];
+    
+    // Add the button to the overlay
+    [overlay addSubview:libraryButton];
+    
+    int rightOffset = 0;
+    NSLayoutConstraint *bottomConstraint;
+    
+    // Positioning for iPad
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        rightOffset = -21;
+        bottomConstraint = [NSLayoutConstraint constraintWithItem:libraryButton
+                                                        attribute:NSLayoutAttributeCenterY
+                                                        relatedBy:NSLayoutRelationEqual
+                                                           toItem:overlay
+                                                        attribute:NSLayoutAttributeCenterY
+                                                       multiplier:1.5
+                                                         constant:0];
+    }
+    // Positioning for iPhone
+    else {
+        UIScreen* mainScreen = [UIScreen mainScreen];
+        CGFloat mainScreenHeight = mainScreen.bounds.size.height;
+        CGFloat mainScreenWidth = mainScreen.bounds.size.width;
+        
+        // On screens >480px tall, the controls are bigger
+        int limit = MAX(mainScreenHeight,mainScreenWidth);
+        int bottomOffset;
+        
+        // Determine the bottom offset based on the device screen size
+        switch (limit) {
+            case 480:
+            case 568:
+                bottomOffset = -7;
+                break;
+                
+            case 667:
+                bottomOffset = -18;
+                break;
+
+            case 736:
+            default:
+                bottomOffset = -27;
+                break;
+        
+        }
+
+        rightOffset = -13;
+        bottomConstraint = [NSLayoutConstraint constraintWithItem:libraryButton
+                                                        attribute:NSLayoutAttributeBottom
+                                                        relatedBy:NSLayoutRelationEqual
+                                                           toItem:overlay
+                                                        attribute:NSLayoutAttributeBottom
+                                                       multiplier:1
+                                                         constant:bottomOffset];
+    }
+    
+    // Add auto-layout constraints to keep the size and position of the button correct on all devices
+    [overlay addConstraints:@[
+                              [NSLayoutConstraint constraintWithItem:libraryButton
+                                                           attribute:NSLayoutAttributeWidth
+                                                           relatedBy:NSLayoutRelationEqual
+                                                              toItem:nil
+                                                           attribute:NSLayoutAttributeNotAnAttribute
+                                                          multiplier:1.0
+                                                            constant:60.0],
+                              
+                              [NSLayoutConstraint constraintWithItem:libraryButton
+                                                           attribute:NSLayoutAttributeHeight
+                                                           relatedBy:NSLayoutRelationEqual
+                                                              toItem:nil
+                                                           attribute:NSLayoutAttributeNotAnAttribute
+                                                          multiplier:1.0
+                                                            constant:60.0],
+                              
+                              [NSLayoutConstraint constraintWithItem:libraryButton
+                                                           attribute:NSLayoutAttributeRight
+                                                           relatedBy:NSLayoutRelationEqual
+                                                              toItem:overlay
+                                                           attribute:NSLayoutAttributeRight
+                                                          multiplier:1
+                                                            constant:rightOffset],
+                              bottomConstraint
+                              ]];
+    
+    return overlay;
+}
+
+// Retrieves the last image from the camera roll, and sets it as the image for the library button
+- (void)setImageFromCameraRoll:(UIButton*)button {
+    // Make sure we have authorization to access it first, to avoid putting up an extra prompt right away
+    ALAuthorizationStatus status = [ALAssetsLibrary authorizationStatus];
+    
+    if (status != ALAuthorizationStatusAuthorized) {
+        return;
+    }
+    
+    // Enumerate the assets, take the first image, and set it on the UIButton
+    ALAssetsGroupEnumerationResultsBlock assetEnumBlock = ^(ALAsset *asset, NSUInteger index, BOOL *stop) {
+        if (!asset) return;
+        
+        ALAssetRepresentation *repr = [asset defaultRepresentation];
+        UIImage *img = [UIImage imageWithCGImage:[repr fullScreenImage]];
+        [button setImage:img forState:UIControlStateNormal];
+            
+        // Call this on the UI thread so it updates immediately
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [button setNeedsLayout];
+        });
+            
+        *stop = YES;
+    };
+
+    ALAssetsLibraryGroupsEnumerationResultsBlock groupsEnumBlock = ^(ALAssetsGroup *group, BOOL *stop) {
+        if (nil != group) {
+            // Filter the group to only include photos
+            [group setAssetsFilter:[ALAssetsFilter allPhotos]];
+            
+            // Enumerate assets in reverse to get most recent
+            [group enumerateAssetsWithOptions:NSEnumerationReverse
+                                   usingBlock:assetEnumBlock];
+        }
+        
+        *stop = NO;
+    };
+    
+    // Enumerate the assets library
+    ALAssetsLibrary *assetsLibrary = [[ALAssetsLibrary alloc] init];
+    [assetsLibrary enumerateGroupsWithTypes:ALAssetsGroupSavedPhotos
+                                 usingBlock:groupsEnumBlock
+                               failureBlock:^(NSError *error) {
+                                   NSLog(@"Camera: error enumerating library [%@]", error);
+                               }];
+}
+
+- (void)switchToCameraRoll {
+    // Switch the UIImagePickerController to show the saved photos album
+    self.sourceType = UIImagePickerControllerSourceTypeSavedPhotosAlbum;
 }
 
 + (instancetype) createFromPictureOptions:(CDVPictureOptions*)pictureOptions;
@@ -752,6 +953,12 @@ static NSString* toBase64(NSData* data) {
         cameraPicker.mediaTypes = @[(NSString*)kUTTypeImage];
         // We can only set the camera device if we're actually using the camera.
         cameraPicker.cameraDevice = pictureOptions.cameraDirection;
+        
+        // If enabled, show button to allow accessing library instead
+        // For iOS 7+ only, as the UI for lower versions is different
+        if (pictureOptions.showLibraryButton == YES && IsAtLeastiOSVersion(@"7.0")) {
+            cameraPicker.cameraOverlayView = [cameraPicker createOverlayView];
+        }
     } else if (pictureOptions.mediaType == MediaTypeAll) {
         cameraPicker.mediaTypes = [UIImagePickerController availableMediaTypesForSourceType:cameraPicker.sourceType];
     } else {

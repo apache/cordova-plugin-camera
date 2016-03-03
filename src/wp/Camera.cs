@@ -124,13 +124,13 @@ namespace WPCordovaClassLib.Cordova.Commands
             [DataMember(IsRequired = false, Name = "allowEdit")]
             public bool AllowEdit { get; set; }
 
-                        /// <summary>
+            /// <summary>
             /// Height in pixels to scale image
             /// </summary>
             [DataMember(IsRequired = false, Name = "encodingType")]
             public int EncodingType { get; set; }
 
-                        /// <summary>
+            /// <summary>
             /// Height in pixels to scale image
             /// </summary>
             [DataMember(IsRequired = false, Name = "mediaType")]
@@ -143,12 +143,17 @@ namespace WPCordovaClassLib.Cordova.Commands
             [DataMember(IsRequired = false, Name = "targetHeight")]
             public int TargetHeight { get; set; }
 
-
             /// <summary>
             /// Width in pixels to scale image
             /// </summary>
             [DataMember(IsRequired = false, Name = "targetWidth")]
             public int TargetWidth { get; set; }
+
+            /// <summary>
+            /// Whether to allow moving between camera and library
+            /// </summary>
+            [DataMember(IsRequired = false, Name = "showLibraryButton")]
+            public bool ShowLibraryButton { get; set; }
 
             /// <summary>
             /// Creates options object with default parameters
@@ -174,6 +179,7 @@ namespace WPCordovaClassLib.Cordova.Commands
                 SaveToPhotoAlbum = false;
                 CorrectOrientation = true;
                 AllowEdit = false;
+                ShowLibraryButton = false;
                 MediaType = -1;
                 EncodingType = -1;
             }
@@ -190,7 +196,8 @@ namespace WPCordovaClassLib.Cordova.Commands
             {
                 string[] args = JSON.JsonHelper.Deserialize<string[]>(options);
                 // ["quality", "destinationType", "sourceType", "targetWidth", "targetHeight", "encodingType",
-                //     "mediaType", "allowEdit", "correctOrientation", "saveToPhotoAlbum" ]
+                //     "mediaType", "allowEdit", "correctOrientation", "saveToPhotoAlbum", "popoverOptions",
+                //     "cameraDirection", "showLibraryButton"]
                 cameraOptions = new CameraOptions();
                 cameraOptions.Quality = int.Parse(args[0]);
                 cameraOptions.DestinationType = int.Parse(args[1]);
@@ -202,6 +209,7 @@ namespace WPCordovaClassLib.Cordova.Commands
                 cameraOptions.AllowEdit = bool.Parse(args[7]);
                 cameraOptions.CorrectOrientation = bool.Parse(args[8]);
                 cameraOptions.SaveToPhotoAlbum = bool.Parse(args[9]);
+                cameraOptions.ShowLibraryButton = bool.Parse(args[12]);
 
                 // a very large number will force the other value to be the bound
                 if (cameraOptions.TargetWidth > -1 && cameraOptions.TargetHeight == -1)
@@ -235,7 +243,19 @@ namespace WPCordovaClassLib.Cordova.Commands
             ChooserBase<PhotoResult> chooserTask = null;
             if (cameraOptions.PictureSourceType == CAMERA)
             {
-                chooserTask = new CameraCaptureTask();
+                // If the user requested to show the library button, then we will
+                // show the photo chooser with a camera button, as that's the closest
+                // we can get with the current WP Tasks.
+                if (cameraOptions.ShowLibraryButton)
+                {
+                    PhotoChooserTask task = new PhotoChooserTask();
+                    task.ShowCamera = true;
+                    chooserTask = task;
+                }
+                else
+                {
+                    chooserTask = new CameraCaptureTask();
+                }
             }
             else if ((cameraOptions.PictureSourceType == PHOTOLIBRARY) || (cameraOptions.PictureSourceType == SAVEDPHOTOALBUM))
             {
