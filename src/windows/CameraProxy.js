@@ -325,14 +325,14 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
         CaptureNS = Windows.Media.Capture,
         sensor = null;
 
-    var createCameraUI = function () {
+    function createCameraUI() {
         // create style for take and cancel buttons
         var buttonStyle = "width:45%;padding: 10px 16px;font-size: 18px;line-height: 1.3333333;color: #333;background-color: #fff;border-color: #ccc; border: 1px solid transparent;border-radius: 6px; display: block; margin: 20px; z-index: 1000;border-color: #adadad;";
 
         // Create fullscreen preview
         // z-order style element for capturePreview and cameraCancelButton elts
         // is necessary to avoid overriding by another page elements, -1 sometimes is not enough
-       capturePreview = document.createElement("video");
+        capturePreview = document.createElement("video");
         capturePreview.style.cssText = "position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: " + (HIGHEST_POSSIBLE_Z_INDEX - 1) + ";";
 
         // Create capture button
@@ -349,9 +349,9 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
 
         captureSettings = new CaptureNS.MediaCaptureInitializationSettings();
         captureSettings.streamingCaptureMode = CaptureNS.StreamingCaptureMode.video;
-    };
+    }
 
-    var startCameraPreview = function () {
+    function startCameraPreview() {
         // Search for available camera devices
         // This is necessary to detect which camera (front or back) we should use
         var DeviceEnum = Windows.Devices.Enumeration;
@@ -443,9 +443,9 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
             destroyCameraPreview();
             errorCallback('Camera intitialization error ' + err);
         });
-    };
+    }
 
-    var destroyCameraPreview = function () {
+    function destroyCameraPreview() {
         // If sensor is available, remove event listener
         if (sensor !== null) {
             sensor.removeEventListener('orientationchanged', onOrientationChange);
@@ -471,9 +471,9 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
             capture.stopRecordAsync();
             capture = null;
         }
-    };
+    }
 
-    var captureAction = function () {
+    function captureAction() {
 
         var encodingProperties,
             fileName,
@@ -535,9 +535,9 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
                 destroyCameraPreview();
                 errorCallback(err);
             });
-    };
+    }
 
-    var getAspectRatios = function (capture) {
+    function getAspectRatios(capture) {
         var videoDeviceController = capture.videoDeviceController;
         var photoAspectRatios = videoDeviceController.getAvailableMediaStreamProperties(CapMSType.photo).map(function (element) {
             return (element.width / element.height).toFixed(1);
@@ -564,9 +564,9 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
         return Object.keys(aspectObj).filter(function (k) {
             return aspectObj[k] === 3;
         });
-    };
+    }
 
-    var setAspectRatio = function (capture, aspect) {
+    function setAspectRatio(capture, aspect) {
         // Max photo resolution with desired aspect ratio
         var videoDeviceController = capture.videoDeviceController;
         var photoResolution = videoDeviceController.getAvailableMediaStreamProperties(CapMSType.photo)
@@ -602,12 +602,12 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
             .then(function () {
                 return videoDeviceController.setMediaStreamPropertiesAsync(CapMSType.videoRecord, videoRecordResolution);
             });
-    };
+    }
 
     /**
      * When Capture button is clicked, try to capture a picture and return
      */
-    var onCameraCaptureButtonClick = function() {
+    function onCameraCaptureButtonClick() {
         // Make sure user can't click more than once
         if (this.getAttribute('clicked') === '1') {
             return false;
@@ -615,12 +615,12 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
             this.setAttribute('clicked', '1');
         }
         captureAction();
-    };
+    }
 
     /**
      * When Cancel button is clicked, destroy camera preview and return with error callback
      */
-    var onCameraCancelButtonClick = function() {
+    function onCameraCancelButtonClick() {
         // Make sure user can't click more than once
         if (this.getAttribute('clicked') === '1') {
             return false;
@@ -629,15 +629,15 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
         }
         destroyCameraPreview();
         errorCallback('no image selected');
-    };
+    }
 
     /**
      * When the phone orientation change, get the event and change camera preview rotation
      * @param  {Object} e - SimpleOrientationSensorOrientationChangedEventArgs
      */
-    var onOrientationChange = function (e) {
+    function onOrientationChange(e) {
         setPreviewRotation(e.orientation);
-    };
+    }
 
     /**
      * Converts SimpleOrientation to a VideoRotation to remove difference between camera sensor orientation
@@ -645,7 +645,7 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
      * @param  {number} orientation - Windows.Devices.Sensors.SimpleOrientation
      * @return {number} - Windows.Media.Capture.VideoRotation
      */
-    var orientationToRotation = function (orientation) {
+    function orientationToRotation(orientation) {
         // VideoRotation enumerable and BitmapRotation enumerable have the same values
         // https://msdn.microsoft.com/en-us/library/windows/apps/windows.media.capture.videorotation.aspx
         // https://msdn.microsoft.com/en-us/library/windows/apps/windows.graphics.imaging.bitmaprotation.aspx
@@ -669,15 +669,15 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
                 // Falling back to portrait default
                 return Windows.Media.Capture.VideoRotation.clockwise90Degrees;
         }
-    };
+    }
 
     /**
      * Rotates the current MediaCapture's video
      * @param {number} orientation - Windows.Devices.Sensors.SimpleOrientation
      */
-    var setPreviewRotation = function(orientation) {
+    function setPreviewRotation(orientation) {
         capture.setPreviewRotation(orientationToRotation(orientation));
-    };
+    }
 
     try {
         createCameraUI();
@@ -731,21 +731,32 @@ function takePictureFromCameraWindows(successCallback, errorCallback, args) {
 
     cameraCaptureUI.photoSettings.maxResolution = maxRes;
 
-    cameraCaptureUI.captureFileAsync(WMCapture.CameraCaptureUIMode.photo).done(function(picture) {
-        if (!picture) {
-            errorCallback("User didn't capture a photo.");
-            return;
-        }
+    var cameraPicture;
+    var savePhotoOnFocus = function() {
 
-        savePhoto(picture, {
+        window.removeEventListener("focus", savePhotoOnFocus);
+        // call only when the app is in focus again
+        savePhoto(cameraPicture, {
             destinationType: destinationType,
             targetHeight: targetHeight,
             targetWidth: targetWidth,
             encodingType: encodingType,
             saveToPhotoAlbum: saveToPhotoAlbum
         }, successCallback, errorCallback);
+    };
+
+    // add and delete focus eventHandler to capture the focus back from cameraUI to app 
+    window.addEventListener("focus", savePhotoOnFocus);
+    cameraCaptureUI.captureFileAsync(WMCapture.CameraCaptureUIMode.photo).done(function(picture) {
+        if (!picture) {
+            errorCallback("User didn't capture a photo.");
+            window.removeEventListener("focus", savePhotoOnFocus);
+            return;
+        }
+        cameraPicture = picture;
     }, function() {
         errorCallback("Fail to capture a photo.");
+        window.removeEventListener("focus", savePhotoOnFocus);
     });
 }
 

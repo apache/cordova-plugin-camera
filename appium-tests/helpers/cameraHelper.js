@@ -1,4 +1,4 @@
-/*jslint node: true, plusplus: true */
+/*jshint node: true */
 'use strict';
 
 var cameraConstants = require('../../www/CameraConstants');

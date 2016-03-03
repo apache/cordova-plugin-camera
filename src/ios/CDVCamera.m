@@ -558,11 +558,14 @@ static NSString* toBase64(NSData* data) {
     
     dispatch_block_t invoke = ^ (void) {
         CDVPluginResult* result;
-        if ([ALAssetsLibrary authorizationStatus] == ALAuthorizationStatusAuthorized) {
-            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"no image selected"];
-        } else {
+        if (picker.sourceType == UIImagePickerControllerSourceTypeCamera && [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo] != ALAuthorizationStatusAuthorized) {
+            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"has no access to camera"];
+        } else if (picker.sourceType != UIImagePickerControllerSourceTypeCamera && [ALAssetsLibrary authorizationStatus] != ALAuthorizationStatusAuthorized) {
             result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"has no access to assets"];
+        } else {
+            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"no image selected"];
         }
+
         
         [weakSelf.commandDelegate sendPluginResult:result callbackId:cameraPicker.callbackId];
         

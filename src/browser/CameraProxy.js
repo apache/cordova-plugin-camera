@@ -32,8 +32,6 @@ function takePicture(success, error, opts) {
         input.name = 'files[]';
 
         input.onchange = function(inputEvent) {
-            var canvas = document.createElement('canvas');
-
             var reader = new FileReader();
             reader.onload = function(readerEvent) {
                 input.parentNode.removeChild(input);
