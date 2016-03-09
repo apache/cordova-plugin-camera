@@ -168,11 +168,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     this.callTakePicture(destType, encodingType);
                 }
                 else if ((this.srcType == PHOTOLIBRARY) || (this.srcType == SAVEDPHOTOALBUM)) {
-                    // Any options that edit the file require READ permissions in order to try and
-                    // preserve the original exif data and filename in the modified file that is
-                    // created
-                    if(this.mediaType == PICTURE && (this.destType == FILE_URI || this.destType == NATIVE_URI)
-                            && fileWillBeModified() && !PermissionHelper.hasPermission(this, permissions[0])) {
+                    // FIXME: Stop always requesting the permission
+                    if(!PermissionHelper.hasPermission(this, permissions[0])) {
                         PermissionHelper.requestPermission(this, SAVE_TO_ALBUM_SEC, Manifest.permission.READ_EXTERNAL_STORAGE);
                     } else {
                         this.getImage(this.srcType, destType, encodingType);
@@ -1202,11 +1199,6 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                 this.getImage(this.srcType, this.destType, this.encodingType);
                 break;
         }
-    }
-
-    private boolean fileWillBeModified() {
-        return (this.targetWidth > 0 && this.targetHeight > 0) ||
-                    this.correctOrientation || this.allowEdit;
     }
 
     /**
