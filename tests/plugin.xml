@@ -22,7 +22,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:rim="http://www.blackberry.com/ns/widgets"
     id="cordova-plugin-camera-tests"
-    version="2.1.1-dev">
+    version="2.1.1">
     <name>Cordova Camera Plugin Tests</name>
     <license>Apache 2.0</license>
     
