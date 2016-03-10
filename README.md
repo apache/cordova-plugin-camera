@@ -73,20 +73,20 @@ Documentation consists of template and API docs produced from the plugin JS code
 
 
 * [camera](#module_camera)
-    * [.getPicture(successCallback, errorCallback, options)](#module_camera.getPicture)
-    * [.cleanup()](#module_camera.cleanup)
-    * [.onError](#module_camera.onError) : <code>function</code>
-    * [.onSuccess](#module_camera.onSuccess) : <code>function</code>
-    * [.CameraOptions](#module_camera.CameraOptions) : <code>Object</code>
+  * [.getPicture(successCallback, errorCallback, options)](#module_camera.getPicture)
+  * [.cleanup()](#module_camera.cleanup)
+  * [.onError](#module_camera.onError) : <code>function</code>
+  * [.onSuccess](#module_camera.onSuccess) : <code>function</code>
+  * [.CameraOptions](#module_camera.CameraOptions) : <code>Object</code>
 
 
 * [Camera](#module_Camera)
-    * [.DestinationType](#module_Camera.DestinationType) : <code>enum</code>
-    * [.EncodingType](#module_Camera.EncodingType) : <code>enum</code>
-    * [.MediaType](#module_Camera.MediaType) : <code>enum</code>
-    * [.PictureSourceType](#module_Camera.PictureSourceType) : <code>enum</code>
-    * [.PopoverArrowDirection](#module_Camera.PopoverArrowDirection) : <code>enum</code>
-    * [.Direction](#module_Camera.Direction) : <code>enum</code>
+  * [.DestinationType](#module_Camera.DestinationType) : <code>enum</code>
+  * [.EncodingType](#module_Camera.EncodingType) : <code>enum</code>
+  * [.MediaType](#module_Camera.MediaType) : <code>enum</code>
+  * [.PictureSourceType](#module_Camera.PictureSourceType) : <code>enum</code>
+  * [.PopoverArrowDirection](#module_Camera.PopoverArrowDirection) : <code>enum</code>
+  * [.Direction](#module_Camera.Direction) : <code>enum</code>
 
 * [CameraPopoverHandle](#module_CameraPopoverHandle)
 * [CameraPopoverOptions](#module_CameraPopoverOptions)
@@ -249,7 +249,7 @@ Optional parameters to customize the camera settings.
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| DATA_URL | <code>number</code> | <code>0</code> | Return base64 encoded string |
+| DATA_URL | <code>number</code> | <code>0</code> | Return base64 encoded string. DATA_URL can be very memory intensive and cause app crashes or out of memory errors. Use FILE_URI or NATIVE_URI if possible |
 | FILE_URI | <code>number</code> | <code>1</code> | Return file uri (content://media/external/images/media/2 for Android) |
 | NATIVE_URI | <code>number</code> | <code>2</code> | Return native uri (eg. asset-library://... for iOS) |
 
@@ -314,13 +314,7 @@ Matches iOS UIPopoverArrowDirection constants to specify arrow location on popov
 
 <a name="module_CameraPopoverOptions"></a>
 ## CameraPopoverOptions
-iOS-only parameters that specify the anchor element location and arrow
-direction of the popover when selecting images from an iPad's library
-or album.
-Note that the size of the popover may change to adjust to the
-direction of the arrow and orientation of the screen.  Make sure to
-account for orientation changes when specifying the anchor element
-location.
+iOS-only parameters that specify the anchor element location and arrowdirection of the popover when selecting images from an iPad's libraryor album.Note that the size of the popover may change to adjust to thedirection of the arrow and orientation of the screen.  Make sure toaccount for orientation changes when specifying the anchor elementlocation.
 
 
 | Param | Type | Default | Description |
@@ -363,21 +357,6 @@ window.onorientationchange = function() {
 
 #### Example <a name="camera-getPicture-examples"></a>
 
-Take a photo and retrieve it as a Base64-encoded image:
-
-    navigator.camera.getPicture(onSuccess, onFail, { quality: 50,
-        destinationType: Camera.DestinationType.DATA_URL
-    });
-
-    function onSuccess(imageData) {
-        var image = document.getElementById('myImage');
-        image.src = "data:image/jpeg;base64," + imageData;
-    }
-
-    function onFail(message) {
-        alert('Failed because: ' + message);
-    }
-
 Take a photo and retrieve the image's file location:
 
     navigator.camera.getPicture(onSuccess, onFail, { quality: 50,
@@ -386,6 +365,27 @@ Take a photo and retrieve the image's file location:
     function onSuccess(imageURI) {
         var image = document.getElementById('myImage');
         image.src = imageURI;
+    }
+
+    function onFail(message) {
+        alert('Failed because: ' + message);
+    }
+
+Take a photo and retrieve it as a Base64-encoded image:
+
+    /**
+     * Warning: Using DATA_URL is not recommended! The DATA_URL destination
+     * type is very memory intensive, even with a low quality setting. Using it
+     * can result in out of memory errors and application crashes. Use FILE_URI
+     * or NATIVE_URI instead.
+     */
+    navigator.camera.getPicture(onSuccess, onFail, { quality: 25,
+        destinationType: Camera.DestinationType.DATA_URL
+    });
+
+    function onSuccess(imageData) {
+        var image = document.getElementById('myImage');
+        image.src = "data:image/jpeg;base64," + imageData;
     }
 
     function onFail(message) {

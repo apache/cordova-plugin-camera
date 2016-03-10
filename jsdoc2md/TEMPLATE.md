@@ -34,21 +34,6 @@ the system's image library.
 
 #### Example <a name="camera-getPicture-examples"></a>
 
-Take a photo and retrieve it as a Base64-encoded image:
-
-    navigator.camera.getPicture(onSuccess, onFail, { quality: 50,
-        destinationType: Camera.DestinationType.DATA_URL
-    });
-
-    function onSuccess(imageData) {
-        var image = document.getElementById('myImage');
-        image.src = "data:image/jpeg;base64," + imageData;
-    }
-
-    function onFail(message) {
-        alert('Failed because: ' + message);
-    }
-
 Take a photo and retrieve the image's file location:
 
     navigator.camera.getPicture(onSuccess, onFail, { quality: 50,
@@ -57,6 +42,27 @@ Take a photo and retrieve the image's file location:
     function onSuccess(imageURI) {
         var image = document.getElementById('myImage');
         image.src = imageURI;
+    }
+
+    function onFail(message) {
+        alert('Failed because: ' + message);
+    }
+
+Take a photo and retrieve it as a Base64-encoded image:
+
+    /**
+     * Warning: Using DATA_URL is not recommended! The DATA_URL destination
+     * type is very memory intensive, even with a low quality setting. Using it
+     * can result in out of memory errors and application crashes. Use FILE_URI
+     * or NATIVE_URI instead.
+     */
+    navigator.camera.getPicture(onSuccess, onFail, { quality: 25,
+        destinationType: Camera.DestinationType.DATA_URL
+    });
+
+    function onSuccess(imageData) {
+        var image = document.getElementById('myImage');
+        image.src = "data:image/jpeg;base64," + imageData;
     }
 
     function onFail(message) {
