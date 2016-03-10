@@ -588,5 +588,5 @@ describe('Camera tests Android.', function () {
 
     it('camera.ui.util Destroy the session', function (done) {
         return driver.quit(done);
-    }, 10000);
+    }, MINUTE);
 });

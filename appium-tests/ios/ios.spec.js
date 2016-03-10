@@ -284,5 +284,5 @@ describe('Camera tests iOS.', function () {
 
     it('camera.ui.util.4 Destroy the session', function (done) {
         driver.quit(done);
-    }, 10000);
+    }, MINUTE);
 });

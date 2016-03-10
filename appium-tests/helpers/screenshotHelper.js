@@ -23,7 +23,7 @@
 'use strict';
 
 var path = require('path');
-var screenshotPath = global.SCREENSHOT_PATH || path.join(__dirname, '../../appium_screenshots/');
+var screenshotPath = global.SCREENSHOT_PATH || path.join(__dirname, '../../../appium_screenshots/');
 
 function generateScreenshotName() {
     var date = new Date();
@@ -51,7 +51,7 @@ module.exports.saveScreenshot = function (driver) {
             oldContext = cc;
         })
         .context('NATIVE_APP')
-        .saveScreenshot(screenshotPath + generateScreenshotName())
+        .saveScreenshot(path.join(screenshotPath, generateScreenshotName()))
         .then(function () {
             return driver.context(oldContext);
         });
