@@ -564,7 +564,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         String realPath = FileHelper.getRealPath(uri, this.cordova);
 
         // Get filename from uri
-        String fileName = realPath != null ?
+        String fileName = realPath != null && !realPath.isEmpty() ?
             realPath.substring(realPath.lastIndexOf('/') + 1) :
             "modified." + (this.encodingType == JPEG ? "jpg" : "png");
 
@@ -578,7 +578,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         bitmap.compress(compressFormat, this.mQuality, os);
         os.close();
 
-        if (realPath != null && this.encodingType == JPEG) {
+        if (realPath != null && !realPath.isEmpty() && this.encodingType == JPEG) {
             // Create an ExifHelper to save the exif data that is lost during compression
             ExifHelper exif = new ExifHelper();
 
