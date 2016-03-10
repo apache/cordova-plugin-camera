@@ -622,14 +622,14 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
 
         String fileLocation = FileHelper.getRealPath(uri, this.cordova);
         Log.d(LOG_TAG, "File locaton is: " + fileLocation);
-
+//        Log.d(LOG_TAG, "URISTRING: " + uri.toString());
         if (destType == DATA_URL) {
             try
             {
                 final String uriStringLower = uri.toString().toLowerCase();
-                if (!uriStringLower.endsWith(".png") && !uriStringLower.endsWith(".jpg") && !uriStringLower.endsWith(".jpeg") && !uriStringLower.endsWith(".gif")) {
-                    final String uriString = uri.toString();
-                    final String filename = uriString.substring(uriString.lastIndexOf('/') + 1);
+                final String uriString = uri.toString();
+                final String filename = uriString.substring(uriString.lastIndexOf('/') + 1);
+                if (filename.contains(".") && (!uriStringLower.endsWith(".jpg") && !uriStringLower.endsWith(".jpeg"))) {
                     byte[] data = new byte[0];
                     try {
                         data = getAnyOtherFile(uri.toString());
@@ -650,6 +650,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
             }
             catch (OutOfMemoryError oom)
             {
+                //Do not change this. This code is parsed.
                 this.failPicture("File too big.");
                 return;
             }
@@ -704,7 +705,10 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
 
                 // If sending base64 image back
                 if (destType == DATA_URL) {
-                    final String filename = uriString.substring(uriString.lastIndexOf('/') + 1);
+                    String filename = uriString.substring(uriString.lastIndexOf('/') + 1);
+                    if (!filename.contains(".")) {
+                        filename = null;
+                    }
                     this.processPicture(bitmap, this.encodingType, filename);
                 }
 
