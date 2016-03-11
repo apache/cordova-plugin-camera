@@ -58,7 +58,9 @@ public class FileHelper {
         // SDK >= 11 && SDK < 19
         else if (Build.VERSION.SDK_INT < 19)
             realPath = FileHelper.getRealPathFromURI_API11to18(cordova.getActivity(), uri);
-
+        //is not document uri
+        else if(!DocumentsContract.isDocumentUri(cordova.getActivity(),uri))
+            realPath = FileHelper.getRealPathFromURI_API11to18(cordova.getActivity(), uri);
         // SDK > 19 (Android 4.4)
         else
             realPath = FileHelper.getRealPathFromURI_API19(cordova.getActivity(), uri);
