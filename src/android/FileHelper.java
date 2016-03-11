@@ -55,13 +55,9 @@ public class FileHelper {
         if (Build.VERSION.SDK_INT < 11)
             realPath = FileHelper.getRealPathFromURI_BelowAPI11(cordova.getActivity(), uri);
 
-        // SDK >= 11 && SDK < 19
-        else if (Build.VERSION.SDK_INT < 19)
-            realPath = FileHelper.getRealPathFromURI_API11to18(cordova.getActivity(), uri);
-
-        // SDK > 19 (Android 4.4)
+        // SDK >= 11
         else
-            realPath = FileHelper.getRealPathFromURI_API19(cordova.getActivity(), uri);
+            realPath = FileHelper.getRealPathFromURI_API11_And_Above(cordova.getActivity(), uri);
 
         return realPath;
     }
@@ -79,10 +75,11 @@ public class FileHelper {
     }
 
     @SuppressLint("NewApi")
-    public static String getRealPathFromURI_API19(final Context context, final Uri uri) {
+    public static String getRealPathFromURI_API11_And_Above(final Context context, final Uri uri) {
 
+        final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
         // DocumentProvider
-        if ( DocumentsContract.isDocumentUri(context, uri)) {
+        if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
 
             // ExternalStorageProvider
             if (isExternalStorageDocument(uri)) {
@@ -143,26 +140,6 @@ public class FileHelper {
         }
 
         return null;
-    }
-
-    @SuppressLint("NewApi")
-    public static String getRealPathFromURI_API11to18(Context context, Uri contentUri) {
-        String[] proj = { MediaStore.Images.Media.DATA };
-        String result = null;
-
-        try {
-            CursorLoader cursorLoader = new CursorLoader(context, contentUri, proj, null, null, null);
-            Cursor cursor = cursorLoader.loadInBackground();
-
-            if (cursor != null) {
-                int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-                cursor.moveToFirst();
-                result = cursor.getString(column_index);
-            }
-        } catch (Exception e) {
-            result = null;
-        }
-        return result;
     }
 
     public static String getRealPathFromURI_BelowAPI11(Context context, Uri contentUri) {
@@ -296,6 +273,8 @@ public class FileHelper {
                 final int column_index = cursor.getColumnIndexOrThrow(column);
                 return cursor.getString(column_index);
             }
+        } catch (Exception e) {
+            return null;
         } finally {
             if (cursor != null)
                 cursor.close();
