@@ -20,7 +20,7 @@
 */
 
 /**
- * @ignore in favour of ios' one
+ * @ignore in favour of iOS' one
  * A handle to an image picker popover.
  */
 var CameraPopoverHandle = function() {

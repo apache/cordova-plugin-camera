@@ -351,11 +351,21 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
         captureSettings.streamingCaptureMode = CaptureNS.StreamingCaptureMode.video;
     }
 
+    function continueVideoOnFocus() {
+        // if preview is defined it would be stuck, play it
+        if (capturePreview) {
+            capturePreview.play();
+        }
+    }
+
     function startCameraPreview() {
         // Search for available camera devices
         // This is necessary to detect which camera (front or back) we should use
         var DeviceEnum = Windows.Devices.Enumeration;
         var expectedPanel = cameraDirection === 1 ? DeviceEnum.Panel.front : DeviceEnum.Panel.back;
+
+        // Add focus event handler to capture the event when user suspends the app and comes back while the preview is on
+        window.addEventListener("focus", continueVideoOnFocus);
 
         DeviceEnum.DeviceInformation.findAllAsync(DeviceEnum.DeviceClass.videoCapture).then(function (devices) {
             if (devices.length <= 0) {
@@ -458,6 +468,9 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
         // Remove event listeners from buttons
         cameraCaptureButton.removeEventListener('click', onCameraCaptureButtonClick);
         cameraCancelButton.removeEventListener('click', onCameraCancelButtonClick);
+
+        // Remove the focus event handler
+        window.removeEventListener("focus", continueVideoOnFocus);
 
         // Remove elements
         [capturePreview, cameraCaptureButton, cameraCancelButton].forEach(function (elem) {
