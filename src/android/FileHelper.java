@@ -35,6 +35,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Locale;
+import android.util.Log;
 
 public class FileHelper {
     private static final String LOG_TAG = "FileUtils";
@@ -56,9 +57,12 @@ public class FileHelper {
             realPath = FileHelper.getRealPathFromURI_BelowAPI11(cordova.getActivity(), uri);
 
         // SDK >= 11 && SDK < 19
-        else if (Build.VERSION.SDK_INT < 19)
+        else if (Build.VERSION.SDK_INT < 19) {
             realPath = FileHelper.getRealPathFromURI_API11to18(cordova.getActivity(), uri);
-
+            if (realPath == null) {
+                realPath = getRealPathFallback(uri.toString(), cordova);
+            }
+        }
         // SDK > 19 (Android 4.4)
         else
             realPath = FileHelper.getRealPathFromURI_API19(cordova.getActivity(), uri);
@@ -164,6 +168,47 @@ public class FileHelper {
         }
         return result;
     }
+
+    /**
+     * Returns the real path of the given URI string.
+     * If the given URI string represents a content:// URI, the real path is retrieved from the media store.
+     *
+     * @param uriString the URI string of the audio/image/video
+     * @param cordova the current application context
+     * @return the full path to the file
+     */
+    @SuppressWarnings("deprecation")
+    public static String getRealPathFallback(String uriString, CordovaInterface cordova) {
+        String realPath = null;
+        try {
+            if (uriString.startsWith("content://")) {
+                String[] proj = { _DATA };
+                Cursor cursor = cordova.getActivity().managedQuery(Uri.parse(uriString), proj, null, null, null);
+                int column_index = cursor.getColumnIndexOrThrow(_DATA);
+                cursor.moveToFirst();
+                realPath = cursor.getString(column_index);
+                Log.d(LOG_TAG, "getRealPath managedQuery success uri " + uriString + " realpath " + realPath);
+                if (realPath == null) {
+                    Log.e(LOG_TAG, "getRealPath Could get real path for URI string " + uriString);
+                }
+            } else if (uriString.startsWith("file://")) {
+                realPath = uriString.substring(7);
+                Log.d(LOG_TAG, "getRealPath file:// " + uriString + " realpath " + realPath);
+                if (realPath.startsWith("/android_asset/")) {
+                    Log.e(LOG_TAG, "getRealPath Cannot get real path for URI string " + uriString + " because it is a file:///android_asset/ URI.");
+                    realPath = null;
+                }
+            } else {
+                realPath = uriString;
+            }
+        } catch (Exception e) {
+            Log.d(LOG_TAG, "getRealPath using uristring could not find real path, uriString: " + uriString + " message: " + e.getMessage());
+            realPath = uriString;
+        }
+
+        return realPath;
+    }
+
 
     public static String getRealPathFromURI_BelowAPI11(Context context, Uri contentUri) {
         String[] proj = { MediaStore.Images.Media.DATA };
