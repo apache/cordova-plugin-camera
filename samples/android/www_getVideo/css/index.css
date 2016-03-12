@@ -1,0 +1,153 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+* {
+    box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    -webkit-tap-highlight-color: rgba(0,0,0,0); /* make transparent link selection, adjust last value opacity 0 to 1.0 */
+    -webkit-tap-highlight-color: transparent; /* for some androids */
+    -webkit-overflow-scrolling: touch; /* show scrollbar on ios while scrolling --- smooth scrolling */
+}
+
+body {
+    -webkit-touch-callout: none;                /* prevent callout to copy image, etc when tap to hold */
+    -webkit-text-size-adjust: none;             /* prevent webkit from resizing text to fit */
+    -webkit-user-select: none;                  /* prevent copy paste, to allow, change 'none' to 'text' */
+    background-color:#E4E4E4;
+    font-family:'HelveticaNeue-Light', 'HelveticaNeue', Helvetica, Arial, sans-serif;
+    font-size:12px;
+    height:100%;
+    margin:0px;
+    padding:0px;
+    width:100%;
+}
+.app {
+    height: 100%;
+    margin: 0 auto;
+    padding: 62px 0 21px;
+    text-align: center;
+    width: 80%;
+}
+h1 {
+    font-size:24px;
+    font-weight:normal;
+    margin:0px;
+    overflow:visible;
+    padding:0px;
+    text-align:center;
+    text-transform: uppercase;
+}
+#deviceready {
+    display: none;
+}
+.test {
+    background-color: #9fa8da;
+    display: block;
+    margin: 21px 0;
+}
+.testHeadline {
+    background-color: #3f51b5;
+    color: #fff;
+    display: block;
+    font-size: 21px;
+    padding: 15px;
+    position: relative;
+    text-align: left;
+}
+.testDemo{
+    display: block;
+    padding: 15px 5px;
+    width: 100%;
+}
+.testDemo > button {
+    background-color: #555;
+    border: 0 none;
+    color: #fff;
+    display: inline-block;
+    font-size: 16px;
+    margin: 15px 0 15px;
+    padding: 12px 10px;
+    vertical-align: top;
+    width: 99%;
+}
+.testResult {
+    background-color: #e8eaf6;
+    box-shadow: 0 0 6px 2px #c5cae9 inset;
+    padding: 15px;
+    text-align: left;
+}
+.testResult > strong {
+    display: block;
+    font-family: Arial;
+    font-size: 15px;
+    margin-top: 10px;
+}
+.testResult > a {
+    display: inline-block;
+    font-size: 14px;
+    margin: 6px 18px 6px 0;
+    vertical-align: baseline;
+}
+.resultProp {
+    display: block;
+    margin-bottom: 5px;
+    padding: 5px 0;
+}
+.resultPropTitle {
+    background-color: #009688;
+    color: #fff;
+    display: block;
+    font-size: 15px;
+    padding: 5px;
+    text-align: left;
+}
+.resultPropValue {
+    color: green;
+    display: inline-block;
+    padding: 5px 0;
+    text-align: center;
+    word-break: break-all;
+}
+.resultPropValue img {
+    display: inline-block;
+    vertical-align: top;
+    max-width: 100%;
+}
+.option {
+    display: block;
+    padding-bottom: 10px;
+}
+.optionTitle {
+    background-color: #ccc;
+    color: #311b92;
+    display: block;
+    font-size: 15px;
+    padding: 5px;
+    text-align: left;
+    text-shadow: 0 1px 1px #666;
+}
+.option input[disabled] {
+    opacity: 0.3;
+}
+.optionNote {
+    background-color: #bbb;
+    display: block;
+    margin-bottom: 6px;
+    padding: 4px;
+    text-align: left;
+}

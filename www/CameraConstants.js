@@ -44,6 +44,20 @@ module.exports = {
     PNG: 1
   },
   /**
+   * Author: @TanaseButcaru, 20160111; getVideo() support
+   * @enum {number}
+   */
+  VideoEncodingType:{
+    /** Return 3GP encoded video */
+    GPP: 2,
+    /** Return MP4 encoded video */
+    MP4: 3,
+    /** Return WEBM encoded video */
+    WEBM: 4,
+    /** Return MKV encoded video */
+    MKV: 5
+  },
+  /**
    * @enum {number}
    */
   MediaType:{
@@ -55,6 +69,18 @@ module.exports = {
     ALLMEDIA : 2
   },
   /**
+   * Author: @TanaseButcaru, 20160111; getVideo() support
+   * @enum {number}
+   */
+  MediaThumbnail:{
+    /** Media thumbnail disabled */
+    NONE: 0,
+    /** Creates a thumbnail of 512x384 px */
+    MINI_KIND: 1,
+    /** Creates a thumbnail of 96x96 px */
+    MICRO_KIND: 2
+  },
+  /**
    * @enum {number}
    */
   PictureSourceType:{
@@ -64,6 +90,26 @@ module.exports = {
     CAMERA : 1,
     /** Choose image from picture library (same as PHOTOLIBRARY for Android) */
     SAVEDPHOTOALBUM : 2
+  },
+  /**
+   * Author: @TanaseButcaru, 20160111; getVideo() support
+   * @enum {number}
+   */
+  VideoSourceType:{
+    /** Choose video from video library */
+    VIDEOLIBRARY : 0,
+    /** Take video from camera */
+    CAMERA : 1
+  },
+  /**
+   * Author: @TanaseButcaru, 20160111; getVideo() support
+   * @enum {number}
+   */
+  VideoQuality:{
+    /**  Low quality, suitable for MMS messages */
+    LOW : 0,
+    /** High quality */
+    HIGH: 1
   },
   /**
    * Matches iOS UIPopoverArrowDirection constants to specify arrow location on popover.
