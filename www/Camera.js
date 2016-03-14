@@ -80,7 +80,7 @@ for (var key in Camera) {
 /**
  * @description Takes a photo using the camera, or retrieves a photo from the device's
  * image gallery.  The image is passed to the success callback as a
- * base64-encoded `String`, or as the URI for the image file.
+ * Base64-encoded `String`, or as the URI for the image file.
  *
  * The `camera.getPicture` function opens the device's default camera
  * application that allows users to snap pictures by default - this behavior occurs,
@@ -98,7 +98,7 @@ for (var key in Camera) {
  * one of the following formats, depending on the specified
  * `cameraOptions`:
  *
- * - A `String` containing the base64-encoded photo image.
+ * - A `String` containing the Base64-encoded photo image.
  *
  * - A `String` representing the image file location on local storage (default).
  *
