@@ -26,7 +26,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -43,6 +42,7 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
@@ -57,7 +57,6 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
-import android.content.pm.PackageManager;
 /**
  * This class launches the camera view, allows the user to take a picture, closes the camera view,
  * and returns the captured image.  When the camera view is closed, the screen displayed before
@@ -320,7 +319,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             intent.setType("image/*");
             if (this.allowEdit) {
                 intent.setAction(Intent.ACTION_PICK);
-                intent.putExtra("crop", "true");
+//                intent.putExtra("crop", "true");
                 if (targetWidth > 0) {
                     intent.putExtra("outputX", targetWidth);
                 }
@@ -331,8 +330,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     intent.putExtra("aspectX", 1);
                     intent.putExtra("aspectY", 1);
                 }
-                File photo = createCaptureFile(encodingType);
-                croppedUri = Uri.fromFile(photo);
+//                File photo = createCaptureFile(encodingType);
+//                croppedUri = Uri.fromFile(photo);
                 intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, croppedUri);
             } else {
                 intent.setAction(Intent.ACTION_GET_CONTENT);
@@ -716,7 +715,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         int destType = (requestCode % 16) - 1;
 
         // If Camera Crop
-        if (requestCode >= CROP_CAMERA) {
+        if (requestCode == CROP_CAMERA) {
             if (resultCode == Activity.RESULT_OK) {
 
                 // Because of the inability to pass through multiple intents, this hack will allow us
@@ -739,6 +738,26 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                 this.failPicture("Did not complete!");
             }
         }
+        // If gallery crop
+        else if (requestCode > CROP_CAMERA) {
+            if (resultCode == Activity.RESULT_OK) {
+
+                // Because of the inability to pass through multiple intents, this hack will allow us
+                // to pass arcane codes back.
+                destType = requestCode - CROP_CAMERA - 1;
+                this.processResultFromGallery(destType, intent);
+
+            }// If cancelled
+            else if (resultCode == Activity.RESULT_CANCELED) {
+                this.failPicture("Gallery cancelled.");
+            }
+
+            // If something else
+            else {
+                this.failPicture("Did not complete!");
+            }
+        }
+
         // If CAMERA
         else if (srcType == CAMERA) {
             // If image available
@@ -771,6 +790,11 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         // If retrieving photo from library
         else if ((srcType == PHOTOLIBRARY) || (srcType == SAVEDPHOTOALBUM)) {
             if (resultCode == Activity.RESULT_OK && intent != null) {
+// <<<<<<< HEAD
+//             	Log.i(LOG_TAG,"CROP>>>>>>PHOTOLIBRARY, destType+1");
+//             	performCrop(intent.getData(), destType + 1, intent);
+// =======
+                Log.i(LOG_TAG,"CROP>>>>>>PHOTOLIBRARY, destType+1");
                 final Intent i = intent;
                 final int finalDestType = destType;
                 cordova.getThreadPool().execute(new Runnable() {
@@ -778,6 +802,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                         processResultFromGallery(finalDestType, i);
                     }
                 });
+// >>>>>>> e1911a3c78592a23358caa0c4fc9429456942702
             }
             else if (resultCode == Activity.RESULT_CANCELED) {
                 this.failPicture("Selection cancelled.");
