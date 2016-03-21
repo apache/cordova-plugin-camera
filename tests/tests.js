@@ -125,7 +125,8 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         var img = document.getElementById('camera_image');
         var startTime = new Date();
         img.src = url;
-        img.onloadend = function () {
+        img.onload = function () {
+            log('Img size: ' + img.naturalWidth + 'x' + img.naturalHeight);
             log('Image tag load time: ' + (new Date() - startTime));
             if (callback) {
                 callback();
