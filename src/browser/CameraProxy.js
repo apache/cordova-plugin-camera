@@ -47,7 +47,7 @@ function takePicture(success, error, opts) {
 
         document.body.appendChild(input);
 
-        input.click()
+        input.click();
     }
 }
 
