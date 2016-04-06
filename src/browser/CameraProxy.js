@@ -27,7 +27,8 @@ function takePicture(success, error, opts) {
     } else {
         var input = document.createElement('input');
         input.style.position = 'relative';
-        input.style.zIndex = HIGHEST_POSSIBLE_Z_INDEX;
+        input.style.opacity = 0;
+        input.style.pointerEvents = "none";
         input.type = 'file';
         input.name = 'files[]';
 
@@ -45,6 +46,8 @@ function takePicture(success, error, opts) {
         };
 
         document.body.appendChild(input);
+
+        input.click()
     }
 }
 
