@@ -83,7 +83,7 @@ static NSString* toBase64(NSData* data) {
     pictureOptions.cameraDirection = [[command argumentAtIndex:11 withDefault:@(UIImagePickerControllerCameraDeviceRear)] unsignedIntegerValue];
     
     pictureOptions.popoverSupported = NO;
-    pictureOptions.usesGeolocation = NO;
+    pictureOptions.usesGeolocation = [[command argumentAtIndex:12 withDefault:@(NO)] boolValue];
     
     return pictureOptions;
 }
@@ -146,7 +146,7 @@ static NSString* toBase64(NSData* data) {
         
         CDVPictureOptions* pictureOptions = [CDVPictureOptions createFromTakePictureArguments:command];
         pictureOptions.popoverSupported = [weakSelf popoverSupported];
-        pictureOptions.usesGeolocation = [weakSelf usesGeolocation];
+        pictureOptions.usesGeolocation = pictureOptions.usesGeolocation || [weakSelf usesGeolocation];
         pictureOptions.cropToSize = NO;
         
         BOOL hasCamera = [UIImagePickerController isSourceTypeAvailable:pictureOptions.sourceType];
@@ -361,7 +361,7 @@ static NSString* toBase64(NSData* data) {
                 if (options.usesGeolocation) {
                     NSDictionary* controllerMetadata = [info objectForKey:@"UIImagePickerControllerMediaMetadata"];
                     if (controllerMetadata) {
-                        self.data = data;
+                        self.data = UIImageJPEGRepresentation(image, [options.quality floatValue] / 100.0f);
                         self.metadata = [[NSMutableDictionary alloc] init];
                         
                         NSMutableDictionary* EXIFDictionary = [[controllerMetadata objectForKey:(NSString*)kCGImagePropertyExifDictionary]mutableCopy];
@@ -500,7 +500,8 @@ static NSString* toBase64(NSData* data) {
         [library writeImageToSavedPhotosAlbum:image.CGImage orientation:(ALAssetOrientation)(image.imageOrientation) completionBlock:nil];
     }
 
-    completion(result);
+    if (result)
+        completion(result);
 }
 
 - (CDVPluginResult*)resultForVideo:(NSDictionary*)info
