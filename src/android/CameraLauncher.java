@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.OutOfMemoryError;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -485,28 +486,35 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
         // If sending base64 image back
         if (destType == DATA_URL) {
-            bitmap = getScaledBitmap(sourcePath);
+            //memory intensive operation which we need to handle OutOfMemoryError gracefully
+            try {
+                bitmap = getScaledBitmap(sourcePath);
 
-            if (bitmap == null) {
-                // Try to get the bitmap from intent.
-                bitmap = (Bitmap)intent.getExtras().get("data");
-            }
+                if (bitmap == null) {
+                    // Try to get the bitmap from intent.
+                    bitmap = (Bitmap) intent.getExtras().get("data");
+                }
 
-            // Double-check the bitmap.
-            if (bitmap == null) {
-                Log.d(LOG_TAG, "I either have a null image path or bitmap");
-                this.failPicture("Unable to create bitmap!");
+                // Double-check the bitmap.
+                if (bitmap == null) {
+                    Log.d(LOG_TAG, "I either have a null image path or bitmap");
+                    this.failPicture("Unable to create bitmap!");
+                    return;
+                }
+
+                if (rotate != 0 && this.correctOrientation) {
+                    bitmap = getRotatedBitmap(rotate, bitmap, exif);
+                }
+
+                this.processPicture(bitmap, this.encodingType);
+
+                if (!this.saveToPhotoAlbum) {
+                    checkForDuplicateImage(DATA_URL);
+                }
+            }catch (OutOfMemoryError e){
+                Log.e(LOG_TAG, "OutOfMemoryError when processing data_url. Consider switching to FILE_URI");
+                this.failPicture("Out of memory while creating bitmap!");
                 return;
-            }
-
-            if (rotate != 0 && this.correctOrientation) {
-                bitmap = getRotatedBitmap(rotate, bitmap, exif);
-            }
-
-            this.processPicture(bitmap, this.encodingType);
-
-            if (!this.saveToPhotoAlbum) {
-                checkForDuplicateImage(DATA_URL);
             }
         }
 
@@ -675,62 +683,71 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                     this.failPicture("Unable to retrieve path to picture!");
                     return;
                 }
-                Bitmap bitmap = null;
+
+                //memory intensive operation which we need to handle OutOfMemoryError gracefully
                 try {
-                    bitmap = getScaledBitmap(uriString);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                if (bitmap == null) {
-                    Log.d(LOG_TAG, "I either have a null image path or bitmap");
-                    this.failPicture("Unable to create bitmap!");
+                    Bitmap bitmap = null;
+                    try {
+                        bitmap = getScaledBitmap(uriString);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    if (bitmap == null) {
+                        Log.d(LOG_TAG, "I either have a null image path or bitmap");
+                        this.failPicture("Unable to create bitmap!");
+                        return;
+                    }
+
+                    if (this.correctOrientation) {
+                        rotate = getImageOrientation(uri);
+                        if (rotate != 0) {
+                            Matrix matrix = new Matrix();
+                            matrix.setRotate(rotate);
+                            try {
+                                bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+                                this.orientationCorrected = true;
+                            } catch (OutOfMemoryError oom) {
+                                this.orientationCorrected = false;
+                            }
+                        }
+                    }
+
+                    // If sending base64 image back
+                    if (destType == DATA_URL) {
+                        this.processPicture(bitmap, this.encodingType);
+                    }
+
+                    // If sending filename back
+                    else if (destType == FILE_URI || destType == NATIVE_URI) {
+                        // Did we modify the image?
+                        if ( (this.targetHeight > 0 && this.targetWidth > 0) ||
+                                (this.correctOrientation && this.orientationCorrected) ) {
+                            try {
+                                String modifiedPath = this.ouputModifiedBitmap(bitmap, uri);
+                                // The modified image is cached by the app in order to get around this and not have to delete you
+                                // application cache I'm adding the current system time to the end of the file url.
+                                this.callbackContext.success("file://" + modifiedPath + "?" + System.currentTimeMillis());
+
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                this.failPicture("Error retrieving image.");
+                            }
+                        }
+                        else {
+                            this.callbackContext.success(fileLocation);
+                        }
+                    }
+
+                    if (bitmap != null) {
+                        bitmap.recycle();
+                        bitmap = null;
+                    }
+                    System.gc();
+                }catch (OutOfMemoryError e){
+                    Log.e(LOG_TAG, "OutOfMemoryError when processing bitmap");
+                    this.failPicture("Out of memory while creating bitmap!");
                     return;
                 }
-
-                if (this.correctOrientation) {
-                    rotate = getImageOrientation(uri);
-                    if (rotate != 0) {
-                        Matrix matrix = new Matrix();
-                        matrix.setRotate(rotate);
-                        try {
-                            bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-                            this.orientationCorrected = true;
-                        } catch (OutOfMemoryError oom) {
-                            this.orientationCorrected = false;
-                        }
-                    }
-                }
-
-                // If sending base64 image back
-                if (destType == DATA_URL) {
-                    this.processPicture(bitmap, this.encodingType);
-                }
-
-                // If sending filename back
-                else if (destType == FILE_URI || destType == NATIVE_URI) {
-                    // Did we modify the image?
-                    if ( (this.targetHeight > 0 && this.targetWidth > 0) ||
-                            (this.correctOrientation && this.orientationCorrected) ) {
-                        try {
-                            String modifiedPath = this.ouputModifiedBitmap(bitmap, uri);
-                            // The modified image is cached by the app in order to get around this and not have to delete you
-                            // application cache I'm adding the current system time to the end of the file url.
-                            this.callbackContext.success("file://" + modifiedPath + "?" + System.currentTimeMillis());
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            this.failPicture("Error retrieving image.");
-                        }
-                    }
-                    else {
-                        this.callbackContext.success(fileLocation);
-                    }
-                }
-                if (bitmap != null) {
-                    bitmap.recycle();
-                    bitmap = null;
-                }
-                System.gc();
             }
         }
     }
