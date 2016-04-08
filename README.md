@@ -294,11 +294,11 @@ Matches iOS UIPopoverArrowDirection constants to specify arrow location on popov
 
 | Name | Type | Default |
 | --- | --- | --- |
-| ARROW_UP | <code>number</code> | <code>1</code> | 
-| ARROW_DOWN | <code>number</code> | <code>2</code> | 
-| ARROW_LEFT | <code>number</code> | <code>4</code> | 
-| ARROW_RIGHT | <code>number</code> | <code>8</code> | 
-| ARROW_ANY | <code>number</code> | <code>15</code> | 
+| ARROW_UP | <code>number</code> | <code>1</code> |
+| ARROW_DOWN | <code>number</code> | <code>2</code> |
+| ARROW_LEFT | <code>number</code> | <code>4</code> |
+| ARROW_RIGHT | <code>number</code> | <code>8</code> |
+| ARROW_ANY | <code>number</code> | <code>15</code> |
 
 <a name="module_Camera.Direction"></a>
 ### Camera.Direction : <code>enum</code>
@@ -526,3 +526,207 @@ Tizen only supports a `destinationType` of
 [web_activities]: https://hacks.mozilla.org/2013/01/introducing-web-activities/
 [wp8_bug]: https://issues.apache.org/jira/browse/CB-2083
 [msdn_wp8_docs]: http://msdn.microsoft.com/en-us/library/windowsphone/develop/hh394006.aspx
+
+## Sample: Take Pictures, Select Pictures from the Picture Library, and Get Thumbnails
+
+The Camera plugin allows you to do things like open the device's Camera app and take a picture, or open the file picker and select one. The code snippets in this section demonstrate different tasks including:
+
+* Open the Camera app and take a Picture
+* Take a picture and return thumbnails (resized picture)
+* Take a picture and generate a FileEntry object
+* Select a file from the picture library
+* Select a JPEG image and return thumbnails (resized image)
+* Select an image and generate a FileEntry object
+
+## Take a Picture
+
+Before you can take a picture, you need to set some Camera plugin options to pass into the Camera plugin's `getPicture` function. Here is a common set of recommendations. In this example, you create the object that you will use for the Camera options, and set the `sourceType` dynamically to support both the Camera app and the file picker.
+
+```js
+function setOptions(srcType) {
+    var options = {
+        quality: 20,
+        destinationType: Camera.DestinationType.FILE_URI,
+        // In this app, dynamically set the picture source, Camera or photo gallery
+        sourceType: srcType,
+        encodingType: Camera.EncodingType.JPEG,
+        mediaType: Camera.MediaType.PICTURE,
+        allowEdit: true,
+        correctOrientation: true  //Corrects Android orientation quirks
+    }
+    return options;
+}
+```
+
+Typically, you want to use a FILE_URI instead of a DATA_URL to avoid most memory issues. JPEG is the recommended encoding type for Android.
+
+You take a picture by passing in the options object to `getPicture`, which takes a CameraOptions object as the third argument. When you call `setOptions`, pass `Camera.PictureSourceType.CAMERA` as the picture source.
+
+```js
+function openCamera(selection) {
+
+    var srcType = Camera.PictureSourceType.CAMERA;
+    var options = setOptions(srcType);
+    var func = copyToFile;
+
+    navigator.camera.getPicture(function cameraSuccess(imageUri) {
+
+        displayImage(imageUri);
+        // You may choose to copy the picture, save it somewhere, or upload.
+        func(imageUri);
+
+    }, function cameraError(error) {
+        console.debug("Unable to obtain picture: " + error, "app");
+
+    }, options);
+}
+```
+
+Once you take the picture, you can display it or do something else. In this example, call the app's `displayImage` function from the preceding code.
+
+```js
+function displayImage(imgUri) {
+
+    var elem = document.getElementById('imageFile');
+    elem.src = imgUri;
+}
+```
+
+## Take a Picture and Return Thumbnails (Resize the Picture)
+
+To get smaller images, you can return a resized image by passing both `targetHeight` and `targetWidth` values with your CameraOptions object. In this example, you resize the returned images to 100px (the aspect ratio is maintained, so 100px is either the height or width, whichever is greater).
+
+```js
+function openCamera(selection) {
+
+    var srcType = Camera.PictureSourceType.CAMERA;
+    var options = setOptions(srcType);
+    var func = copyToFile;
+
+    if (selection == "camera-thmb") {
+        options.targetHeight = 100;
+        options.targetWidth = 100;
+    }
+
+    navigator.camera.getPicture(function cameraSuccess(imageUri) {
+
+        // Do something
+
+    }, function cameraError(error) {
+        console.debug("Unable to obtain picture: " + error, "app");
+
+    }, options);
+}
+```
+
+## Select a File from the Picture Library
+
+When selecting a file using the file picker, you also need to set the CameraOptions object. In this example, set the `sourceType` to `Camera.PictureSourceType.SAVEDPHOTOALBUM`. To open the file picker, call `getPicture` just as you did in the previous example, passing in the success and error callbacks along with CameraOptions object.
+
+```js
+function openFilePicker(selection) {
+
+    var srcType = Camera.PictureSourceType.SAVEDPHOTOALBUM;
+    var options = setOptions(srcType);
+    var func = copyToFile;
+
+    navigator.camera.getPicture(function cameraSuccess(imageUri) {
+
+        // Do something
+
+    }, function cameraError(error) {
+        console.debug("Unable to obtain picture: " + error, "app");
+
+    }, options);
+}
+```
+
+## Select an Image and Return Thumbnails (resized images)
+
+Resizing a file selected with the file picker works just like resizing using the Camera app. If you are using the file picker instead of the Camera, and you are resizing the image, the `Camera.EncodingType` value must match the value for the selected image. We previously set this value to JPEG in the app's `setOptions` function.
+
+```js
+function openFilePicker(selection) {
+
+    var srcType = Camera.PictureSourceType.SAVEDPHOTOALBUM;
+    var options = setOptions(srcType);
+    var func = copyToFile;
+
+    if (selection == "picker-thmb") {
+        // To downscale a selected image,
+        // Camera.EncodingType (e.g., JPEG) must match the selected image type.
+        options.targetHeight = 100;
+        options.targetWidth = 100;
+    }
+
+    navigator.camera.getPicture(function cameraSuccess(imageUri) {
+
+        // Do something with image
+
+    }, function cameraError(error) {
+        console.debug("Unable to obtain picture: " + error, "app");
+
+    }, options);
+}
+```
+
+## Take a picture and get a FileEntry Object
+
+If you want to do something like copy the image to another location, or upload it somewhere using the FileTransfer plugin, you need to get a FileEntry object for the returned picture. To do that, call `window.resolveLocalFileSystemURL` on the file URI returned by the Camera app. If you need to use a FileEntry object, set the `destinationType` to `Camera.DestinationType.FILE_URI` in your CameraOptions object (this is also the default value).
+
+```js
+function setOptions(srcType) {
+    var options = {
+        quality: 20,
+        destinationType: Camera.DestinationType.FILE_URI,
+        // In this app, dynamically set the picture source, Camera or photo gallery
+        sourceType: srcType,
+        encodingType: Camera.EncodingType.JPEG,
+        mediaType: Camera.MediaType.PICTURE,
+        allowEdit: true,
+        correctOrientation: true  //Corrects Android orientation quirks
+    }
+    return options;
+}
+```
+
+Here is the call to `window.resolveLocalFileSystemURL`. The image URI is passed to this function from the success callback of `getPicture`. The success handler of `resolveLocalFileSystemURL` receives the FileEntry object.
+
+```js
+function getFileEntry(imgUri) {
+    window.resolveLocalFileSystemURL(imgUri, function success(fileEntry) {
+
+        // Do something with the FileEntry object, like write to it, upload it, etc.
+        // writeFile(fileEntry, imgUri);
+        console.log("got file: " + fileEntry.fullPath);
+        displayFileData(fileEntry.nativeURL, "Native URL");
+
+    }, function () {
+        // If you can't easily get the FileEntry (for example, no write access
+        // to Pictures library) copy to a new FileEntry.
+        copyToFile(imgUri);
+    });
+}
+```
+
+In the example shown in the preceding code, you call the app's `copyToFile` function if you don't get a valid FileEntry object. The image URI returned from the Camera app should result in a valid FileEntry, but platform behavior may be different for files returned from the file picker.
+
+The code shown here creates a file in your app's cache (in sandboxed storage) named `tempFile.jpeg`. With the new FileEntry object, you can copy the image to the file or do something else like upload it.
+
+```js
+function copyToFile(imgUri) {
+    window.resolveLocalFileSystemURL(cordova.file.cacheDirectory, function success(dirEntry) {
+
+        // JPEG file
+        dirEntry.getFile("tempFile.jpeg", { create: true, exclusive: false }, function (fileEntry) {
+
+            // Do something with it, like write to it, upload it, etc.
+            // writeFile(fileEntry, imgUri);
+            console.log("got file: " + fileEntry.fullPath);
+            displayFileData(fileEntry.fullPath, "File copied to");
+
+        }, onErrorCreateFile);
+
+    }, onErrorResolveUrl);
+}
+```
