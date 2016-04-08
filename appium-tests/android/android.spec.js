@@ -35,6 +35,7 @@ var cameraConstants = require('../../www/CameraConstants');
 var cameraHelper = require('../helpers/cameraHelper');
 
 var MINUTE = 60 * 1000;
+var BACK_BUTTON = 4;
 var DEFAULT_SCREEN_WIDTH = 360;
 var DEFAULT_SCREEN_HEIGHT = 567;
 var DEFAULT_WEBVIEW_CONTEXT = 'WEBVIEW';
@@ -100,14 +101,7 @@ describe('Camera tests Android.', function () {
 
         return driver
             .context(webviewContext)
-            .execute(function (opts, pid) {
-                navigator._appiumPromises[pid] = Q.defer();
-                navigator.camera.getPicture(function (result) {
-                    navigator._appiumPromises[pid].resolve(result);
-                }, function (err) {
-                    navigator._appiumPromises[pid].reject(err);
-                }, opts);
-            }, [options, promiseId])
+            .execute(cameraHelper.getPicture, [options, promiseId])
             .context('NATIVE_APP')
             .then(function () {
                 if (skipUiInteractions) {
@@ -165,14 +159,7 @@ describe('Camera tests Android.', function () {
         return driver
             .context(webviewContext)
             .setAsyncScriptTimeout(MINUTE)
-            .executeAsync(function (pid, cb) {
-                navigator._appiumPromises[pid].promise
-                .then(function (result) {
-                    cb(result);
-                }, function (err) {
-                    cb('ERROR: ' + err);
-                });
-            }, [getCurrentPromiseId()])
+            .executeAsync(cameraHelper.checkPicture, [getCurrentPromiseId()])
             .then(function (result) {
                 if (shouldLoad) {
                     expect(result.length).toBeGreaterThan(0);
@@ -307,17 +294,17 @@ describe('Camera tests Android.', function () {
                         });
                 })
                 .fail(saveScreenshotAndFail)
-                .deviceKeyEvent(4)
+                .deviceKeyEvent(BACK_BUTTON)
                 .elementById('action_bar_title')
                 .then(function () {
                     // success means we're still in native app
                     return driver
-                        .deviceKeyEvent(4)
+                        .deviceKeyEvent(BACK_BUTTON)
                         .elementById('action_bar_title')
                         .then(function () {
                             // success means we're still in native app
                             return driver
-                                .deviceKeyEvent(4);
+                                .deviceKeyEvent(BACK_BUTTON);
                         }, function () {
                             // error means we're already in webview
                             return driver;
