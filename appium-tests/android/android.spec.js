@@ -112,27 +112,32 @@ describe('Camera tests Android.', function () {
                 if (options.hasOwnProperty('sourceType') &&
                         (options.sourceType === cameraConstants.PictureSourceType.PHOTOLIBRARY ||
                         options.sourceType === cameraConstants.PictureSourceType.SAVEDPHOTOALBUM)) {
-                    var touchTile = new wd.TouchAction();
+                    var tapTile = new wd.TouchAction();
                     var swipeRight = new wd.TouchAction();
-                    touchTile.press({x: Math.round(screenWidth / 4), y: Math.round(screenHeight / 5)}).release();
+                    tapTile.tap({x: Math.round(screenWidth / 4), y: Math.round(screenHeight / 5)});
                     swipeRight.press({x: 10, y: 100})
                         .wait(300)
                         .moveTo({x: Math.round(screenWidth / 2), y: 100})
                         .release();
                     return driver
-                        .waitForElementByXPath('//*[@text="Gallery"]', MINUTE / 2)
+                        .elementByXPath('//android.widget.TextView[@text="Gallery"]')
                         .fail(function () {
                             return driver
                                 .performTouchAction(swipeRight)
-                                .elementByXPath('//*[@text="Gallery"]');
+                                .elementByXPath('//android.widget.TextView[@text="Gallery"]');
                         })
                         .then(function (element) {
-                            return element.click();
+                            return element
+                                .click()
+                                // we need to sleep here to give a sidebar some time to close
+                                // if we don't sleep here, sometimes we would click on a sidebar
+                                // in the next step
+                                .sleep(3000);
                         }, function () {
                             // the gallery is already opened, just go on:
                             return driver;
                         })
-                        .performTouchAction(touchTile);
+                        .performTouchAction(tapTile);
                 }
                 // taking a picture from camera
                 return driver
@@ -276,7 +281,7 @@ describe('Camera tests Android.', function () {
                     // try to find "Gallery" menu item
                     // if there's none, the gallery should be already opened
                     return driver
-                        .elementByXPath('//*[@text="Gallery"]')
+                        .elementByXPath('//android.widget.TextView[@text="Gallery"]')
                         .then(function (element) {
                             return element.click();
                         }, function () {
@@ -292,13 +297,11 @@ describe('Camera tests Android.', function () {
                             throw 'Couldn\'t find "Choose video" element.';
                         });
                 })
-                .fail(saveScreenshotAndFail)
                 .deviceKeyEvent(BACK_BUTTON)
-                .elementById('action_bar_title')
-                .then(function () {
-                    // success means we're still in native app
+                .elementByXPath('//android.widget.TextView[@text="Gallery"]')
+                .deviceKeyEvent(BACK_BUTTON)
+                .finally(function () {
                     return driver
-                        .deviceKeyEvent(BACK_BUTTON)
                         .elementById('action_bar_title')
                         .then(function () {
                             // success means we're still in native app
@@ -308,10 +311,8 @@ describe('Camera tests Android.', function () {
                             // error means we're already in webview
                             return driver;
                         });
-                }, function () {
-                    // error means we're already in webview
-                    return driver;
                 })
+                .fail(saveScreenshotAndFail)
                 .done(done);
         }, 3 * MINUTE);
 
@@ -380,7 +381,11 @@ describe('Camera tests Android.', function () {
             // this should be the picture we've taken in the first spec
             return driver
                 .context('NATIVE_APP')
-                .deviceKeyEvent(3)
+                .deviceKeyEvent(BACK_BUTTON)
+                .sleep(1000)
+                .deviceKeyEvent(BACK_BUTTON)
+                .sleep(1000)
+                .deviceKeyEvent(BACK_BUTTON)
                 .elementById('Apps')
                 .click()
                 .elementByXPath('//android.widget.TextView[@text="Gallery"]')
@@ -388,6 +393,11 @@ describe('Camera tests Android.', function () {
                 .elementByXPath('//android.widget.TextView[contains(@text,"Pictures")]')
                 .click()
                 .then(deleteImage)
+                .deviceKeyEvent(BACK_BUTTON)
+                .sleep(1000)
+                .deviceKeyEvent(BACK_BUTTON)
+                .sleep(1000)
+                .deviceKeyEvent(BACK_BUTTON)
                 .fail(fail)
                 .finally(done);
         }, 3 * MINUTE);
