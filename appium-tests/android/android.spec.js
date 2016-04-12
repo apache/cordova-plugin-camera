@@ -54,11 +54,12 @@ describe('Camera tests Android.', function () {
     var promiseCount = 0;
 
     function getNextPromiseId() {
-        return PROMISE_PREFIX + promiseCount++;
+        promiseCount += 1;
+        return getCurrentPromiseId();
     }
 
     function getCurrentPromiseId() {
-        return PROMISE_PREFIX + (promiseCount - 1);
+        return PROMISE_PREFIX + promiseCount;
     }
 
     function saveScreenshotAndFail(error) {
@@ -229,16 +230,14 @@ describe('Camera tests Android.', function () {
         return driver
             .context(webviewContext)
             .execute(function () {
-                return window.innerWidth;
+                return {
+                    'width': window.innerWidth,
+                    'height': window.innerHeight
+                };
             }, [])
-            .then(function (width) {
-                screenWidth = Number(width);
-            })
-            .execute(function () {
-                return window.innerHeight;
-            }, [])
-            .then(function (height) {
-                screenHeight = Number(height);
+            .then(function (size) {
+                screenWidth = Number(size.width);
+                screenHeight = Number(size.height);
             })
             .done(done);
     }, MINUTE);

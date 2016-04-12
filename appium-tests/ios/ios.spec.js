@@ -46,11 +46,12 @@ describe('Camera tests iOS.', function () {
     var promiseCount = 0;
 
     function getNextPromiseId() {
-        return PROMISE_PREFIX + promiseCount++;
+        promiseCount += 1;
+        return getCurrentPromiseId();
     }
 
     function getCurrentPromiseId() {
-        return PROMISE_PREFIX + (promiseCount - 1);
+        return PROMISE_PREFIX + promiseCount;
     }
 
     function saveScreenshotAndFail(error) {
@@ -83,6 +84,25 @@ describe('Camera tests iOS.', function () {
         return cameraHelper.generateSpecs(sourceTypes, destinationTypes, encodingTypes, allowEditOptions);
     }
 
+    function usePicture() {
+        return driver
+            .elementByXPath('//*[@label="Use"]')
+            .click()
+            .fail(function () {
+                return driver
+                    // For some reason "Choose" element is not clickable by standard Appium methods
+                    // So getting its position and tapping there using TouchAction
+                    .elementByXPath('//UIAButton[@label="Choose"]')
+                    .getLocation()
+                    .then(function (loc) {
+                        var tapChoose = new wd.TouchAction();
+                        tapChoose.tap(loc);
+                        return driver
+                            .performTouchAction(tapChoose);
+                    });
+            });
+    }
+
     function getPicture(options, cancelCamera, skipUiInteractions) {
         var promiseId = getNextPromiseId();
         if (!options) {
@@ -104,23 +124,10 @@ describe('Camera tests iOS.', function () {
                         .elementByXPath('//UIACollectionCell')
                         .click()
                         .then(function () {
-                            if (options.allowEdit) {
-                                return driver
-                                    .elementByXPath('//*[@label="Use"]')
-                                    .click()
-                                    .fail(function () {
-                                        return driver
-                                            .elementByXPath('//UIAButton[@label="Choose"]')
-                                            .getLocation()
-                                            .then(function (loc) {
-                                                var tapChoose = new wd.TouchAction();
-                                                tapChoose.tap(loc);
-                                                return driver
-                                                    .performTouchAction(tapChoose);
-                                            });
-                                    });
+                            if (!options.allowEdit) {
+                                return driver;
                             }
-                            return driver;
+                            return usePicture();
                         });
                 }
                 if (options.hasOwnProperty('sourceType') && options.sourceType === cameraConstants.PictureSourceType.SAVEDPHOTOALBUM) {
@@ -128,23 +135,10 @@ describe('Camera tests iOS.', function () {
                         .waitForElementByXPath('//UIACollectionCell', MINUTE / 2)
                         .click()
                         .then(function () {
-                            if (options.allowEdit) {
-                                return driver
-                                    .elementByXPath('//*[@label="Use"]')
-                                    .click()
-                                    .fail(function () {
-                                        return driver
-                                            .elementByXPath('//UIAButton[@label="Choose"]')
-                                            .getLocation()
-                                            .then(function (loc) {
-                                                var tapChoose = new wd.TouchAction();
-                                                tapChoose.tap(loc);
-                                                return driver
-                                                    .performTouchAction(tapChoose);
-                                            });
-                                    });
+                            if (!options.allowEdit) {
+                                return driver;
                             }
-                            return driver;
+                            return usePicture();
                         });
                 }
                 if (cancelCamera) {
