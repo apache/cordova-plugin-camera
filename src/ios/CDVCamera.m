@@ -358,6 +358,7 @@ static NSString* toBase64(NSData* data) {
                 // use image unedited as requested , don't resize
                 data = UIImageJPEGRepresentation(image, 1.0);
             } else {
+                data = UIImageJPEGRepresentation(image, [options.quality floatValue] / 100.0f);
                 if (options.usesGeolocation) {
                     NSDictionary* controllerMetadata = [info objectForKey:@"UIImagePickerControllerMediaMetadata"];
                     if (controllerMetadata) {
@@ -374,8 +375,6 @@ static NSString* toBase64(NSData* data) {
                         }
                         [[self locationManager] startUpdatingLocation];
                     }
-                } else {
-                    data = UIImageJPEGRepresentation(image, [options.quality floatValue] / 100.0f);
                 }
             }
         }
