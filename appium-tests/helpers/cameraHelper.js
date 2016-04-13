@@ -1,4 +1,5 @@
 /*jshint node: true */
+/* global Q */
 /*
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -83,4 +84,22 @@ module.exports.generateSpecs = function (sourceTypes, destinationTypes, encoding
         }
     }
     return specs;
+};
+
+module.exports.getPicture = function (opts, pid) {
+    navigator._appiumPromises[pid] = Q.defer();
+    navigator.camera.getPicture(function (result) {
+        navigator._appiumPromises[pid].resolve(result);
+    }, function (err) {
+        navigator._appiumPromises[pid].reject(err);
+    }, opts);
+};
+
+module.exports.checkPicture = function (pid, cb) {
+    navigator._appiumPromises[pid].promise
+        .then(function (result) {
+            cb(result);
+        }, function (err) {
+            cb('ERROR: ' + err);
+        });
 };
