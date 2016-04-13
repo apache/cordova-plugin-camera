@@ -245,7 +245,7 @@ function openCamera(selection) {
 
     var srcType = Camera.PictureSourceType.CAMERA;
     var options = setOptions(srcType);
-    var func = copyToFile;
+    var func = createNewFileEntry;
 
     navigator.camera.getPicture(function cameraSuccess(imageUri) {
 
@@ -270,6 +270,12 @@ function displayImage(imgUri) {
 }
 ```
 
+To display the image on some platforms, you might need to include the main part of the URI in the Content-Security-Policy <meta> element in index.html. For example, on Windows 10, you can include `ms-appdata:` in your <meta> element. Here is an example.
+
+```html
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: ms-appdata: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *">
+```
+
 ## Take a Picture and Return Thumbnails (Resize the Picture) <a name="getThumbnails"></a>
 
 To get smaller images, you can return a resized image by passing both `targetHeight` and `targetWidth` values with your CameraOptions object. In this example, you resize the returned image to fit in a 100px by 100px box (the aspect ratio is maintained, so 100px is either the height or width, whichever is greater in the source).
@@ -279,7 +285,7 @@ function openCamera(selection) {
 
     var srcType = Camera.PictureSourceType.CAMERA;
     var options = setOptions(srcType);
-    var func = copyToFile;
+    var func = createNewFileEntry;
 
     if (selection == "camera-thmb") {
         options.targetHeight = 100;
@@ -306,7 +312,7 @@ function openFilePicker(selection) {
 
     var srcType = Camera.PictureSourceType.SAVEDPHOTOALBUM;
     var options = setOptions(srcType);
-    var func = copyToFile;
+    var func = createNewFileEntry;
 
     navigator.camera.getPicture(function cameraSuccess(imageUri) {
 
@@ -321,14 +327,14 @@ function openFilePicker(selection) {
 
 ## Select an Image and Return Thumbnails (resized images) <a name="getFileThumbnails"></a>
 
-Resizing a file selected with the file picker works just like resizing using the Camera app. If you are using the file picker instead of the Camera, and you are resizing the image, the `Camera.EncodingType` value must match the value for the selected image. We previously set this value to JPEG in the app's `setOptions` function.
+Resizing a file selected with the file picker works just like resizing using the Camera app; set the `targetHeight` and `targetWidth` options.
 
 ```js
 function openFilePicker(selection) {
 
     var srcType = Camera.PictureSourceType.SAVEDPHOTOALBUM;
     var options = setOptions(srcType);
-    var func = copyToFile;
+    var func = createNewFileEntry;
 
     if (selection == "picker-thmb") {
         // To downscale a selected image,
@@ -352,7 +358,7 @@ function openFilePicker(selection) {
 
 If you want to do something like copy the image to another location, or upload it somewhere using the FileTransfer plugin, you need to get a FileEntry object for the returned picture. To do that, call `window.resolveLocalFileSystemURL` on the file URI returned by the Camera app. If you need to use a FileEntry object, set the `destinationType` to `Camera.DestinationType.FILE_URI` in your CameraOptions object (this is also the default value).
 
->*Note* You need the File plugin to call `window.resolveLocalFileSystemURL`.
+>*Note* You need the [File plugin](https://www.npmjs.com/package/cordova-plugin-file) to call `window.resolveLocalFileSystemURL`.
 
 Here is the call to `window.resolveLocalFileSystemURL`. The image URI is passed to this function from the success callback of `getPicture`. The success handler of `resolveLocalFileSystemURL` receives the FileEntry object.
 
@@ -368,17 +374,19 @@ function getFileEntry(imgUri) {
     }, function () {
       // If don't get the FileEntry (which may happen when testing
       // on some emulators), copy to a new FileEntry.
-        copyToFile(imgUri);
+        createNewFileEntry(imgUri);
     });
 }
 ```
 
-In the example shown in the preceding code, you call the app's `copyToFile` function if you don't get a valid FileEntry object. The image URI returned from the Camera app should result in a valid FileEntry, but platform behavior may be different for files returned from the file picker.
+In the example shown in the preceding code, you call the app's `createNewFileEntry` function if you don't get a valid FileEntry object. The image URI returned from the Camera app should result in a valid FileEntry, but platform behavior on some emulators may be different for files returned from the file picker.
+
+>*Note* To see an example of writing to a FileEntry, see the [File plugin README](https://www.npmjs.com/package/cordova-plugin-file).
 
 The code shown here creates a file in your app's cache (in sandboxed storage) named `tempFile.jpeg`. With the new FileEntry object, you can copy the image to the file or do something else like upload it.
 
 ```js
-function copyToFile(imgUri) {
+function createNewFileEntry(imgUri) {
     window.resolveLocalFileSystemURL(cordova.file.cacheDirectory, function success(dirEntry) {
 
         // JPEG file
