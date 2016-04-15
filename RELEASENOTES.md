@@ -20,6 +20,17 @@
 -->
 # Release Notes
 
+### 2.2.0 (Apr 15, 2016)
+* CB-10873 Avoid crash due to usage of uninitialized variable when writing geolocation data to image destination. Properly handle 'CameraUsesGeolocation' option by properly setting geolocation data in EXIF header in all cases
+* CB-11073 Appium tests stability improvements
+* Replace `PermissionHelper.java` with `cordova-plugin-compat`
+* Making focus handler work only for **windows 10** phone
+* CB-10865 Run **ios** native tests on **Travis**
+* CB-10120 Fixing use of constants and `PermissionHelper`
+* CB-10120 Fix missing CAMERA permission for **Android M**
+* CB-10756 Adding sterner warnings about `DATA_URL`
+* CB-10460 `getRealPath` return null in some cases
+
 ### 2.1.1 (Mar 09, 2016)
 * [CB-10825](https://issues.apache.org/jira/browse/CB-10825) **Android** should request READ permission for gallery source
 * added apache license header to appium files
