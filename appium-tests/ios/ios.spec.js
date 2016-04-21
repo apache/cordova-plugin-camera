@@ -1,5 +1,5 @@
 /*jshint node: true, jasmine: true */
-/* global navigator, Q */
+
 /*
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -260,5 +260,5 @@ describe('Camera tests iOS.', function () {
         driver
             .quit()
             .done(done);
-    }, MINUTE);
+    }, 5 * MINUTE);
 });

@@ -1,5 +1,5 @@
 /*jshint node: true, jasmine: true */
-/* global navigator, Q */
+
 /*
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -114,11 +114,23 @@ describe('Camera tests Android.', function () {
                         options.sourceType === cameraConstants.PictureSourceType.SAVEDPHOTOALBUM)) {
                     var tapTile = new wd.TouchAction();
                     var swipeRight = new wd.TouchAction();
-                    tapTile.tap({x: Math.round(screenWidth / 4), y: Math.round(screenHeight / 5)});
-                    swipeRight.press({x: 10, y: 100})
+                    tapTile
+                        .tap({
+                            x: Math.round(screenWidth / 4),
+                            y: Math.round(screenHeight / 5)
+                        });
+                    swipeRight
+                        .press({x: 10, y: 100})
                         .wait(300)
-                        .moveTo({x: Math.round(screenWidth / 2), y: 100})
-                        .release();
+                        .moveTo({x: Math.round(screenWidth / 2), y: 0})
+                        .release()
+                        .wait(1000);
+                    if (options.allowEdit) {
+                        return driver
+                            // always wait before performing touchAction
+                            .sleep(7000)
+                            .performTouchAction(tapTile);
+                    }
                     return driver
                         .elementByXPath('//android.widget.TextView[@text="Gallery"]')
                         .fail(function () {
@@ -126,17 +138,9 @@ describe('Camera tests Android.', function () {
                                 .performTouchAction(swipeRight)
                                 .elementByXPath('//android.widget.TextView[@text="Gallery"]');
                         })
-                        .then(function (element) {
-                            return element
-                                .click()
-                                // we need to sleep here to give a sidebar some time to close
-                                // if we don't sleep here, sometimes we would click on a sidebar
-                                // in the next step
-                                .sleep(3000);
-                        }, function () {
-                            // the gallery is already opened, just go on:
-                            return driver;
-                        })
+                        .click()
+                        // always wait before performing touchAction
+                        .sleep(7000)
                         .performTouchAction(tapTile);
                 }
                 // taking a picture from camera
@@ -156,7 +160,10 @@ describe('Camera tests Android.', function () {
                         .click();
                 }
             })
-            .fail(fail);
+            .fail(function (failure) {
+                console.log(failure);
+                fail(failure);
+            });
     }
 
     // checks if the picture was successfully taken
@@ -197,6 +204,8 @@ describe('Camera tests Android.', function () {
         var holdTile = new wd.TouchAction();
         holdTile.press({x: Math.round(screenWidth / 4), y: Math.round(screenHeight / 5)}).wait(1000).release();
         return driver
+            // always wait before performing touchAction
+            .sleep(7000)
             .performTouchAction(holdTile)
             .elementByXPath('//android.widget.TextView[@text="Delete"]')
             .then(function (element) {
@@ -407,5 +416,5 @@ describe('Camera tests Android.', function () {
         driver
             .quit()
             .done(done);
-    }, MINUTE);
+    }, 5 * MINUTE);
 });
