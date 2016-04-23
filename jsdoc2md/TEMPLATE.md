@@ -1,3 +1,7 @@
+---
+title: Camera
+description: Take pictures with the device camera.
+---
 {{>cdv-license~}}
 
 [![Build Status](https://travis-ci.org/apache/cordova-plugin-camera.svg?branch=master)](https://travis-ci.org/apache/cordova-plugin-camera)
