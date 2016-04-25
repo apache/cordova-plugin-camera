@@ -78,18 +78,13 @@ describe('Camera tests Android.', function () {
         var sourceTypes = [
                 cameraConstants.PictureSourceType.CAMERA,
                 cameraConstants.PictureSourceType.PHOTOLIBRARY
-            ],
-            destinationTypes = cameraConstants.DestinationType,
-            encodingTypes = [
-                cameraConstants.EncodingType.JPEG,
-                cameraConstants.EncodingType.PNG
-            ],
-            allowEditOptions = [
-                true,
-                false
             ];
+        var destinationTypes = cameraConstants.DestinationType;
+        var encodingTypes = cameraConstants.EncodingType;
+        var allowEditOptions = [ true, false ];
+        var correctOrientationOptions = [ true, false ];
 
-        return cameraHelper.generateSpecs(sourceTypes, destinationTypes, encodingTypes, allowEditOptions);
+        return cameraHelper.generateSpecs(sourceTypes, destinationTypes, encodingTypes, allowEditOptions, correctOrientationOptions);
     }
 
     // invokes Camera.getPicture() with the specified options
@@ -373,7 +368,7 @@ describe('Camera tests Android.', function () {
 
         // combine various options for getPicture()
         generateSpecs().forEach(function (spec) {
-            it('camera.ui.spec.5.' + spec.id + ' Combining options', function (done) {
+            it('camera.ui.spec.5.' + spec.id + ' Combining options. ' + spec.description, function (done) {
                 runCombinedSpec(spec)
                     .done(done);
             }, 3 * MINUTE);

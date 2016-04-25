@@ -25,11 +25,35 @@
 
 var cameraConstants = require('../../www/CameraConstants');
 
-module.exports.generateSpecs = function (sourceTypes, destinationTypes, encodingTypes, allowEditOptions) {
+function findKeyByValue(set, value) {
+   for (var k in set) {
+      if (set.hasOwnProperty(k)) {
+         if (set[k] == value) {
+            return k;
+         }
+      }
+   }
+   return undefined;
+}
+
+function getDescription(spec) {
+    var desc = '';
+
+    desc += 'sourceType: ' + findKeyByValue(cameraConstants.PictureSourceType, spec.options.sourceType);
+    desc += ', destinationType: ' + findKeyByValue(cameraConstants.DestinationType, spec.options.destinationType);
+    desc += ', encodingType: ' + findKeyByValue(cameraConstants.EncodingType, spec.options.encodingType);
+    desc += ', allowEdit: ' + spec.options.allowEdit.toString();
+    desc += ', correctOrientation: ' + spec.options.correctOrientation.toString();
+
+    return desc;
+}
+
+module.exports.generateSpecs = function (sourceTypes, destinationTypes, encodingTypes, allowEditOptions, correctOrientationOptions) {
     var destinationType,
         sourceType,
         encodingType,
         allowEdit,
+        correctOrientation,
         specs = [],
         id = 1;
     for (destinationType in destinationTypes) {
@@ -40,9 +64,12 @@ module.exports.generateSpecs = function (sourceTypes, destinationTypes, encoding
                         if (encodingTypes.hasOwnProperty(encodingType)) {
                             for (allowEdit in allowEditOptions) {
                                 if (allowEditOptions.hasOwnProperty(allowEdit)) {
-                                    // if taking picture from photolibrary, don't vary 'correctOrientation' option
-                                    if (sourceTypes[sourceType] === cameraConstants.PictureSourceType.PHOTOLIBRARY) {
-                                        specs.push({
+                                    for (correctOrientation in correctOrientationOptions) {
+                                        // if taking picture from photolibrary, don't vary 'correctOrientation' option
+                                        if ((sourceTypes[sourceType] === cameraConstants.PictureSourceType.PHOTOLIBRARY ||
+                                            sourceTypes[sourceType] === cameraConstants.PictureSourceType.SAVEDPHOTOALBUM) &&
+                                            correctOrientation === true) { continue; }
+                                        var spec = {
                                             'id': id++,
                                             'options': {
                                                 'destinationType': destinationTypes[destinationType],
@@ -50,30 +77,11 @@ module.exports.generateSpecs = function (sourceTypes, destinationTypes, encoding
                                                 'encodingType': encodingTypes[encodingType],
                                                 'allowEdit': allowEditOptions[allowEdit],
                                                 'saveToPhotoAlbum': false,
+                                                'correctOrientation': correctOrientationOptions[correctOrientation]
                                             }
-                                        });
-                                    } else {
-                                        specs.push({
-                                            'id': id++,
-                                            'options': {
-                                                'destinationType': destinationTypes[destinationType],
-                                                'sourceType': sourceTypes[sourceType],
-                                                'encodingType': encodingTypes[encodingType],
-                                                'correctOrientation': true,
-                                                'allowEdit': allowEditOptions[allowEdit],
-                                                'saveToPhotoAlbum': false,
-                                            }
-                                        }, {
-                                            'id': id++,
-                                            'options': {
-                                                'destinationType': destinationTypes[destinationType],
-                                                'sourceType': sourceTypes[sourceType],
-                                                'encodingType': encodingTypes[encodingType],
-                                                'correctOrientation': false,
-                                                'allowEdit': allowEditOptions[allowEdit],
-                                                'saveToPhotoAlbum': false,
-                                            }
-                                        });
+                                        };
+                                        spec.description = getDescription(spec);
+                                        specs.push(spec);
                                     }
                                 }
                             }
