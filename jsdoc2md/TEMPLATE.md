@@ -15,7 +15,7 @@ the system's image library.
 
 ---
 
-# API Reference
+# API Reference <a name="reference"></a>
 
 {{#orphans~}}
 {{>member-index}}
@@ -274,7 +274,7 @@ function displayImage(imgUri) {
 }
 ```
 
-To display the image on some platforms, you might need to include the main part of the URI in the Content-Security-Policy <meta> element in index.html. For example, on Windows 10, you can include `ms-appdata:` in your <meta> element. Here is an example.
+To display the image on some platforms, you might need to include the main part of the URI in the Content-Security-Policy `<meta>` element in index.html. For example, on Windows 10, you can include `ms-appdata:` in your `<meta>` element. Here is an example.
 
 ```html
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: ms-appdata: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *">
