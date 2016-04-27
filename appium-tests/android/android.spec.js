@@ -157,7 +157,7 @@ describe('Camera tests Android.', function () {
             })
             .fail(function (failure) {
                 console.log(failure);
-                fail(failure);
+                throw failure;
             });
     }
 
@@ -170,28 +170,18 @@ describe('Camera tests Android.', function () {
             .executeAsync(cameraHelper.checkPicture, [getCurrentPromiseId()])
             .then(function (result) {
                 if (shouldLoad) {
-                    expect(result.length).toBeGreaterThan(0);
+                    if (result.length === 0) {
+                        throw 'The result is an empty string.';
+                    }
                     if (result.indexOf('ERROR') >= 0) {
-                        return fail(result);
+                        throw result;
                     }
                 } else {
                     if (result.indexOf('ERROR') === -1) {
-                        return fail('Unexpected success callback with result: ' + result);
+                        throw 'Unexpected success callback with result: ' + result;
                     }
-                    expect(result.indexOf('ERROR')).toBe(0);
                 }
             });
-    }
-
-    function runCombinedSpec(spec) {
-        return driver
-            .then(function () {
-                return getPicture(spec.options);
-            })
-            .then(function () {
-                return checkPicture(true);
-            })
-            .fail(saveScreenshotAndFail);
     }
 
     // deletes the latest image from the gallery
@@ -229,6 +219,41 @@ describe('Camera tests Android.', function () {
             });
     }
 
+    function recreateSession() {
+        return driver
+            .quit()
+            .finally(function () {
+                return getDriver();
+            });
+    }
+
+    function tryRunSpec(spec) {
+        return driver
+            .then(spec)
+            .fail(function () {
+                return recreateSession()
+                    .then(spec)
+                    .fail(function() {
+                        return recreateSession()
+                            .then(spec);
+                    });
+            })
+            .fail(saveScreenshotAndFail);
+    }
+
+    function runCombinedSpec(s) {
+        var spec = function () {
+            return driver
+                .then(function () {
+                    return getPicture(s.options);
+                })
+                .then(function () {
+                    return checkPicture(true);
+                });
+        };
+        return tryRunSpec(spec);
+    }
+
     it('camera.ui.util configuring driver and starting a session', function (done) {
         getDriver()
             .fail(fail)
@@ -253,127 +278,137 @@ describe('Camera tests Android.', function () {
 
     describe('Specs.', function () {
         // getPicture() with saveToPhotoLibrary = true
-        it('camera.ui.spec.1 Saving the picture to photo library', function (done) {
-            var options = {
-                quality: 50,
-                allowEdit: false,
-                sourceType: cameraConstants.PictureSourceType.CAMERA,
-                saveToPhotoAlbum: true
+        it('camera.ui.spec.1 Saving a picture to the photo library', function (done) {
+            var spec = function() {
+                var options = {
+                    quality: 50,
+                    allowEdit: false,
+                    sourceType: cameraConstants.PictureSourceType.CAMERA,
+                    saveToPhotoAlbum: true
+                };
+                return driver
+                    .then(function () {
+                        return getPicture(options);
+                    })
+                    .then(function () {
+                        isTestPictureSaved = true;
+                        return checkPicture(true);
+                    });
             };
-            driver
-                .then(function () {
-                    return getPicture(options);
-                })
-                .then(function () {
-                    isTestPictureSaved = true;
-                    return checkPicture(true);
-                })
-                .fail(saveScreenshotAndFail)
+
+            return tryRunSpec(spec)
                 .done(done);
-        }, 3 * MINUTE);
+        }, 10 * MINUTE);
 
         // getPicture() with mediaType: VIDEO, sourceType: PHOTOLIBRARY
         it('camera.ui.spec.2 Selecting only videos', function (done) {
-            var options = { sourceType: cameraConstants.PictureSourceType.PHOTOLIBRARY,
-                            mediaType: cameraConstants.MediaType.VIDEO };
-            driver
-                .then(function () {
-                    return getPicture(options, true);
-                })
-                .context('NATIVE_APP')
-                .then(function () {
-                    // try to find "Gallery" menu item
-                    // if there's none, the gallery should be already opened
-                    return driver
-                        .elementByXPath('//android.widget.TextView[@text="Gallery"]')
-                        .then(function (element) {
-                            return element.click();
-                        }, function () {
-                            return driver;
-                        });
-                })
-                .then(function () {
-                    // if the gallery is opened on the videos page,
-                    // there should be a "Choose video" caption
-                    return driver
-                        .elementByXPath('//*[@text="Choose video"]')
-                        .fail(function () {
-                            throw 'Couldn\'t find "Choose video" element.';
-                        });
-                })
-                .deviceKeyEvent(BACK_BUTTON)
-                .elementByXPath('//android.widget.TextView[@text="Gallery"]')
-                .deviceKeyEvent(BACK_BUTTON)
-                .finally(function () {
-                    return driver
-                        .elementById('action_bar_title')
-                        .then(function () {
-                            // success means we're still in native app
-                            return driver
-                                .deviceKeyEvent(BACK_BUTTON);
-                        }, function () {
-                            // error means we're already in webview
-                            return driver;
-                        });
-                })
-                .fail(saveScreenshotAndFail)
+            var spec = function () {
+                var options = { sourceType: cameraConstants.PictureSourceType.PHOTOLIBRARY,
+                                mediaType: cameraConstants.MediaType.VIDEO };
+                return driver
+                    .then(function () {
+                        return getPicture(options, true);
+                    })
+                    .context('NATIVE_APP')
+                    .then(function () {
+                        // try to find "Gallery" menu item
+                        // if there's none, the gallery should be already opened
+                        return driver
+                            .elementByXPath('//android.widget.TextView[@text="Gallery"]')
+                            .then(function (element) {
+                                return element.click();
+                            }, function () {
+                                return driver;
+                            });
+                    })
+                    .then(function () {
+                        // if the gallery is opened on the videos page,
+                        // there should be a "Choose video" caption
+                        return driver
+                            .elementByXPath('//*[@text="Choose video"]')
+                            .fail(function () {
+                                throw 'Couldn\'t find "Choose video" element.';
+                            });
+                    })
+                    .deviceKeyEvent(BACK_BUTTON)
+                    .elementByXPath('//android.widget.TextView[@text="Gallery"]')
+                    .deviceKeyEvent(BACK_BUTTON)
+                    .finally(function () {
+                        return driver
+                            .elementById('action_bar_title')
+                            .then(function () {
+                                // success means we're still in native app
+                                return driver
+                                    .deviceKeyEvent(BACK_BUTTON);
+                            }, function () {
+                                // error means we're already in webview
+                                return driver;
+                            });
+                    });
+            };
+            return tryRunSpec(spec)
                 .done(done);
-        }, 3 * MINUTE);
+        }, 10 * MINUTE);
 
         // getPicture(), then dismiss
         // wait for the error callback to be called
         it('camera.ui.spec.3 Dismissing the camera', function (done) {
-            var options = { quality: 50,
-                            allowEdit: true,
-                            sourceType: cameraConstants.PictureSourceType.CAMERA,
-                            destinationType: cameraConstants.DestinationType.FILE_URI };
-            driver
-                .then(function () {
-                    return getPicture(options, true);
-                })
-                .context("NATIVE_APP")
-                .waitForElementByXPath('//android.widget.ImageView[contains(@resource-id,\'cancel\')]', MINUTE / 2)
-                .click()
-                .then(function () {
-                    return checkPicture(false);
-                })
-                .fail(saveScreenshotAndFail)
+            var spec = function () {
+                var options = { quality: 50,
+                                allowEdit: true,
+                                sourceType: cameraConstants.PictureSourceType.CAMERA,
+                                destinationType: cameraConstants.DestinationType.FILE_URI };
+                return driver
+                    .then(function () {
+                        return getPicture(options, true);
+                    })
+                    .context("NATIVE_APP")
+                    .waitForElementByXPath('//android.widget.ImageView[contains(@resource-id,\'cancel\')]', MINUTE / 2)
+                    .click()
+                    .then(function () {
+                        return checkPicture(false);
+                    });
+            };
+
+            return tryRunSpec(spec)
                 .done(done);
-        }, 3 * MINUTE);
+        }, 10 * MINUTE);
 
         // getPicture(), then take picture but dismiss the edit
         // wait for the error callback to be called
         it('camera.ui.spec.4 Dismissing the edit', function (done) {
-            var options = { quality: 50,
-                            allowEdit: true,
-                            sourceType: cameraConstants.PictureSourceType.CAMERA,
-                            destinationType: cameraConstants.DestinationType.FILE_URI };
-            driver
-                .then(function () {
-                    return getPicture(options, true);
-                })
-                .context('NATIVE_APP')
-                .waitForElementByXPath('//android.widget.ImageView[contains(@resource-id,\'shutter\')]', MINUTE / 2)
-                .click()
-                .waitForElementByXPath('//android.widget.ImageView[contains(@resource-id,\'done\')]', MINUTE / 2)
-                .click()
-                .waitForElementByXPath('//*[contains(@resource-id,\'discard\')]', MINUTE / 2)
-                .click()
-                .then(function () {
-                    return checkPicture(false);
-                })
-                .fail(saveScreenshotAndFail)
+            var spec = function () {
+                var options = { quality: 50,
+                                allowEdit: true,
+                                sourceType: cameraConstants.PictureSourceType.CAMERA,
+                                destinationType: cameraConstants.DestinationType.FILE_URI };
+                return driver
+                    .then(function () {
+                        return getPicture(options, true);
+                    })
+                    .context('NATIVE_APP')
+                    .waitForElementByXPath('//android.widget.ImageView[contains(@resource-id,\'shutter\')]', MINUTE / 2)
+                    .click()
+                    .waitForElementByXPath('//android.widget.ImageView[contains(@resource-id,\'done\')]', MINUTE / 2)
+                    .click()
+                    .waitForElementByXPath('//*[contains(@resource-id,\'discard\')]', MINUTE / 2)
+                    .click()
+                    .then(function () {
+                        return checkPicture(false);
+                    });
+            };
+
+            return tryRunSpec(spec)
                 .done(done);
-        }, 3 * MINUTE);
+        }, 10 * MINUTE);
 
         // combine various options for getPicture()
         generateSpecs().forEach(function (spec) {
             it('camera.ui.spec.5.' + spec.id + ' Combining options. ' + spec.description, function (done) {
                 runCombinedSpec(spec)
                     .done(done);
-            }, 3 * MINUTE);
+            }, 10 * MINUTE);
         });
-
 
         it('camera.ui.util Delete test image from device library', function (done) {
             if (!isTestPictureSaved) {
