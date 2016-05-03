@@ -15,7 +15,7 @@ the system's image library.
 
 ---
 
-# API Reference
+# API Reference <a name="reference"></a>
 
 {{#orphans~}}
 {{>member-index}}
