@@ -23,7 +23,7 @@ var HIGHEST_POSSIBLE_Z_INDEX = 2147483647;
 
 function takePicture(success, error, opts) {
     if (opts && opts[2] === 1) {
-        capture(success, error);
+        capture(success, error, opts);
     } else {
         var input = document.createElement('input');
         input.style.position = 'relative';
@@ -48,8 +48,13 @@ function takePicture(success, error, opts) {
     }
 }
 
-function capture(success, errorCallback) {
+function capture(success, errorCallback, opts) {
     var localMediaStream;
+    var targetWidth = opts[3];
+    var targetHeight = opts[4];
+
+    targetWidth = targetWidth == -1?320:targetWidth;
+    targetHeight = targetHeight == -1?240:targetHeight;
 
     var video = document.createElement('video');
     var button = document.createElement('button');
@@ -59,14 +64,16 @@ function capture(success, errorCallback) {
     parent.appendChild(video);
     parent.appendChild(button);
 
-    video.width = 320;
-    video.height = 240;
+    video.width = targetWidth;
+    video.height = targetHeight;
     button.innerHTML = 'Capture!';
 
     button.onclick = function() {
         // create a canvas and capture a frame from video stream
         var canvas = document.createElement('canvas');
-        canvas.getContext('2d').drawImage(video, 0, 0, 320, 240);
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0, targetWidth, targetHeight);
 
         // convert image stored in canvas to base64 encoded image
         var imageData = canvas.toDataURL('image/png');
