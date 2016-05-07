@@ -69,7 +69,7 @@ function capture(success, errorCallback) {
         canvas.getContext('2d').drawImage(video, 0, 0, 320, 240);
 
         // convert image stored in canvas to base64 encoded image
-        var imageData = canvas.toDataURL('img/png');
+        var imageData = canvas.toDataURL('image/png');
         imageData = imageData.replace('data:image/png;base64,', '');
 
         // stop video stream, remove video and button.
