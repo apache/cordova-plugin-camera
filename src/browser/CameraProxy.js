@@ -28,6 +28,7 @@ function takePicture(success, error, opts) {
         var input = document.createElement('input');
         input.style.position = 'relative';
         input.style.zIndex = HIGHEST_POSSIBLE_Z_INDEX;
+        input.className = 'cordova-camera-select';
         input.type = 'file';
         input.name = 'files[]';
 
@@ -56,6 +57,7 @@ function capture(success, errorCallback) {
     var parent = document.createElement('div');
     parent.style.position = 'relative';
     parent.style.zIndex = HIGHEST_POSSIBLE_Z_INDEX;
+    parent.className = 'cordova-camera-capture';
     parent.appendChild(video);
     parent.appendChild(button);
 
