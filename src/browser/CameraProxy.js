@@ -19,11 +19,25 @@
  *
  */
 
+/*
+ * - Added support for the targetWidth and targetHeight options
+ * - Added a Cancel button
+ * - Used the existing popoverOptions to pass options:
+ *
+ *      popoverOptions: {
+ *          className: 'my-classname',
+ *          buttons: [
+ *              {text: 'Take photo'},
+ *              {text: 'Cancel'}
+ *          ]
+ *      }
+ */
+
 var HIGHEST_POSSIBLE_Z_INDEX = 2147483647;
 
 function takePicture(success, error, opts) {
     if (opts && opts[2] === 1) {
-        capture(success, error);
+        capture(success, error, opts[10], opts[3], opts[4]);
     } else {
         var input = document.createElement('input');
         input.style.position = 'relative';
@@ -48,56 +62,91 @@ function takePicture(success, error, opts) {
     }
 }
 
-function capture(success, errorCallback) {
+function capture(success, errorCallback, options, targetWidth, targetHeight) {
     var localMediaStream;
 
+    options = options || {};
+    targetWidth = targetWidth || 320;
+    targetHeight = targetHeight || 240;
+
+    var placeholder = document.createElement('div');
+
+    placeholder.style.position = 'relative';
+    placeholder.style.zIndex = HIGHEST_POSSIBLE_Z_INDEX;
+
     var video = document.createElement('video');
-    var button = document.createElement('button');
-    var parent = document.createElement('div');
-    parent.style.position = 'relative';
-    parent.style.zIndex = HIGHEST_POSSIBLE_Z_INDEX;
-    parent.appendChild(video);
-    parent.appendChild(button);
+    video.width = targetWidth;
+    video.height = targetHeight;
 
-    video.width = 320;
-    video.height = 240;
-    button.innerHTML = 'Capture!';
+    var controls = document.createElement('div');
+    var button1 = document.createElement('button');
+    var button2 = document.createElement('button');
 
-    button.onclick = function() {
+    if (Object.prototype.hasOwnProperty.call(options, 'className')) {
+        placeholder.className = options.className;
+    }
+
+    controls.appendChild(button1);
+    controls.appendChild(button2);
+
+    var getButtonText = function(index, defaultValue) {
+        return options && options.buttons && options.buttons[index] && options.buttons[index].text ? options.buttons[index].text : defaultValue;
+    };
+
+    button1.innerHTML = getButtonText(0, 'Take photo');
+    button2.innerHTML = getButtonText(1, 'Cancel');
+
+    placeholder.appendChild(video);
+    placeholder.appendChild(controls);
+
+    button2.onclick = function() {
+        stopStream(localMediaStream);
+        placeholder.parentNode.removeChild(placeholder);
+        return errorCallback('');
+    }
+
+    button1.onclick = function() {
         // create a canvas and capture a frame from video stream
         var canvas = document.createElement('canvas');
-        canvas.getContext('2d').drawImage(video, 0, 0, 320, 240);
+
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        var newWidth, newHeight,
+            aspect = video.videoHeight / video.videoWidth;
+        if (aspect < 1) {
+            newWidth = targetWidth;
+            newHeight = targetWidth * aspect;
+        } else {
+            newHeight = targetHeight;
+            newWidth = targetHeight * aspect;
+
+        }
+        canvas.width = newWidth;
+        canvas.height = newHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, newWidth, newHeight);
 
         // convert image stored in canvas to base64 encoded image
         var imageData = canvas.toDataURL('image/png');
         imageData = imageData.replace('data:image/png;base64,', '');
 
         // stop video stream, remove video and button.
-        // Note that MediaStream.stop() is deprecated as of Chrome 47.
-        if (localMediaStream.stop) {
-            localMediaStream.stop();
-        } else {
-            localMediaStream.getTracks().forEach(function (track) {
-                track.stop();
-            });
-        }
-        parent.parentNode.removeChild(parent);
+        stopStream(localMediaStream);
+        placeholder.parentNode.removeChild(placeholder);
 
         return success(imageData);
     };
 
     navigator.getUserMedia = navigator.getUserMedia ||
-                             navigator.webkitGetUserMedia ||
-                             navigator.mozGetUserMedia ||
-                             navigator.msGetUserMedia;
-
+        navigator.webkitGetUserMedia ||
+        navigator.mozGetUserMedia ||
+        navigator.msGetUserMedia;
     var successCallback = function(stream) {
         localMediaStream = stream;
         video.src = window.URL.createObjectURL(localMediaStream);
         video.play();
 
-        document.body.appendChild(parent);
-    };
+        document.body.appendChild(placeholder);
+    }
 
     if (navigator.getUserMedia) {
         navigator.getUserMedia({video: true, audio: true}, successCallback, errorCallback);
@@ -106,9 +155,21 @@ function capture(success, errorCallback) {
     }
 }
 
+function stopStream(stream) {
+    // Note that MediaStream.stop() is deprecated as of Chrome 47.
+    if (stream.stop) {
+        stream.stop();
+    } else {
+        stream.getTracks().forEach(function(track) {
+            track.stop();
+        });
+    }
+}
+
 module.exports = {
     takePicture: takePicture,
-    cleanup: function(){}
+    cleanup: function() {
+    }
 };
 
-require("cordova/exec/proxy").add("Camera",module.exports);
+require("cordova/exec/proxy").add("Camera", module.exports);
