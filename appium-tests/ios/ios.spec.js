@@ -81,17 +81,8 @@ describe('Camera tests iOS.', function () {
             .elementByXPath('//*[@label="Use"]')
             .click()
             .fail(function () {
-                return driver
-                    // For some reason "Choose" element is not clickable by standard Appium methods
-                    // So getting its position and tapping there using TouchAction
-                    .elementByXPath('//UIAButton[@label="Choose"]')
-                    .getLocation()
-                    .then(function (loc) {
-                        var tapChoose = new wd.TouchAction();
-                        tapChoose.tap(loc);
-                        return driver
-                            .performTouchAction(tapChoose);
-                    });
+                // For some reason "Choose" element is not clickable by standard Appium methods
+                return wdHelper.tapElementByXPath('//UIAButton[@label="Choose"]', driver);
             });
     }
 
