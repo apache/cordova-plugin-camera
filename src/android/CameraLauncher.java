@@ -392,52 +392,53 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         }
     }
 
-    /**
-     * Brings up the UI to perform crop on passed image URI
-     *
-     * @param picUri
-     */
-    private void performCrop(Uri picUri, int destType, Intent cameraIntent) {
-        try {
-            Intent cropIntent = new Intent("com.android.camera.action.CROP");
-            // indicate image type and Uri
-            cropIntent.setDataAndType(picUri, "image/*");
-            // set crop properties
-            cropIntent.putExtra("crop", "true");
 
-            // indicate output X and Y
-            if (targetWidth > 0) {
-                cropIntent.putExtra("outputX", targetWidth);
-            }
-            if (targetHeight > 0) {
-                cropIntent.putExtra("outputY", targetHeight);
-            }
-            if (targetHeight > 0 && targetWidth > 0 && targetWidth == targetHeight) {
-                cropIntent.putExtra("aspectX", 1);
-                cropIntent.putExtra("aspectY", 1);
-            }
-            // create new file handle to get full resolution crop
-            croppedUri = Uri.fromFile(createCaptureFile(this.encodingType, System.currentTimeMillis() + ""));
-            cropIntent.putExtra("output", croppedUri);
+  /**
+   * Brings up the UI to perform crop on passed image URI
+   *
+   * @param picUri
+   */
+  private void performCrop(Uri picUri, int destType, Intent cameraIntent) {
+    try {
+      Intent cropIntent = new Intent("com.android.camera.action.CROP");
+      // indicate image type and Uri
+      cropIntent.setDataAndType(picUri, "image/*");
+      // set crop properties
+      cropIntent.putExtra("crop", "true");
 
-            // start the activity - we handle returning in onActivityResult
+      // indicate output X and Y
+      if (targetWidth > 0) {
+          cropIntent.putExtra("outputX", targetWidth);
+      }
+      if (targetHeight > 0) {
+          cropIntent.putExtra("outputY", targetHeight);
+      }
+      if (targetHeight > 0 && targetWidth > 0 && targetWidth == targetHeight) {
+          cropIntent.putExtra("aspectX", 1);
+          cropIntent.putExtra("aspectY", 1);
+      }
+      // create new file handle to get full resolution crop
+      croppedUri = Uri.fromFile(createCaptureFile(this.encodingType, System.currentTimeMillis() + ""));
+      cropIntent.putExtra("output", croppedUri);
 
-            if (this.cordova != null) {
-                this.cordova.startActivityForResult((CordovaPlugin) this,
-                        cropIntent, CROP_CAMERA + destType);
-            }
-        } catch (ActivityNotFoundException anfe) {
-            Log.e(LOG_TAG, "Crop operation not supported on this device");
-            try {
-                processResultFromCamera(destType, cameraIntent);
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-                Log.e(LOG_TAG, "Unable to write to file");
-            }
-        }
+      // start the activity - we handle returning in onActivityResult
+
+      if (this.cordova != null) {
+        this.cordova.startActivityForResult((CordovaPlugin) this,
+            cropIntent, CROP_CAMERA + destType);
+      }
+    } catch (ActivityNotFoundException anfe) {
+      Log.e(LOG_TAG, "Crop operation not supported on this device");
+      try {
+          processResultFromCamera(destType, cameraIntent);
+      }
+      catch (IOException e)
+      {
+          e.printStackTrace();
+          Log.e(LOG_TAG, "Unable to write to file");
+      }
     }
+  }
 
     /**
      * Applies all needed transformation to the image received from the camera.
@@ -451,8 +452,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         // Create an ExifHelper to save the exif data that is lost during compression
         ExifHelper exif = new ExifHelper();
         String sourcePath = (this.allowEdit && this.croppedUri != null) ?
-                FileHelper.stripFileProtocol(this.croppedUri.toString()) :
-                FileHelper.stripFileProtocol(this.imageUri.toString());
+            FileHelper.stripFileProtocol(this.croppedUri.toString()) :
+            FileHelper.stripFileProtocol(this.imageUri.toString());
 
         if (this.encodingType == JPEG) {
             try {
