@@ -19,6 +19,9 @@
  *
 */
 
+/* globals Camera, resolveLocalFileSystemURI, FileEntry, CameraPopoverOptions, FileTransfer, FileUploadOptions, LocalFileSystem, MSApp */
+/* jshint jasmine: true */
+
 exports.defineAutoTests = function () {
     describe('Camera (navigator.camera)', function () {
         it("should exist", function () {
@@ -78,7 +81,6 @@ exports.defineAutoTests = function () {
 /******************************************************************************/
 
 exports.defineManualTests = function (contentEl, createActionButton) {
-    var platformId = cordova.require('cordova/platform').id;
     var pictureUrl = null;
     var fileObj = null;
     var fileEntry = null;
@@ -93,11 +95,6 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     var camMediaTypeDefault = ['mediaType', 0];
     var camCorrectOrientationDefault = ['correctOrientation', false];
     var camSaveToPhotoAlbumDefault = ['saveToPhotoAlbum', true];
-
-    var clearLog = function () {
-        var log = document.getElementById('info');
-        log.innerHTML = "";
-    }
 
     function log(value) {
         console.log(value);
@@ -121,16 +118,19 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             url = "data:image/jpeg;base64," + url;
         } catch (e) {
             // not DATA_URL
-            log('URL: ' + url.slice(0, 100));
         }
+        log('URL: "' + url.slice(0, 90) + '"');
 
         pictureUrl = url;
         var img = document.getElementById('camera_image');
         var startTime = new Date();
         img.src = url;
-        img.onloadend = function () {
+        img.onload = function () {
+            log('Img size: ' + img.naturalWidth + 'x' + img.naturalHeight);
             log('Image tag load time: ' + (new Date() - startTime));
-            callback && callback();
+            if (callback) {
+                callback();
+            }
         };
     }
 
@@ -141,12 +141,13 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     function getPictureWin(data) {
         setPicture(data);
         // TODO: Fix resolveLocalFileSystemURI to work with native-uri.
-        if (pictureUrl.indexOf('file:') == 0 || pictureUrl.indexOf('content:') == 0 || pictureUrl.indexOf('ms-appdata:') === 0) {
+        if (pictureUrl.indexOf('file:') === 0 || pictureUrl.indexOf('content:') === 0 || pictureUrl.indexOf('ms-appdata:') === 0 || pictureUrl.indexOf('assets-library:') === 0) {
             resolveLocalFileSystemURI(data, function (e) {
                 fileEntry = e;
                 logCallback('resolveLocalFileSystemURI()', true)(e.toURL());
+                readFile();
             }, logCallback('resolveLocalFileSystemURI()', false));
-        } else if (pictureUrl.indexOf('data:image/jpeg;base64') == 0) {
+        } else if (pictureUrl.indexOf('data:image/jpeg;base64') === 0) {
             // do nothing
         } else {
             var path = pictureUrl.replace(/^file:\/\/(localhost)?/, '').replace(/%20/g, ' ');
@@ -164,13 +165,11 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         window.onorientationchange = function () {
             var newPopoverOptions = new CameraPopoverOptions(0, 0, 100, 100, 0);
             popoverHandle.setPosition(newPopoverOptions);
-        }
+        };
     }
 
     function uploadImage() {
         var ft = new FileTransfer(),
-            uploadcomplete = 0,
-            progress = 0,
             options = new FileUploadOptions();
         options.fileKey = "photo";
         options.fileName = 'test.jpg';
@@ -206,7 +205,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             img.style.display = "block";
             img.src = evt.target.result;
             log("FileReader.readAsDataURL success");
-        };
+        }
 
         function onFileReceived(file) {
             log('Got file: ' + JSON.stringify(file));
@@ -217,8 +216,10 @@ exports.defineManualTests = function (contentEl, createActionButton) {
                 log('FileReader.readAsDataURL() - length = ' + reader.result.length);
             };
             reader.onerror = logCallback('FileReader.readAsDataURL', false);
+            reader.onloadend = onFileReadAsDataURL;
             reader.readAsDataURL(file);
-        };
+        }
+
         // Test out onFileReceived when the file object was set via a native <input> elements.
         if (fileObj) {
             onFileReceived(fileObj);
@@ -226,13 +227,14 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             fileEntry.file(onFileReceived, logCallback('FileEntry.file', false));
         }
     }
+
     function getFileInfo() {
         // Test FileEntry API here.
         fileEntry.getMetadata(logCallback('FileEntry.getMetadata', true), logCallback('FileEntry.getMetadata', false));
         fileEntry.setMetadata(logCallback('FileEntry.setMetadata', true), logCallback('FileEntry.setMetadata', false), { "com.apple.MobileBackup": 1 });
         fileEntry.getParent(logCallback('FileEntry.getParent', true), logCallback('FileEntry.getParent', false));
         fileEntry.getParent(logCallback('FileEntry.getParent', true), logCallback('FileEntry.getParent', false));
-    };
+    }
 
     /**
      * Copy image from library using a NATIVE_URI destination type
@@ -266,7 +268,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         };
 
         window.requestFileSystem(LocalFileSystem.TEMPORARY, 0, onFileSystemReceived, null);
-    };
+    }
 
     /**
      * Write image to library using a NATIVE_URI destination type
@@ -287,7 +289,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
 
         fileEntry.createWriter(onFileWriterReceived, logCallback('FileEntry.createWriter', false));
         fileEntry.createWriter(onFileTruncateWriterReceived, null);
-    };
+    }
 
     function displayImageUsingCanvas() {
         var canvas = document.getElementById('canvas');
@@ -300,7 +302,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         canvas.height = h;
         var context = canvas.getContext('2d');
         context.drawImage(img, 0, 0, w, h);
-    };
+    }
 
     /**
      * Remove image from library using a NATIVE_URI destination type
@@ -308,7 +310,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
      */
     function removeImage() {
         fileEntry.remove(logCallback('FileEntry.remove', true), logCallback('FileEntry.remove', false));
-    };
+    }
 
     function testInputTag(inputEl) {
         clearStatus();
@@ -317,7 +319,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         window.setTimeout(function () {
             testNativeFile2(inputEl);
         }, 0);
-    };
+    }
 
     function testNativeFile2(inputEl) {
         if (!inputEl.value) {
@@ -347,24 +349,28 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     function extractOptions() {
         var els = document.querySelectorAll('#image-options select');
         var ret = {};
+        /*jshint -W084 */
         for (var i = 0, el; el = els[i]; ++i) {
             var value = el.value;
             if (value === '') continue;
+            value = +value;
+
             if (el.isBool) {
-                ret[el.getAttribute("name")] = !!+value;
+                ret[el.getAttribute("name")] = !!value;
             } else {
-                ret[el.getAttribute("name")] = +value;
+                ret[el.getAttribute("name")] = value;
             }
         }
+        /*jshint +W084 */
         return ret;
     }
 
     function createOptionsEl(name, values, selectionDefault) {
         var openDiv = '<div style="display: inline-block">' + name + ': ';
-        var select = '<select name=' + name + '>';
+        var select = '<select name=' + name + ' id="' + name + '">';
 
         var defaultOption = '';
-        if (selectionDefault == undefined) {
+        if (selectionDefault === undefined) {
             defaultOption = '<option value="">default</option>';
         }
 
@@ -460,7 +466,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     var elements = document.getElementsByClassName("testInputTag");
     var listener = function (e) {
         testInputTag(e.target);
-    }
+    };
     for (var i = 0; i < elements.length; ++i) {
         var item = elements[i];
         item.addEventListener("change", listener, false);

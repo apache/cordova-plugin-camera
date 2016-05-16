@@ -17,11 +17,11 @@
     under the License.
 -->
 
-# org.apache.cordova.camera
+# cordova-plugin-camera
 
 Этот плагин предоставляет API для съемки и для выбора изображения из библиотеки изображений системы.
 
-    cordova plugin add org.apache.cordova.camera
+    cordova plugin add cordova-plugin-camera
     
 
 ## navigator.camera.getPicture

@@ -47,6 +47,11 @@ namespace WPCordovaClassLib.Cordova.Commands
         private const int FILE_URI = 1;
 
         /// <summary>
+        /// Return native uri
+        /// </summary>
+        private const int NATIVE_URI = 2;
+
+        /// <summary>
         /// Choose image from picture library
         /// </summary>
         private const int PHOTOLIBRARY = 0;
@@ -214,10 +219,17 @@ namespace WPCordovaClassLib.Cordova.Commands
                 return;
             }
 
-            if(cameraOptions.DestinationType != Camera.FILE_URI && cameraOptions.DestinationType != Camera.DATA_URL )
+            // Api supports FILE_URI, DATA_URL, NATIVE_URI destination types.
+            // Treat all other destination types as an error.
+            switch (cameraOptions.DestinationType)
             {
-                DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR, "Incorrect option: destinationType"));
-                return;
+                case Camera.FILE_URI:
+                case Camera.DATA_URL:
+                case Camera.NATIVE_URI:
+                    break;
+                default:
+                    DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR, "Incorrect option: destinationType"));
+                    return;
             }
 
             ChooserBase<PhotoResult> chooserTask = null;
@@ -271,21 +283,27 @@ namespace WPCordovaClassLib.Cordova.Commands
                             Picture pict = library.SavePicture(e.OriginalFileName, e.ChosenPhoto); // to save to photo-roll ...
                         }
 
-                        int orient = ImageExifHelper.getImageOrientationFromStream(e.ChosenPhoto);
                         int newAngle = 0;
-                        switch (orient)
-                        {
-                            case ImageExifOrientation.LandscapeLeft:
-                                newAngle = 90;
-                                break;
-                            case ImageExifOrientation.PortraitUpsideDown:
-                                newAngle = 180;
-                                break;
-                            case ImageExifOrientation.LandscapeRight:
-                                newAngle = 270;
-                                break;
-                            case ImageExifOrientation.Portrait:
-                            default: break; // 0 default already set
+                        // There's bug in Windows Phone 8.1 causing Seek on a DssPhotoStream not working properly.
+                        // https://connect.microsoft.com/VisualStudio/feedback/details/783252
+                        // But a mis-oriented file is better than nothing, so try and catch.
+                        try {
+                            int orient = ImageExifHelper.getImageOrientationFromStream(e.ChosenPhoto);
+                            switch (orient) {
+                                case ImageExifOrientation.LandscapeLeft:
+                                    newAngle = 90;
+                                    break;
+                                case ImageExifOrientation.PortraitUpsideDown:
+                                    newAngle = 180;
+                                    break;
+                                case ImageExifOrientation.LandscapeRight:
+                                    newAngle = 270;
+                                    break;
+                                case ImageExifOrientation.Portrait:
+                                default: break; // 0 default already set
+                            }
+                        } catch {
+                            Debug.WriteLine("Error fetching orientation from Exif");
                         }
 
                         if (newAngle != 0)
@@ -298,7 +316,7 @@ namespace WPCordovaClassLib.Cordova.Commands
                                 {
                                     imagePathOrContent = GetImageContent(rotImageStream);
                                 }
-                                else   // FILE_URL
+                                else   // FILE_URL or NATIVE_URI (both use the same resultant uri format)
                                 {
                                     imagePathOrContent = SaveImageToLocalStorage(rotImageStream, Path.GetFileName(e.OriginalFileName));
                                 }
@@ -310,7 +328,7 @@ namespace WPCordovaClassLib.Cordova.Commands
                             {
                                 imagePathOrContent = GetImageContent(e.ChosenPhoto);
                             }
-                            else  // FILE_URL
+                            else  // FILE_URL or NATIVE_URI (both use the same resultant uri format)
                             {
                                 imagePathOrContent = SaveImageToLocalStorage(e.ChosenPhoto, Path.GetFileName(e.OriginalFileName));
                             }
