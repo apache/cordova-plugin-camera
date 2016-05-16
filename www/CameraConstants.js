@@ -27,7 +27,7 @@ module.exports = {
    * @enum {number}
    */
   DestinationType:{
-    /** Return base64 encoded string */
+    /** Return base64 encoded string. DATA_URL can be very memory intensive and cause app crashes or out of memory errors. Use FILE_URI or NATIVE_URI if possible */
     DATA_URL: 0,
     /** Return file uri (content://media/external/images/media/2 for Android) */
     FILE_URI: 1,

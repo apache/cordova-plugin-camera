@@ -1,0 +1,8 @@
+language: objective-c
+sudo: false
+node_js:
+  - "4.2"
+env:
+  - TEST_DIR=.
+  - TEST_DIR=./tests/ios
+script: cd $TEST_DIR && npm install && npm test

@@ -20,6 +20,43 @@
 -->
 # Release Notes
 
+### 2.2.0 (Apr 15, 2016)
+* CB-10873 Avoid crash due to usage of uninitialized variable when writing geolocation data to image destination. Properly handle 'CameraUsesGeolocation' option by properly setting geolocation data in EXIF header in all cases
+* CB-11073 Appium tests stability improvements
+* Replace `PermissionHelper.java` with `cordova-plugin-compat`
+* Making focus handler work only for **windows 10** phone
+* CB-10865 Run **ios** native tests on **Travis**
+* CB-10120 Fixing use of constants and `PermissionHelper`
+* CB-10120 Fix missing CAMERA permission for **Android M**
+* CB-10756 Adding sterner warnings about `DATA_URL`
+* CB-10460 `getRealPath` return null in some cases
+
+### 2.1.1 (Mar 09, 2016)
+* [CB-10825](https://issues.apache.org/jira/browse/CB-10825) **Android** should request READ permission for gallery source
+* added apache license header to appium files
+* [CB-10720](https://issues.apache.org/jira/browse/CB-10720) Fixed spelling, capitalization, and other small issues.
+* [CB-10414](https://issues.apache.org/jira/browse/CB-10414) Adding focus handler to resume video when user comes back on leaving the app while preview was running
+* Appium tests: adjust swipe distance on **Android**
+* [CB-10750](https://issues.apache.org/jira/browse/CB-10750) Appium tests: fail fast if session is irrecoverable
+* Adding missing semi colon
+* Adding focus handler to make sure filepicker gets launched when app is active on **Windows**
+* [CB-10128](https://issues.apache.org/jira/browse/CB-10128) **iOS** Fixed how checks access authorization to camera & library. This closes #146
+* [CB-10636](https://issues.apache.org/jira/browse/CB-10636) Add JSHint for plugins
+* [CB-10639](https://issues.apache.org/jira/browse/CB-10639) Appium tests: Added some timeouts, Taking a screenshot on failure, Retry taking a picture up to 3 times, Try to restart the Appium session if it's lost
+* [CB-10552](https://issues.apache.org/jira/browse/CB-10552) Replacing images in README.md.
+* Added a lot of more cases to get the real path on **Android** 
+* [CB-10625](https://issues.apache.org/jira/browse/CB-10625) **Android** getPicture fails when getting a photo from the Photo Library - Google Photos
+* [CB-10619](https://issues.apache.org/jira/browse/CB-10619) Appium tests: Properly switch to webview on **Android**
+* [CB-10397](https://issues.apache.org/jira/browse/CB-10397) Added Appium tests
+* [CB-10576](https://issues.apache.org/jira/browse/CB-10576) MobileSpec can't get results for **Windows**-Store 8.1 Builds
+* chore: edit package.json license to match SPDX id
+* [CB-10539](https://issues.apache.org/jira/browse/CB-10539) Commenting out the verySmallQvga maxResolution option on **Windows**
+* [CB-10541](https://issues.apache.org/jira/browse/CB-10541) Changing default maxResoltion to be highestAvailable for CameraCaptureUI on **Windows**
+* [CB-10113](https://issues.apache.org/jira/browse/CB-10113) **Browse** - Layer camera UI on top of all! 
+* [CB-10502](https://issues.apache.org/jira/browse/CB-10502) **Browser** - Fix camera plugin exception in Chrome when click capture.
+* Adding comments
+* Camera tapping fix on **Windows**
+
 ### 2.1.0 (Jan 15, 2016)
 * added `.ratignore`
 * CB-10319 **Android** Adding reflective helper methods for permission requests
