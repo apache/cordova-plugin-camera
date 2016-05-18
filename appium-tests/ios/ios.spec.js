@@ -66,7 +66,7 @@ describe('Camera tests iOS.', function () {
 
     // generates test specs by combining all the specified options
     // you can add more options to test more scenarios
-    function generateSpecs() {
+    function generateOptions() {
         var sourceTypes = cameraConstants.PictureSourceType;
         var destinationTypes = cameraConstants.DestinationType;
         var encodingTypes = cameraConstants.EncodingType;
@@ -149,33 +149,34 @@ describe('Camera tests iOS.', function () {
 
     // checks if the picture was successfully taken
     // if shouldLoad is falsy, ensures that the error callback was called
-    function checkPicture(shouldLoad) {
+    function checkPicture(shouldLoad, options) {
+        if (!options) {
+            options = {};
+        }
         return driver
             .context(webviewContext)
             .setAsyncScriptTimeout(MINUTE)
-            .executeAsync(cameraHelper.checkPicture, [getCurrentPromiseId()])
+            .executeAsync(cameraHelper.checkPicture, [getCurrentPromiseId(), options])
             .then(function (result) {
                 if (shouldLoad) {
-                    expect(result.length).toBeGreaterThan(0);
-                    if (result.indexOf('ERROR') >= 0) {
-                        return fail(result);
+                    if (result !== 'OK') {
+                        fail(result);
                     }
-                } else {
-                    if (result.indexOf('ERROR') === -1) {
-                        return fail('Unexpected success callback with result: ' + result);
-                    }
-                    expect(result.indexOf('ERROR')).toBe(0);
+                } else if (result.indexOf('ERROR') === -1) {
+                    throw 'Unexpected success callback with result: ' + result;
                 }
             });
     }
 
-    function runCombinedSpec(spec) {
+    // takes a picture with the specified options
+    // and then verifies it
+    function runSpec(options) {
         return driver
             .then(function () {
-                return getPicture(spec.options);
+                return getPicture(options);
             })
             .then(function () {
-                return checkPicture(true);
+                return checkPicture(true, options);
             })
             .fail(saveScreenshotAndFail);
     }
@@ -219,9 +220,8 @@ describe('Camera tests iOS.', function () {
         // getPicture(), then dismiss
         // wait for the error callback to be called
         it('camera.ui.spec.2 Dismissing the camera', function (done) {
-            // camera is not available on the iOS simulator
             if (!isDevice) {
-                pending();
+                pending('Camera is not available on iOS simulator');
             }
             var options = { sourceType: cameraConstants.PictureSourceType.CAMERA };
             driver
@@ -235,20 +235,156 @@ describe('Camera tests iOS.', function () {
                 .done(done);
         }, 3 * MINUTE);
 
+        it('camera.ui.spec.3 Verifying target image size, sourceType=CAMERA', function (done) {
+            if (!isDevice) {
+                pending('Camera is not available on iOS simulator');
+            }
+            var options = {
+                quality: 50,
+                allowEdit: false,
+                sourceType: cameraConstants.PictureSourceType.CAMERA,
+                saveToPhotoAlbum: false,
+                targetWidth: 210,
+                targetHeight: 210
+            };
+
+            runSpec(options).done(done);
+        }, 3 * MINUTE);
+
+        it('camera.ui.spec.4 Verifying target image size, sourceType=SAVEDPHOTOALBUM', function (done) {
+            var options = {
+                quality: 50,
+                allowEdit: false,
+                sourceType: cameraConstants.PictureSourceType.SAVEDPHOTOALBUM,
+                saveToPhotoAlbum: false,
+                targetWidth: 210,
+                targetHeight: 210
+            };
+
+            runSpec(options).done(done);
+        }, 3 * MINUTE);
+
+        it('camera.ui.spec.5 Verifying target image size, sourceType=PHOTOLIBRARY', function (done) {
+            var options = {
+                quality: 50,
+                allowEdit: false,
+                sourceType: cameraConstants.PictureSourceType.PHOTOLIBRARY,
+                saveToPhotoAlbum: false,
+                targetWidth: 210,
+                targetHeight: 210
+            };
+
+            runSpec(options).done(done);
+        }, 3 * MINUTE);
+
+        it('camera.ui.spec.6 Verifying target image size, sourceType=CAMERA, destinationType=NATIVE_URI', function (done) {
+            if (!isDevice) {
+                pending('Camera is not available on iOS simulator');
+            }
+            var options = {
+                quality: 50,
+                allowEdit: false,
+                sourceType: cameraConstants.PictureSourceType.CAMERA,
+                destinationType: cameraConstants.DestinationType.NATIVE_URI,
+                saveToPhotoAlbum: false,
+                targetWidth: 210,
+                targetHeight: 210
+            };
+
+            runSpec(options).done(done);
+        }, 3 * MINUTE);
+
+        it('camera.ui.spec.7 Verifying target image size, sourceType=SAVEDPHOTOALBUM, destinationType=NATIVE_URI', function (done) {
+            var options = {
+                quality: 50,
+                allowEdit: false,
+                sourceType: cameraConstants.PictureSourceType.SAVEDPHOTOALBUM,
+                destinationType: cameraConstants.DestinationType.NATIVE_URI,
+                saveToPhotoAlbum: false,
+                targetWidth: 210,
+                targetHeight: 210
+            };
+
+            runSpec(options).done(done);
+        }, 3 * MINUTE);
+
+        it('camera.ui.spec.8 Verifying target image size, sourceType=PHOTOLIBRARY, destinationType=NATIVE_URI', function (done) {
+            var options = {
+                quality: 50,
+                allowEdit: false,
+                sourceType: cameraConstants.PictureSourceType.PHOTOLIBRARY,
+                destinationType: cameraConstants.DestinationType.NATIVE_URI,
+                saveToPhotoAlbum: false,
+                targetWidth: 210,
+                targetHeight: 210
+            };
+
+            runSpec(options).done(done);
+        }, 3 * MINUTE);
+
+        it('camera.ui.spec.9 Verifying target image size, sourceType=CAMERA, destinationType=NATIVE_URI, quality=100', function (done) {
+            if (!isDevice) {
+                pending('Camera is not available on iOS simulator');
+            }
+            var options = {
+                quality: 100,
+                allowEdit: false,
+                sourceType: cameraConstants.PictureSourceType.CAMERA,
+                destinationType: cameraConstants.DestinationType.NATIVE_URI,
+                saveToPhotoAlbum: false,
+                targetWidth: 305,
+                targetHeight: 305
+            };
+            runSpec(options).done(done);
+        }, 3 * MINUTE);
+
+        it('camera.ui.spec.10 Verifying target image size, sourceType=SAVEDPHOTOALBUM, destinationType=NATIVE_URI, quality=100', function (done) {
+            var options = {
+                quality: 100,
+                allowEdit: false,
+                sourceType: cameraConstants.PictureSourceType.SAVEDPHOTOALBUM,
+                destinationType: cameraConstants.DestinationType.NATIVE_URI,
+                saveToPhotoAlbum: false,
+                targetWidth: 305,
+                targetHeight: 305
+            };
+
+            runSpec(options).done(done);
+        }, 3 * MINUTE);
+
+        it('camera.ui.spec.11 Verifying target image size, sourceType=PHOTOLIBRARY, destinationType=NATIVE_URI, quality=100', function (done) {
+            var options = {
+                quality: 100,
+                allowEdit: false,
+                sourceType: cameraConstants.PictureSourceType.PHOTOLIBRARY,
+                destinationType: cameraConstants.DestinationType.NATIVE_URI,
+                saveToPhotoAlbum: false,
+                targetWidth: 305,
+                targetHeight: 305
+            };
+
+            runSpec(options).done(done);
+        }, 3 * MINUTE);
+
         // combine various options for getPicture()
-        generateSpecs().forEach(function (spec) {
-            it('camera.ui.spec.3.' + spec.id + ' Combining options. ' + spec.description, function (done) {
-                // camera is not available on iOS simulator
+        generateOptions().forEach(function (spec) {
+            it('camera.ui.spec.12.' + spec.id + ' Combining options. ' + spec.description, function (done) {
                 if (!isDevice && spec.options.sourceType === cameraConstants.PictureSourceType.CAMERA) {
-                    pending();
+                    pending('Camera is not available on iOS simulator');
                 }
-                runCombinedSpec(spec).done(done);
+                if (spec.options.sourceType === cameraConstants.PictureSourceType.CAMERA &&
+                    spec.options.destinationType === cameraConstants.DestinationType.NATIVE_URI) {
+                    pending('Skipping: cannot prevent iOS from saving the picture to photo library and cannot delete it. ' +
+                        'For more info, see iOS quirks here: https://github.com/apache/cordova-plugin-camera#ios-quirks-1');
+                }
+
+                runSpec(spec.options).done(done);
             }, 3 * MINUTE);
         });
 
     });
 
-    it('camera.ui.util.4 Destroy the session', function (done) {
+    it('camera.ui.util Destroy the session', function (done) {
         driver
             .quit()
             .done(done);

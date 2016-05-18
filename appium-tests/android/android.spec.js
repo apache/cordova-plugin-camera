@@ -72,9 +72,9 @@ describe('Camera tests Android.', function () {
             });
     }
 
-    // generates test specs by combining all the specified options
+    // combinines specified options in all possible variations
     // you can add more options to test more scenarios
-    function generateSpecs() {
+    function generateOptions() {
         var sourceTypes = [
                 cameraConstants.PictureSourceType.CAMERA,
                 cameraConstants.PictureSourceType.PHOTOLIBRARY
@@ -156,30 +156,27 @@ describe('Camera tests Android.', function () {
                 }
             })
             .fail(function (failure) {
-                console.log(failure);
                 throw failure;
             });
     }
 
     // checks if the picture was successfully taken
     // if shouldLoad is falsy, ensures that the error callback was called
-    function checkPicture(shouldLoad) {
+    function checkPicture(shouldLoad, options) {
+        if (!options) {
+            options = {};
+        }
         return driver
             .context(webviewContext)
             .setAsyncScriptTimeout(MINUTE)
-            .executeAsync(cameraHelper.checkPicture, [getCurrentPromiseId()])
+            .executeAsync(cameraHelper.checkPicture, [getCurrentPromiseId(), options])
             .then(function (result) {
                 if (shouldLoad) {
-                    if (result.length === 0) {
-                        throw 'The result is an empty string.';
+                    if (result !== 'OK') {
+                        fail(result);
                     }
-                    if (result.indexOf('ERROR') >= 0) {
-                        throw result;
-                    }
-                } else {
-                    if (result.indexOf('ERROR') === -1) {
-                        throw 'Unexpected success callback with result: ' + result;
-                    }
+                } else if (result.indexOf('ERROR') === -1) {
+                    throw 'Unexpected success callback with result: ' + result;
                 }
             });
     }
@@ -241,17 +238,19 @@ describe('Camera tests Android.', function () {
             .fail(saveScreenshotAndFail);
     }
 
-    function runCombinedSpec(s) {
-        var spec = function () {
+    // produces a generic spec function which
+    // takes a picture with specified options
+    // and then verifies it
+    function generateSpec(options) {
+        return function () {
             return driver
                 .then(function () {
-                    return getPicture(s.options);
+                    return getPicture(options);
                 })
                 .then(function () {
-                    return checkPicture(true);
+                    return checkPicture(true, options);
                 });
         };
-        return tryRunSpec(spec);
     }
 
     it('camera.ui.util configuring driver and starting a session', function (done) {
@@ -279,24 +278,17 @@ describe('Camera tests Android.', function () {
     describe('Specs.', function () {
         // getPicture() with saveToPhotoLibrary = true
         it('camera.ui.spec.1 Saving a picture to the photo library', function (done) {
-            var spec = function() {
-                var options = {
-                    quality: 50,
-                    allowEdit: false,
-                    sourceType: cameraConstants.PictureSourceType.CAMERA,
-                    saveToPhotoAlbum: true
-                };
-                return driver
-                    .then(function () {
-                        return getPicture(options);
-                    })
-                    .then(function () {
-                        isTestPictureSaved = true;
-                        return checkPicture(true);
-                    });
-            };
+            var spec = generateSpec({
+                quality: 50,
+                allowEdit: false,
+                sourceType: cameraConstants.PictureSourceType.CAMERA,
+                saveToPhotoAlbum: true
+            });
 
-            return tryRunSpec(spec)
+            tryRunSpec(spec)
+                .then(function () {
+                    isTestPictureSaved = true;
+                })
                 .done(done);
         }, 10 * MINUTE);
 
@@ -346,18 +338,19 @@ describe('Camera tests Android.', function () {
                             });
                     });
             };
-            return tryRunSpec(spec)
-                .done(done);
+            tryRunSpec(spec).done(done);
         }, 10 * MINUTE);
 
         // getPicture(), then dismiss
         // wait for the error callback to be called
         it('camera.ui.spec.3 Dismissing the camera', function (done) {
             var spec = function () {
-                var options = { quality: 50,
-                                allowEdit: true,
-                                sourceType: cameraConstants.PictureSourceType.CAMERA,
-                                destinationType: cameraConstants.DestinationType.FILE_URI };
+                var options = {
+                    quality: 50,
+                    allowEdit: true,
+                    sourceType: cameraConstants.PictureSourceType.CAMERA,
+                    destinationType: cameraConstants.DestinationType.FILE_URI
+                };
                 return driver
                     .then(function () {
                         return getPicture(options, true);
@@ -370,18 +363,19 @@ describe('Camera tests Android.', function () {
                     });
             };
 
-            return tryRunSpec(spec)
-                .done(done);
+            tryRunSpec(spec).done(done);
         }, 10 * MINUTE);
 
         // getPicture(), then take picture but dismiss the edit
         // wait for the error callback to be called
         it('camera.ui.spec.4 Dismissing the edit', function (done) {
             var spec = function () {
-                var options = { quality: 50,
-                                allowEdit: true,
-                                sourceType: cameraConstants.PictureSourceType.CAMERA,
-                                destinationType: cameraConstants.DestinationType.FILE_URI };
+                var options = {
+                    quality: 50,
+                    allowEdit: true,
+                    sourceType: cameraConstants.PictureSourceType.CAMERA,
+                    destinationType: cameraConstants.DestinationType.FILE_URI
+                };
                 return driver
                     .then(function () {
                         return getPicture(options, true);
@@ -398,15 +392,96 @@ describe('Camera tests Android.', function () {
                     });
             };
 
-            return tryRunSpec(spec)
-                .done(done);
+            tryRunSpec(spec).done(done);
+        }, 10 * MINUTE);
+
+        it('camera.ui.spec.5 Verifying target image size, sourceType=CAMERA', function (done) {
+            var spec = generateSpec({
+                quality: 50,
+                allowEdit: false,
+                sourceType: cameraConstants.PictureSourceType.CAMERA,
+                saveToPhotoAlbum: false,
+                targetWidth: 210,
+                targetHeight: 210
+            });
+
+            tryRunSpec(spec).done(done);
+        }, 10 * MINUTE);
+
+        it('camera.ui.spec.6 Verifying target image size, sourceType=PHOTOLIBRARY', function (done) {
+            var spec = generateSpec({
+                quality: 50,
+                allowEdit: false,
+                sourceType: cameraConstants.PictureSourceType.PHOTOLIBRARY,
+                saveToPhotoAlbum: false,
+                targetWidth: 210,
+                targetHeight: 210
+            });
+
+            tryRunSpec(spec).done(done);
+        }, 10 * MINUTE);
+
+        it('camera.ui.spec.7 Verifying target image size, sourceType=CAMERA, DestinationType=NATIVE_URI', function (done) {
+            var spec = generateSpec({
+                quality: 50,
+                allowEdit: false,
+                sourceType: cameraConstants.PictureSourceType.CAMERA,
+                destinationType: cameraConstants.DestinationType.NATIVE_URI,
+                saveToPhotoAlbum: false,
+                targetWidth: 210,
+                targetHeight: 210
+            });
+
+            tryRunSpec(spec).done(done);
+        }, 10 * MINUTE);
+
+        it('camera.ui.spec.8 Verifying target image size, sourceType=PHOTOLIBRARY, DestinationType=NATIVE_URI', function (done) {
+            var spec = generateSpec({
+                quality: 50,
+                allowEdit: false,
+                sourceType: cameraConstants.PictureSourceType.PHOTOLIBRARY,
+                destinationType: cameraConstants.DestinationType.NATIVE_URI,
+                saveToPhotoAlbum: false,
+                targetWidth: 210,
+                targetHeight: 210
+            });
+
+            tryRunSpec(spec).done(done);
+        }, 10 * MINUTE);
+
+        it('camera.ui.spec.9 Verifying target image size, sourceType=CAMERA, DestinationType=NATIVE_URI, quality=100', function (done) {
+            var spec = generateSpec({
+                quality: 100,
+                allowEdit: true,
+                sourceType: cameraConstants.PictureSourceType.CAMERA,
+                destinationType: cameraConstants.DestinationType.NATIVE_URI,
+                saveToPhotoAlbum: false,
+                targetWidth: 305,
+                targetHeight: 305
+            });
+
+            tryRunSpec(spec).done(done);
+        }, 10 * MINUTE);
+
+        it('camera.ui.spec.10 Verifying target image size, sourceType=PHOTOLIBRARY, DestinationType=NATIVE_URI, quality=100', function (done) {
+            var spec = generateSpec({
+                quality: 100,
+                allowEdit: true,
+                sourceType: cameraConstants.PictureSourceType.PHOTOLIBRARY,
+                destinationType: cameraConstants.DestinationType.NATIVE_URI,
+                saveToPhotoAlbum: false,
+                targetWidth: 305,
+                targetHeight: 305
+            });
+
+            tryRunSpec(spec).done(done);
         }, 10 * MINUTE);
 
         // combine various options for getPicture()
-        generateSpecs().forEach(function (spec) {
-            it('camera.ui.spec.5.' + spec.id + ' Combining options. ' + spec.description, function (done) {
-                runCombinedSpec(spec)
-                    .done(done);
+        generateOptions().forEach(function (spec) {
+            it('camera.ui.spec.11.' + spec.id + ' Combining options. ' + spec.description, function (done) {
+                var s = generateSpec(spec.options);
+                tryRunSpec(s).done(done);
             }, 10 * MINUTE);
         });
 
