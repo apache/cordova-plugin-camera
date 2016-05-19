@@ -30,7 +30,6 @@
 
 var wdHelper = global.WD_HELPER;
 var screenshotHelper = global.SCREENSHOT_HELPER;
-var wd = wdHelper.getWD();
 var isDevice = global.DEVICE;
 var cameraConstants = require('../../www/CameraConstants');
 var cameraHelper = require('../helpers/cameraHelper');
@@ -44,6 +43,8 @@ describe('Camera tests iOS.', function () {
     var webviewContext = DEFAULT_WEBVIEW_CONTEXT;
     // promise count to use in promise ID
     var promiseCount = 0;
+    // going to set this to false if session is created successfully
+    var failedToStart = true;
 
     function getNextPromiseId() {
         promiseCount += 1;
@@ -127,12 +128,14 @@ describe('Camera tests iOS.', function () {
                 if (cancelCamera) {
                     return driver
                         .waitForElementByXPath('//*[@label="Cancel"]', MINUTE / 2)
+                        .elementByXPath('//*[@label="Cancel"]')
+                        .elementByXPath('//*[@label="Cancel"]')
                         .click();
                 }
                 return driver
                     .waitForElementByXPath('//*[@label="Take Picture"]', MINUTE / 2)
                     .click()
-                    .elementByXPath('//*[@label="Use Photo"]')
+                    .waitForElementByXPath('//*[@label="Use Photo"]', MINUTE / 2)
                     .click();
             })
             .fail(fail);
@@ -146,7 +149,7 @@ describe('Camera tests iOS.', function () {
         }
         return driver
             .context(webviewContext)
-            .setAsyncScriptTimeout(MINUTE)
+            .setAsyncScriptTimeout(MINUTE / 2)
             .executeAsync(cameraHelper.checkPicture, [getCurrentPromiseId(), options])
             .then(function (result) {
                 if (shouldLoad) {
@@ -187,15 +190,25 @@ describe('Camera tests iOS.', function () {
             });
     }
 
+    function checkSession(done) {
+        if (failedToStart) {
+            fail('Failed to start a session');
+            done();
+        }
+    }
+
     it('camera.ui.util configure driver and start a session', function (done) {
         getDriver()
-            .fail(fail)
-            .finally(done);
+            .then(function () {
+                failedToStart = false;
+            }, fail)
+            .done(done);
     }, 5 * MINUTE);
 
     describe('Specs.', function () {
         // getPicture() with mediaType: VIDEO, sourceType: PHOTOLIBRARY
         it('camera.ui.spec.1 Selecting only videos', function (done) {
+            checkSession(done);
             var options = { sourceType: cameraConstants.PictureSourceType.PHOTOLIBRARY,
                             mediaType: cameraConstants.MediaType.VIDEO };
             driver
@@ -211,10 +224,12 @@ describe('Camera tests iOS.', function () {
         // getPicture(), then dismiss
         // wait for the error callback to be called
         it('camera.ui.spec.2 Dismissing the camera', function (done) {
+            checkSession(done);
             if (!isDevice) {
                 pending('Camera is not available on iOS simulator');
             }
-            var options = { sourceType: cameraConstants.PictureSourceType.CAMERA };
+            var options = { sourceType: cameraConstants.PictureSourceType.CAMERA,
+                            saveToPhotoAlbum: false };
             driver
                 .then(function () {
                     return getPicture(options, true);
@@ -227,6 +242,7 @@ describe('Camera tests iOS.', function () {
         }, 3 * MINUTE);
 
         it('camera.ui.spec.3 Verifying target image size, sourceType=CAMERA', function (done) {
+            checkSession(done);
             if (!isDevice) {
                 pending('Camera is not available on iOS simulator');
             }
@@ -243,6 +259,7 @@ describe('Camera tests iOS.', function () {
         }, 3 * MINUTE);
 
         it('camera.ui.spec.4 Verifying target image size, sourceType=SAVEDPHOTOALBUM', function (done) {
+            checkSession(done);
             var options = {
                 quality: 50,
                 allowEdit: false,
@@ -256,6 +273,7 @@ describe('Camera tests iOS.', function () {
         }, 3 * MINUTE);
 
         it('camera.ui.spec.5 Verifying target image size, sourceType=PHOTOLIBRARY', function (done) {
+            checkSession(done);
             var options = {
                 quality: 50,
                 allowEdit: false,
@@ -269,6 +287,10 @@ describe('Camera tests iOS.', function () {
         }, 3 * MINUTE);
 
         it('camera.ui.spec.6 Verifying target image size, sourceType=CAMERA, destinationType=NATIVE_URI', function (done) {
+            // remove this line if you don't mind the tests leaving a photo saved on device
+            pending('Cannot prevent iOS from saving the picture to photo library');
+
+            checkSession(done);
             if (!isDevice) {
                 pending('Camera is not available on iOS simulator');
             }
@@ -286,6 +308,7 @@ describe('Camera tests iOS.', function () {
         }, 3 * MINUTE);
 
         it('camera.ui.spec.7 Verifying target image size, sourceType=SAVEDPHOTOALBUM, destinationType=NATIVE_URI', function (done) {
+            checkSession(done);
             var options = {
                 quality: 50,
                 allowEdit: false,
@@ -300,6 +323,7 @@ describe('Camera tests iOS.', function () {
         }, 3 * MINUTE);
 
         it('camera.ui.spec.8 Verifying target image size, sourceType=PHOTOLIBRARY, destinationType=NATIVE_URI', function (done) {
+            checkSession(done);
             var options = {
                 quality: 50,
                 allowEdit: false,
@@ -314,6 +338,10 @@ describe('Camera tests iOS.', function () {
         }, 3 * MINUTE);
 
         it('camera.ui.spec.9 Verifying target image size, sourceType=CAMERA, destinationType=NATIVE_URI, quality=100', function (done) {
+            // remove this line if you don't mind the tests leaving a photo saved on device
+            pending('Cannot prevent iOS from saving the picture to photo library');
+
+            checkSession(done);
             if (!isDevice) {
                 pending('Camera is not available on iOS simulator');
             }
@@ -330,6 +358,7 @@ describe('Camera tests iOS.', function () {
         }, 3 * MINUTE);
 
         it('camera.ui.spec.10 Verifying target image size, sourceType=SAVEDPHOTOALBUM, destinationType=NATIVE_URI, quality=100', function (done) {
+            checkSession(done);
             var options = {
                 quality: 100,
                 allowEdit: false,
@@ -344,6 +373,7 @@ describe('Camera tests iOS.', function () {
         }, 3 * MINUTE);
 
         it('camera.ui.spec.11 Verifying target image size, sourceType=PHOTOLIBRARY, destinationType=NATIVE_URI, quality=100', function (done) {
+            checkSession(done);
             var options = {
                 quality: 100,
                 allowEdit: false,
@@ -360,9 +390,12 @@ describe('Camera tests iOS.', function () {
         // combine various options for getPicture()
         generateOptions().forEach(function (spec) {
             it('camera.ui.spec.12.' + spec.id + ' Combining options. ' + spec.description, function (done) {
+                checkSession(done);
                 if (!isDevice && spec.options.sourceType === cameraConstants.PictureSourceType.CAMERA) {
                     pending('Camera is not available on iOS simulator');
                 }
+
+                // remove this check if you don't mind the tests leaving a photo saved on device
                 if (spec.options.sourceType === cameraConstants.PictureSourceType.CAMERA &&
                     spec.options.destinationType === cameraConstants.DestinationType.NATIVE_URI) {
                     pending('Skipping: cannot prevent iOS from saving the picture to photo library and cannot delete it. ' +
@@ -376,6 +409,7 @@ describe('Camera tests iOS.', function () {
     });
 
     it('camera.ui.util Destroy the session', function (done) {
+        checkSession(done);
         driver
             .quit()
             .done(done);
