@@ -247,18 +247,22 @@ module.exports.checkPicture = function (pid, options, cb) {
 
     function displayImage(image) {
         try {
-            var imgEl = document.createElement('img');
-            document.body.appendChild(imgEl);
+            var imgEl = document.getElementById('camera_test_image');
+            if (!imgEl) {
+                imgEl = document.createElement('img');
+                imgEl.id = 'camera_test_image';
+                document.body.appendChild(imgEl);
+            }
             var timedOut = false;
             var loadTimeout = setTimeout(function () {
                 timedOut = true;
-                document.body.removeChild(imgEl);
+                imgEl.src = '';
                 errorCallback('The image did not load: ' + image.substring(0, 150));
             }, 10000);
             var done = function (status) {
                 if (!timedOut) {
                     clearTimeout(loadTimeout);
-                    document.body.removeChild(imgEl);
+                    imgEl.src = '';
                     cb(status);
                 }
             };
