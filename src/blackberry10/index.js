@@ -162,6 +162,10 @@ function encodeBase64(filePath, callback) {
                     // set it back to original value
                     window.qnx.webplatform.getController().setFileSystemSandbox = sandbox;
                     callback(this.result);
+
+                    // remove the picture
+                    fileEntry.remove(function() {
+                    }, errorHandler);
                 };
 
                 reader.readAsDataURL(file);
