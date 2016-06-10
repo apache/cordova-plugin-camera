@@ -19,17 +19,19 @@
  *
  */
 
+var HIGHEST_POSSIBLE_Z_INDEX = 2147483647;
+
 function takePicture(success, error, opts) {
     if (opts && opts[2] === 1) {
         capture(success, error);
     } else {
         var input = document.createElement('input');
+        input.style.position = 'relative';
+        input.style.zIndex = HIGHEST_POSSIBLE_Z_INDEX;
         input.type = 'file';
         input.name = 'files[]';
 
         input.onchange = function(inputEvent) {
-            var canvas = document.createElement('canvas');
-
             var reader = new FileReader();
             reader.onload = function(readerEvent) {
                 input.parentNode.removeChild(input);
@@ -37,7 +39,7 @@ function takePicture(success, error, opts) {
                 var imageData = readerEvent.target.result;
 
                 return success(imageData.substr(imageData.indexOf(',') + 1));
-            }
+            };
 
             reader.readAsDataURL(inputEvent.target.files[0]);
         };
@@ -51,6 +53,11 @@ function capture(success, errorCallback) {
 
     var video = document.createElement('video');
     var button = document.createElement('button');
+    var parent = document.createElement('div');
+    parent.style.position = 'relative';
+    parent.style.zIndex = HIGHEST_POSSIBLE_Z_INDEX;
+    parent.appendChild(video);
+    parent.appendChild(button);
 
     video.width = 320;
     video.height = 240;
@@ -60,18 +67,24 @@ function capture(success, errorCallback) {
         // create a canvas and capture a frame from video stream
         var canvas = document.createElement('canvas');
         canvas.getContext('2d').drawImage(video, 0, 0, 320, 240);
-        
+
         // convert image stored in canvas to base64 encoded image
         var imageData = canvas.toDataURL('img/png');
         imageData = imageData.replace('data:image/png;base64,', '');
 
-        // stop video stream, remove video and button
-        localMediaStream.stop();
-        video.parentNode.removeChild(video);
-        button.parentNode.removeChild(button);
+        // stop video stream, remove video and button.
+        // Note that MediaStream.stop() is deprecated as of Chrome 47.
+        if (localMediaStream.stop) {
+            localMediaStream.stop();
+        } else {
+            localMediaStream.getTracks().forEach(function (track) {
+                track.stop();
+            });
+        }
+        parent.parentNode.removeChild(parent);
 
         return success(imageData);
-    }
+    };
 
     navigator.getUserMedia = navigator.getUserMedia ||
                              navigator.webkitGetUserMedia ||
@@ -83,9 +96,8 @@ function capture(success, errorCallback) {
         video.src = window.URL.createObjectURL(localMediaStream);
         video.play();
 
-        document.body.appendChild(video);
-        document.body.appendChild(button);
-    }
+        document.body.appendChild(parent);
+    };
 
     if (navigator.getUserMedia) {
         navigator.getUserMedia({video: true, audio: true}, successCallback, errorCallback);
