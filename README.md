@@ -21,7 +21,9 @@ description: Take pictures with the device camera.
 #         under the License.
 -->
 
-[![Build Status](https://travis-ci.org/apache/cordova-plugin-camera.svg?branch=master)](https://travis-ci.org/apache/cordova-plugin-camera)
+|Android|iOS| Windows 8.1 Store | Windows 8.1 Phone | Windows 10 Store | Travis CI |
+|:-:|:-:|:-:|:-:|:-:|:-:|
+|[![Build Status](http://cordova-ci.cloudapp.net:8080/buildStatus/icon?job=cordova-periodic-build/PLATFORM=android,PLUGIN=cordova-plugin-camera)](http://cordova-ci.cloudapp.net:8080/job/cordova-periodic-build/PLATFORM=android,PLUGIN=cordova-plugin-camera/)|[![Build Status](http://cordova-ci.cloudapp.net:8080/buildStatus/icon?job=cordova-periodic-build/PLATFORM=ios,PLUGIN=cordova-plugin-camera)](http://cordova-ci.cloudapp.net:8080/job/cordova-periodic-build/PLATFORM=ios,PLUGIN=cordova-plugin-camera/)|[![Build Status](http://cordova-ci.cloudapp.net:8080/buildStatus/icon?job=cordova-periodic-build/PLATFORM=windows-8.1-store,PLUGIN=cordova-plugin-camera)](http://cordova-ci.cloudapp.net:8080/job/cordova-periodic-build/PLATFORM=windows-8.1-store,PLUGIN=cordova-plugin-camera/)|[![Build Status](http://cordova-ci.cloudapp.net:8080/buildStatus/icon?job=cordova-periodic-build/PLATFORM=windows-8.1-phone,PLUGIN=cordova-plugin-camera)](http://cordova-ci.cloudapp.net:8080/job/cordova-periodic-build/PLATFORM=windows-8.1-phone,PLUGIN=cordova-plugin-camera/)|[![Build Status](http://cordova-ci.cloudapp.net:8080/buildStatus/icon?job=cordova-periodic-build/PLATFORM=windows-10-store,PLUGIN=cordova-plugin-camera)](http://cordova-ci.cloudapp.net:8080/job/cordova-periodic-build/PLATFORM=windows-10-store,PLUGIN=cordova-plugin-camera/)|[![Build Status](https://travis-ci.org/apache/cordova-plugin-camera.svg?branch=master)](https://travis-ci.org/apache/cordova-plugin-camera)
 
 # cordova-plugin-camera
 
@@ -98,8 +100,10 @@ Documentation consists of template and API docs produced from the plugin JS code
 ---
 
 <a name="module_camera"></a>
+
 ## camera
 <a name="module_camera.getPicture"></a>
+
 ### camera.getPicture(successCallback, errorCallback, options)
 Takes a photo using the camera, or retrieves a photo from the device's
 image gallery.  The image is passed to the success callback as a
@@ -167,6 +171,7 @@ More examples [here](#camera-getPicture-examples). Quirks [here](#camera-getPict
 navigator.camera.getPicture(cameraSuccess, cameraError, cameraOptions);
 ```
 <a name="module_camera.cleanup"></a>
+
 ### camera.cleanup()
 Removes intermediate image files that are kept in temporary storage
 after calling [`camera.getPicture`](#module_camera.getPicture). Applies only when the value of
@@ -191,6 +196,7 @@ function onFail(message) {
 }
 ```
 <a name="module_camera.onError"></a>
+
 ### camera.onError : <code>function</code>
 Callback function that provides an error message.
 
@@ -201,6 +207,7 @@ Callback function that provides an error message.
 | message | <code>string</code> | The message is provided by the device's native code. |
 
 <a name="module_camera.onSuccess"></a>
+
 ### camera.onSuccess : <code>function</code>
 Callback function that provides the image data.
 
@@ -220,6 +227,7 @@ function cameraCallback(imageData) {
 }
 ```
 <a name="module_camera.CameraOptions"></a>
+
 ### camera.CameraOptions : <code>Object</code>
 Optional parameters to customize the camera settings.
 * [Quirks](#CameraOptions-quirks)
@@ -245,8 +253,10 @@ Optional parameters to customize the camera settings.
 ---
 
 <a name="module_Camera"></a>
+
 ## Camera
 <a name="module_Camera.DestinationType"></a>
+
 ### Camera.DestinationType : <code>enum</code>
 **Kind**: static enum property of <code>[Camera](#module_Camera)</code>  
 **Properties**
@@ -258,6 +268,7 @@ Optional parameters to customize the camera settings.
 | NATIVE_URI | <code>number</code> | <code>2</code> | Return native uri (eg. asset-library://... for iOS) |
 
 <a name="module_Camera.EncodingType"></a>
+
 ### Camera.EncodingType : <code>enum</code>
 **Kind**: static enum property of <code>[Camera](#module_Camera)</code>  
 **Properties**
@@ -268,6 +279,7 @@ Optional parameters to customize the camera settings.
 | PNG | <code>number</code> | <code>1</code> | Return PNG encoded image |
 
 <a name="module_Camera.MediaType"></a>
+
 ### Camera.MediaType : <code>enum</code>
 **Kind**: static enum property of <code>[Camera](#module_Camera)</code>  
 **Properties**
@@ -279,6 +291,7 @@ Optional parameters to customize the camera settings.
 | ALLMEDIA | <code>number</code> | <code>2</code> | Allow selection from all media types |
 
 <a name="module_Camera.PictureSourceType"></a>
+
 ### Camera.PictureSourceType : <code>enum</code>
 **Kind**: static enum property of <code>[Camera](#module_Camera)</code>  
 **Properties**
@@ -290,6 +303,7 @@ Optional parameters to customize the camera settings.
 | SAVEDPHOTOALBUM | <code>number</code> | <code>2</code> | Choose image from picture library (same as PHOTOLIBRARY for Android) |
 
 <a name="module_Camera.PopoverArrowDirection"></a>
+
 ### Camera.PopoverArrowDirection : <code>enum</code>
 Matches iOS UIPopoverArrowDirection constants to specify arrow location on popover.
 
@@ -305,6 +319,7 @@ Matches iOS UIPopoverArrowDirection constants to specify arrow location on popov
 | ARROW_ANY | <code>number</code> | <code>15</code> | 
 
 <a name="module_Camera.Direction"></a>
+
 ### Camera.Direction : <code>enum</code>
 **Kind**: static enum property of <code>[Camera](#module_Camera)</code>  
 **Properties**
@@ -317,6 +332,7 @@ Matches iOS UIPopoverArrowDirection constants to specify arrow location on popov
 ---
 
 <a name="module_CameraPopoverOptions"></a>
+
 ## CameraPopoverOptions
 iOS-only parameters that specify the anchor element location and arrow
 direction of the popover when selecting images from an iPad's library
@@ -338,6 +354,7 @@ location.
 ---
 
 <a name="module_CameraPopoverHandle"></a>
+
 ## CameraPopoverHandle
 A handle to an image picker popover.
 
