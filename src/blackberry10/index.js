@@ -17,38 +17,32 @@
  * specific language governing permissions and limitations
  * under the License.
  *
-*/
-
+ */
 /* globals qnx, FileError, PluginResult */
-
 var PictureSourceType = {
-        PHOTOLIBRARY : 0,    // Choose image from picture library (same as SAVEDPHOTOALBUM for Android)
-        CAMERA : 1,          // Take picture from camera
-        SAVEDPHOTOALBUM : 2  // Choose image from picture library (same as PHOTOLIBRARY for Android)
+        PHOTOLIBRARY: 0, // Choose image from picture library (same as SAVEDPHOTOALBUM for Android)
+        CAMERA: 1, // Take picture from camera
+        SAVEDPHOTOALBUM: 2 // Choose image from picture library (same as PHOTOLIBRARY for Android)
     },
     DestinationType = {
-        DATA_URL: 0,         // Return base64 encoded string
-        FILE_URI: 1,         // Return file uri (content://media/external/images/media/2 for Android)
-        NATIVE_URI: 2        // Return native uri (eg. asset-library://... for iOS)
+        DATA_URL: 0, // Return base64 encoded string
+        FILE_URI: 1, // Return file uri (content://media/external/images/media/2 for Android)
+        NATIVE_URI: 2 // Return native uri (eg. asset-library://... for iOS)
     },
     savePath = window.qnx.webplatform.getApplication().getEnv("HOME").replace('/data', '') + '/shared/camera/',
     invokeAvailable = true;
-
 //check for camera card - it isn't currently availble in work perimeter
-window.qnx.webplatform.getApplication().invocation.queryTargets(
-    {
-        type: 'image/jpeg',
-        action: 'bb.action.CAPTURE',
-        target_type: 'CARD'
-    },
-    function (error, targets) {
-        invokeAvailable = !error && targets && targets instanceof Array &&
-            targets.filter(function (t) { return t.default === 'sys.camera.card'; }).length > 0;
-    }
-);
-
+window.qnx.webplatform.getApplication().invocation.queryTargets({
+    type: 'image/jpeg',
+    action: 'bb.action.CAPTURE',
+    target_type: 'CARD'
+}, function (error, targets) {
+    invokeAvailable = !error && targets && targets instanceof Array && targets.filter(function (t) {
+        return t.default === 'sys.camera.card';
+    }).length > 0;
+});
 //open a webview with getUserMedia camera card implementation when camera card not available
-function showCameraDialog (done, cancel, fail) {
+function showCameraDialog(done, cancel, fail) {
     var wv = qnx.webplatform.createWebView(function () {
         wv.url = 'local:///chrome/camera.html';
         wv.allowQnxObject = true;
@@ -84,15 +78,14 @@ function showCameraDialog (done, cancel, fail) {
         qnx.webplatform.getController().dispatchEvent('webview.initialized', [wv]);
     });
 }
-
 //create unique name for saved file (same pattern as BB10 camera app)
 function imgName() {
     var date = new Date(),
-        pad = function (n) { return n < 10 ? '0' + n : n; };
-    return 'IMG_' + date.getFullYear() + pad(date.getMonth() + 1) + pad(date.getDate()) + '_' +
-            pad(date.getHours()) + pad(date.getMinutes()) + pad(date.getSeconds()) + '.png';
+        pad = function (n) {
+            return n < 10 ? '0' + n : n;
+        };
+    return 'IMG_' + date.getFullYear() + pad(date.getMonth() + 1) + pad(date.getDate()) + '_' + pad(date.getHours()) + pad(date.getMinutes()) + pad(date.getSeconds()) + '.png';
 }
-
 //convert dataURI to Blob
 function dataURItoBlob(dataURI) {
     var byteString = atob(dataURI.split(',')[1]),
@@ -103,15 +96,18 @@ function dataURItoBlob(dataURI) {
     for (i = 0; i < byteString.length; i++) {
         ia[i] = byteString.charCodeAt(i);
     }
-    return new Blob([new DataView(arrayBuffer)], { type: mimeString });
+    return new Blob([new DataView(arrayBuffer)], {
+        type: mimeString
+    });
 }
-
 //save dataURI to file system and call success with path
 function saveImage(data, success, fail) {
     var name = savePath + imgName();
     require('lib/webview').setSandbox(false);
     window.webkitRequestFileSystem(window.PERSISTENT, 0, function (fs) {
-        fs.root.getFile(name, { create: true }, function (entry) {
+        fs.root.getFile(name, {
+            create: true
+        }, function (entry) {
             entry.createWriter(function (writer) {
                 writer.onwriteend = function () {
                     success(name);
@@ -127,29 +123,23 @@ function encodeBase64(filePath, callback) {
     var sandbox = window.qnx.webplatform.getController().setFileSystemSandbox, // save original sandbox value
         errorHandler = function (err) {
             var msg = "An error occured: ";
-
             switch (err.code) {
             case FileError.NOT_FOUND_ERR:
                 msg += "File or directory not found";
                 break;
-
             case FileError.NOT_READABLE_ERR:
                 msg += "File or directory not readable";
                 break;
-
             case FileError.PATH_EXISTS_ERR:
                 msg += "File or directory already exists";
                 break;
-
             case FileError.TYPE_MISMATCH_ERR:
                 msg += "Invalid file type";
                 break;
-
             default:
                 msg += "Unknown Error";
                 break;
             }
-
             // set it back to original value
             window.qnx.webplatform.getController().setFileSystemSandbox = sandbox;
             callback(msg);
@@ -157,28 +147,23 @@ function encodeBase64(filePath, callback) {
         gotFile = function (fileEntry) {
             fileEntry.file(function (file) {
                 var reader = new FileReader();
-
                 reader.onloadend = function (e) {
                     // set it back to original value
                     window.qnx.webplatform.getController().setFileSystemSandbox = sandbox;
                     callback(this.result);
-
-                    // remove the picture
-                    fileEntry.remove(function() {
-                    }, errorHandler);
+                    fileEntry.remove(function () {}, errorHandler);
                 };
-
                 reader.readAsDataURL(file);
             }, errorHandler);
         },
         onInitFs = function (fs) {
             window.qnx.webplatform.getController().setFileSystemSandbox = false;
-            fs.root.getFile(filePath, {create: false}, gotFile, errorHandler);
+            fs.root.getFile(filePath, {
+                create: false
+            }, gotFile, errorHandler);
         };
-
     window.webkitRequestFileSystem(window.TEMPORARY, 10 * 1024 * 1024, onInitFs, errorHandler); // set size to 10MB max
 }
-
 module.exports = {
     takePicture: function (success, fail, args, env) {
         var destinationType = JSON.parse(decodeURIComponent(args[1])),
@@ -191,76 +176,47 @@ module.exports = {
                 } else {
                     encodeBase64(data, function (data) {
                         if (/^data:/.test(data)) {
-                            
-                            var img = new Image();
-
-                            img.onload = function() {
-
-                                var canvas=document.createElement("canvas");
-                                var ctx = canvas.getContext('2d');
-
-                                // use the required picture size, from the parameters
-                                canvas.width = args[3];
-                                canvas.height = args[4];
-
-                                var ratiox = canvas.height/this.width;
-                                var ratioy = canvas.width/this.height;
-                                var toWidth, toHeight, toLeft, toTop;
-
-                                // front camera used, assumed on photo size, it works with BB Z10
-                                // @todo use exif informations to get more information about the picture
-                                if ( this.width < 2000 && this.height < 1000) {
-
-                                    // source is wider than destination
-                                    if (ratiox > ratioy) {
-                                        toWidth = canvas.height;
-                                        toHeight = (this.height/this.width)*canvas.height;
-                                        toTop = (canvas.width-toHeight)/2;
-                                        toLeft = -canvas.height;
-                                    }
-                                    // source is higher than destination
-                                    else {
-                                        toHeight = canvas.width;
-                                        toWidth = (this.width/this.height)*canvas.width;
-                                        toTop = 0;
-                                        toLeft = (canvas.height + (toWidth-canvas.height)/2)*-1;
-                                    }
-
-                                    ctx.rotate(-90*Math.PI/180);
-                                    ctx.drawImage(this, toLeft, toTop, toWidth, toHeight);
+                            getPhotoOrientation(data, function (rotation) {
+                                // we have to rotate the picture
+                                if (rotation == 6 || rotation == 3 || rotation == 8) {
+                                    var img = new Image();
+                                    img.onload = function () {
+                                        var canvas = document.createElement("canvas");
+                                        var ctx = canvas.getContext('2d');
+                                        var useTheOriginal = false;
+                                        // We have to rotate to right with 90
+                                        if (rotation == 6) {
+                                            canvas.width = this.height;
+                                            canvas.height = this.width;
+                                            ctx.rotate(90 * Math.PI / 180);
+                                            ctx.drawImage(this, 0, -this.height);
+                                        }
+                                        // We have to rotate to left with 90
+                                        else if (rotation == 8) {
+                                            canvas.width = this.height;
+                                            canvas.height = this.width;
+                                            ctx.rotate(-90 * Math.PI / 180);
+                                            ctx.drawImage(this, -this.width, 0);
+                                        }
+                                        // We have to rotate with 180
+                                        else if (rotation == 3) {
+                                            canvas.width = this.width;
+                                            canvas.height = this.height;
+                                            ctx.rotate(180 * Math.PI / 180);
+                                            ctx.drawImage(this, -this.width, -this.height);
+                                        }
+                                        data = canvas.toDataURL('image/jpeg');
+                                        data = data.slice(data.indexOf(",") + 1);
+                                        canvas = null;
+                                        img = null;
+                                        result.callbackOk(data, false);
+                                    };
+                                    img.src = data;
+                                } else {
+                                    // the picture is ok, we can return
+                                    result.callbackOk(data.slice(data.indexOf(",") + 1), false);
                                 }
-                                else {
-
-                                    // source is wider than destination
-                                    if (ratiox > ratioy) {
-                                        console.log('first 2');
-                                        toWidth = canvas.height;
-                                        toHeight = (this.height/this.width)*canvas.height;
-                                        toTop = (canvas.width+ ((toHeight-canvas.width)/2))*-1;
-                                        toLeft = 0;//(canvas.width-toHeight)/2;
-                                    }
-                                    // source is higher than destination
-                                    else {
-                                        toHeight = canvas.width;
-                                        toWidth = (this.width/this.height)*canvas.width;
-                                        toTop = -canvas.width; //
-                                        toLeft = (canvas.height-toWidth)/2;
-                                    }
-
-                                    ctx.rotate(90*Math.PI/180);
-                                    ctx.drawImage(this, toLeft, toTop, toWidth, toHeight);
-                                }
-
-                                data = canvas.toDataURL('image/jpeg');
-                                data = data.slice(data.indexOf(",") + 1);
-
-                                canvas = null;
-                                img = null;
-                                result.callbackOk(data, false);
-                            };
-
-                            img.src = data;
-
+                            });
                         } else {
                             result.callbackError(data, false);
                         }
@@ -274,9 +230,61 @@ module.exports = {
                 if (error) {
                     result.callbackError(error, false);
                 }
+            },
+            b64toBlob = function (b64Data, contentType, sliceSize) {
+                contentType = contentType || '';
+                sliceSize = sliceSize || 512;
+                var byteCharacters = atob(b64Data);
+                var byteArrays = [];
+                for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+                    var slice = byteCharacters.slice(offset, offset + sliceSize);
+                    var byteNumbers = new Array(slice.length);
+                    for (var i = 0; i < slice.length; i++) {
+                        byteNumbers[i] = slice.charCodeAt(i);
+                    }
+                    var byteArray = new Uint8Array(byteNumbers);
+                    byteArrays.push(byteArray);
+                }
+                var blob = new Blob(byteArrays, {
+                    type: contentType
+                });
+                return blob;
+            },
+            getPhotoOrientation = function (file, callback) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var view = new DataView(e.target.result);
+                    if (view.getUint16(0, false) != 0xFFD8) {
+                        return callback(-2);
+                    }
+                    var length = view.byteLength,
+                        offset = 2;
+                    while (offset < length) {
+                        var marker = view.getUint16(offset, false);
+                        offset += 2;
+                        if (marker == 0xFFE1) {
+                            if (view.getUint32(offset += 2, false) != 0x45786966) return callback(-1);
+                            var little = view.getUint16(offset += 6, false) == 0x4949;
+                            offset += view.getUint32(offset + 4, little);
+                            var tags = view.getUint16(offset, little);
+                            offset += 2;
+                            for (var i = 0; i < tags; i++) {
+                                if (view.getUint16(offset + (i * 12), little) == 0x0112) {
+                                    return callback(view.getUint16(offset + (i * 12) + 8, little));
+                                }
+                            }
+                            // @todo Do this
+                        } else if ((marker & 0xFF00) != 0xFF00) {
+                            break;
+                        } else {
+                            offset += view.getUint16(offset, false);
+                        }
+                    }
+                    return callback(-1);
+                };
+                reader.readAsArrayBuffer(b64toBlob(file.replace(/data:image\/png;base64,|data:image\/jpeg;base64,/gi, '')));
             };
-
-        switch(sourceType) {
+        switch (sourceType) {
         case PictureSourceType.CAMERA:
             if (invokeAvailable) {
                 window.qnx.webplatform.getApplication().cards.camera.open("photo", done, cancel, invoked);
@@ -284,7 +292,6 @@ module.exports = {
                 showCameraDialog(done, cancel, fail);
             }
             break;
-
         case PictureSourceType.PHOTOLIBRARY:
         case PictureSourceType.SAVEDPHOTOALBUM:
             window.qnx.webplatform.getApplication().cards.filePicker.open({
@@ -293,7 +300,6 @@ module.exports = {
             }, done, cancel, invoked);
             break;
         }
-
         result.noResult(true);
     }
 };
