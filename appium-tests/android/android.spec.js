@@ -52,8 +52,12 @@ describe('Camera tests Android.', function () {
     var screenHeight = DEFAULT_SCREEN_HEIGHT;
     // promise count to use in promise ID
     var promiseCount = 0;
-    // going to set this to false if session is created successfully
-    var failedToStart = true;
+    // determine if Appium session is created successfully
+    var appiumSessionStarted = false;
+    // determine if camera is present on the device/emulator
+    var cameraAvailable = false;
+    // a path to the image we add to the gallery before test run
+    var fillerImagePath;
 
     function getNextPromiseId() {
         promiseCount += 1;
@@ -217,16 +221,24 @@ describe('Camera tests Android.', function () {
 
     function getDriver() {
         driver = wdHelper.getDriver('Android');
-        return wdHelper.getWebviewContext(driver)
+        return driver.getWebviewContext()
             .then(function(context) {
                 webviewContext = context;
                 return driver.context(webviewContext);
             })
+            .waitForDeviceReady()
+            .injectLibraries()
+            .deleteFillerImage(fillerImagePath)
             .then(function () {
-                return wdHelper.waitForDeviceReady(driver);
+                fillerImagePath = null;
             })
-            .then(function () {
-                return wdHelper.injectLibraries(driver);
+            .addFillerImage()
+            .then(function (result) {
+                if (result && result.indexOf('ERROR:') === 0) {
+                    throw new Error(result);
+                } else {
+                    fillerImagePath = result;
+                }
             });
     }
 
@@ -268,23 +280,29 @@ describe('Camera tests Android.', function () {
     }
 
     function checkSession(done) {
-        if (failedToStart) {
+        if (!appiumSessionStarted) {
             fail('Failed to start a session');
             done();
+        }
+    }
+
+    function checkCamera(pending) {
+        if (!cameraAvailable) {
+            pending('This test requires camera');
         }
     }
 
     it('camera.ui.util configuring driver and starting a session', function (done) {
         getDriver()
             .then(function () {
-                failedToStart = false;
+                appiumSessionStarted = true;
             }, fail)
             .done(done);
     }, 5 * MINUTE);
 
     it('camera.ui.util determine screen dimensions', function (done) {
         checkSession(done);
-        return driver
+        driver
             .context(webviewContext)
             .execute(function () {
                 return {
@@ -299,10 +317,28 @@ describe('Camera tests Android.', function () {
             .done(done);
     }, MINUTE);
 
+    it('camera.ui.util determine camera availability', function (done) {
+        checkSession(done);
+        var opts = {
+            sourceType: cameraConstants.PictureSourceType.CAMERA,
+            saveToPhotoAlbum: false
+        };
+
+        return driver
+            .then(function () {
+                return getPicture(opts);
+            })
+            .then(function () {
+                cameraAvailable = true;
+            })
+            .finally(done);
+    }, 5 * MINUTE);
+
     describe('Specs.', function () {
         // getPicture() with saveToPhotoLibrary = true
         it('camera.ui.spec.1 Saving a picture to the photo library', function (done) {
             checkSession(done);
+            checkCamera(pending);
             var spec = generateSpec({
                 quality: 50,
                 allowEdit: false,
@@ -373,6 +409,7 @@ describe('Camera tests Android.', function () {
         // wait for the error callback to be called
         it('camera.ui.spec.3 Dismissing the camera', function (done) {
             checkSession(done);
+            checkCamera(pending);
             var spec = function () {
                 var options = {
                     quality: 50,
@@ -401,6 +438,7 @@ describe('Camera tests Android.', function () {
         // wait for the error callback to be called
         it('camera.ui.spec.4 Dismissing the edit', function (done) {
             checkSession(done);
+            checkCamera(pending);
             var spec = function () {
                 var options = {
                     quality: 50,
@@ -435,6 +473,7 @@ describe('Camera tests Android.', function () {
 
         it('camera.ui.spec.5 Verifying target image size, sourceType=CAMERA', function (done) {
             checkSession(done);
+            checkCamera(pending);
             var spec = generateSpec({
                 quality: 50,
                 allowEdit: false,
@@ -463,6 +502,7 @@ describe('Camera tests Android.', function () {
 
         it('camera.ui.spec.7 Verifying target image size, sourceType=CAMERA, DestinationType=NATIVE_URI', function (done) {
             checkSession(done);
+            checkCamera(pending);
             var spec = generateSpec({
                 quality: 50,
                 allowEdit: false,
@@ -493,6 +533,7 @@ describe('Camera tests Android.', function () {
 
         it('camera.ui.spec.9 Verifying target image size, sourceType=CAMERA, DestinationType=NATIVE_URI, quality=100', function (done) {
             checkSession(done);
+            checkCamera(pending);
             var spec = generateSpec({
                 quality: 100,
                 allowEdit: true,
@@ -525,12 +566,22 @@ describe('Camera tests Android.', function () {
         generateOptions().forEach(function (spec) {
             it('camera.ui.spec.11.' + spec.id + ' Combining options. ' + spec.description, function (done) {
                 checkSession(done);
+                if (spec.options.sourceType == cameraConstants.PictureSourceType.CAMERA) {
+                    checkCamera(pending);
+                }
                 var s = generateSpec(spec.options);
                 tryRunSpec(s).done(done);
             }, 10 * MINUTE);
         });
 
-        it('camera.ui.util Delete test image from device library', function (done) {
+        it('camera.ui.util Delete filler picture from device library', function (done) {
+            driver
+                .context(webviewContext)
+                .deleteFillerImage(fillerImagePath)
+                .done(done);
+        }, MINUTE);
+
+        it('camera.ui.util Delete taken picture from device library', function (done) {
             checkSession(done);
             if (!isTestPictureSaved) {
                 // couldn't save test picture earlier, so nothing to delete here
@@ -539,7 +590,7 @@ describe('Camera tests Android.', function () {
             }
             // delete exactly one latest picture
             // this should be the picture we've taken in the first spec
-            return driver
+            driver
                 .context('NATIVE_APP')
                 .deviceKeyEvent(BACK_BUTTON)
                 .sleep(1000)
