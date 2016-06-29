@@ -56,7 +56,6 @@
                                initWithBarButtonSystemItem:UIBarButtonSystemItemRedo
                                target:self
                                action:@selector(_actionCancel)];
-    cancel.style = UIBarButtonItemStyleBordered;
 
     UIBarButtonItem *flex = [[UIBarButtonItem alloc]
                              initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace

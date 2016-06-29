@@ -20,7 +20,7 @@
 #import <Foundation/Foundation.h>
 #import <CoreLocation/CoreLocation.h>
 #import <CoreLocation/CLLocationManager.h>
-#import <Cordova/CDVPlugin.h>
+#import <Cordova/CDVPlugin+Resources.h>
 #import "GKImageCropViewController.h"
 
 enum CDVDestinationType {
@@ -56,6 +56,7 @@ typedef NSUInteger CDVMediaType;
 @property (assign) BOOL saveToPhotoAlbum;
 @property (strong) NSDictionary* popoverOptions;
 @property (assign) UIImagePickerControllerCameraDevice cameraDirection;
+@property (assign) BOOL convertToGrayscale;
 
 @property (assign) BOOL popoverSupported;
 @property (assign) BOOL usesGeolocation;

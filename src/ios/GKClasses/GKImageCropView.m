@@ -85,8 +85,15 @@ static CGRect GKScaleRect(CGRect rect, CGFloat scale)
 
     //finally crop image
     CGImageRef imageRef = CGImageCreateWithImageInRect([self.imageToCrop CGImage], visibleRect);
-    UIImage *result = [UIImage imageWithCGImage:imageRef scale:self.imageToCrop.scale orientation:self.imageToCrop.imageOrientation];
+    UIImage *imgWOri = [UIImage imageWithCGImage:imageRef scale:self.imageToCrop.scale orientation:self.imageToCrop.imageOrientation];
     CGImageRelease(imageRef);
+
+    // make it upright without orientation (i.e. orientation 0)
+    // as an image taken in portrait but cropped to landscape would occur compressed vertically
+    UIGraphicsBeginImageContext(imgWOri.size);
+    [imgWOri drawAtPoint:CGPointMake(0, 0)]; // already respects orientation, so that's enough
+    UIImage *result = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
 
     return result;
 }

@@ -237,6 +237,7 @@ Optional parameters to customize the camera settings.
 | saveToPhotoAlbum | <code>Boolean</code> |  | Save the image to the photo album on the device after capture. |
 | popoverOptions | <code>[CameraPopoverOptions](#module_CameraPopoverOptions)</code> |  | iOS-only options that specify popover location in iPad. |
 | cameraDirection | <code>[Direction](#module_Camera.Direction)</code> | <code>BACK</code> | Choose the camera to use (front- or back-facing). |
+| convertToGrayscale | <code>Boolean</code> | <code>false</code> | iOS-only, converts the saved image to grayscale. |
 
 ---
 
@@ -314,7 +315,13 @@ Matches iOS UIPopoverArrowDirection constants to specify arrow location on popov
 
 <a name="module_CameraPopoverOptions"></a>
 ## CameraPopoverOptions
-iOS-only parameters that specify the anchor element location and arrowdirection of the popover when selecting images from an iPad's libraryor album.Note that the size of the popover may change to adjust to thedirection of the arrow and orientation of the screen.  Make sure toaccount for orientation changes when specifying the anchor elementlocation.
+iOS-only parameters that specify the anchor element location and arrow
+direction of the popover when selecting images from an iPad's library
+or album.
+Note that the size of the popover may change to adjust to the
+direction of the arrow and orientation of the screen.  Make sure to
+account for orientation changes when specifying the anchor element
+location.
 
 
 | Param | Type | Default | Description |
@@ -397,6 +404,10 @@ Take a photo and retrieve it as a Base64-encoded image:
 -  __CameraUsesGeolocation__ (boolean, defaults to false). For capturing JPEGs, set to true to get geolocation data in the EXIF header. This will trigger a request for geolocation permissions if set to true.
 
         <preference name="CameraUsesGeolocation" value="false" />
+        
+-  __CameraUsesVariableEdit__ (boolean, defaults to false). If the plugin is called with the optional parameter `allowEdit == true`, then setting this preference to `true` suppresses the standard (fairly useless) square for cropping the photo, even suppresses the (then also useless) view of the photo with the "Retake"- and "Use Photo"-buttons, but instead offers a resizable cropping rectangle (with "Redo" and "Save"). For this portions of [GKImagePicker](https://github.com/gekitz/GKImagePicker) by Georg Kitz are used (under MIT-License).
+
+        <preference name="CameraUsesVariableEdit" value="false" />
 
 #### Amazon Fire OS Quirks <a name="camera-getPicture-quirks"></a>
 

@@ -81,6 +81,7 @@ static NSString* toBase64(NSData* data) {
     pictureOptions.saveToPhotoAlbum = [[command argumentAtIndex:9 withDefault:@(NO)] boolValue];
     pictureOptions.popoverOptions = [command argumentAtIndex:10 withDefault:nil];
     pictureOptions.cameraDirection = [[command argumentAtIndex:11 withDefault:@(UIImagePickerControllerCameraDeviceRear)] unsignedIntegerValue];
+    pictureOptions.convertToGrayscale = [[command argumentAtIndex:12 withDefault:@(NO)] boolValue];
     
     pictureOptions.popoverSupported = NO;
     pictureOptions.usesGeolocation = NO;
@@ -180,17 +181,16 @@ static NSString* toBase64(NSData* data) {
             if (authStatus == AVAuthorizationStatusDenied ||
                 authStatus == AVAuthorizationStatusRestricted) {
                 // If iOS 8+, offer a link to the Settings app
-                NSString* settingsButton = (&UIApplicationOpenSettingsURLString != NULL)
-                    ? NSLocalizedString(@"Settings", nil)
-                    : nil;
+                NSString *currentSysVers = [[UIDevice currentDevice] systemVersion]
+                ,        *settingsButton = ([currentSysVers compare:@"8.0" options:NSNumericSearch] != NSOrderedAscending) ?
+                                                [weakSelf pluginLocalizedString:@"Settings"] : nil;
 
                 // Denied; show an alert
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    [[[UIAlertView alloc] initWithTitle:[[NSBundle mainBundle]
-                                                         objectForInfoDictionaryKey:@"CFBundleDisplayName"]
-                                                message:NSLocalizedString(@"Access to the camera has been prohibited; please enable it in the Settings app to continue.", nil)
+                    [[[UIAlertView alloc] initWithTitle:[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"]
+                                                message:[weakSelf pluginLocalizedString:@"NoAccess"]
                                                delegate:self
-                                      cancelButtonTitle:NSLocalizedString(@"OK", nil)
+                                      cancelButtonTitle:[weakSelf pluginLocalizedString:@"OK"]
                                       otherButtonTitles:settingsButton, nil] show];
                 });
             }
@@ -298,7 +298,7 @@ static NSString* toBase64(NSData* data) {
         UIImagePickerController* cameraPicker = (UIImagePickerController*)navigationController;
         
         if(![cameraPicker.mediaTypes containsObject:(NSString*)kUTTypeImage]){
-            [viewController.navigationItem setTitle:NSLocalizedString(@"Videos", nil)];
+            [viewController.navigationItem setTitle:[self pluginLocalizedString:@"Videos"]];
         }
     }
 }
@@ -357,6 +357,9 @@ static NSString* toBase64(NSData* data) {
 {
     NSData* data = nil;
     
+    if (options.convertToGrayscale)
+        image = [self grayscaleImage:image];
+    
     switch (options.encodingType) {
         case EncodingTypePNG:
             data = UIImagePNGRepresentation(image);
@@ -394,6 +397,27 @@ static NSString* toBase64(NSData* data) {
     };
     
     return data;
+}
+
+- (UIImage *) grayscaleImage:(UIImage *)pImage
+{
+    CGSize          imgSize   = pImage.size;
+    CGFloat         imgWidth  = imgSize.width
+    ,               imgHeight = imgSize.height;
+    CGColorSpaceRef clrSpace  = CGColorSpaceCreateDeviceGray();
+    CGContextRef    ctxt      = CGBitmapContextCreate(nil, imgWidth, imgHeight, 8, 0, clrSpace, (CGBitmapInfo) kCGImageAlphaNone);
+    CGContextSetInterpolationQuality(ctxt, kCGInterpolationHigh);
+    CGContextSetShouldAntialias(ctxt, NO);
+    
+    CGContextDrawImage(ctxt, CGRectMake(0, 0, imgWidth, imgHeight), [pImage CGImage]);
+    CGImageRef gsCGI    = CGBitmapContextCreateImage(ctxt);
+    UIImage    *gsImage = [UIImage imageWithCGImage:gsCGI];
+    
+    CGColorSpaceRelease(clrSpace);
+    CGContextRelease(ctxt);
+    CGImageRelease(gsCGI);
+    
+    return gsImage;
 }
 
 - (NSString*)tempFilePath:(NSString*)extension

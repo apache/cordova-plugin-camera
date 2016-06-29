@@ -1,0 +1,11 @@
+/* 
+  Localizable.strings
+  CDVCamera
+
+  Created by convey on 24.06.16.
+*/
+
+"NoAccess" = "Access to the camera has been prohibited; please enable it in Settings to continue.";
+"OK"       = "OK";
+"Settings" = "Settings";
+"Videos"   = "Videos";
