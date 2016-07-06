@@ -189,7 +189,7 @@ static NSString* toBase64(NSData* data) {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [[[UIAlertView alloc] initWithTitle:[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"]
                                                 message:[weakSelf pluginLocalizedString:@"NoAccess"]
-                                               delegate:self
+                                               delegate:weakSelf
                                       cancelButtonTitle:[weakSelf pluginLocalizedString:@"OK"]
                                       otherButtonTitles:settingsButton, nil] show];
                 });
@@ -239,7 +239,7 @@ static NSString* toBase64(NSData* data) {
     // Dismiss the view
     [[self.pickerController presentingViewController] dismissViewControllerAnimated:YES completion:nil];
 
-    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"has no access to camera"];   // error callback expects string ATM
+    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[self pluginLocalizedString:@"NoAccess"]];   // error callback expects string ATM
 
     [self.commandDelegate sendPluginResult:result callbackId:self.pickerController.callbackId];
 
