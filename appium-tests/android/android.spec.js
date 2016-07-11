@@ -292,6 +292,12 @@ describe('Camera tests Android.', function () {
         }
     }
 
+    function checkSauce(pending) {
+        if (global.USE_SAUCE) {
+            pending('This test cannot run on Sauce Labs yet. We\'re working on it!');
+        }
+    }
+
     it('camera.ui.util configuring driver and starting a session', function (done) {
         getDriver()
             .then(function () {
@@ -356,6 +362,7 @@ describe('Camera tests Android.', function () {
         // getPicture() with mediaType: VIDEO, sourceType: PHOTOLIBRARY
         it('camera.ui.spec.2 Selecting only videos', function (done) {
             checkSession(done);
+            checkSauce(pending);
             var spec = function () {
                 var options = { sourceType: cameraConstants.PictureSourceType.PHOTOLIBRARY,
                                 mediaType: cameraConstants.MediaType.VIDEO };
@@ -488,6 +495,7 @@ describe('Camera tests Android.', function () {
 
         it('camera.ui.spec.6 Verifying target image size, sourceType=PHOTOLIBRARY', function (done) {
             checkSession(done);
+            checkSauce(pending);
             var spec = generateSpec({
                 quality: 50,
                 allowEdit: false,
@@ -518,6 +526,7 @@ describe('Camera tests Android.', function () {
 
         it('camera.ui.spec.8 Verifying target image size, sourceType=PHOTOLIBRARY, DestinationType=NATIVE_URI', function (done) {
             checkSession(done);
+            checkSauce(pending);
             var spec = generateSpec({
                 quality: 50,
                 allowEdit: false,
@@ -549,6 +558,7 @@ describe('Camera tests Android.', function () {
 
         it('camera.ui.spec.10 Verifying target image size, sourceType=PHOTOLIBRARY, DestinationType=NATIVE_URI, quality=100', function (done) {
             checkSession(done);
+            checkSauce(pending);
             var spec = generateSpec({
                 quality: 100,
                 allowEdit: true,
@@ -566,6 +576,7 @@ describe('Camera tests Android.', function () {
         generateOptions().forEach(function (spec) {
             it('camera.ui.spec.11.' + spec.id + ' Combining options. ' + spec.description, function (done) {
                 checkSession(done);
+                checkSauce(pending);
                 if (spec.options.sourceType == cameraConstants.PictureSourceType.CAMERA) {
                     checkCamera(pending);
                 }
