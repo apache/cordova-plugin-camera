@@ -519,7 +519,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 // If we saved the uncompressed photo to the album, we can just
                 // return the URI we already created
                 if (this.saveToPhotoAlbum) {
-                    this.callbackContext.success(galleryUri.toString());
+                    String fileLocation = FileHelper.getRealPath(galleryUri, this.cordova);
+                    Log.d(LOG_TAG, "File locaton is: " + fileLocation);
+
+                    this.callbackContext.success( pathToDestType(fileLocation, galleryUri) );
                 } else {
                     Uri uri = Uri.fromFile(createCaptureFile(this.encodingType, System.currentTimeMillis() + ""));
 
@@ -529,7 +532,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                         writeUncompressedImage(this.imageUri, uri);
                     }
 
-                    this.callbackContext.success(uri.toString());
+                    String fileLocation = FileHelper.getRealPath(uri, this.cordova);
+                    Log.d(LOG_TAG, "File locaton is: " + fileLocation);
+
+                    this.callbackContext.success( pathToDestType(fileLocation, uri) );
                 }
             } else {
                 Uri uri = Uri.fromFile(createCaptureFile(this.encodingType, System.currentTimeMillis() + ""));
@@ -564,7 +570,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 }
 
                 // Send Uri back to JavaScript for viewing image
-                this.callbackContext.success(uri.toString());
+                String fileLocation = FileHelper.getRealPath(uri, this.cordova);
+                Log.d(LOG_TAG, "File locaton is: " + fileLocation);
+
+                this.callbackContext.success( pathToDestType(fileLocation, uri) );
 
             }
         } else {
@@ -657,14 +666,14 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         // If you ask for video or all media type you will automatically get back a file URI
         // and there will be no attempt to resize any returned data
         if (this.mediaType != PICTURE) {
-            this.callbackContext.success(fileLocation);
+            this.callbackContext.success( pathToDestType(fileLocation, uri) );
         }
         else {
             // This is a special case to just return the path as no scaling,
             // rotating, nor compressing needs to be done
             if (this.targetHeight == -1 && this.targetWidth == -1 &&
                     (destType == FILE_URI || destType == NATIVE_URI) && !this.correctOrientation) {
-                this.callbackContext.success(uri.toString());
+                this.callbackContext.success( pathToDestType(fileLocation, uri) );
             } else {
                 String uriString = uri.toString();
                 // Get the path to the image. Makes loading so much easier.
@@ -723,7 +732,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
                         }
                     }
                     else {
-                        this.callbackContext.success(fileLocation);
+                        this.callbackContext.success(  pathToDestType(fileLocation, uri)  );
                     }
                 }
                 if (bitmap != null) {
@@ -1287,5 +1296,29 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
         }
 
         this.callbackContext = callbackContext;
+    }
+
+    /**
+     * Get the type of uri the user wants to be returned
+     * FILE_URI should return the ``file://`` scheme;
+     * NATIVE_URI should return the ``content://`` scheme;
+     *
+     * @param path
+     * @param uri
+     */
+    private String pathToDestType(String path, Uri uri) {
+        String destFilepath = "";
+
+        if (this.destType == FILE_URI && ! path.isEmpty()) {
+            destFilepath = "file://" + path;
+        }
+        else if (this.destType == NATIVE_URI) {
+            destFilepath = uri.toString();
+        }
+        else {
+            destFilepath = path;
+        }
+
+        return destFilepath;
     }
 }
