@@ -663,7 +663,7 @@ private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
             // This is a special case to just return the path as no scaling,
             // rotating, nor compressing needs to be done
             if (this.targetHeight == -1 && this.targetWidth == -1 &&
-                    (destType == FILE_URI || destType == NATIVE_URI) && !this.correctOrientation) {
+                    (destType == FILE_URI || destType == NATIVE_URI) && !this.correctOrientation  && this.mQuality == 100) {
                 this.callbackContext.success(uri.toString());
             } else {
                 String uriString = uri.toString();
