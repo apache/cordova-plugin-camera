@@ -126,16 +126,13 @@ one of the following formats, depending on the specified
 `cameraOptions`:
 
 - A `String` containing the Base64-encoded photo image.
-
 - A `String` representing the image file location on local storage (default).
 
 You can do whatever you want with the encoded image or URI, for
 example:
 
 - Render the image in an `<img>` tag, as in the example below
-
 - Save the data locally (`LocalStorage`, [Lawnchair](http://brianleroux.github.com/lawnchair/), etc.)
-
 - Post the data to a remote server
 
 __NOTE__: Photo resolution on newer devices is quite good. Photos
@@ -258,6 +255,12 @@ Optional parameters to customize the camera settings.
 <a name="module_Camera.DestinationType"></a>
 
 ### Camera.DestinationType : <code>enum</code>
+Defines the output format of `Camera.getPicture` call.
+_Note:_ On iOS passing `DestinationType.NATIVE_URI` along with
+`PictureSourceType.PHOTOLIBRARY` or `PictureSourceType.SAVEDPHOTOALBUM` will
+disable any image modifications (resize, quality change, cropping, etc.) due
+to implementation specific.
+
 **Kind**: static enum property of <code>[Camera](#module_Camera)</code>  
 **Properties**
 
@@ -293,6 +296,11 @@ Optional parameters to customize the camera settings.
 <a name="module_Camera.PictureSourceType"></a>
 
 ### Camera.PictureSourceType : <code>enum</code>
+Defines the output format of `Camera.getPicture` call.
+_Note:_ On iOS passing `PictureSourceType.PHOTOLIBRARY` or `PictureSourceType.SAVEDPHOTOALBUM`
+along with `DestinationType.NATIVE_URI` will disable any image modifications (resize, quality
+change, cropping, etc.) due to implementation specific.
+
 **Kind**: static enum property of <code>[Camera](#module_Camera)</code>  
 **Properties**
 
@@ -530,6 +538,8 @@ Tizen only supports a `destinationType` of
 - When using `destinationType.FILE_URI`, photos are saved in the application's temporary directory. The contents of the application's temporary directory is deleted when the application ends.
 
 - When using `destinationType.NATIVE_URI` and `sourceType.CAMERA`, photos are saved in the saved photo album regardless on the value of `saveToPhotoAlbum` parameter.
+
+- When using `destinationType.NATIVE_URI` and `sourceType.PHOTOLIBRARY` or `sourceType.SAVEDPHOTOALBUM`, all editing options are ignored and link is returned to original picture.
 
 #### Tizen Quirks
 

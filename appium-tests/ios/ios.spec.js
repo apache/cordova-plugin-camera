@@ -286,7 +286,7 @@ describe('Camera tests iOS.', function () {
             runSpec(options).done(done);
         }, 3 * MINUTE);
 
-        it('camera.ui.spec.6 Verifying target image size, sourceType=CAMERA, destinationType=NATIVE_URI', function (done) {
+        it('camera.ui.spec.6 Verifying target image size, sourceType=CAMERA, destinationType=FILE_URL', function (done) {
             // remove this line if you don't mind the tests leaving a photo saved on device
             pending('Cannot prevent iOS from saving the picture to photo library');
 
@@ -298,7 +298,7 @@ describe('Camera tests iOS.', function () {
                 quality: 50,
                 allowEdit: false,
                 sourceType: cameraConstants.PictureSourceType.CAMERA,
-                destinationType: cameraConstants.DestinationType.NATIVE_URI,
+                destinationType: cameraConstants.DestinationType.FILE_URL,
                 saveToPhotoAlbum: false,
                 targetWidth: 210,
                 targetHeight: 210
@@ -307,13 +307,13 @@ describe('Camera tests iOS.', function () {
             runSpec(options).done(done);
         }, 3 * MINUTE);
 
-        it('camera.ui.spec.7 Verifying target image size, sourceType=SAVEDPHOTOALBUM, destinationType=NATIVE_URI', function (done) {
+        it('camera.ui.spec.7 Verifying target image size, sourceType=SAVEDPHOTOALBUM, destinationType=FILE_URL', function (done) {
             checkSession(done);
             var options = {
                 quality: 50,
                 allowEdit: false,
                 sourceType: cameraConstants.PictureSourceType.SAVEDPHOTOALBUM,
-                destinationType: cameraConstants.DestinationType.NATIVE_URI,
+                destinationType: cameraConstants.DestinationType.FILE_URL,
                 saveToPhotoAlbum: false,
                 targetWidth: 210,
                 targetHeight: 210
@@ -322,13 +322,13 @@ describe('Camera tests iOS.', function () {
             runSpec(options).done(done);
         }, 3 * MINUTE);
 
-        it('camera.ui.spec.8 Verifying target image size, sourceType=PHOTOLIBRARY, destinationType=NATIVE_URI', function (done) {
+        it('camera.ui.spec.8 Verifying target image size, sourceType=PHOTOLIBRARY, destinationType=FILE_URL', function (done) {
             checkSession(done);
             var options = {
                 quality: 50,
                 allowEdit: false,
                 sourceType: cameraConstants.PictureSourceType.PHOTOLIBRARY,
-                destinationType: cameraConstants.DestinationType.NATIVE_URI,
+                destinationType: cameraConstants.DestinationType.FILE_URL,
                 saveToPhotoAlbum: false,
                 targetWidth: 210,
                 targetHeight: 210
@@ -337,7 +337,7 @@ describe('Camera tests iOS.', function () {
             runSpec(options).done(done);
         }, 3 * MINUTE);
 
-        it('camera.ui.spec.9 Verifying target image size, sourceType=CAMERA, destinationType=NATIVE_URI, quality=100', function (done) {
+        it('camera.ui.spec.9 Verifying target image size, sourceType=CAMERA, destinationType=FILE_URL, quality=100', function (done) {
             // remove this line if you don't mind the tests leaving a photo saved on device
             pending('Cannot prevent iOS from saving the picture to photo library');
 
@@ -349,7 +349,7 @@ describe('Camera tests iOS.', function () {
                 quality: 100,
                 allowEdit: false,
                 sourceType: cameraConstants.PictureSourceType.CAMERA,
-                destinationType: cameraConstants.DestinationType.NATIVE_URI,
+                destinationType: cameraConstants.DestinationType.FILE_URL,
                 saveToPhotoAlbum: false,
                 targetWidth: 305,
                 targetHeight: 305
@@ -357,13 +357,13 @@ describe('Camera tests iOS.', function () {
             runSpec(options).done(done);
         }, 3 * MINUTE);
 
-        it('camera.ui.spec.10 Verifying target image size, sourceType=SAVEDPHOTOALBUM, destinationType=NATIVE_URI, quality=100', function (done) {
+        it('camera.ui.spec.10 Verifying target image size, sourceType=SAVEDPHOTOALBUM, destinationType=FILE_URL, quality=100', function (done) {
             checkSession(done);
             var options = {
                 quality: 100,
                 allowEdit: false,
                 sourceType: cameraConstants.PictureSourceType.SAVEDPHOTOALBUM,
-                destinationType: cameraConstants.DestinationType.NATIVE_URI,
+                destinationType: cameraConstants.DestinationType.FILE_URL,
                 saveToPhotoAlbum: false,
                 targetWidth: 305,
                 targetHeight: 305
@@ -372,13 +372,13 @@ describe('Camera tests iOS.', function () {
             runSpec(options).done(done);
         }, 3 * MINUTE);
 
-        it('camera.ui.spec.11 Verifying target image size, sourceType=PHOTOLIBRARY, destinationType=NATIVE_URI, quality=100', function (done) {
+        it('camera.ui.spec.11 Verifying target image size, sourceType=PHOTOLIBRARY, destinationType=FILE_URL, quality=100', function (done) {
             checkSession(done);
             var options = {
                 quality: 100,
                 allowEdit: false,
                 sourceType: cameraConstants.PictureSourceType.PHOTOLIBRARY,
-                destinationType: cameraConstants.DestinationType.NATIVE_URI,
+                destinationType: cameraConstants.DestinationType.FILE_URL,
                 saveToPhotoAlbum: false,
                 targetWidth: 305,
                 targetHeight: 305
