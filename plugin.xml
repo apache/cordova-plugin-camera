@@ -69,17 +69,17 @@
         <config-file target="AndroidManifest.xml" parent="/*">
             <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
         </config-file>
-        <config file target="AndroidManifest.xml" parent="application">
+        <config-file target="AndroidManifest.xml" parent="application">
           <provider
               android:name="android.support.v4.content.FileProvider"
               android:authorities="${applicationId}.provider"
               android:exported="false"
-              android:grantUriPermissions="true">
+              android:grantUriPermissions="true" >
               <meta-data
                   android:name="android.support.FILE_PROVIDER_PATHS"
                   android:resource="@xml/provider_paths"/>
           </provider>
-        </config>
+        </config-file>
 
         <source-file src="src/android/CameraLauncher.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/FileHelper.java" target-dir="src/org/apache/cordova/camera" />
