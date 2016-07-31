@@ -240,9 +240,13 @@ static NSString* toBase64(NSData* data) {
 
 - (void)repositionPopover:(CDVInvokedUrlCommand*)command
 {
-    NSDictionary* options = [command argumentAtIndex:0 withDefault:nil];
+    if (([[self pickerController] pickerPopoverController] != nil) && [[[self pickerController] pickerPopoverController] isPopoverVisible]) {
 
-    [self displayPopover:options];
+        [[[self pickerController] pickerPopoverController] dismissPopoverAnimated:NO];
+
+        NSDictionary* options = [command argumentAtIndex:0 withDefault:nil];
+        [self displayPopover:options];
+    }
 }
 
 - (NSInteger)integerValueForKey:(NSDictionary*)dict key:(NSString*)key defaultValue:(NSInteger)defaultValue
