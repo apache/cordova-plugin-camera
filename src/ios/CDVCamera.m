@@ -524,9 +524,11 @@ static NSString* toBase64(NSData* data) {
         NSString* mediaType = [info objectForKey:UIImagePickerControllerMediaType];
         if ([mediaType isEqualToString:(NSString*)kUTTypeImage]) {
             [weakSelf resultForImage:cameraPicker.pictureOptions info:info completion:^(CDVPluginResult* res) {
-                [weakSelf.commandDelegate sendPluginResult:res callbackId:cameraPicker.callbackId];
-                weakSelf.hasPendingOperation = NO;
-                weakSelf.pickerController = nil;
+                if (![self usesGeolocation] || picker.sourceType != UIImagePickerControllerSourceTypeCamera) {
+                    [weakSelf.commandDelegate sendPluginResult:res callbackId:cameraPicker.callbackId];
+                    weakSelf.hasPendingOperation = NO;
+                    weakSelf.pickerController = nil;
+                }
             }];
         }
         else {
