@@ -93,9 +93,11 @@ Documentation consists of template and API docs produced from the plugin JS code
     * [.PictureSourceType](#module_Camera.PictureSourceType) : <code>enum</code>
     * [.PopoverArrowDirection](#module_Camera.PopoverArrowDirection) : <code>enum</code>
     * [.Direction](#module_Camera.Direction) : <code>enum</code>
+    
+* [CameraPopoverOptions](#module_CameraPopoverOptions)
 
 * [CameraPopoverHandle](#module_CameraPopoverHandle)
-* [CameraPopoverOptions](#module_CameraPopoverOptions)
+	* [.setPosition(options)](#module_CameraPopoverHandle.setPosition)
 
 ---
 
@@ -116,10 +118,7 @@ Once the user snaps the photo, the camera application closes and the application
 
 If `Camera.sourceType` is `Camera.PictureSourceType.PHOTOLIBRARY` or
 `Camera.PictureSourceType.SAVEDPHOTOALBUM`, then a dialog displays
-that allows users to select an existing image.  The
-`camera.getPicture` function returns a [`CameraPopoverHandle`](#module_CameraPopoverHandle) object,
-which can be used to reposition the image selection dialog, for
-example, when the device orientation changes.
+that allows users to select an existing image.
 
 The return value is sent to the [`cameraSuccess`](#module_camera.onSuccess) callback function, in
 one of the following formats, depending on the specified
@@ -364,7 +363,17 @@ location.
 <a name="module_CameraPopoverHandle"></a>
 
 ## CameraPopoverHandle
-A handle to an image picker popover.
+A handle to the image picker popover.
+
+<a name="module_CameraPopoverHandle.setPosition"></a>
+
+### CameraPopoverHandle.setPosition(options)
+Can be used to reposition the image selection dialog, for example, when the device orientation changes.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| options | <code>[CameraPopoverOptions](#module_CameraPopoverOptions)</code> | CameraPopoverOptions |
 
 __Supported Platforms__
 
@@ -372,7 +381,7 @@ __Supported Platforms__
 
 **Example**  
 ```js
-var cameraPopoverHandle = navigator.camera.getPicture(onSuccess, onFail,
+navigator.camera.getPicture(onSuccess, onFail,
 {
     destinationType: Camera.DestinationType.FILE_URI,
     sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
@@ -381,6 +390,7 @@ var cameraPopoverHandle = navigator.camera.getPicture(onSuccess, onFail,
 
 // Reposition the popover if the orientation changes.
 window.onorientationchange = function() {
+    var cameraPopoverHandle = new CameraPopoverHandle();
     var cameraPopoverOptions = new CameraPopoverOptions(0, 0, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY);
     cameraPopoverHandle.setPosition(cameraPopoverOptions);
 }
