@@ -305,9 +305,9 @@ change, cropping, etc.) due to implementation specific.
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| PHOTOLIBRARY | <code>number</code> | <code>0</code> | Choose image from picture library (same as SAVEDPHOTOALBUM for Android) |
+| PHOTOLIBRARY | <code>number</code> | <code>0</code> | Choose image from the device's photo library (same as SAVEDPHOTOALBUM for Android) |
 | CAMERA | <code>number</code> | <code>1</code> | Take picture from camera |
-| SAVEDPHOTOALBUM | <code>number</code> | <code>2</code> | Choose image from picture library (same as PHOTOLIBRARY for Android) |
+| SAVEDPHOTOALBUM | <code>number</code> | <code>2</code> | Choose image only from the device's Camera Roll album (same as PHOTOLIBRARY for Android) |
 
 <a name="module_Camera.PopoverArrowDirection"></a>
 
