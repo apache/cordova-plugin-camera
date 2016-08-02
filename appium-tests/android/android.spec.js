@@ -118,12 +118,12 @@ describe('Camera tests Android.', function () {
                     tapTile
                         .tap({
                             x: Math.round(screenWidth / 4),
-                            y: Math.round(screenHeight / 5)
+                            y: Math.round(screenHeight / 4)
                         });
                     swipeRight
                         .press({x: 10, y: 100})
                         .wait(300)
-                        .moveTo({x: Math.round(screenWidth / 2), y: 0})
+                        .moveTo({x: Math.round(screenWidth - (screenWidth / 8)), y: 0})
                         .release()
                         .wait(1000);
                     if (options.allowEdit) {
@@ -306,8 +306,8 @@ describe('Camera tests Android.', function () {
             .context(webviewContext)
             .execute(function () {
                 return {
-                    'width': window.innerWidth,
-                    'height': window.innerHeight
+                    'width': screen.availWidth,
+                    'height': screen.availHeight
                 };
             }, [])
             .then(function (size) {
@@ -330,8 +330,10 @@ describe('Camera tests Android.', function () {
             })
             .then(function () {
                 cameraAvailable = true;
+            }, function () {
+                return recreateSession();
             })
-            .finally(done);
+            .done(done);
     }, 5 * MINUTE);
 
     describe('Specs.', function () {
