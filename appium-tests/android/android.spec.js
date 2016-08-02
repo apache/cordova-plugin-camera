@@ -121,9 +121,10 @@ describe('Camera tests Android.', function () {
                             y: Math.round(screenHeight / 4)
                         });
                     swipeRight
-                        .press({x: 10, y: 100})
+                        .press({x: 10, y: 150})
                         .wait(300)
                         .moveTo({x: Math.round(screenWidth - (screenWidth / 8)), y: 0})
+                        .wait(1500)
                         .release()
                         .wait(1000);
                     if (options.allowEdit) {
