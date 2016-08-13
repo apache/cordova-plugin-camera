@@ -125,7 +125,6 @@ module.exports.checkPicture = function (pid, options, cb) {
 
     // Skip image type check if destination is NATIVE_URI and source - device's photoalbum
     // https://github.com/apache/cordova-plugin-camera/#ios-quirks-1
-    // TODO: correct link above
     var skipFileTypeCheckiOS = isIos && options.destinationType === Camera.DestinationType.NATIVE_URI &&
         (options.sourceType === Camera.PictureSourceType.PHOTOLIBRARY ||
          options.sourceType === Camera.PictureSourceType.SAVEDPHOTOALBUM);

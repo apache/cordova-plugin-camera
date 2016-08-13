@@ -398,7 +398,9 @@ describe('Camera tests Android.', function () {
                             .then(function () {
                                 // success means we're still in native app
                                 return driver
-                                    .deviceKeyEvent(BACK_BUTTON);
+                                    .deviceKeyEvent(BACK_BUTTON)
+                                    // give native app some time to close
+                                    .sleep(2000);
                             }, function () {
                                 // error means we're already in webview
                                 return driver;
