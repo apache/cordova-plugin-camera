@@ -374,6 +374,10 @@ static NSString* toBase64(NSData* data) {
             } else {
                 // just try
                 NSURL *assertURL = [info objectForKey:UIImagePickerControllerReferenceURL];
+                if(!assertURL) {
+                    completion();
+                    break;
+                }
                 ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
                 [library assetForURL:assertURL resultBlock:^(ALAsset *asset) {
                     NSDictionary *metadata = asset.defaultRepresentation.metadata;
