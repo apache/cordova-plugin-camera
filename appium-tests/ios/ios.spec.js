@@ -203,7 +203,7 @@ describe('Camera tests iOS.', function () {
                 failedToStart = false;
             }, fail)
             .done(done);
-    }, 5 * MINUTE);
+    }, 10 * MINUTE);
 
     describe('Specs.', function () {
         // getPicture() with mediaType: VIDEO, sourceType: PHOTOLIBRARY

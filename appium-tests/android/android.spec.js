@@ -299,7 +299,7 @@ describe('Camera tests Android.', function () {
                 appiumSessionStarted = true;
             }, fail)
             .done(done);
-    }, 5 * MINUTE);
+    }, 10 * MINUTE);
 
     it('camera.ui.util determine screen dimensions', function (done) {
         checkSession(done);
