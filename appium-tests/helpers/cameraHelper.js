@@ -1,5 +1,5 @@
 /*jshint node: true */
-/* global Q, resolveLocalFileSystemURI, Camera, cordova */
+/* global Q, resolveLocalFileSystemURL, Camera, cordova */
 /*
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -174,11 +174,11 @@ module.exports.checkPicture = function (pid, options, cb) {
                 result.indexOf('content:') === 0 ||
                 result.indexOf('assets-library:') === 0) {
 
-                if (!window.resolveLocalFileSystemURI) {
+                if (!window.resolveLocalFileSystemURL) {
                     errorCallback('Cannot read file. Please install cordova-plugin-file to fix this.');
                     return;
                 }
-                resolveLocalFileSystemURI(result, function (entry) {
+                resolveLocalFileSystemURL(result, function (entry) {
                     if (skipFileTypeCheck) {
                         displayFile(entry);
                     } else {
