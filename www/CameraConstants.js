@@ -24,6 +24,13 @@
  */
 module.exports = {
   /**
+   * @description
+   * Defines the output format of `Camera.getPicture` call.
+   * _Note:_ On iOS passing `DestinationType.NATIVE_URI` along with
+   * `PictureSourceType.PHOTOLIBRARY` or `PictureSourceType.SAVEDPHOTOALBUM` will
+   * disable any image modifications (resize, quality change, cropping, etc.) due
+   * to implementation specific.
+   *
    * @enum {number}
    */
   DestinationType:{
@@ -55,6 +62,12 @@ module.exports = {
     ALLMEDIA : 2
   },
   /**
+   * @description
+   * Defines the output format of `Camera.getPicture` call.
+   * _Note:_ On iOS passing `PictureSourceType.PHOTOLIBRARY` or `PictureSourceType.SAVEDPHOTOALBUM`
+   * along with `DestinationType.NATIVE_URI` will disable any image modifications (resize, quality
+   * change, cropping, etc.) due to implementation specific.
+   *
    * @enum {number}
    */
   PictureSourceType:{
