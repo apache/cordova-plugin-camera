@@ -89,10 +89,7 @@ for (var key in Camera) {
  *
  * If `Camera.sourceType` is `Camera.PictureSourceType.PHOTOLIBRARY` or
  * `Camera.PictureSourceType.SAVEDPHOTOALBUM`, then a dialog displays
- * that allows users to select an existing image.  The
- * `camera.getPicture` function returns a [`CameraPopoverHandle`]{@link module:CameraPopoverHandle} object,
- * which can be used to reposition the image selection dialog, for
- * example, when the device orientation changes.
+ * that allows users to select an existing image.
  *
  * The return value is sent to the [`cameraSuccess`]{@link module:camera.onSuccess} callback function, in
  * one of the following formats, depending on the specified

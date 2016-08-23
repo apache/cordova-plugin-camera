@@ -93,11 +93,9 @@ Documentation consists of template and API docs produced from the plugin JS code
     * [.PictureSourceType](#module_Camera.PictureSourceType) : <code>enum</code>
     * [.PopoverArrowDirection](#module_Camera.PopoverArrowDirection) : <code>enum</code>
     * [.Direction](#module_Camera.Direction) : <code>enum</code>
-    
-* [CameraPopoverOptions](#module_CameraPopoverOptions)
 
 * [CameraPopoverHandle](#module_CameraPopoverHandle)
-	* [.setPosition(options)](#module_CameraPopoverHandle.setPosition)
+* [CameraPopoverOptions](#module_CameraPopoverOptions)
 
 ---
 
@@ -305,9 +303,9 @@ change, cropping, etc.) due to implementation specific.
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| PHOTOLIBRARY | <code>number</code> | <code>0</code> | Choose image from the device's photo library (same as SAVEDPHOTOALBUM for Android) |
+| PHOTOLIBRARY | <code>number</code> | <code>0</code> | Choose image from picture library (same as SAVEDPHOTOALBUM for Android) |
 | CAMERA | <code>number</code> | <code>1</code> | Take picture from camera |
-| SAVEDPHOTOALBUM | <code>number</code> | <code>2</code> | Choose image only from the device's Camera Roll album (same as PHOTOLIBRARY for Android) |
+| SAVEDPHOTOALBUM | <code>number</code> | <code>2</code> | Choose image from picture library (same as PHOTOLIBRARY for Android) |
 
 <a name="module_Camera.PopoverArrowDirection"></a>
 
@@ -363,17 +361,7 @@ location.
 <a name="module_CameraPopoverHandle"></a>
 
 ## CameraPopoverHandle
-A handle to the image picker popover.
-
-<a name="module_CameraPopoverHandle.setPosition"></a>
-
-### CameraPopoverHandle.setPosition(options)
-Can be used to reposition the image selection dialog, for example, when the device orientation changes.
-
-
-| Param | Type | Description |
-| --- | --- | --- |
-| options | <code>[CameraPopoverOptions](#module_CameraPopoverOptions)</code> | CameraPopoverOptions |
+A handle to an image picker popover.
 
 __Supported Platforms__
 
