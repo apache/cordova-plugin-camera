@@ -71,11 +71,11 @@ module.exports = {
    * @enum {number}
    */
   PictureSourceType:{
-    /** Choose image from picture library (same as SAVEDPHOTOALBUM for Android) */
+    /** Choose image from the device's photo library (same as SAVEDPHOTOALBUM for Android) */
     PHOTOLIBRARY : 0,
     /** Take picture from camera */
     CAMERA : 1,
-    /** Choose image from picture library (same as PHOTOLIBRARY for Android) */
+    /** Choose image only from the device's Camera Roll album (same as PHOTOLIBRARY for Android) */
     SAVEDPHOTOALBUM : 2
   },
   /**
