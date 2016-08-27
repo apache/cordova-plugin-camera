@@ -19,7 +19,7 @@
  *
 */
 
-/* globals Camera, resolveLocalFileSystemURI, FileEntry, CameraPopoverOptions, FileTransfer, FileUploadOptions, LocalFileSystem, MSApp */
+/* globals Camera, resolveLocalFileSystemURL, FileEntry, CameraPopoverOptions, FileTransfer, FileUploadOptions, LocalFileSystem, MSApp */
 /* jshint jasmine: true */
 
 exports.defineAutoTests = function () {
@@ -142,11 +142,11 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         setPicture(data);
         // TODO: Fix resolveLocalFileSystemURI to work with native-uri.
         if (pictureUrl.indexOf('file:') === 0 || pictureUrl.indexOf('content:') === 0 || pictureUrl.indexOf('ms-appdata:') === 0 || pictureUrl.indexOf('assets-library:') === 0) {
-            resolveLocalFileSystemURI(data, function (e) {
+            resolveLocalFileSystemURL(data, function (e) {
                 fileEntry = e;
-                logCallback('resolveLocalFileSystemURI()', true)(e.toURL());
+                logCallback('resolveLocalFileSystemURL()', true)(e.toURL());
                 readFile();
-            }, logCallback('resolveLocalFileSystemURI()', false));
+            }, logCallback('resolveLocalFileSystemURL()', false));
         } else if (pictureUrl.indexOf('data:image/jpeg;base64') === 0) {
             // do nothing
         } else {
@@ -251,7 +251,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
 
             //cleanup
             //rename moved file back to original name so other tests can reference image
-            resolveLocalFileSystemURI(destDirEntry.nativeURL+'moved_file.png', function(fileEntry) {
+            resolveLocalFileSystemURL(destDirEntry.nativeURL+'moved_file.png', function(fileEntry) {
                 fileEntry.moveTo(destDirEntry, origName, logCallback('FileEntry.moveTo', true), logCallback('FileEntry.moveTo', false));
                 console.log('Cleanup: successfully renamed file back to original name');
             }, function () {
@@ -259,7 +259,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             });
 
             //remove copied file
-            resolveLocalFileSystemURI(destDirEntry.nativeURL+'copied_file.png', function(fileEntry) {
+            resolveLocalFileSystemURL(destDirEntry.nativeURL+'copied_file.png', function(fileEntry) {
                 fileEntry.remove(logCallback('FileEntry.remove', true), logCallback('FileEntry.remove', false));
                 console.log('Cleanup: successfully removed copied file');
             }, function () {

@@ -79,10 +79,14 @@ var HIGHEST_POSSIBLE_Z_INDEX = 2147483647;
 // Resize method
 function resizeImage(successCallback, errorCallback, file, targetWidth, targetHeight, encodingType) {
     var tempPhotoFileName = "";
+    var targetContentType = "";
+
     if (encodingType == Camera.EncodingType.PNG) {
         tempPhotoFileName = "camera_cordova_temp_return.png";
+        targetContentType = "image/png";
     } else {
         tempPhotoFileName = "camera_cordova_temp_return.jpg";
+        targetContentType = "image/jpeg";
     }
 
     var storageFolder = getAppData().localFolder;
@@ -108,7 +112,7 @@ function resizeImage(successCallback, errorCallback, file, targetWidth, targetHe
 
                 canvas.getContext("2d").drawImage(this, 0, 0, imageWidth, imageHeight);
 
-                var fileContent = canvas.toDataURL(file.contentType).split(',')[1];
+                var fileContent = canvas.toDataURL(targetContentType).split(',')[1];
 
                 var storageFolder = getAppData().localFolder;
 
@@ -745,7 +749,7 @@ function takePictureFromCameraWindows(successCallback, errorCallback, args) {
     cameraCaptureUI.photoSettings.maxResolution = maxRes;
 
     var cameraPicture;
-    
+
     // define focus handler for windows phone 10.0
     var savePhotoOnFocus = function () {
         window.removeEventListener("focus", savePhotoOnFocus);
@@ -760,7 +764,7 @@ function takePictureFromCameraWindows(successCallback, errorCallback, args) {
     };
 
     // if windows phone 10, add and delete focus eventHandler to capture the focus back from cameraUI to app
-    if (navigator.appVersion.indexOf('Windows Phone 10.0') >= 0) { 
+    if (navigator.appVersion.indexOf('Windows Phone 10.0') >= 0) {
         window.addEventListener("focus", savePhotoOnFocus);
     }
 

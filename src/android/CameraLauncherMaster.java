@@ -26,11 +26,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.CordovaResourceApi;
 import org.apache.cordova.LOG;
 import org.apache.cordova.PermissionHelper;
 import org.apache.cordova.PluginResult;
@@ -61,6 +63,7 @@ import android.provider.MediaStore;
 import android.util.Base64;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.PermissionInfo;
 
 /**
  * This class launches the camera view, allows the user to take a picture, closes the camera view,
@@ -169,7 +172,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 this.encodingType = JPEG;
             }
 
-            try {
+             try {
                 if (this.srcType == CAMERA) {
                     this.callTakePicture(destType, encodingType);
                 }
@@ -373,24 +376,23 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
             }
         } else if (this.mediaType == VIDEO) {
-            intent.setType("video/*");
-            title = GET_VIDEO;
-            intent.setAction(Intent.ACTION_GET_CONTENT);
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("video/*");
+                title = GET_VIDEO;
+          intent.setAction(Intent.ACTION_GET_CONTENT);
+          intent.addCategory(Intent.CATEGORY_OPENABLE);
         } else if (this.mediaType == ALLMEDIA) {
-            // I wanted to make the type 'image/*, video/*' but this does not work on all versions
-            // of android so I had to go with the wildcard search.
-            intent.setType("*/*");
-            title = GET_All;
-            intent.setAction(Intent.ACTION_GET_CONTENT);
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
+                // I wanted to make the type 'image/*, video/*' but this does not work on all versions
+                // of android so I had to go with the wildcard search.
+                intent.setType("*/*");
+                title = GET_All;
+          intent.setAction(Intent.ACTION_GET_CONTENT);
+          intent.addCategory(Intent.CATEGORY_OPENABLE);
         }
         if (this.cordova != null) {
             this.cordova.startActivityForResult((CordovaPlugin) this, Intent.createChooser(intent,
                     new String(title)), (srcType + 1) * 16 + returnType + 1);
         }
     }
-
 
   /**
    * Brings up the UI to perform crop on passed image URI
@@ -570,22 +572,22 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         bitmap = null;
     }
 
-    private String getPicturesPath()
-    {
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "IMG_" + timeStamp + (this.encodingType == JPEG ? ".jpg" : ".png");
-        File storageDir = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES);
-        String galleryPath = storageDir.getAbsolutePath() + "/" + imageFileName;
-        return galleryPath;
-    }
+private String getPicutresPath()
+{
+    String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+    String imageFileName = "IMG_" + timeStamp + (this.encodingType == JPEG ? ".jpg" : ".png");
+    File storageDir = Environment.getExternalStoragePublicDirectory(
+            Environment.DIRECTORY_PICTURES);
+    String galleryPath = storageDir.getAbsolutePath() + "/" + imageFileName;
+    return galleryPath;
+}
 
-    private void refreshGallery(Uri contentUri)
-    {
-        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-        mediaScanIntent.setData(contentUri);
-        this.cordova.getActivity().sendBroadcast(mediaScanIntent);
-    }
+private void refreshGallery(Uri contentUri)
+{
+    Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+    mediaScanIntent.setData(contentUri);
+    this.cordova.getActivity().sendBroadcast(mediaScanIntent);
+}
 
     /**
      * Converts output image format int value to string value of mime type.
@@ -599,11 +601,18 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         return "";
     }
 
+    private String ouputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
+        // Some content: URIs do not map to file paths (e.g. picasa).
+        String realPath = FileHelper.getRealPath(uri, this.cordova);
 
-    private String outputModifiedBitmap(Bitmap bitmap, Uri uri) throws IOException {
+        // Get filename from uri
+        String fileName = realPath != null ?
+            realPath.substring(realPath.lastIndexOf('/') + 1, realPath.lastIndexOf(".") + 1) :
+            "modified.";
 
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String fileName = "IMG_" + timeStamp + (this.encodingType == JPEG ? ".jpg" : ".png");
+        // Append filename extension based on output encoding type
+        fileName += (this.encodingType == JPEG ? "jpg" : "png");
+
         String modifiedPath = getTempDirectoryPath() + "/" + fileName;
 
         OutputStream os = new FileOutputStream(modifiedPath);
@@ -614,14 +623,18 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         bitmap.compress(compressFormat, this.mQuality, os);
         os.close();
 
-        if (exifData != null && this.encodingType == JPEG) {
+        if (realPath != null && this.encodingType == JPEG) {
+            // Create an ExifHelper to save the exif data that is lost during compression
+            ExifHelper exif = new ExifHelper();
+
             try {
+                exif.createInFile(realPath);
+                exif.readExifData();
                 if (this.correctOrientation && this.orientationCorrected) {
-                    exifData.resetOrientation();
+                    exif.resetOrientation();
                 }
-                exifData.createOutFile(modifiedPath);
-                exifData.writeExifData();
-                exifData = null;
+                exif.createOutFile(modifiedPath);
+                exif.writeExifData();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -631,7 +644,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
 
 
-    /**
+/**
      * Applies all needed transformation to the image received from the gallery.
      *
      * @param destType          In which form should we return the image
@@ -678,7 +691,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 }
                 Bitmap bitmap = null;
                 try {
-                    bitmap = getScaledAndRotatedBitmap(uriString);
+                    bitmap = getScaledBitmap(uriString);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -686,6 +699,20 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     LOG.d(LOG_TAG, "I either have a null image path or bitmap");
                     this.failPicture("Unable to create bitmap!");
                     return;
+                }
+
+                if (this.correctOrientation) {
+                    rotate = getImageOrientation(uri);
+                    if (rotate != 0) {
+                        Matrix matrix = new Matrix();
+                        matrix.setRotate(rotate);
+                        try {
+                            bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+                            this.orientationCorrected = true;
+                        } catch (OutOfMemoryError oom) {
+                            this.orientationCorrected = false;
+                        }
+                    }
                 }
 
                 // If sending base64 image back
@@ -701,7 +728,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                             !mimeType.equalsIgnoreCase(getMimetypeForFormat(encodingType)))
                     {
                         try {
-                            String modifiedPath = this.outputModifiedBitmap(bitmap, uri);
+                            String modifiedPath = this.ouputModifiedBitmap(bitmap, uri);
                             // The modified image is cached by the app in order to get around this and not have to delete you
                             // application cache I'm adding the current system time to the end of the file url.
                             this.callbackContext.success("file://" + modifiedPath + "?" + System.currentTimeMillis());
@@ -811,30 +838,69 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         }
     }
 
-    private int exifToDegrees(int exifOrientation) {
-        if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_90) {
-            return 90;
-        } else if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_180) {
-            return 180;
-        } else if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_270) {
-            return 270;
-        } else {
-            return 0;
+    private int getImageOrientation(Uri uri) {
+        int rotate = 0;
+        String[] cols = { MediaStore.Images.Media.ORIENTATION };
+        try {
+            Cursor cursor = cordova.getActivity().getContentResolver().query(uri,
+                    cols, null, null, null);
+            if (cursor != null) {
+                cursor.moveToPosition(0);
+                rotate = cursor.getInt(0);
+                cursor.close();
+            }
+        } catch (Exception e) {
+            // You can get an IllegalArgumentException if ContentProvider doesn't support querying for orientation.
         }
+        return rotate;
     }
-    
+
     /**
-     * Write an inputstream to local disk
+     * Figure out if the bitmap should be rotated. For instance if the picture was taken in
+     * portrait mode
      *
-     * @param fis - The InputStream to write
-     * @param dest - Destination on disk to write to
+     * @param rotate
+     * @param bitmap
+     * @return rotated bitmap
+     */
+    private Bitmap getRotatedBitmap(int rotate, Bitmap bitmap, ExifHelper exif) {
+        Matrix matrix = new Matrix();
+        if (rotate == 180) {
+            matrix.setRotate(rotate);
+        } else {
+            matrix.setRotate(rotate, (float) bitmap.getWidth() / 2, (float) bitmap.getHeight() / 2);
+        }
+
+        try
+        {
+            bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+            exif.resetOrientation();
+        }
+        catch (OutOfMemoryError oom)
+        {
+            // You can run out of memory if the image is very large:
+            // http://simonmacdonald.blogspot.ca/2012/07/change-to-camera-code-in-phonegap-190.html
+            // If this happens, simply do not rotate the image and return it unmodified.
+            // If you do not catch the OutOfMemoryError, the Android app crashes.
+        }
+
+        return bitmap;
+    }
+
+    /**
+     * In the special case where the default width, height and quality are unchanged
+     * we just write the file out to disk saving the expensive Bitmap.compress function.
+     *
+     * @param uri
      * @throws FileNotFoundException
      * @throws IOException
      */
-    private void writeUncompressedImage(InputStream fis, Uri dest) throws FileNotFoundException,
+    private void writeUncompressedImage(Uri src, Uri dest) throws FileNotFoundException,
             IOException {
+        FileInputStream fis = null;
         OutputStream os = null;
         try {
+            fis = new FileInputStream(FileHelper.stripFileProtocol(src.toString()));
             os = this.cordova.getActivity().getContentResolver().openOutputStream(dest);
             byte[] buffer = new byte[4096];
             int len;
@@ -858,21 +924,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 }
             }
         }
-    }
-    /**
-     * In the special case where the default width, height and quality are unchanged
-     * we just write the file out to disk saving the expensive Bitmap.compress function.
-     *
-     * @param src
-     * @throws FileNotFoundException
-     * @throws IOException
-     */
-    private void writeUncompressedImage(Uri src, Uri dest) throws FileNotFoundException,
-            IOException {
-
-        FileInputStream fis = new FileInputStream(FileHelper.stripFileProtocol(src.toString()));
-        writeUncompressedImage(fis, dest);
-
     }
 
     /**
@@ -899,15 +950,15 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     }
 
     /**
-     * Return a scaled and rotated bitmap based on the target width and height
+     * Return a scaled bitmap based on the target width and height
      *
-     * @param imageUrl
+     * @param imagePath
      * @return
      * @throws IOException
      */
-    private Bitmap getScaledAndRotatedBitmap(String imageUrl) throws IOException {
-        // If no new width or height were specified, and orientation is not needed return the original bitmap
-        if (this.targetWidth <= 0 && this.targetHeight <= 0 && !(this.correctOrientation)) {
+    private Bitmap getScaledBitmap(String imageUrl) throws IOException {
+        // If no new width or height were specified return the original bitmap
+        if (this.targetWidth <= 0 && this.targetHeight <= 0) {
             InputStream fileStream = null;
             Bitmap image = null;
             try {
@@ -925,147 +976,53 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             return image;
         }
 
-
-        /*  Copy the inputstream to a temporary file on the device.
-            We then use this temporary file to determine the width/height/orientation.
-            This is the only way to determine the orientation of the photo coming from 3rd party providers (Google Drive, Dropbox,etc)
-            This also ensures we create a scaled bitmap with the correct orientation
-
-             We delete the temporary file once we are done
-         */
-        File localFile = null;
-        Uri galleryUri = null;
-        int rotate = 0;
+        // figure out the original width and height of the image
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        InputStream fileStream = null;
         try {
-            InputStream fileStream = FileHelper.getInputStreamFromUriString(imageUrl, cordova);
+            fileStream = FileHelper.getInputStreamFromUriString(imageUrl, cordova);
+            BitmapFactory.decodeStream(fileStream, null, options);
+        } finally {
             if (fileStream != null) {
-                // Generate a temporary file
-                String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-                String fileName = "IMG_" + timeStamp + (this.encodingType == JPEG ? ".jpg" : ".png");
-                localFile = new File(getTempDirectoryPath() + fileName);
-                galleryUri = Uri.fromFile(localFile);
-                writeUncompressedImage(fileStream, galleryUri);
                 try {
-                    String mimeType = FileHelper.getMimeType(imageUrl.toString(), cordova);
-                    if ("image/jpeg".equalsIgnoreCase(mimeType)) {
-                        //  ExifInterface doesn't like the file:// prefix
-                        String filePath = galleryUri.toString().replace("file://", "");
-                        // read exifData of source
-                        exifData = new ExifHelper();
-                        exifData.createInFile(filePath);
-                        // Use ExifInterface to pull rotation information
-                        if (this.correctOrientation) {
-                            ExifInterface exif = new ExifInterface(filePath);
-                            rotate = exifToDegrees(exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_UNDEFINED));
-                        }
-                    }
-                } catch (Exception oe) {
-                    LOG.w(LOG_TAG,"Unable to read Exif data: "+ oe.toString());
-                    rotate = 0;
+                    fileStream.close();
+                } catch (IOException e) {
+                    LOG.d(LOG_TAG,"Exception while closing file input stream.");
                 }
             }
         }
-        catch (Exception e)
+
+        //CB-2292: WTF? Why is the width null?
+        if(options.outWidth == 0 || options.outHeight == 0)
         {
-            LOG.e(LOG_TAG,"Exception while getting input stream: "+ e.toString());
             return null;
         }
 
+        // determine the correct aspect ratio
+        int[] widthHeight = calculateAspectRatio(options.outWidth, options.outHeight);
 
-
+        // Load in the smallest bitmap possible that is closest to the size we want
+        options.inJustDecodeBounds = false;
+        options.inSampleSize = calculateSampleSize(options.outWidth, options.outHeight, this.targetWidth, this.targetHeight);
+        Bitmap unscaledBitmap = null;
         try {
-            // figure out the original width and height of the image
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inJustDecodeBounds = true;
-            InputStream fileStream = null;
-            try {
-                fileStream = FileHelper.getInputStreamFromUriString(galleryUri.toString(), cordova);
-                BitmapFactory.decodeStream(fileStream, null, options);
-            } finally {
-                if (fileStream != null) {
-                    try {
-                        fileStream.close();
-                    } catch (IOException e) {
-                        LOG.d(LOG_TAG, "Exception while closing file input stream.");
-                    }
-                }
-            }
-
-
-            //CB-2292: WTF? Why is the width null?
-            if (options.outWidth == 0 || options.outHeight == 0) {
-                return null;
-            }
-
-            // User didn't specify output dimensions, but they need orientation
-            if (this.targetWidth <= 0 && this.targetHeight <= 0) {
-                this.targetWidth = options.outWidth;
-                this.targetHeight = options.outHeight;
-            }
-
-            // Setup target width/height based on orientation
-            int rotatedWidth, rotatedHeight;
-            boolean rotated= false;
-            if (rotate == 90 || rotate == 270) {
-                rotatedWidth = options.outHeight;
-                rotatedHeight = options.outWidth;
-                rotated = true;
-            } else {
-                rotatedWidth = options.outWidth;
-                rotatedHeight = options.outHeight;
-            }
-
-            // determine the correct aspect ratio
-            int[] widthHeight = calculateAspectRatio(rotatedWidth, rotatedHeight);
-
-
-            // Load in the smallest bitmap possible that is closest to the size we want
-            options.inJustDecodeBounds = false;
-            options.inSampleSize = calculateSampleSize(rotatedWidth, rotatedHeight,  widthHeight[0], widthHeight[1]);
-            Bitmap unscaledBitmap = null;
-            try {
-                fileStream = FileHelper.getInputStreamFromUriString(galleryUri.toString(), cordova);
-                unscaledBitmap = BitmapFactory.decodeStream(fileStream, null, options);
-            } finally {
-                if (fileStream != null) {
-                    try {
-                        fileStream.close();
-                    } catch (IOException e) {
-                        LOG.d(LOG_TAG, "Exception while closing file input stream.");
-                    }
-                }
-            }
-            if (unscaledBitmap == null) {
-                return null;
-            }
-
-            int scaledWidth = (!rotated) ? widthHeight[0] : widthHeight[1];
-            int scaledHeight = (!rotated) ? widthHeight[1] : widthHeight[0];
-
-            Bitmap scaledBitmap = Bitmap.createScaledBitmap(unscaledBitmap, scaledWidth, scaledHeight, true);
-            if (scaledBitmap != unscaledBitmap) {
-                unscaledBitmap.recycle();
-                unscaledBitmap = null;
-            }
-            if (this.correctOrientation && (rotate != 0)) {
-                Matrix matrix = new Matrix();
-                matrix.setRotate(rotate);
+            fileStream = FileHelper.getInputStreamFromUriString(imageUrl, cordova);
+            unscaledBitmap = BitmapFactory.decodeStream(fileStream, null, options);
+        } finally {
+            if (fileStream != null) {
                 try {
-                    scaledBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0, scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix, true);
-                    this.orientationCorrected = true;
-                } catch (OutOfMemoryError oom) {
-                    this.orientationCorrected = false;
+                    fileStream.close();
+                } catch (IOException e) {
+                    LOG.d(LOG_TAG,"Exception while closing file input stream.");
                 }
             }
-            return scaledBitmap;
         }
-        finally {
-            // delete the temporary copy
-            if (localFile != null) {
-                localFile.delete();
-            }
+        if (unscaledBitmap == null) {
+            return null;
         }
 
+        return Bitmap.createScaledBitmap(unscaledBitmap, widthHeight[0], widthHeight[1], true);
     }
 
     /**
@@ -1086,11 +1043,11 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         }
         // Only the width was specified
         else if (newWidth > 0 && newHeight <= 0) {
-            newHeight = (int)((double)(newWidth / (double)origWidth) * origHeight);
+            newHeight = (newWidth * origHeight) / origWidth;
         }
         // only the height was specified
         else if (newWidth <= 0 && newHeight > 0) {
-            newWidth = (int)((double)(newHeight / (double)origHeight) * origWidth);
+            newWidth = (newHeight * origWidth) / origHeight;
         }
         // If the user specified both a positive width and height
         // (potentially different aspect ratio) then the width or height is
@@ -1134,7 +1091,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         } else {
             return srcHeight / dstHeight;
         }
-    }
+      }
 
     /**
      * Creates a cursor that can be used to determine how many images we have.

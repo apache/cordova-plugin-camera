@@ -21,7 +21,9 @@ description: Take pictures with the device camera.
 #         under the License.
 -->
 
-[![Build Status](https://travis-ci.org/apache/cordova-plugin-camera.svg?branch=master)](https://travis-ci.org/apache/cordova-plugin-camera)
+|Android|iOS| Windows 8.1 Store | Windows 8.1 Phone | Windows 10 Store | Travis CI |
+|:-:|:-:|:-:|:-:|:-:|:-:|
+|[![Build Status](http://cordova-ci.cloudapp.net:8080/buildStatus/icon?job=cordova-periodic-build/PLATFORM=android,PLUGIN=cordova-plugin-camera)](http://cordova-ci.cloudapp.net:8080/job/cordova-periodic-build/PLATFORM=android,PLUGIN=cordova-plugin-camera/)|[![Build Status](http://cordova-ci.cloudapp.net:8080/buildStatus/icon?job=cordova-periodic-build/PLATFORM=ios,PLUGIN=cordova-plugin-camera)](http://cordova-ci.cloudapp.net:8080/job/cordova-periodic-build/PLATFORM=ios,PLUGIN=cordova-plugin-camera/)|[![Build Status](http://cordova-ci.cloudapp.net:8080/buildStatus/icon?job=cordova-periodic-build/PLATFORM=windows-8.1-store,PLUGIN=cordova-plugin-camera)](http://cordova-ci.cloudapp.net:8080/job/cordova-periodic-build/PLATFORM=windows-8.1-store,PLUGIN=cordova-plugin-camera/)|[![Build Status](http://cordova-ci.cloudapp.net:8080/buildStatus/icon?job=cordova-periodic-build/PLATFORM=windows-8.1-phone,PLUGIN=cordova-plugin-camera)](http://cordova-ci.cloudapp.net:8080/job/cordova-periodic-build/PLATFORM=windows-8.1-phone,PLUGIN=cordova-plugin-camera/)|[![Build Status](http://cordova-ci.cloudapp.net:8080/buildStatus/icon?job=cordova-periodic-build/PLATFORM=windows-10-store,PLUGIN=cordova-plugin-camera)](http://cordova-ci.cloudapp.net:8080/job/cordova-periodic-build/PLATFORM=windows-10-store,PLUGIN=cordova-plugin-camera/)|[![Build Status](https://travis-ci.org/apache/cordova-plugin-camera.svg?branch=master)](https://travis-ci.org/apache/cordova-plugin-camera)
 
 # cordova-plugin-camera
 
@@ -73,7 +75,7 @@ Documentation consists of template and API docs produced from the plugin JS code
 
 ---
 
-# API Reference
+# API Reference <a name="reference"></a>
 
 
 * [camera](#module_camera)
@@ -114,26 +116,20 @@ Once the user snaps the photo, the camera application closes and the application
 
 If `Camera.sourceType` is `Camera.PictureSourceType.PHOTOLIBRARY` or
 `Camera.PictureSourceType.SAVEDPHOTOALBUM`, then a dialog displays
-that allows users to select an existing image.  The
-`camera.getPicture` function returns a [`CameraPopoverHandle`](#module_CameraPopoverHandle) object,
-which can be used to reposition the image selection dialog, for
-example, when the device orientation changes.
+that allows users to select an existing image.
 
 The return value is sent to the [`cameraSuccess`](#module_camera.onSuccess) callback function, in
 one of the following formats, depending on the specified
 `cameraOptions`:
 
 - A `String` containing the Base64-encoded photo image.
-
 - A `String` representing the image file location on local storage (default).
 
 You can do whatever you want with the encoded image or URI, for
 example:
 
 - Render the image in an `<img>` tag, as in the example below
-
 - Save the data locally (`LocalStorage`, [Lawnchair](http://brianleroux.github.com/lawnchair/), etc.)
-
 - Post the data to a remote server
 
 __NOTE__: Photo resolution on newer devices is quite good. Photos
@@ -256,6 +252,12 @@ Optional parameters to customize the camera settings.
 <a name="module_Camera.DestinationType"></a>
 
 ### Camera.DestinationType : <code>enum</code>
+Defines the output format of `Camera.getPicture` call.
+_Note:_ On iOS passing `DestinationType.NATIVE_URI` along with
+`PictureSourceType.PHOTOLIBRARY` or `PictureSourceType.SAVEDPHOTOALBUM` will
+disable any image modifications (resize, quality change, cropping, etc.) due
+to implementation specific.
+
 **Kind**: static enum property of <code>[Camera](#module_Camera)</code>  
 **Properties**
 
@@ -291,14 +293,19 @@ Optional parameters to customize the camera settings.
 <a name="module_Camera.PictureSourceType"></a>
 
 ### Camera.PictureSourceType : <code>enum</code>
+Defines the output format of `Camera.getPicture` call.
+_Note:_ On iOS passing `PictureSourceType.PHOTOLIBRARY` or `PictureSourceType.SAVEDPHOTOALBUM`
+along with `DestinationType.NATIVE_URI` will disable any image modifications (resize, quality
+change, cropping, etc.) due to implementation specific.
+
 **Kind**: static enum property of <code>[Camera](#module_Camera)</code>  
 **Properties**
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| PHOTOLIBRARY | <code>number</code> | <code>0</code> | Choose image from picture library (same as SAVEDPHOTOALBUM for Android) |
+| PHOTOLIBRARY | <code>number</code> | <code>0</code> | Choose image from the device's photo library (same as SAVEDPHOTOALBUM for Android) |
 | CAMERA | <code>number</code> | <code>1</code> | Take picture from camera |
-| SAVEDPHOTOALBUM | <code>number</code> | <code>2</code> | Choose image from picture library (same as PHOTOLIBRARY for Android) |
+| SAVEDPHOTOALBUM | <code>number</code> | <code>2</code> | Choose image only from the device's Camera Roll album (same as PHOTOLIBRARY for Android) |
 
 <a name="module_Camera.PopoverArrowDirection"></a>
 
@@ -362,7 +369,7 @@ __Supported Platforms__
 
 **Example**  
 ```js
-var cameraPopoverHandle = navigator.camera.getPicture(onSuccess, onFail,
+navigator.camera.getPicture(onSuccess, onFail,
 {
     destinationType: Camera.DestinationType.FILE_URI,
     sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
@@ -371,6 +378,7 @@ var cameraPopoverHandle = navigator.camera.getPicture(onSuccess, onFail,
 
 // Reposition the popover if the orientation changes.
 window.onorientationchange = function() {
+    var cameraPopoverHandle = new CameraPopoverHandle();
     var cameraPopoverOptions = new CameraPopoverOptions(0, 0, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY);
     cameraPopoverHandle.setPosition(cameraPopoverOptions);
 }
@@ -464,6 +472,16 @@ displays:
 Invoking the native camera application while the device is connected
 via Zune does not work, and triggers an error callback.
 
+#### Windows quirks
+
+On Windows Phone 8.1 using `SAVEDPHOTOALBUM` or `PHOTOLIBRARY` as a source type causes application to suspend until file picker returns the selected image and
+then restore with start page as defined in app's `config.xml`. In case when `camera.getPicture` was called from different page, this will lead to reloading
+start page from scratch and success and error callbacks will never be called.
+
+To avoid this we suggest using SPA pattern or call `camera.getPicture` only from your app's start page.
+
+More information about Windows Phone 8.1 picker APIs is here: [How to continue your Windows Phone app after calling a file picker](https://msdn.microsoft.com/en-us/library/windows/apps/dn720490.aspx)
+
 #### Tizen Quirks
 
 Tizen only supports a `destinationType` of
@@ -528,6 +546,8 @@ Tizen only supports a `destinationType` of
 - When using `destinationType.FILE_URI`, photos are saved in the application's temporary directory. The contents of the application's temporary directory is deleted when the application ends.
 
 - When using `destinationType.NATIVE_URI` and `sourceType.CAMERA`, photos are saved in the saved photo album regardless on the value of `saveToPhotoAlbum` parameter.
+
+- When using `destinationType.NATIVE_URI` and `sourceType.PHOTOLIBRARY` or `sourceType.SAVEDPHOTOALBUM`, all editing options are ignored and link is returned to original picture.
 
 #### Tizen Quirks
 
@@ -618,7 +638,7 @@ function displayImage(imgUri) {
 }
 ```
 
-To display the image on some platforms, you might need to include the main part of the URI in the Content-Security-Policy <meta> element in index.html. For example, on Windows 10, you can include `ms-appdata:` in your <meta> element. Here is an example.
+To display the image on some platforms, you might need to include the main part of the URI in the Content-Security-Policy `<meta>` element in index.html. For example, on Windows 10, you can include `ms-appdata:` in your `<meta>` element. Here is an example.
 
 ```html
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: ms-appdata: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *">
