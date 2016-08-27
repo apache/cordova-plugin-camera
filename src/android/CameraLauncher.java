@@ -667,9 +667,11 @@ private void refreshGallery(Uri contentUri)
         String fileLocation = FileHelper.getRealPath(uri, this.cordova);
         LOG.d(LOG_TAG, "File locaton is: " + fileLocation);
 
-        // If you ask for video or all media type you will automatically get back a file URI
+        // If you ask for video type, or you ask for all media type and the selected type is not an image
+        // you will automatically get back a file location
         // and there will be no attempt to resize any returned data
-        if (this.mediaType != PICTURE) {
+        String type = cordova.getActivity().getContentResolver().getType(uri);
+        if (this.mediaType != PICTURE &&  !type.contains("image")) {
             this.callbackContext.success(fileLocation);
         }
         else {
@@ -704,7 +706,7 @@ private void refreshGallery(Uri contentUri)
                 }
 
                 if (this.correctOrientation) {
-                    rotate = getImageOrientation(uri);
+                    rotate = getImageOrientation(fileLocation);
                     if (rotate != 0) {
                         Matrix matrix = new Matrix();
                         matrix.setRotate(rotate);
@@ -840,20 +842,16 @@ private void refreshGallery(Uri contentUri)
         }
     }
 
-    private int getImageOrientation(Uri uri) {
+    private int getImageOrientation(String fileLocation) {
         int rotate = 0;
-        String[] cols = { MediaStore.Images.Media.ORIENTATION };
+        ExifHelper exif = new ExifHelper();
         try {
-            Cursor cursor = cordova.getActivity().getContentResolver().query(uri,
-                    cols, null, null, null);
-            if (cursor != null) {
-                cursor.moveToPosition(0);
-                rotate = cursor.getInt(0);
-                cursor.close();
-            }
+            exif.createInFile(fileLocation);
         } catch (Exception e) {
             // You can get an IllegalArgumentException if ContentProvider doesn't support querying for orientation.
         }
+        exif.readExifData();
+        rotate = exif.getOrientation();
         return rotate;
     }
 
