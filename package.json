@@ -46,6 +46,13 @@
   },
   "author": "Apache Software Foundation",
   "license": "Apache-2.0",
+  "engines": {
+    "cordovaDependencies": {
+      "3.0.0": {
+        "cordova": ">100"
+      }
+    }
+  },
   "devDependencies": {
     "dmd-plugin-cordova-plugin": "^0.1.0",
     "husky": "^0.10.1",
