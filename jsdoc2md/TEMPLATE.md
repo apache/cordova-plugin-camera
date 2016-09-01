@@ -15,6 +15,19 @@ the system's image library.
 
 {{>cdv-header device-ready-warning-obj='navigator.camera' npmName='cordova-plugin-camera' cprName='org.apache.cordova.camera' pluginName='Plugin Camera' repoUrl='https://github.com/apache/cordova-plugin-camera' }}
 
+
+### iOS Quirks
+
+Since iOS 10 it's mandatory to add a `NSCameraUsageDescription` entry in the info.plist.
+
+`NSCameraUsageDescription` describes the reason that the app accesses the user’s camera. When the system prompts the user to allow access, this string is displayed as part of the dialog box. To add this entry you can pass the variable `CAMERA_USAGE_DESCRIPTION` on plugin install.
+-
+Example:
+
+    cordova plugin add cordova-plugin-camera --variable CAMERA_USAGE_DESCRIPTION="your usage message"
+
+If you don't pass the variable, the plugin will add an empty string as value.
+
 ---
 
 # API Reference <a name="reference"></a>
