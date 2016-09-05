@@ -76,9 +76,18 @@ Documentation consists of template and API docs produced from the plugin JS code
 
 ### iOS Quirks
 
-Since iOS 10 it's mandatory to add a `NSCameraUsageDescription` entry in the info.plist.
+Since iOS 10 it's mandatory to add a `NSCameraUsageDescription` and `NSPhotoLibraryUsageDescriptionentry` in the info.plist.
 
-`NSCameraUsageDescription` describes the reason that the app accesses the user’s camera. When the system prompts the user to allow access, this string is displayed as part of the dialog box. To add this entry you can pass the variable `CAMERA_USAGE_DESCRIPTION` on plugin install.
+* `NSCameraUsageDescription` describes the reason that the app accesses the user’s camera.
+* `NSPhotoLibraryUsageDescriptionentry` describes the reason the app accesses the user's photo library. 
+
+When the system prompts the user to allow access, this string is displayed as part of the dialog box. 
+
+To add this entry you can pass the following variables on plugin install.
+
+* `CAMERA_USAGE_DESCRIPTION` for `NSCameraUsageDescription`
+* `PHOTOLIBRARY_USAGE_DESCRIPTION` for `NSPhotoLibraryUsageDescriptionentry`
+
 -
 Example:
 
