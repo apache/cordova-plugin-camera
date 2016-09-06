@@ -15,6 +15,19 @@ the system's image library.
 
 {{>cdv-header device-ready-warning-obj='navigator.camera' npmName='cordova-plugin-camera' cprName='org.apache.cordova.camera' pluginName='Plugin Camera' repoUrl='https://github.com/apache/cordova-plugin-camera' }}
 
+
+### iOS Quirks
+
+Since iOS 10 it's mandatory to add a `NSCameraUsageDescription` entry in the info.plist.
+
+`NSCameraUsageDescription` describes the reason that the app accesses the user’s camera. When the system prompts the user to allow access, this string is displayed as part of the dialog box. To add this entry you can pass the variable `CAMERA_USAGE_DESCRIPTION` on plugin install.
+-
+Example:
+
+    cordova plugin add cordova-plugin-camera --variable CAMERA_USAGE_DESCRIPTION="your usage message"
+
+If you don't pass the variable, the plugin will add an empty string as value.
+
 ---
 
 # API Reference <a name="reference"></a>
@@ -121,6 +134,16 @@ displays:
 
 Invoking the native camera application while the device is connected
 via Zune does not work, and triggers an error callback.
+
+#### Windows quirks
+
+On Windows Phone 8.1 using `SAVEDPHOTOALBUM` or `PHOTOLIBRARY` as a source type causes application to suspend until file picker returns the selected image and
+then restore with start page as defined in app's `config.xml`. In case when `camera.getPicture` was called from different page, this will lead to reloading
+start page from scratch and success and error callbacks will never be called.
+
+To avoid this we suggest using SPA pattern or call `camera.getPicture` only from your app's start page.
+
+More information about Windows Phone 8.1 picker APIs is here: [How to continue your Windows Phone app after calling a file picker](https://msdn.microsoft.com/en-us/library/windows/apps/dn720490.aspx)
 
 #### Tizen Quirks
 

@@ -299,7 +299,7 @@ describe('Camera tests Android.', function () {
                 appiumSessionStarted = true;
             }, fail)
             .done(done);
-    }, 5 * MINUTE);
+    }, 10 * MINUTE);
 
     it('camera.ui.util determine screen dimensions', function (done) {
         checkSession(done);
@@ -398,7 +398,20 @@ describe('Camera tests Android.', function () {
                             .then(function () {
                                 // success means we're still in native app
                                 return driver
-                                    .deviceKeyEvent(BACK_BUTTON);
+                                    .deviceKeyEvent(BACK_BUTTON)
+                                    // give native app some time to close
+                                    .sleep(2000)
+                                    // try again! because every ~30th build
+                                    // on Sauce Labs this backbutton doesn't work
+                                    .elementById('action_bar_title')
+                                    .then(function () {
+                                        // success means we're still in native app
+                                        return driver
+                                            .deviceKeyEvent(BACK_BUTTON);
+                                        }, function () {
+                                            // error means we're already in webview
+                                            return driver;
+                                        });
                             }, function () {
                                 // error means we're already in webview
                                 return driver;
