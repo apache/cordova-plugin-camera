@@ -554,7 +554,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 if (this.encodingType == JPEG) {
                     String exifPath;
                     exifPath = uri.getPath();
-                    //opbokel - Roteted files already have the correct orientation.
+                    //opbokel - Rotated files already have the correct orientation.
                     if (this.correctOrientation && this.orientationCorrected) {
                         exif.resetOrientation();
                     }
