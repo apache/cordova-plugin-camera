@@ -5,9 +5,9 @@
     "author": "Apache Software Foundation",
     "license": "Apache Version 2.0",
     "dependencies": {
-        "cordova-ios": "^3.7.0"
+        "cordova-ios": "*"
     },
     "scripts": {
         "test": "xcodebuild -scheme CordovaLib && xcodebuild test -scheme CDVCameraLibTests -destination 'platform=iOS Simulator,name=iPhone 5'"
-    }    
+    }
 }

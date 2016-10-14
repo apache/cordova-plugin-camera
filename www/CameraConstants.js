@@ -24,10 +24,17 @@
  */
 module.exports = {
   /**
+   * @description
+   * Defines the output format of `Camera.getPicture` call.
+   * _Note:_ On iOS passing `DestinationType.NATIVE_URI` along with
+   * `PictureSourceType.PHOTOLIBRARY` or `PictureSourceType.SAVEDPHOTOALBUM` will
+   * disable any image modifications (resize, quality change, cropping, etc.) due
+   * to implementation specific.
+   *
    * @enum {number}
    */
   DestinationType:{
-    /** Return base64 encoded string */
+    /** Return base64 encoded string. DATA_URL can be very memory intensive and cause app crashes or out of memory errors. Use FILE_URI or NATIVE_URI if possible */
     DATA_URL: 0,
     /** Return file uri (content://media/external/images/media/2 for Android) */
     FILE_URI: 1,
@@ -55,14 +62,20 @@ module.exports = {
     ALLMEDIA : 2
   },
   /**
+   * @description
+   * Defines the output format of `Camera.getPicture` call.
+   * _Note:_ On iOS passing `PictureSourceType.PHOTOLIBRARY` or `PictureSourceType.SAVEDPHOTOALBUM`
+   * along with `DestinationType.NATIVE_URI` will disable any image modifications (resize, quality
+   * change, cropping, etc.) due to implementation specific.
+   *
    * @enum {number}
    */
   PictureSourceType:{
-    /** Choose image from picture library (same as SAVEDPHOTOALBUM for Android) */
+    /** Choose image from the device's photo library (same as SAVEDPHOTOALBUM for Android) */
     PHOTOLIBRARY : 0,
     /** Take picture from camera */
     CAMERA : 1,
-    /** Choose image from picture library (same as PHOTOLIBRARY for Android) */
+    /** Choose image only from the device's Camera Roll album (same as PHOTOLIBRARY for Android) */
     SAVEDPHOTOALBUM : 2
   },
   /**
