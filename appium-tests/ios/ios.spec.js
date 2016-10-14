@@ -1,4 +1,5 @@
 /*jshint node: true, jasmine: true */
+
 /*
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -27,74 +28,74 @@
 
 'use strict';
 
-var wdHelper = require('../helpers/wdHelper');
-var wd = wdHelper.getWD();
+var wdHelper = global.WD_HELPER;
+var screenshotHelper = global.SCREENSHOT_HELPER;
 var isDevice = global.DEVICE;
 var cameraConstants = require('../../www/CameraConstants');
 var cameraHelper = require('../helpers/cameraHelper');
-var screenshotHelper = require('../helpers/screenshotHelper');
 
 var MINUTE = 60 * 1000;
 var DEFAULT_WEBVIEW_CONTEXT = 'WEBVIEW_1';
+var PROMISE_PREFIX = 'appium_camera_promise_';
 
 describe('Camera tests iOS.', function () {
-
     var driver;
     var webviewContext = DEFAULT_WEBVIEW_CONTEXT;
-    var startingMessage = 'Ready for action!';
+    // promise count to use in promise ID
+    var promiseCount = 0;
+    // going to set this to false if session is created successfully
+    var failedToStart = true;
 
-    function win() {
-        expect(true).toBe(true);
+    function getNextPromiseId() {
+        promiseCount += 1;
+        return getCurrentPromiseId();
     }
 
-    function fail(error) {
-        screenshotHelper.saveScreenshot(driver);
-        if (error && error.message) {
-            console.log('An error occured: ' + error.message);
-            expect(true).toFailWithMessage(error.message);
-            throw error.message;
-        }
-        if (error) {
-            console.log('Failed expectation: ' + error);
-            expect(true).toFailWithMessage(error);
-            throw error;
-        }
-        // no message provided :(
-        expect(true).toBe(false);
-        throw 'An error without description occured';
+    function getCurrentPromiseId() {
+        return PROMISE_PREFIX + promiseCount;
+    }
+
+    function saveScreenshotAndFail(error) {
+        fail(error);
+        return screenshotHelper
+            .saveScreenshot(driver)
+            .quit()
+            .then(function () {
+                return getDriver();
+            });
     }
 
     // generates test specs by combining all the specified options
     // you can add more options to test more scenarios
-    function generateSpecs() {
-        var sourceTypes = [
-                cameraConstants.PictureSourceType.CAMERA,
-                cameraConstants.PictureSourceType.PHOTOLIBRARY
-            ],
-            destinationTypes = cameraConstants.DestinationType,
-            encodingTypes = [
-                cameraConstants.EncodingType.JPEG,
-                cameraConstants.EncodingType.PNG
-            ],
-            allowEditOptions = [
-                true,
-                false
-            ];
+    function generateOptions() {
+        var sourceTypes = cameraConstants.PictureSourceType;
+        var destinationTypes = cameraConstants.DestinationType;
+        var encodingTypes = cameraConstants.EncodingType;
+        var allowEditOptions = [ true, false ];
+        var correctOrientationOptions = [ true, false ];
 
-        return cameraHelper.generateSpecs(sourceTypes, destinationTypes, encodingTypes, allowEditOptions);
+        return cameraHelper.generateSpecs(sourceTypes, destinationTypes, encodingTypes, allowEditOptions, correctOrientationOptions);
+    }
+
+    function usePicture() {
+        return driver
+            .elementByXPath('//*[@label="Use"]')
+            .click()
+            .fail(function () {
+                // For some reason "Choose" element is not clickable by standard Appium methods
+                return wdHelper.tapElementByXPath('//UIAButton[@label="Choose"]', driver);
+            });
     }
 
     function getPicture(options, cancelCamera, skipUiInteractions) {
+        var promiseId = getNextPromiseId();
         if (!options) {
             options = {};
         }
-        var command = "navigator.camera.getPicture(function (result) { document.getElementById('info').innerHTML = 'Success: ' + result.slice(0, 100); }, " +
-                      "function (err) { document.getElementById('info').innerHTML = 'ERROR: ' + err; }," + JSON.stringify(options) + ");";
+
         return driver
-            .sleep(2000)
             .context(webviewContext)
-            .execute(command)
-            .sleep(5000)
+            .execute(cameraHelper.getPicture, [options, promiseId])
             .context('NATIVE_APP')
             .then(function () {
                 if (skipUiInteractions) {
@@ -102,187 +103,315 @@ describe('Camera tests iOS.', function () {
                 }
                 if (options.hasOwnProperty('sourceType') && options.sourceType === cameraConstants.PictureSourceType.PHOTOLIBRARY) {
                     return driver
-                        .elementByName('Camera Roll')
+                        .waitForElementByXPath('//*[@label="Camera Roll"]', MINUTE / 2)
                         .click()
                         .elementByXPath('//UIACollectionCell')
                         .click()
                         .then(function () {
-                            if (options.hasOwnProperty('allowEdit') && options.allowEdit === true) {
-                                return driver
-                                    .elementByName('Use')
-                                    .click();
+                            if (!options.allowEdit) {
+                                return driver;
                             }
-                            return driver;
+                            return usePicture();
                         });
                 }
                 if (options.hasOwnProperty('sourceType') && options.sourceType === cameraConstants.PictureSourceType.SAVEDPHOTOALBUM) {
                     return driver
-                        .elementByXPath('//UIACollectionCell')
+                        .waitForElementByXPath('//UIACollectionCell', MINUTE / 2)
                         .click()
                         .then(function () {
-                            if (options.hasOwnProperty('allowEdit') && options.allowEdit === true) {
-                                return driver
-                                    .elementByName('Use')
-                                    .click();
+                            if (!options.allowEdit) {
+                                return driver;
                             }
-                            return driver;
+                            return usePicture();
                         });
                 }
                 if (cancelCamera) {
                     return driver
-                        .elementByName('Cancel')
+                        .waitForElementByXPath('//*[@label="Cancel"]', MINUTE / 2)
+                        .elementByXPath('//*[@label="Cancel"]')
+                        .elementByXPath('//*[@label="Cancel"]')
                         .click();
                 }
                 return driver
-                    .elementByName('PhotoCapture')
+                    .waitForElementByXPath('//*[@label="Take Picture"]', MINUTE / 2)
                     .click()
-                    .elementByName('Use Photo')
+                    .waitForElementByXPath('//*[@label="Use Photo"]', MINUTE / 2)
                     .click();
             })
-            .sleep(3000);
-    }
-
-    function enterTest() {
-        return driver
-            .contexts(function (err, contexts) {
-                if (err) {
-                    fail(err);
-                } else {
-                    // if WEBVIEW context is available, use it
-                    // if not, use NATIVE_APP
-                    webviewContext = contexts[contexts.length - 1];
-                }
-            })
-            .then(function () {
-                return driver
-                    .context(webviewContext);
-            })
-            .fail(fail)
-            .elementById('info')
-            .fail(function () {
-                // unknown starting page: no 'info' div
-                // adding it manually
-                return driver
-                    .execute('var info = document.createElement("div"); ' +
-                             'info.id = "info"' +
-                             'document.body.appendChild(info);')
-                    .fail(fail);
-            })
-            .execute('document.getElementById("info").innerHTML = "' + startingMessage + '";')
             .fail(fail);
     }
 
-    function checkPicture(shouldLoad) {
+    // checks if the picture was successfully taken
+    // if shouldLoad is falsy, ensures that the error callback was called
+    function checkPicture(shouldLoad, options) {
+        if (!options) {
+            options = {};
+        }
         return driver
-            .contexts(function (err, contexts) {
-                // if WEBVIEW context is available, use it
-                // if not, use NATIVE_APP
-                webviewContext = contexts[contexts.length - 1];
-            })
             .context(webviewContext)
-            .elementById('info')
-            .getAttribute('innerHTML')
-            .then(function (html) {
-                if (html.indexOf(startingMessage) >= 0) {
-                    expect(true).toFailWithMessage('No callback was fired');
-                } else if (shouldLoad) {
-                    expect(html.length).toBeGreaterThan(0);
-                    if (html.indexOf('ERROR') >= 0) {
-                        expect(true).toFailWithMessage(html);
+            .setAsyncScriptTimeout(MINUTE / 2)
+            .executeAsync(cameraHelper.checkPicture, [getCurrentPromiseId(), options])
+            .then(function (result) {
+                if (shouldLoad) {
+                    if (result !== 'OK') {
+                        fail(result);
                     }
-                } else {
-                    if (html.indexOf('ERROR') === -1) {
-                        expect(true).toFailWithMessage('Unexpected success callback with result: ' + html);
-                    }
-                    expect(html.indexOf('ERROR')).toBe(0);
+                } else if (result.indexOf('ERROR') === -1) {
+                    throw 'Unexpected success callback with result: ' + result;
                 }
-            })
-            .context('NATIVE_APP');
+            });
     }
 
-    function runCombinedSpec(spec) {
-        return enterTest()
+    // takes a picture with the specified options
+    // and then verifies it
+    function runSpec(options) {
+        return driver
             .then(function () {
-                return getPicture(spec.options);
+                return getPicture(options);
             })
             .then(function () {
-                return checkPicture(true);
+                return checkPicture(true, options);
             })
-            .then(win, fail);
+            .fail(saveScreenshotAndFail);
     }
 
-    beforeEach(function () {
-        jasmine.addMatchers({
-            toFailWithMessage : function () {
-                return {
-                    compare: function (actual, msg) {
-                        console.log('Failing with message: ' + msg);
-                        var result = {
-                            pass: false,
-                            message: msg
-                        };
-                        return result;
-                    }
-                };
-            }
-        });
-    });
+    function getDriver() {
+        driver = wdHelper.getDriver('iOS');
+        return wdHelper.getWebviewContext(driver)
+            .then(function(context) {
+                webviewContext = context;
+                return driver.context(webviewContext);
+            })
+            .then(function () {
+                return wdHelper.waitForDeviceReady(driver);
+            })
+            .then(function () {
+                return wdHelper.injectLibraries(driver);
+            });
+    }
 
-    it('camera.ui.util Configuring driver and starting a session', function (done) {
-        driver = wdHelper.getDriver('iOS', done);
-    }, 3 * MINUTE);
+    function checkSession(done) {
+        if (failedToStart) {
+            fail('Failed to start a session');
+            done();
+        }
+    }
+
+    it('camera.ui.util configure driver and start a session', function (done) {
+        getDriver()
+            .then(function () {
+                failedToStart = false;
+            }, fail)
+            .done(done);
+    }, 10 * MINUTE);
 
     describe('Specs.', function () {
         // getPicture() with mediaType: VIDEO, sourceType: PHOTOLIBRARY
         it('camera.ui.spec.1 Selecting only videos', function (done) {
+            checkSession(done);
             var options = { sourceType: cameraConstants.PictureSourceType.PHOTOLIBRARY,
                             mediaType: cameraConstants.MediaType.VIDEO };
-            enterTest()
-                .then(function () { return getPicture(options, false, true); }) // skip ui unteractions
-                .sleep(5000)
-                .elementByName('Videos')
-                .then(win, fail)
-                .elementByName('Cancel')
+            driver
+                // skip ui unteractions
+                .then(function () { return getPicture(options, false, true); })
+                .waitForElementByXPath('//*[contains(@label,"Videos")]', MINUTE / 2)
+                .elementByXPath('//*[@label="Cancel"]')
                 .click()
-                .finally(done);
+                .fail(saveScreenshotAndFail)
+                .done(done);
         }, 3 * MINUTE);
 
         // getPicture(), then dismiss
-        // wait for the error callback to bee called
+        // wait for the error callback to be called
         it('camera.ui.spec.2 Dismissing the camera', function (done) {
-            // camera is not available on iOS simulator
+            checkSession(done);
             if (!isDevice) {
-                pending();
+                pending('Camera is not available on iOS simulator');
             }
-            var options = { sourceType: cameraConstants.PictureSourceType.CAMERA };
-            enterTest()
+            var options = { sourceType: cameraConstants.PictureSourceType.CAMERA,
+                            saveToPhotoAlbum: false };
+            driver
                 .then(function () {
                     return getPicture(options, true);
                 })
                 .then(function () {
                     return checkPicture(false);
                 })
-                .elementByXPath('//UIAStaticText[contains(@label,"no image selected")]')
-                .then(function () {
-                    return checkPicture(false);
-                }, fail)
-                .finally(done);
+                .fail(saveScreenshotAndFail)
+                .done(done);
+        }, 3 * MINUTE);
+
+        it('camera.ui.spec.3 Verifying target image size, sourceType=CAMERA', function (done) {
+            checkSession(done);
+            if (!isDevice) {
+                pending('Camera is not available on iOS simulator');
+            }
+            var options = {
+                quality: 50,
+                allowEdit: false,
+                sourceType: cameraConstants.PictureSourceType.CAMERA,
+                saveToPhotoAlbum: false,
+                targetWidth: 210,
+                targetHeight: 210
+            };
+
+            runSpec(options).done(done);
+        }, 3 * MINUTE);
+
+        it('camera.ui.spec.4 Verifying target image size, sourceType=SAVEDPHOTOALBUM', function (done) {
+            checkSession(done);
+            var options = {
+                quality: 50,
+                allowEdit: false,
+                sourceType: cameraConstants.PictureSourceType.SAVEDPHOTOALBUM,
+                saveToPhotoAlbum: false,
+                targetWidth: 210,
+                targetHeight: 210
+            };
+
+            runSpec(options).done(done);
+        }, 3 * MINUTE);
+
+        it('camera.ui.spec.5 Verifying target image size, sourceType=PHOTOLIBRARY', function (done) {
+            checkSession(done);
+            var options = {
+                quality: 50,
+                allowEdit: false,
+                sourceType: cameraConstants.PictureSourceType.PHOTOLIBRARY,
+                saveToPhotoAlbum: false,
+                targetWidth: 210,
+                targetHeight: 210
+            };
+
+            runSpec(options).done(done);
+        }, 3 * MINUTE);
+
+        it('camera.ui.spec.6 Verifying target image size, sourceType=CAMERA, destinationType=FILE_URL', function (done) {
+            // remove this line if you don't mind the tests leaving a photo saved on device
+            pending('Cannot prevent iOS from saving the picture to photo library');
+
+            checkSession(done);
+            if (!isDevice) {
+                pending('Camera is not available on iOS simulator');
+            }
+            var options = {
+                quality: 50,
+                allowEdit: false,
+                sourceType: cameraConstants.PictureSourceType.CAMERA,
+                destinationType: cameraConstants.DestinationType.FILE_URL,
+                saveToPhotoAlbum: false,
+                targetWidth: 210,
+                targetHeight: 210
+            };
+
+            runSpec(options).done(done);
+        }, 3 * MINUTE);
+
+        it('camera.ui.spec.7 Verifying target image size, sourceType=SAVEDPHOTOALBUM, destinationType=FILE_URL', function (done) {
+            checkSession(done);
+            var options = {
+                quality: 50,
+                allowEdit: false,
+                sourceType: cameraConstants.PictureSourceType.SAVEDPHOTOALBUM,
+                destinationType: cameraConstants.DestinationType.FILE_URL,
+                saveToPhotoAlbum: false,
+                targetWidth: 210,
+                targetHeight: 210
+            };
+
+            runSpec(options).done(done);
+        }, 3 * MINUTE);
+
+        it('camera.ui.spec.8 Verifying target image size, sourceType=PHOTOLIBRARY, destinationType=FILE_URL', function (done) {
+            checkSession(done);
+            var options = {
+                quality: 50,
+                allowEdit: false,
+                sourceType: cameraConstants.PictureSourceType.PHOTOLIBRARY,
+                destinationType: cameraConstants.DestinationType.FILE_URL,
+                saveToPhotoAlbum: false,
+                targetWidth: 210,
+                targetHeight: 210
+            };
+
+            runSpec(options).done(done);
+        }, 3 * MINUTE);
+
+        it('camera.ui.spec.9 Verifying target image size, sourceType=CAMERA, destinationType=FILE_URL, quality=100', function (done) {
+            // remove this line if you don't mind the tests leaving a photo saved on device
+            pending('Cannot prevent iOS from saving the picture to photo library');
+
+            checkSession(done);
+            if (!isDevice) {
+                pending('Camera is not available on iOS simulator');
+            }
+            var options = {
+                quality: 100,
+                allowEdit: false,
+                sourceType: cameraConstants.PictureSourceType.CAMERA,
+                destinationType: cameraConstants.DestinationType.FILE_URL,
+                saveToPhotoAlbum: false,
+                targetWidth: 305,
+                targetHeight: 305
+            };
+            runSpec(options).done(done);
+        }, 3 * MINUTE);
+
+        it('camera.ui.spec.10 Verifying target image size, sourceType=SAVEDPHOTOALBUM, destinationType=FILE_URL, quality=100', function (done) {
+            checkSession(done);
+            var options = {
+                quality: 100,
+                allowEdit: false,
+                sourceType: cameraConstants.PictureSourceType.SAVEDPHOTOALBUM,
+                destinationType: cameraConstants.DestinationType.FILE_URL,
+                saveToPhotoAlbum: false,
+                targetWidth: 305,
+                targetHeight: 305
+            };
+
+            runSpec(options).done(done);
+        }, 3 * MINUTE);
+
+        it('camera.ui.spec.11 Verifying target image size, sourceType=PHOTOLIBRARY, destinationType=FILE_URL, quality=100', function (done) {
+            checkSession(done);
+            var options = {
+                quality: 100,
+                allowEdit: false,
+                sourceType: cameraConstants.PictureSourceType.PHOTOLIBRARY,
+                destinationType: cameraConstants.DestinationType.FILE_URL,
+                saveToPhotoAlbum: false,
+                targetWidth: 305,
+                targetHeight: 305
+            };
+
+            runSpec(options).done(done);
         }, 3 * MINUTE);
 
         // combine various options for getPicture()
-        generateSpecs().forEach(function (spec) {
-            it('camera.ui.spec.3.' + spec.id + ' Combining options', function (done) {
-                // camera is not available on iOS simulator
-                if (!isDevice) {
-                    pending();
+        generateOptions().forEach(function (spec) {
+            it('camera.ui.spec.12.' + spec.id + ' Combining options. ' + spec.description, function (done) {
+                checkSession(done);
+                if (!isDevice && spec.options.sourceType === cameraConstants.PictureSourceType.CAMERA) {
+                    pending('Camera is not available on iOS simulator');
                 }
-                runCombinedSpec(spec).then(done);
+
+                // remove this check if you don't mind the tests leaving a photo saved on device
+                if (spec.options.sourceType === cameraConstants.PictureSourceType.CAMERA &&
+                    spec.options.destinationType === cameraConstants.DestinationType.NATIVE_URI) {
+                    pending('Skipping: cannot prevent iOS from saving the picture to photo library and cannot delete it. ' +
+                        'For more info, see iOS quirks here: https://github.com/apache/cordova-plugin-camera#ios-quirks-1');
+                }
+
+                runSpec(spec.options).done(done);
             }, 3 * MINUTE);
         });
 
     });
 
-    it('camera.ui.util.4 Destroy the session', function (done) {
-        driver.quit(done);
-    }, MINUTE);
+    it('camera.ui.util Destroy the session', function (done) {
+        checkSession(done);
+        driver
+            .quit()
+            .done(done);
+    }, 5 * MINUTE);
 });

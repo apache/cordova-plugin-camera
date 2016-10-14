@@ -22,13 +22,15 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:rim="http://www.blackberry.com/ns/widgets"
     id="cordova-plugin-camera"
-    version="2.1.2-dev">
+    version="2.3.1-dev">
     <name>Camera</name>
     <description>Cordova Camera Plugin</description>
     <license>Apache 2.0</license>
     <keywords>cordova,camera</keywords>
     <repo>https://git-wip-us.apache.org/repos/asf/cordova-plugin-camera.git</repo>
     <issue>https://issues.apache.org/jira/browse/CB/component/12320645</issue>
+
+    <dependency id="cordova-plugin-compat" version="^1.0.0" />
 
     <js-module src="www/CameraConstants.js" name="Camera">
         <clobbers target="Camera" />
@@ -71,7 +73,6 @@
         <source-file src="src/android/CameraLauncher.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/FileHelper.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/ExifHelper.java" target-dir="src/org/apache/cordova/camera" />
-        <source-file src="src/android/PermissionHelper.java" target-dir="src/org/apache/cordova/camera" />
 
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />
@@ -148,6 +149,16 @@
          <framework src="MobileCoreServices.framework" />
          <framework src="CoreGraphics.framework" />
          <framework src="AVFoundation.framework" />
+
+         <preference name="CAMERA_USAGE_DESCRIPTION" default=" " />
+         <config-file target="*-Info.plist" parent="NSCameraUsageDescription">
+             <string>$CAMERA_USAGE_DESCRIPTION</string>
+         </config-file>
+
+         <preference name="PHOTOLIBRARY_USAGE_DESCRIPTION" default=" " />
+         <config-file target="*-Info.plist" parent="NSPhotoLibraryUsageDescription">
+             <string>$PHOTOLIBRARY_USAGE_DESCRIPTION</string>
+         </config-file>
 
          <config-file target="*-Info.plist" parent="NSLocationWhenInUseUsageDescription">
              <string></string>

@@ -89,26 +89,20 @@ for (var key in Camera) {
  *
  * If `Camera.sourceType` is `Camera.PictureSourceType.PHOTOLIBRARY` or
  * `Camera.PictureSourceType.SAVEDPHOTOALBUM`, then a dialog displays
- * that allows users to select an existing image.  The
- * `camera.getPicture` function returns a [`CameraPopoverHandle`]{@link module:CameraPopoverHandle} object,
- * which can be used to reposition the image selection dialog, for
- * example, when the device orientation changes.
+ * that allows users to select an existing image.
  *
  * The return value is sent to the [`cameraSuccess`]{@link module:camera.onSuccess} callback function, in
  * one of the following formats, depending on the specified
  * `cameraOptions`:
  *
  * - A `String` containing the Base64-encoded photo image.
- *
  * - A `String` representing the image file location on local storage (default).
  *
  * You can do whatever you want with the encoded image or URI, for
  * example:
  *
  * - Render the image in an `<img>` tag, as in the example below
- *
  * - Save the data locally (`LocalStorage`, [Lawnchair](http://brianleroux.github.com/lawnchair/), etc.)
- *
  * - Post the data to a remote server
  *
  * __NOTE__: Photo resolution on newer devices is quite good. Photos
