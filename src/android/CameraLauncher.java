@@ -294,7 +294,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         }
     }
 
-    private void grantUriPermissionForCorpPackages(Uri croppedUri)
+    private void grantUriPermissionForCropPackages(Uri croppedUri)
     {
         Intent cropIntent = new Intent("com.android.camera.action.CROP");
         cropIntent.setDataAndType(croppedUri, "image/*");
@@ -403,7 +403,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, croppedUri);
                 grantUriPermissionForIntent(intent, croppedUri);
                 // This intent related to crop will be launched directly after the pick image intent, so grant permission here too
-                grantUriPermissionForCorpPackages(croppedUri);
+                grantUriPermissionForCropPackages(croppedUri);
             } else {
                 intent.setAction(Intent.ACTION_GET_CONTENT);
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
