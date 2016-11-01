@@ -135,7 +135,7 @@ public class FileHelper {
             return getDataColumn(context, uri, null, null);
         }
         // File
-        else if ("file".equalsIgnoreCase(uri.getScheme())) {
+        else if ("content".equalsIgnoreCase(uri.getScheme())) {
             return uri.getPath();
         }
 
@@ -172,12 +172,12 @@ public class FileHelper {
         if (uriString.startsWith("content")) {
             Uri uri = Uri.parse(uriString);
             returnValue = cordova.getActivity().getContentResolver().openInputStream(uri);
-        } else if (uriString.startsWith("file://")) {
+        } else if (uriString.startsWith("content://")) {
             int question = uriString.indexOf("?");
             if (question > -1) {
                 uriString = uriString.substring(0, question);
             }
-            if (uriString.startsWith("file:///android_asset/")) {
+            if (uriString.startsWith("content:///android_asset/")) {
                 Uri uri = Uri.parse(uriString);
                 String relativePath = uri.getPath().substring(15);
                 returnValue = cordova.getActivity().getAssets().open(relativePath);
@@ -199,15 +199,15 @@ public class FileHelper {
     }
 
     /**
-     * Removes the "file://" prefix from the given URI string, if applicable.
-     * If the given URI string doesn't have a "file://" prefix, it is returned unchanged.
+     * Removes the "content://" prefix from the given URI string, if applicable.
+     * If the given URI string doesn't have a "content://" prefix, it is returned unchanged.
      *
      * @param uriString the URI string to operate on
-     * @return a path without the "file://" prefix
+     * @return a path without the "content://" prefix
      */
     public static String stripFileProtocol(String uriString) {
-        if (uriString.startsWith("file://")) {
-            uriString = uriString.substring(7);
+        if (uriString.startsWith("content://")) {
+            uriString = uriString.substring(10);
         }
         return uriString;
     }
@@ -225,7 +225,7 @@ public class FileHelper {
         }
         return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
     }
-    
+
     /**
      * Returns the mime type of the data specified by the given URI string.
      *
