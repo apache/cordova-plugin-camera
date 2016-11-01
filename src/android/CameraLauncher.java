@@ -93,7 +93,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     public static final int PERMISSION_DENIED_ERROR = 20;
     public static final int TAKE_PIC_SEC = 0;
     public static final int SAVE_TO_ALBUM_SEC = 1;
-    public static String APPLICATION_ID = "";
 
     private static final String LOG_TAG = "CameraLauncher";
     private static final String CAPTURE_FILE_NAME = ".Pic";
@@ -281,8 +280,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private Uri getUri(File photo)
     {
         Context context=this.cordova.getActivity().getApplicationContext();
-        assert(APPLICATION_ID != "");
-        return FileProvider.getUriForFile(context, APPLICATION_ID + ".provider", photo);
+        return FileProvider.getUriForFile(context, context.getPackageName() + ".provider", photo);
     }
 
     private void grantUriPermissionForIntent(Intent intent, Uri uri)
