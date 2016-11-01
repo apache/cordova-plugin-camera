@@ -296,6 +296,14 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         }
     }
 
+    private void grantUriPermissionForCorpPackages(Uri croppedUri)
+    {
+        Intent cropIntent = new Intent("com.android.camera.action.CROP");
+        cropIntent.setDataAndType(croppedUri, "image/*");
+        cropIntent.putExtra("crop", "true");
+        grantUriPermissionForIntent(cropIntent, croppedUri);
+    }
+
     public void takePicture(int returnType, int encodingType)
     {
         // Save the number of images currently on disk for later
@@ -395,6 +403,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 File photo = createCaptureFile(JPEG);
                 croppedUri = getUri(photo);
                 intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, croppedUri);
+                grantUriPermissionForIntent(intent, croppedUri);
+                grantUriPermissionForCorpPackages(croppedUri);
             } else {
                 intent.setAction(Intent.ACTION_GET_CONTENT);
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
