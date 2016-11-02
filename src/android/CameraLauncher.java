@@ -294,14 +294,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         }
     }
 
-    private void grantUriPermissionForCropPackages(Uri croppedUri)
-    {
-        Intent cropIntent = new Intent("com.android.camera.action.CROP");
-        cropIntent.setDataAndType(croppedUri, "image/*");
-        cropIntent.putExtra("crop", "true");
-        grantUriPermissionForIntent(cropIntent, croppedUri);
-    }
-
     public void takePicture(int returnType, int encodingType)
     {
         // Save the number of images currently on disk for later
@@ -387,23 +379,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             intent.setType("image/*");
             if (this.allowEdit) {
                 intent.setAction(Intent.ACTION_PICK);
-                intent.putExtra("crop", "true");
-                if (targetWidth > 0) {
-                    intent.putExtra("outputX", targetWidth);
-                }
-                if (targetHeight > 0) {
-                    intent.putExtra("outputY", targetHeight);
-                }
-                if (targetHeight > 0 && targetWidth > 0 && targetWidth == targetHeight) {
-                    intent.putExtra("aspectX", 1);
-                    intent.putExtra("aspectY", 1);
-                }
                 File photo = createCaptureFile(JPEG);
                 croppedUri = getUri(photo);
                 intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, croppedUri);
                 grantUriPermissionForIntent(intent, croppedUri);
-                // This intent related to crop will be launched directly after the pick image intent, so grant permission here too
-                grantUriPermissionForCropPackages(croppedUri);
             } else {
                 intent.setAction(Intent.ACTION_GET_CONTENT);
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -686,81 +665,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 return;
             }
         }
-        int rotate = 0;
 
-        String fileLocation = FileHelper.getRealPath(uri, this.cordova);
-        LOG.d(LOG_TAG, "File locaton is: " + fileLocation);
-
-        // If you ask for video or all media type you will automatically get back a file URI
-        // and there will be no attempt to resize any returned data
-        if (this.mediaType != PICTURE) {
-            this.callbackContext.success(fileLocation);
-        }
-        else {
-            String uriString = uri.toString();
-            // Get the path to the image. Makes loading so much easier.
-            String mimeType = FileHelper.getMimeType(uriString, this.cordova);
-
-            // This is a special case to just return the path as no scaling,
-            // rotating, nor compressing needs to be done
-            if (this.targetHeight == -1 && this.targetWidth == -1 &&
-                    (destType == FILE_URI || destType == NATIVE_URI) && !this.correctOrientation &&
-                    mimeType.equalsIgnoreCase(getMimetypeForFormat(encodingType)))
-            {
-                this.callbackContext.success(uriString);
-            } else {
-                // If we don't have a valid image so quit.
-                if (!("image/jpeg".equalsIgnoreCase(mimeType) || "image/png".equalsIgnoreCase(mimeType))) {
-                    LOG.d(LOG_TAG, "I either have a null image path or bitmap");
-                    this.failPicture("Unable to retrieve path to picture!");
-                    return;
-                }
-                Bitmap bitmap = null;
-                try {
-                    bitmap = getScaledAndRotatedBitmap(uriString);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                if (bitmap == null) {
-                    LOG.d(LOG_TAG, "I either have a null image path or bitmap");
-                    this.failPicture("Unable to create bitmap!");
-                    return;
-                }
-
-                // If sending base64 image back
-                if (destType == DATA_URL) {
-                    this.processPicture(bitmap, this.encodingType);
-                }
-
-                // If sending filename back
-                else if (destType == FILE_URI || destType == NATIVE_URI) {
-                    // Did we modify the image?
-                    if ( (this.targetHeight > 0 && this.targetWidth > 0) ||
-                            (this.correctOrientation && this.orientationCorrected) ||
-                            !mimeType.equalsIgnoreCase(getMimetypeForFormat(encodingType)))
-                    {
-                        try {
-                            String modifiedPath = this.outputModifiedBitmap(bitmap, uri);
-                            // The modified image is cached by the app in order to get around this and not have to delete you
-                            // application cache I'm adding the current system time to the end of the file url.
-                            this.callbackContext.success("file://" + modifiedPath + "?" + System.currentTimeMillis());
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            this.failPicture("Error retrieving image.");
-                        }
-                    }
-                    else {
-                        this.callbackContext.success(fileLocation);
-                    }
-                }
-                if (bitmap != null) {
-                    bitmap.recycle();
-                    bitmap = null;
-                }
-                System.gc();
-            }
-        }
+        croppedFileName = System.currentTimeMillis() + "";
+        performCrop(uri, destType, intent);
     }
 
     /**
@@ -1201,7 +1108,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         }
 
         // Clean up initial camera-written image file.
-        (new File(FileHelper.stripFileProtocol(oldImage.toString()))).delete();
+        if (oldImage != null)
+        {
+            (new File(FileHelper.stripFileProtocol(oldImage.toString()))).delete();
+        }
 
         checkForDuplicateImage(imageType);
         // Scan for the gallery to update pic refs in gallery
