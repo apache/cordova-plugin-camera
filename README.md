@@ -86,11 +86,11 @@ When the system prompts the user to allow access, this string is displayed as pa
 To add this entry you can pass the following variables on plugin install.
 
 - `CAMERA_USAGE_DESCRIPTION` for `NSCameraUsageDescription`
-- `PHOTOLIBRARY_USAGE_DESCRIPTION` for `NSPhotoLibraryUsageDescription`
-
+- `PHOTOLIBRARY_USAGE_DESCRIPTION` for `NSPhotoLibraryUsageDescriptionentry`
+-
 Example:
 
-    cordova plugin add cordova-plugin-camera --variable CAMERA_USAGE_DESCRIPTION="your usage message" --variable PHOTOLIBRARY_USAGE_DESCRIPTION="your usage message"
+    cordova plugin add cordova-plugin-camera --variable CAMERA_USAGE_DESCRIPTION="your usage message"
 
 If you don't pass the variable, the plugin will add an empty string as value.
 
