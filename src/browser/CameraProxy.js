@@ -25,6 +25,12 @@ function takePicture(success, error, opts) {
     if (opts && opts[2] === 1) {
         capture(success, error, opts);
     } else {
+        var targetWidth = opts[3];
+        var targetHeight = opts[4];
+
+        targetWidth = targetWidth == -1?1080:targetWidth;
+        targetHeight = targetHeight == -1?960:targetHeight;
+
         var input = document.createElement('input');
         input.style.position = 'relative';
         input.style.opacity = 0;
@@ -39,9 +45,32 @@ function takePicture(success, error, opts) {
             reader.onload = function(readerEvent) {
                 input.parentNode.removeChild(input);
 
-                var imageData = readerEvent.target.result;
+                // resize input to match targetWidth / targetHeight
+                var image = new Image();
+                image.src = readerEvent.target.result;
+                image.onload = function() {
+                    var width = image.width;
+                    var height = image.height;
+                    var aspect = image.width / image.height;
 
-                return success(imageData.substr(imageData.indexOf(',') + 1));
+                    if (width > targetWidth) {
+                        width = targetWidth;
+                        height = targetWidth / aspect;
+                    }
+                    if (height > targetHeight) {
+                        width = targetHeight / aspect;
+                        height = targetHeight;
+                    }
+
+                    var canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    canvas.getContext("2d").drawImage(this, 0, 0, image.width, image.height, 0, 0, width, height);
+
+                    var imageData = canvas.toDataURL("image/jpeg");
+
+                    return success(imageData.substr(imageData.indexOf(',') + 1));
+                };
             };
 
             reader.readAsDataURL(inputEvent.target.files[0]);
