@@ -109,14 +109,6 @@ static NSString* toBase64(NSData* data) {
 
 @synthesize hasPendingOperation, pickerController, locationManager;
 
--(void)pluginInitialize
-{
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(fetchCapturedPhoto)
-                                                 name:@"_UIImagePickerControllerUserDidCaptureItem"
-                                               object:nil];
-}
-
 - (NSURL*) urlTransformer:(NSURL*)url
 {
     NSURL* urlToTransform = url;
@@ -601,34 +593,6 @@ static NSString* toBase64(NSData* data) {
     [self imagePickerController:picker didFinishPickingMediaWithInfo:imageInfo];
 }
 
-- (void)fetchCapturedPhoto
-{
-    CDVCameraPicker *pickCtrl = self.pickerController;
-    CDVPictureOptions* options = pickCtrl.pictureOptions;
-    
-    if (options.allowsEditing && options.variableEditRect)
-    {
-        UIImage *img = [(UIImageView *)[[self allImageViewsSubViews:[[[pickCtrl viewControllers]firstObject] view]] lastObject] image];
-        if (img)
-            [self imagePickerController:pickCtrl didFinishPickingMediaWithInfo:[NSDictionary dictionaryWithObject:img forKey:UIImagePickerControllerOriginalImage]];
-        else
-            [self imagePickerControllerDidCancel:pickCtrl];
-    }
-}
-
-- (NSMutableArray*)allImageViewsSubViews:(UIView *)pView
-{
-    NSMutableArray *arrImageViews = [NSMutableArray array];
-    
-    if ([pView isKindOfClass:[UIImageView class]])
-        [arrImageViews addObject:pView];
-    else
-        for (UIView *sv in [pView subviews])
-            [arrImageViews addObjectsFromArray:[self allImageViewsSubViews:sv]];
-
-    return arrImageViews;
-}
-
 - (void)imagePickerControllerDidCancel:(UIImagePickerController*)picker
 {
     __weak CDVCameraPicker* cameraPicker = (CDVCameraPicker*)picker;
@@ -821,6 +785,10 @@ static NSString* toBase64(NSData* data) {
 @end
 
 @implementation CDVCameraPicker
+{
+    UIButton *takePhotoBtn, *cancelPhotoBtn, *switchCameraBtn;
+    UIDeviceOrientation currentOrientation;
+}
 
 - (BOOL)prefersStatusBarHidden
 {
@@ -831,7 +799,7 @@ static NSString* toBase64(NSData* data) {
 {
     return nil;
 }
-    
+
 - (void)viewWillAppear:(BOOL)animated
 {
     SEL sel = NSSelectorFromString(@"setNeedsStatusBarAppearanceUpdate");
@@ -842,13 +810,190 @@ static NSString* toBase64(NSData* data) {
     [super viewWillAppear:animated];
 }
 
-+ (instancetype) createFromPictureOptions:(CDVPictureOptions*)pictureOptions;
+- (void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+    
+    // create an overlay-view – if needed
+    if (!self.showsCameraControls) {
+        CDVCamera *camera = (CDVCamera *)self.delegate;
+        UIView *olv = [[UIView alloc] initWithFrame:self.view.bounds];
+        
+        [olv setOpaque:NO];
+        [olv setBackgroundColor:[UIColor clearColor]];
+        [olv setAutoresizesSubviews:YES];
+        [olv setAutoresizingMask:UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight];
+        
+        takePhotoBtn = [UIButton buttonWithType:UIButtonTypeCustom],
+        [takePhotoBtn setImage:[camera pluginImageResource:@"icons8PhotoBtn"] forState:UIControlStateNormal];
+        [takePhotoBtn setShowsTouchWhenHighlighted:YES];
+        [takePhotoBtn addTarget:self action:@selector(takeFoto:) forControlEvents:UIControlEventTouchUpInside];
+        //--
+        cancelPhotoBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        [cancelPhotoBtn setTitle:[camera pluginLocalizedString:@"Cancel"] forState:UIControlStateNormal];
+        [cancelPhotoBtn setShowsTouchWhenHighlighted:YES];
+        [cancelPhotoBtn addTarget:self action:@selector(cancelFoto:) forControlEvents:UIControlEventTouchUpInside];
+        //--
+        switchCameraBtn = [UIButton buttonWithType:UIButtonTypeSystem];
+        [switchCameraBtn setTintColor:[UIColor whiteColor]];
+        [switchCameraBtn setImage:[camera pluginImageResource:@"icons8SwitchCamera"] forState:UIControlStateNormal];
+        [switchCameraBtn setShowsTouchWhenHighlighted:YES];
+        [switchCameraBtn addTarget:self action:@selector(switchCamera:) forControlEvents:UIControlEventTouchUpInside];
+        //--
+        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+        {
+            [cancelPhotoBtn setContentHorizontalAlignment:UIControlContentHorizontalAlignmentCenter];
+            //--
+            [switchCameraBtn setBackgroundColor:[UIColor colorWithRed:0. green:0. blue:0. alpha:0.3]];
+            [switchCameraBtn setClipsToBounds:YES];
+            [switchCameraBtn.layer setCornerRadius:20];
+        }
+        else
+            // camera on iPhone always starts in portrait
+            currentOrientation = UIDeviceOrientationPortrait;
+        
+        [self positionTheButtons:YES]; // first call
+
+        [olv addSubview:takePhotoBtn];
+        [olv addSubview:cancelPhotoBtn];
+        [olv addSubview:switchCameraBtn];
+        
+        [self setCameraOverlayView:olv];
+    }
+}
+
+- (void)positionTheButtons:(BOOL)firstTime
+{
+    CGSize  theSize   = self.view.bounds.size;
+    CGFloat theWidth  = theSize.width
+    ,       theHeight = theSize.height
+    ,       bigBtn    = 60
+    ,       smallBtn  = 40
+    ,       txtBtn    = 30
+    ,       barSpace, margin;
+    
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
+    {
+        barSpace = 100;
+        margin = 30;
+        [takePhotoBtn setFrame:CGRectMake(theWidth - barSpace/2 - bigBtn/2, theHeight/2 - bigBtn/2, bigBtn, bigBtn)];
+        [cancelPhotoBtn setFrame:CGRectMake(theWidth - barSpace, theHeight - margin - txtBtn, barSpace, txtBtn)];
+        [switchCameraBtn setFrame:CGRectMake(theWidth - barSpace/2 - smallBtn/2, margin, smallBtn, smallBtn)];
+    } else { // iPhone
+        if (firstTime) { // here the positions don't change when orientation changes, so it's needed only when first called
+            CGSize screenSize = [[[UIScreen mainScreen] fixedCoordinateSpace] bounds].size; // always in portrait
+            barSpace = screenSize.height - screenSize.width * 6.65 / 5.0; // height to width of the photo (in cm)
+            margin = 5;
+            
+            // iPhone 4
+            if (bigBtn >= barSpace)
+                bigBtn = barSpace - 2 * margin;
+            
+            [takePhotoBtn setFrame:CGRectMake(theWidth/2 - bigBtn/2, theHeight - barSpace/2 - bigBtn/2, bigBtn, bigBtn)];
+            [cancelPhotoBtn setFrame:CGRectMake(margin, theHeight - barSpace/2 - txtBtn/2, 100, txtBtn)];
+            [switchCameraBtn setFrame:CGRectMake(theWidth - smallBtn - margin, theHeight - barSpace/2 - smallBtn/2, smallBtn, smallBtn)];
+        }
+        
+        //---
+        // finally rotate the icon-buttons
+        UIDeviceOrientation curOri = currentOrientation
+        ,                   newOri = [[UIDevice currentDevice] orientation];
+        
+        // ignoring specific - for us useless - orientations
+        if(newOri != UIDeviceOrientationFaceUp &&
+           newOri != UIDeviceOrientationFaceDown &&
+           newOri != UIDeviceOrientationUnknown &&
+           curOri != newOri)
+        {
+            CGFloat angle;
+            
+            if ((UIDeviceOrientationIsLandscape(curOri) && UIDeviceOrientationIsLandscape(newOri)) ||
+                (UIDeviceOrientationIsPortrait(curOri) && UIDeviceOrientationIsPortrait(newOri)))
+                angle = M_PI;
+            else
+            {
+                angle = M_PI_2;
+                if ((curOri == UIDeviceOrientationLandscapeLeft && newOri == UIDeviceOrientationPortrait) ||
+                    (curOri == UIDeviceOrientationPortrait && newOri == UIDeviceOrientationLandscapeRight) ||
+                    (curOri == UIDeviceOrientationLandscapeRight && newOri == UIDeviceOrientationPortraitUpsideDown) ||
+                    (curOri == UIDeviceOrientationPortraitUpsideDown && newOri == UIDeviceOrientationLandscapeLeft))
+                    angle *= -1;
+            }
+            [UIView animateWithDuration:0.3
+                             animations:^{
+                                 takePhotoBtn.transform = CGAffineTransformRotate(takePhotoBtn.transform, angle);
+                                 switchCameraBtn.transform = CGAffineTransformRotate(switchCameraBtn.transform, angle);
+                             }
+             ];
+            
+            currentOrientation = newOri;
+        }
+    }
+}
+
+- (IBAction)takeFoto:(UIButton*)aSwitch
+{
+    [self takePicture];
+}
+
+- (IBAction)cancelFoto:(UIButton*)aSwitch
+{
+    [self.delegate imagePickerControllerDidCancel: self];
+}
+
+- (IBAction)switchCamera:(UIButton*)aSwitch
+{
+    UIImagePickerControllerCameraDevice dvc;
+    if (self.cameraDevice == UIImagePickerControllerCameraDeviceRear)
+        dvc = UIImagePickerControllerCameraDeviceFront;
+    else
+        dvc = UIImagePickerControllerCameraDeviceRear;
+    
+    if ([[[UIDevice currentDevice] systemVersion] floatValue] < 10.0)
+        [UIView transitionWithView:self.view
+                          duration:1.0
+                           options:UIViewAnimationOptionAllowAnimatedContent | UIViewAnimationOptionTransitionFlipFromLeft
+                        animations:^{
+                            [self setCameraDevice:dvc];
+                        }
+                        completion:NULL
+         ];
+    else
+        [self setCameraDevice:dvc];
+}
+
+- (void)dealloc
+{
+    CDVPictureOptions *options = self.pictureOptions;
+    if (options.allowsEditing && options.variableEditRect) {
+        [[UIDevice currentDevice] endGeneratingDeviceOrientationNotifications];
+        [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                        name:UIDeviceOrientationDidChangeNotification
+                                                      object:nil];
+    }
+}
+
+- (void)deviceOrientationDidChange:(NSNotification*)notification
+{
+    [self positionTheButtons:NO]; // not the first but a subsequent call
+}
+
++ (instancetype)createFromPictureOptions:(CDVPictureOptions*)pictureOptions;
 {
     CDVCameraPicker* cameraPicker = [[CDVCameraPicker alloc] init];
     cameraPicker.pictureOptions = pictureOptions;
     cameraPicker.sourceType = pictureOptions.sourceType;
     if (!pictureOptions.variableEditRect)
         cameraPicker.allowsEditing = pictureOptions.allowsEditing;
+    else if (pictureOptions.allowsEditing) {
+        cameraPicker.showsCameraControls = NO; // here we have to use our own controls (in an overlayView)
+
+        [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
+        [[NSNotificationCenter defaultCenter] addObserver:cameraPicker
+                                                 selector:@selector(deviceOrientationDidChange:)
+                                                     name:UIDeviceOrientationDidChangeNotification
+                                                   object:nil];
+    }
     
     if (cameraPicker.sourceType == UIImagePickerControllerSourceTypeCamera) {
         // We only allow taking pictures (no video) in this API.

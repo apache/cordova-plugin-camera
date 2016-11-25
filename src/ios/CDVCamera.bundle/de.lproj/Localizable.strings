@@ -7,5 +7,6 @@
 
 "NoAccess" = "Der Zugriff auf die Kamera ist nicht erlaubt; bitte in den Einstellungen freigeben um fortzufahren.";
 "OK"       = "OK";
+"Cancel"   = "Abbrechen";
 "Settings" = "Einstellungen";
 "Videos"   = "Videos";

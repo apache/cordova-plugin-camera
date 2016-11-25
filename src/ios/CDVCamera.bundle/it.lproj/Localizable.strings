@@ -7,5 +7,6 @@
 
 "NoAccess" = "Accesso alla fotocamera non autorizzato; per favore controllate le autorizzazioni di accesso nelle impostazioni.";
 "OK"       = "OK";
+"Cancel"   = "Annulla";
 "Settings" = "Impostazioni";
 "Videos"   = "Video";

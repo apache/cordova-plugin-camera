@@ -7,5 +7,6 @@
 
 "NoAccess" = "Access to the camera has been prohibited; please enable it in Settings to continue.";
 "OK"       = "OK";
+"Cancel"   = "Cancel";
 "Settings" = "Settings";
 "Videos"   = "Videos";

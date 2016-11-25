@@ -7,5 +7,6 @@
 
 "NoAccess" = "L'accès à l’appareil photo est pas autorisé; S'il vous plaît autoriser dans les Réglages pour continuer.";
 "OK"       = "OK";
+"Cancel"   = "Annuler";
 "Settings" = "Réglages";
 "Videos"   = "Vidéos";
