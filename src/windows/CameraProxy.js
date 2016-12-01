@@ -800,9 +800,16 @@ function savePhoto(picture, options, successCallback, errorCallback) {
             if (options.targetHeight > 0 && options.targetWidth > 0) {
                 resizeImage(successCallback, errorCallback, picture, options.targetWidth, options.targetHeight, options.encodingType);
             } else {
-                picture.copyAsync(getAppData().localFolder, picture.name, OptUnique).done(function (copiedFile) {
-                    successCallback("ms-appdata:///local/" + copiedFile.name);
-                },errorCallback);
+                // CB-11714: check if target content-type is PNG to just rename as *.jpg since camera is captured as JPEG
+                var pictureName = picture.name;
+
+                if (options.encodingType === Camera.EncodingType.PNG) {
+                    pictureName = pictureName.replace(/\.png$/, ".jpg");
+                }
+
+                picture
+                    .copyAsync(getAppData().localFolder, pictureName, OptUnique)
+                    .done(function (copiedFile) { successCallback("ms-appdata:///local/" + copiedFile.name); }, errorCallback);
             }
         } else {
             if (options.targetHeight > 0 && options.targetWidth > 0) {
