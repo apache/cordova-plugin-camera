@@ -136,6 +136,10 @@
          </js-module>
 
          <resource-file src="src/ios/CDVCamera.bundle" />
+         <resource-file src="src/ios/en.lproj/InfoPlist.strings" target="en.lproj/InfoPlist.strings" />
+         <resource-file src="src/ios/de.lproj/InfoPlist.strings" target="de.lproj/InfoPlist.strings" />
+         <resource-file src="src/ios/fr.lproj/InfoPlist.strings" target="fr.lproj/InfoPlist.strings" />
+         <resource-file src="src/ios/it.lproj/InfoPlist.strings" target="it.lproj/InfoPlist.strings" />
 
          <header-file src="src/ios/UIImage+CropScaleOrientation.h" />
          <source-file src="src/ios/UIImage+CropScaleOrientation.m" />
@@ -165,7 +169,10 @@
              <string></string>
          </config-file>
          <config-file target="*-Info.plist" parent="NSCameraUsageDescription">
-             <string></string>
+             <string>Captured contact's data will be sent to the server.</string>
+         </config-file>
+         <config-file target="*-Info.plist" parent="NSPhotoLibraryUsageDescription">
+             <string>(not used in this App!!)</string>
          </config-file>
 
      </platform>

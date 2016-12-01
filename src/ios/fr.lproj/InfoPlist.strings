@@ -1,0 +1,6 @@
+/*
+  InfoPlist.strings
+  LeadSuccess
+*/
+
+"NSCameraUsageDescription" = "Les données des contacts enregistrées seront envoyées au serveur.";

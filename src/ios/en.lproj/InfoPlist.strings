@@ -1,0 +1,6 @@
+/* 
+  InfoPlist.strings
+  LeadSuccess
+*/
+
+"NSCameraUsageDescription" = "Captured contacts' data will be sent to the server.";
