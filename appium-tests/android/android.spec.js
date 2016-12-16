@@ -21,10 +21,12 @@
  *
 */
 
-// these tests are meant to be executed by Cordova Medic Appium runner
-// you can find it here: https://github.com/apache/cordova-medic/
+// these tests are meant to be executed by Cordova ParaMedic Appium runner
+// you can find it here: https://github.com/apache/cordova-paramedic/
 // it is not necessary to do a full CI setup to run these tests
-// just run "node cordova-medic/medic/medic.js appium --platform android --plugins cordova-plugin-camera"
+// Run:
+//      node cordova-paramedic/main.js --platform android --plugin cordova-plugin-camera --skipMainTests --target <emulator name>
+// Please note only Android 5.1 and 4.4 are supported at this point.
 
 'use strict';
 
@@ -56,6 +58,8 @@ describe('Camera tests Android.', function () {
     var appiumSessionStarted = false;
     // determine if camera is present on the device/emulator
     var cameraAvailable = false;
+    // determine if emulator is within a range of acceptable resolutions able to run these tests
+    var isResolutionBad = true;
     // a path to the image we add to the gallery before test run
     var fillerImagePath;
 
@@ -121,7 +125,7 @@ describe('Camera tests Android.', function () {
                             y: Math.round(screenHeight / 4)
                         });
                     swipeRight
-                        .press({x: 10, y: 150})
+                        .press({x: 10, y: Math.round(screenHeight / 4)})
                         .wait(300)
                         .moveTo({x: Math.round(screenWidth - (screenWidth / 8)), y: 0})
                         .wait(1500)
@@ -135,18 +139,19 @@ describe('Camera tests Android.', function () {
                     }
                     return driver
                         .waitForElementByXPath('//android.widget.TextView[@text="Gallery"]', 20000)
-                        .elementByXPath('//android.widget.TextView[@text="Gallery"]')
-                        .elementByXPath('//android.widget.TextView[@text="Gallery"]')
-                        .elementByXPath('//android.widget.TextView[@text="Gallery"]')
-                        .elementByXPath('//android.widget.TextView[@text="Gallery"]')
+                        .elementByXPath('//android.widget.TextView[@text="Gallery"]') // multiple calls here for an Android bug:
+                        .elementByXPath('//android.widget.TextView[@text="Gallery"]') // on Windows + Android emulator, element selection
+                        .elementByXPath('//android.widget.TextView[@text="Gallery"]') // is completely wonky. Unfortunately duplicating element()
+                        .elementByXPath('//android.widget.TextView[@text="Gallery"]') // calls is the only workaround identified thus far.
                         .fail(function () {
+                            // If the Gallery button is not present, swipe right to reveal the Gallery button!
                             return driver
                                 .performTouchAction(swipeRight)
                                 .waitForElementByXPath('//android.widget.TextView[@text="Gallery"]', 20000)
                                 .elementByXPath('//android.widget.TextView[@text="Gallery"]')
                                 .elementByXPath('//android.widget.TextView[@text="Gallery"]')
                                 .elementByXPath('//android.widget.TextView[@text="Gallery"]')
-                                .elementByXPath('//android.widget.TextView[@text="Gallery"]');
+                                .elementByXPath('//android.widget.TextView[@text="Gallery"]')
                         })
                         .click()
                         // always wait before performing touchAction
@@ -158,8 +163,12 @@ describe('Camera tests Android.', function () {
                     .waitForElementByXPath('//android.widget.ImageView[contains(@resource-id,\'shutter\')]', MINUTE / 2)
                     .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'shutter\')]')
                     .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'shutter\')]')
+                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'shutter\')]')
+                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'shutter\')]')
                     .click()
                     .waitForElementByXPath('//android.widget.ImageView[contains(@resource-id,\'done\')]', MINUTE / 2)
+                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'done\')]')
+                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'done\')]')
                     .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'done\')]')
                     .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'done\')]')
                     .click();
@@ -203,15 +212,24 @@ describe('Camera tests Android.', function () {
     // deletes the latest image from the gallery
     function deleteImage() {
         var holdTile = new wd.TouchAction();
-        holdTile.press({x: Math.round(screenWidth / 4), y: Math.round(screenHeight / 5)}).wait(1000).release();
+        holdTile
+            .press({x: Math.round(screenWidth / 4), y: Math.round(screenHeight / 5)})
+            .wait(1000)
+            .release();
         return driver
             // always wait before performing touchAction
             .sleep(7000)
             .performTouchAction(holdTile)
             .elementByXPath('//android.widget.TextView[@text="Delete"]')
+            .elementByXPath('//android.widget.TextView[@text="Delete"]')
+            .elementByXPath('//android.widget.TextView[@text="Delete"]')
+            .elementByXPath('//android.widget.TextView[@text="Delete"]')
             .then(function (element) {
                 return element
                     .click()
+                    .elementByXPath('//android.widget.Button[@text="OK"]')
+                    .elementByXPath('//android.widget.Button[@text="OK"]')
+                    .elementByXPath('//android.widget.Button[@text="OK"]')
                     .elementByXPath('//android.widget.Button[@text="OK"]')
                     .click();
             }, function () {
@@ -280,18 +298,27 @@ describe('Camera tests Android.', function () {
         };
     }
 
-    function checkSession(done) {
+    function checkSession(done, skipResolutionCheck) {
         if (!appiumSessionStarted) {
-            fail('Failed to start a session');
+            fail('Failed to start a session ' + (lastFailureReason ? lastFailureReason : ''));
             done();
+        }
+        if (!skipResolutionCheck && isResolutionBad) {
+            fail('The resolution of this target device is not within the appropriate range of width: blah-blah and height: bleh-bleh. The target\'s current resolution is: ' + isResolutionBad);
         }
     }
 
     function checkCamera(pending) {
         if (!cameraAvailable) {
-            pending('This test requires camera');
+            pending('This test requires a functioning camera on the Android device/emulator, and this test suite\'s functional camera test failed on your target environment.');
         }
     }
+    afterAll(function (done) {
+        checkSession(done);
+        driver
+            .quit()
+            .done(done);
+    }, MINUTE);
 
     it('camera.ui.util configuring driver and starting a session', function (done) {
         getDriver()
@@ -302,18 +329,19 @@ describe('Camera tests Android.', function () {
     }, 10 * MINUTE);
 
     it('camera.ui.util determine screen dimensions', function (done) {
-        checkSession(done);
+        checkSession(done, /*skipResolutionCheck?*/ true); // skip the resolution check here since we are about to find out in this spec!
         driver
-            .context(webviewContext)
-            .execute(function () {
-                return {
-                    'width': screen.availWidth,
-                    'height': screen.availHeight
-                };
-            }, [])
+            .context('NATIVE_APP')
+            .getWindowSize()
             .then(function (size) {
                 screenWidth = Number(size.width);
                 screenHeight = Number(size.height);
+                isResolutionBad = false;
+                /*
+                TODO: what are acceptable resolution values?
+                need to check what the emulators used in CI return.
+                and also what local device definitions work and dont
+                */
             })
             .done(done);
     }, MINUTE);
@@ -374,6 +402,8 @@ describe('Camera tests Android.', function () {
                             .waitForElementByXPath('//android.widget.TextView[@text="Gallery"]', 20000)
                             .elementByXPath('//android.widget.TextView[@text="Gallery"]')
                             .elementByXPath('//android.widget.TextView[@text="Gallery"]')
+                            .elementByXPath('//android.widget.TextView[@text="Gallery"]')
+                            .elementByXPath('//android.widget.TextView[@text="Gallery"]')
                             .then(function (element) {
                                 return element.click();
                             }, function () {
@@ -385,11 +415,17 @@ describe('Camera tests Android.', function () {
                         // there should be a "Choose video" caption
                         return driver
                             .elementByXPath('//*[@text="Choose video"]')
+                            .elementByXPath('//*[@text="Choose video"]')
+                            .elementByXPath('//*[@text="Choose video"]')
+                            .elementByXPath('//*[@text="Choose video"]')
                             .fail(function () {
                                 throw 'Couldn\'t find "Choose video" element.';
                             });
                     })
                     .deviceKeyEvent(BACK_BUTTON)
+                    .elementByXPath('//android.widget.TextView[@text="Gallery"]')
+                    .elementByXPath('//android.widget.TextView[@text="Gallery"]')
+                    .elementByXPath('//android.widget.TextView[@text="Gallery"]')
                     .elementByXPath('//android.widget.TextView[@text="Gallery"]')
                     .deviceKeyEvent(BACK_BUTTON)
                     .finally(function () {
@@ -441,6 +477,8 @@ describe('Camera tests Android.', function () {
                     .waitForElementByXPath('//android.widget.ImageView[contains(@resource-id,\'cancel\')]', MINUTE / 2)
                     .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'cancel\')]')
                     .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'cancel\')]')
+                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'cancel\')]')
+                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'cancel\')]')
                     .click()
                     .then(function () {
                         return checkPicture(false);
@@ -470,12 +508,18 @@ describe('Camera tests Android.', function () {
                     .waitForElementByXPath('//android.widget.ImageView[contains(@resource-id,\'shutter\')]', MINUTE / 2)
                     .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'shutter\')]')
                     .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'shutter\')]')
+                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'shutter\')]')
+                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'shutter\')]')
                     .click()
                     .waitForElementByXPath('//android.widget.ImageView[contains(@resource-id,\'done\')]', MINUTE / 2)
                     .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'done\')]')
                     .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'done\')]')
+                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'done\')]')
+                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'done\')]')
                     .click()
                     .waitForElementByXPath('//*[contains(@resource-id,\'discard\')]', MINUTE / 2)
+                    .elementByXPath('//*[contains(@resource-id,\'discard\')]')
+                    .elementByXPath('//*[contains(@resource-id,\'discard\')]')
                     .elementByXPath('//*[contains(@resource-id,\'discard\')]')
                     .elementByXPath('//*[contains(@resource-id,\'discard\')]')
                     .click()
@@ -616,7 +660,13 @@ describe('Camera tests Android.', function () {
                 .elementById('Apps')
                 .click()
                 .elementByXPath('//android.widget.TextView[@text="Gallery"]')
+                .elementByXPath('//android.widget.TextView[@text="Gallery"]')
+                .elementByXPath('//android.widget.TextView[@text="Gallery"]')
+                .elementByXPath('//android.widget.TextView[@text="Gallery"]')
                 .click()
+                .elementByXPath('//android.widget.TextView[contains(@text,"Pictures")]')
+                .elementByXPath('//android.widget.TextView[contains(@text,"Pictures")]')
+                .elementByXPath('//android.widget.TextView[contains(@text,"Pictures")]')
                 .elementByXPath('//android.widget.TextView[contains(@text,"Pictures")]')
                 .click()
                 .then(deleteImage)
@@ -630,10 +680,4 @@ describe('Camera tests Android.', function () {
         }, 3 * MINUTE);
     });
 
-    it('camera.ui.util Destroy the session', function (done) {
-        checkSession(done);
-        driver
-            .quit()
-            .done(done);
-    }, 5 * MINUTE);
 });
