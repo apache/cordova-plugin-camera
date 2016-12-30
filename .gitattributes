@@ -1,5 +1,6 @@
 * text eol=lf
 
+
 # source code
 *.php text
 *.css text
