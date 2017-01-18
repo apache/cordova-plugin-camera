@@ -249,7 +249,7 @@
             <clobbers target="CameraPopoverHandle" />
         </js-module>
         <js-module src="src/windows/CameraProxy.js" name="CameraProxy">
-            <merges target="" />
+            <runs />
         </js-module>
 
     </platform>
@@ -276,7 +276,7 @@
             <clobbers target="CameraPopoverHandle" />
         </js-module>
         <js-module src="src/windows/CameraProxy.js" name="CameraProxy">
-            <merges target="" />
+            <runs />
         </js-module>
     </platform>
 
