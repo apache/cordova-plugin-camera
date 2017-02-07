@@ -445,14 +445,14 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             cropIntent, CROP_CAMERA + destType);
       }
     } catch (ActivityNotFoundException anfe) {
-      Log.e(LOG_TAG, "Crop operation not supported on this device");
+      LOG.e(LOG_TAG, "Crop operation not supported on this device");
       try {
           processResultFromCamera(destType, cameraIntent);
       }
       catch (IOException e)
       {
           e.printStackTrace();
-          Log.e(LOG_TAG, "Unable to write to file");
+          LOG.e(LOG_TAG, "Unable to write to file");
       }
     }
   }
@@ -515,7 +515,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
             // Double-check the bitmap.
             if (bitmap == null) {
-                Log.d(LOG_TAG, "I either have a null image path or bitmap");
+                LOG.d(LOG_TAG, "I either have a null image path or bitmap");
                 this.failPicture("Unable to create bitmap!");
                 return;
             }
@@ -557,7 +557,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
                 // Double-check the bitmap.
                 if (bitmap == null) {
-                    Log.d(LOG_TAG, "I either have a null image path or bitmap");
+                    LOG.d(LOG_TAG, "I either have a null image path or bitmap");
                     this.failPicture("Unable to create bitmap!");
                     return;
                 }
@@ -680,7 +680,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         int rotate = 0;
 
         String fileLocation = FileHelper.getRealPath(uri, this.cordova);
-        Log.d(LOG_TAG, "File locaton is: " + fileLocation);
+        LOG.d(LOG_TAG, "File locaton is: " + fileLocation);
 
         // If you ask for video or all media type you will automatically get back a file URI
         // and there will be no attempt to resize any returned data
@@ -702,7 +702,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             } else {
                 // If we don't have a valid image so quit.
                 if (!("image/jpeg".equalsIgnoreCase(mimeType) || "image/png".equalsIgnoreCase(mimeType))) {
-                    Log.d(LOG_TAG, "I either have a null image path or bitmap");
+                    LOG.d(LOG_TAG, "I either have a null image path or bitmap");
                     this.failPicture("Unable to retrieve path to picture!");
                     return;
                 }
@@ -713,7 +713,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     e.printStackTrace();
                 }
                 if (bitmap == null) {
-                    Log.d(LOG_TAG, "I either have a null image path or bitmap");
+                    LOG.d(LOG_TAG, "I either have a null image path or bitmap");
                     this.failPicture("Unable to create bitmap!");
                     return;
                 }
@@ -778,7 +778,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     processResultFromCamera(destType, intent);
                 } catch (IOException e) {
                     e.printStackTrace();
-                    Log.e(LOG_TAG, "Unable to write to file");
+                    LOG.e(LOG_TAG, "Unable to write to file");
                 }
 
             }// If cancelled
@@ -849,7 +849,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             return 0;
         }
     }
-    
+
     /**
      * Write an inputstream to local disk
      *
