@@ -43,7 +43,7 @@ Although the object is attached to the global scoped `navigator`, it is not avai
 This requires cordova 5.0+
 
     cordova plugin add cordova-plugin-camera
-A older versions of cordova cli(version < 5.0) can still install via the __deprecated__ id
+An older versions of cordova cli(version < 5.0) can still install via the __deprecated__ id
 
     cordova plugin add org.apache.cordova.camera
 It is also possible to install via repo url directly ( unstable )
