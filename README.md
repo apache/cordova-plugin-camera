@@ -50,6 +50,11 @@ It is also possible to install via repo url directly ( unstable )
 
     cordova plugin add https://github.com/apache/cordova-plugin-camera.git
 
+** Note:** 
+The id is picked from the `package.json` or `plugin.xml` and on versions < 1 the id is the __deprecated__ id. 
+The following are some examples.
+- plugin < 1 : https://github.com/apache/cordova-plugin-camera/blob/r0.3.6/package.json#L6
+- plugin >= 1 : https://github.com/apache/cordova-plugin-camera/blob/r1.0.0/package.json#L6
 
 ## How to Contribute
 
