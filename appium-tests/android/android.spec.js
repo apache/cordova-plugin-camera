@@ -42,6 +42,7 @@ var DEFAULT_SCREEN_WIDTH = 360;
 var DEFAULT_SCREEN_HEIGHT = 567;
 var DEFAULT_WEBVIEW_CONTEXT = 'WEBVIEW';
 var PROMISE_PREFIX = 'appium_camera_promise_';
+var CONTEXT_NATIVE_APP = 'NATIVE_APP';
 
 describe('Camera tests Android.', function () {
     var driver;
@@ -72,10 +73,9 @@ describe('Camera tests Android.', function () {
         return PROMISE_PREFIX + promiseCount;
     }
 
-    function saveScreenshotAndFail(error) {
+    function gracefullyFail(error) {
         fail(error);
-        return screenshotHelper
-            .saveScreenshot(driver)
+        return driver
             .quit()
             .then(function () {
                 return getDriver();
@@ -108,7 +108,7 @@ describe('Camera tests Android.', function () {
         return driver
             .context(webviewContext)
             .execute(cameraHelper.getPicture, [options, promiseId])
-            .context('NATIVE_APP')
+            .context(CONTEXT_NATIVE_APP)
             .then(function () {
                 if (skipUiInteractions) {
                     return;
@@ -138,20 +138,12 @@ describe('Camera tests Android.', function () {
                             .performTouchAction(tapTile);
                     }
                     return driver
-                        .waitForElementByXPath('//android.widget.TextView[@text="Gallery"]', 20000)
-                        .elementByXPath('//android.widget.TextView[@text="Gallery"]') // multiple calls here for an Android bug:
-                        .elementByXPath('//android.widget.TextView[@text="Gallery"]') // on Windows + Android emulator, element selection
-                        .elementByXPath('//android.widget.TextView[@text="Gallery"]') // is completely wonky. Unfortunately duplicating element()
-                        .elementByXPath('//android.widget.TextView[@text="Gallery"]') // calls is the only workaround identified thus far.
+                        .waitForElementByAndroidUIAutomator('new UiSelector().text("Gallery");', 20000)
                         .fail(function () {
                             // If the Gallery button is not present, swipe right to reveal the Gallery button!
                             return driver
                                 .performTouchAction(swipeRight)
-                                .waitForElementByXPath('//android.widget.TextView[@text="Gallery"]', 20000)
-                                .elementByXPath('//android.widget.TextView[@text="Gallery"]')
-                                .elementByXPath('//android.widget.TextView[@text="Gallery"]')
-                                .elementByXPath('//android.widget.TextView[@text="Gallery"]')
-                                .elementByXPath('//android.widget.TextView[@text="Gallery"]')
+                                .waitForElementByAndroidUIAutomator('new UiSelector().text("Gallery");', 20000)
                         })
                         .click()
                         // always wait before performing touchAction
@@ -160,17 +152,9 @@ describe('Camera tests Android.', function () {
                 }
                 // taking a picture from camera
                 return driver
-                    .waitForElementByXPath('//android.widget.ImageView[contains(@resource-id,\'shutter\')]', MINUTE / 2)
-                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'shutter\')]')
-                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'shutter\')]')
-                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'shutter\')]')
-                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'shutter\')]')
+                    .waitForElementByAndroidUIAutomator('new UiSelector().resourceIdMatches(".*shutter.*")', MINUTE / 2)
                     .click()
-                    .waitForElementByXPath('//android.widget.ImageView[contains(@resource-id,\'done\')]', MINUTE / 2)
-                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'done\')]')
-                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'done\')]')
-                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'done\')]')
-                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'done\')]')
+                    .waitForElementByAndroidUIAutomator('new UiSelector().resourceIdMatches(".*done.*")', MINUTE / 2)
                     .click();
             })
             .then(function () {
@@ -179,7 +163,7 @@ describe('Camera tests Android.', function () {
                 }
                 if (options.allowEdit) {
                     return driver
-                        .waitForElementByXPath('//*[contains(@resource-id,\'save\')]', MINUTE)
+                        .waitForElementByAndroidUIAutomator('new UiSelector().text("Save")', MINUTE)
                         .click();
                 }
             })
@@ -220,17 +204,11 @@ describe('Camera tests Android.', function () {
             // always wait before performing touchAction
             .sleep(7000)
             .performTouchAction(holdTile)
-            .elementByXPath('//android.widget.TextView[@text="Delete"]')
-            .elementByXPath('//android.widget.TextView[@text="Delete"]')
-            .elementByXPath('//android.widget.TextView[@text="Delete"]')
-            .elementByXPath('//android.widget.TextView[@text="Delete"]')
+            .elementByAndroidUIAutomator('new UiSelector().text("Delete")')
             .then(function (element) {
                 return element
                     .click()
-                    .elementByXPath('//android.widget.Button[@text="OK"]')
-                    .elementByXPath('//android.widget.Button[@text="OK"]')
-                    .elementByXPath('//android.widget.Button[@text="OK"]')
-                    .elementByXPath('//android.widget.Button[@text="OK"]')
+                    .elementByAndroidUIAutomator('new UiSelector().text("OK")')
                     .click();
             }, function () {
                 // couldn't find Delete menu item. Possibly there is no image.
@@ -280,7 +258,7 @@ describe('Camera tests Android.', function () {
                             .then(spec);
                     });
             })
-            .fail(saveScreenshotAndFail);
+            .fail(gracefullyFail);
     }
 
     // produces a generic spec function which
@@ -331,7 +309,7 @@ describe('Camera tests Android.', function () {
     it('camera.ui.util determine screen dimensions', function (done) {
         checkSession(done, /*skipResolutionCheck?*/ true); // skip the resolution check here since we are about to find out in this spec!
         driver
-            .context('NATIVE_APP')
+            .context(CONTEXT_NATIVE_APP)
             .getWindowSize()
             .then(function (size) {
                 screenWidth = Number(size.width);
@@ -394,16 +372,12 @@ describe('Camera tests Android.', function () {
                     .then(function () {
                         return getPicture(options, true);
                     })
-                    .context('NATIVE_APP')
+                    .context(CONTEXT_NATIVE_APP)
                     .then(function () {
                         // try to find "Gallery" menu item
                         // if there's none, the gallery should be already opened
                         return driver
-                            .waitForElementByXPath('//android.widget.TextView[@text="Gallery"]', 20000)
-                            .elementByXPath('//android.widget.TextView[@text="Gallery"]')
-                            .elementByXPath('//android.widget.TextView[@text="Gallery"]')
-                            .elementByXPath('//android.widget.TextView[@text="Gallery"]')
-                            .elementByXPath('//android.widget.TextView[@text="Gallery"]')
+                            .waitForElementByAndroidUIAutomator('new UiSelector().text("Gallery")', 20000)
                             .then(function (element) {
                                 return element.click();
                             }, function () {
@@ -414,19 +388,13 @@ describe('Camera tests Android.', function () {
                         // if the gallery is opened on the videos page,
                         // there should be a "Choose video" caption
                         return driver
-                            .elementByXPath('//*[@text="Choose video"]')
-                            .elementByXPath('//*[@text="Choose video"]')
-                            .elementByXPath('//*[@text="Choose video"]')
-                            .elementByXPath('//*[@text="Choose video"]')
+                            .elementByAndroidUIAutomator('new UiSelector().text("Choose video")')
                             .fail(function () {
                                 throw 'Couldn\'t find "Choose video" element.';
                             });
                     })
                     .deviceKeyEvent(BACK_BUTTON)
-                    .elementByXPath('//android.widget.TextView[@text="Gallery"]')
-                    .elementByXPath('//android.widget.TextView[@text="Gallery"]')
-                    .elementByXPath('//android.widget.TextView[@text="Gallery"]')
-                    .elementByXPath('//android.widget.TextView[@text="Gallery"]')
+                    .elementByAndroidUIAutomator('new UiSelector().text("Gallery")')
                     .deviceKeyEvent(BACK_BUTTON)
                     .finally(function () {
                         return driver
@@ -473,12 +441,8 @@ describe('Camera tests Android.', function () {
                     .then(function () {
                         return getPicture(options, true);
                     })
-                    .context("NATIVE_APP")
-                    .waitForElementByXPath('//android.widget.ImageView[contains(@resource-id,\'cancel\')]', MINUTE / 2)
-                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'cancel\')]')
-                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'cancel\')]')
-                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'cancel\')]')
-                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'cancel\')]')
+                    .context(CONTEXT_NATIVE_APP)
+                    .waitForElementByAndroidUIAutomator('new UiSelector().resourceIdMatches(".*cancel.*")', MINUTE / 2)
                     .click()
                     .then(function () {
                         return checkPicture(false);
@@ -504,24 +468,11 @@ describe('Camera tests Android.', function () {
                     .then(function () {
                         return getPicture(options, true);
                     })
-                    .context('NATIVE_APP')
-                    .waitForElementByXPath('//android.widget.ImageView[contains(@resource-id,\'shutter\')]', MINUTE / 2)
-                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'shutter\')]')
-                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'shutter\')]')
-                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'shutter\')]')
-                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'shutter\')]')
+                    .waitForElementByAndroidUIAutomator('new UiSelector().resourceIdMatches(".*shutter.*")', MINUTE / 2)
                     .click()
-                    .waitForElementByXPath('//android.widget.ImageView[contains(@resource-id,\'done\')]', MINUTE / 2)
-                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'done\')]')
-                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'done\')]')
-                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'done\')]')
-                    .elementByXPath('//android.widget.ImageView[contains(@resource-id,\'done\')]')
+                    .waitForElementByAndroidUIAutomator('new UiSelector().resourceIdMatches(".*done.*")', MINUTE / 2)
                     .click()
-                    .waitForElementByXPath('//*[contains(@resource-id,\'discard\')]', MINUTE / 2)
-                    .elementByXPath('//*[contains(@resource-id,\'discard\')]')
-                    .elementByXPath('//*[contains(@resource-id,\'discard\')]')
-                    .elementByXPath('//*[contains(@resource-id,\'discard\')]')
-                    .elementByXPath('//*[contains(@resource-id,\'discard\')]')
+                    .waitForElementByAndroidUIAutomator('new UiSelector().resourceIdMatches(".*discard.*")', MINUTE / 2)
                     .click()
                     .then(function () {
                         return checkPicture(false);
@@ -651,7 +602,7 @@ describe('Camera tests Android.', function () {
             // delete exactly one latest picture
             // this should be the picture we've taken in the first spec
             driver
-                .context('NATIVE_APP')
+                .context(CONTEXT_NATIVE_APP)
                 .deviceKeyEvent(BACK_BUTTON)
                 .sleep(1000)
                 .deviceKeyEvent(BACK_BUTTON)
@@ -659,15 +610,9 @@ describe('Camera tests Android.', function () {
                 .deviceKeyEvent(BACK_BUTTON)
                 .elementById('Apps')
                 .click()
-                .elementByXPath('//android.widget.TextView[@text="Gallery"]')
-                .elementByXPath('//android.widget.TextView[@text="Gallery"]')
-                .elementByXPath('//android.widget.TextView[@text="Gallery"]')
-                .elementByXPath('//android.widget.TextView[@text="Gallery"]')
+                .elementByAndroidUIAutomator('new UiSelector().text("Gallery")')
                 .click()
-                .elementByXPath('//android.widget.TextView[contains(@text,"Pictures")]')
-                .elementByXPath('//android.widget.TextView[contains(@text,"Pictures")]')
-                .elementByXPath('//android.widget.TextView[contains(@text,"Pictures")]')
-                .elementByXPath('//android.widget.TextView[contains(@text,"Pictures")]')
+                .elementByAndroidUIAutomator('new UiSelector().textContains("Pictures")')
                 .click()
                 .then(deleteImage)
                 .deviceKeyEvent(BACK_BUTTON)
