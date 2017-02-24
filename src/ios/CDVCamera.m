@@ -82,12 +82,11 @@ static NSString* toBase64(NSData* data) {
     pictureOptions.popoverOptions = [command argumentAtIndex:10 withDefault:nil];
     pictureOptions.cameraDirection = [[command argumentAtIndex:11 withDefault:@(UIImagePickerControllerCameraDeviceRear)] unsignedIntegerValue];
     pictureOptions.convertToGrayscale = [[command argumentAtIndex:12 withDefault:@(NO)] boolValue];
+    pictureOptions.variableEditRect = [[command argumentAtIndex:13 withDefault:@(NO)] boolValue];
     
     pictureOptions.popoverSupported = NO;
     pictureOptions.usesGeolocation = NO;
     
-    pictureOptions.variableEditRect = NO;
-
     return pictureOptions;
 }
 
@@ -139,12 +138,6 @@ static NSString* toBase64(NSData* data) {
            (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad);
 }
 
-- (BOOL)withVariableEdit
-{
-    id variRect = [self.commandDelegate.settings objectForKey:[@"CameraUsesVariableEdit" lowercaseString]];
-    return [(NSNumber*)variRect boolValue];
-}
-
 - (void)takePicture:(CDVInvokedUrlCommand*)command
 {
     self.hasPendingOperation = YES;
@@ -156,7 +149,6 @@ static NSString* toBase64(NSData* data) {
         CDVPictureOptions* pictureOptions = [CDVPictureOptions createFromTakePictureArguments:command];
         pictureOptions.popoverSupported = [weakSelf popoverSupported];
         pictureOptions.usesGeolocation = [weakSelf usesGeolocation];
-        pictureOptions.variableEditRect = [weakSelf withVariableEdit];
         pictureOptions.cropToSize = NO;
         
         BOOL hasCamera = [UIImagePickerController isSourceTypeAvailable:pictureOptions.sourceType];
@@ -825,8 +817,8 @@ static NSString* toBase64(NSData* data) {
         [olv setAutoresizingMask:UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight];
         
         takePhotoBtn = [UIButton buttonWithType:UIButtonTypeCustom],
-        [takePhotoBtn setImage:[camera pluginImageResource:@"icons8PhotoBtn"] forState:UIControlStateNormal];
-        [takePhotoBtn setShowsTouchWhenHighlighted:YES];
+        [takePhotoBtn setImage:[camera pluginImageResource:@"icons8Shutter"] forState:UIControlStateNormal];
+        [takePhotoBtn setImage:[camera pluginImageResource:@"icons8ShutterHilite"] forState:UIControlStateHighlighted];
         [takePhotoBtn addTarget:self action:@selector(takeFoto:) forControlEvents:UIControlEventTouchUpInside];
         //--
         cancelPhotoBtn = [UIButton buttonWithType:UIButtonTypeCustom];
@@ -867,7 +859,7 @@ static NSString* toBase64(NSData* data) {
     CGSize  theSize   = self.view.bounds.size;
     CGFloat theWidth  = theSize.width
     ,       theHeight = theSize.height
-    ,       bigBtn    = 60
+    ,       bigBtn    = 66
     ,       smallBtn  = 40
     ,       txtBtn    = 30
     ,       barSpace, margin;
@@ -895,7 +887,7 @@ static NSString* toBase64(NSData* data) {
         }
         
         //---
-        // finally rotate the icon-buttons
+        // finally rotate the icon-button
         UIDeviceOrientation curOri = currentOrientation
         ,                   newOri = [[UIDevice currentDevice] orientation];
         
@@ -921,8 +913,8 @@ static NSString* toBase64(NSData* data) {
             }
             [UIView animateWithDuration:0.3
                              animations:^{
-                                 takePhotoBtn.transform = CGAffineTransformRotate(takePhotoBtn.transform, angle);
                                  switchCameraBtn.transform = CGAffineTransformRotate(switchCameraBtn.transform, angle);
+                                 // the shutter button hasn't to be rotated, it's a round circle
                              }
              ];
             

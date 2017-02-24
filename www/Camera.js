@@ -76,6 +76,7 @@ for (var key in Camera) {
  * @property {module:CameraPopoverOptions} [popoverOptions] - iOS-only options that specify popover location in iPad.
  * @property {module:Camera.Direction} [cameraDirection=BACK] - Choose the camera to use (front- or back-facing).
  * @property {Boolean} [convertToGrayscale=false] - iOS-only, converts the saved image to grayscale.
+ * @property {Boolean} [variableEditRect=false] - iOS-only, if `allowEdit` is `true`, then a resizeable cropping rectangle is used instead of standard square.
  */
 
 /**
@@ -156,9 +157,11 @@ cameraExport.getPicture = function(successCallback, errorCallback, options) {
     var popoverOptions = getValue(options.popoverOptions, null);
     var cameraDirection = getValue(options.cameraDirection, Camera.Direction.BACK);
     var convertToGrayscale = !!options.convertToGrayscale;
+    var variableEditRect = !!options.variableEditRect;
 
     var args = [quality, destinationType, sourceType, targetWidth, targetHeight, encodingType,
-                mediaType, allowEdit, correctOrientation, saveToPhotoAlbum, popoverOptions, cameraDirection, convertToGrayscale];
+                mediaType, allowEdit, correctOrientation, saveToPhotoAlbum, popoverOptions, cameraDirection,
+                convertToGrayscale, variableEditRect];
 
     exec(successCallback, errorCallback, "Camera", "takePicture", args);
     // XXX: commented out

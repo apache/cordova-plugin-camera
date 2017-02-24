@@ -238,6 +238,7 @@ Optional parameters to customize the camera settings.
 | popoverOptions | <code>[CameraPopoverOptions](#module_CameraPopoverOptions)</code> |  | iOS-only options that specify popover location in iPad. |
 | cameraDirection | <code>[Direction](#module_Camera.Direction)</code> | <code>BACK</code> | Choose the camera to use (front- or back-facing). |
 | convertToGrayscale | <code>Boolean</code> | <code>false</code> | iOS-only, converts the saved image to grayscale. |
+| variableEditRect | <code>Boolean</code> | <code>false</code> | iOS-only, if `allowEdit` is `true`, then a resizeable cropping rectangle is used instead of standard square. |
 
 ---
 
@@ -404,10 +405,6 @@ Take a photo and retrieve it as a Base64-encoded image:
 -  __CameraUsesGeolocation__ (boolean, defaults to false). For capturing JPEGs, set to true to get geolocation data in the EXIF header. This will trigger a request for geolocation permissions if set to true.
 
         <preference name="CameraUsesGeolocation" value="false" />
-        
--  __CameraUsesVariableEdit__ (boolean, defaults to false). If the plugin is called with the optional parameter `allowEdit == true`, then setting this preference to `true` suppresses the standard (fairly useless) square for cropping the photo, even suppresses the (then also useless) view of the photo with the "Retake"- and "Use Photo"-buttons, but instead offers a resizable cropping rectangle (with "Redo" and "Save"). For this portions of [GKImagePicker](https://github.com/gekitz/GKImagePicker) by Georg Kitz are used (under MIT-License).
-
-        <preference name="CameraUsesVariableEdit" value="false" />
 
 #### Amazon Fire OS Quirks <a name="camera-getPicture-quirks"></a>
 

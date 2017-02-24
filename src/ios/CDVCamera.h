@@ -57,11 +57,11 @@ typedef NSUInteger CDVMediaType;
 @property (strong) NSDictionary* popoverOptions;
 @property (assign) UIImagePickerControllerCameraDevice cameraDirection;
 @property (assign) BOOL convertToGrayscale;
+@property (assign) BOOL variableEditRect;
 
 @property (assign) BOOL popoverSupported;
 @property (assign) BOOL usesGeolocation;
 @property (assign) BOOL cropToSize;
-@property (assign) BOOL variableEditRect;
 
 + (instancetype) createFromTakePictureArguments:(CDVInvokedUrlCommand*)command;
 
