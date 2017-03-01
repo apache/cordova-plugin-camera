@@ -20,6 +20,18 @@
 -->
 # Release Notes
 
+### 2.3.2 (Feb 28, 2017)
+* [CB-12501](https://issues.apache.org/jira/browse/CB-12501) **Android**: Appium tests don't use `XPath` selectors anymore
+* [CB-12469](https://issues.apache.org/jira/browse/CB-12469) Appium tests can now run on **iOS 10**
+* [CB-12005](https://issues.apache.org/jira/browse/CB-12005) Changing the `getOrientation` method to return the defined enumerated `EXIF` instead of orientation in degrees for Consistency
+* [CB-12368](https://issues.apache.org/jira/browse/CB-12368) Fix permission check on **Android**
+* [CB-12353](https://issues.apache.org/jira/browse/CB-12353) Corrected merges usage in `plugin.xml`
+* [CB-12369](https://issues.apache.org/jira/browse/CB-12369) Add plugin typings from `DefinitelyTyped`
+* [CB-12363](https://issues.apache.org/jira/browse/CB-12363) Added build badges for **iOS 9.3** and **iOS 10.0**
+* [CB-12312](https://issues.apache.org/jira/browse/CB-12312) [Appium] [Android] A few changes to the tests:  - updated comments on how to run the tests. extra comments around functionality at certain points in the automation.  - stub of a resolution checker on test startup - still need to figure out acceptable values.  - moved session shutdown to an afterAll clause.  - changed resolution determiner from using webview-based values to using the native windows dimensions - this helps as the webview values may be scaled down intentionally by manufacturers (via changing devicePixelRatio). furthermore, since the screen dimension automation is used purely for native UI automation, better to use the dimensions reported by the native context rather than the web context.  - when finding elements by XPath, use multiple calls to avoid a Windows emulator + Android bug. Made this pattern consistent in the entire test.
+* [CB-12236](https://issues.apache.org/jira/browse/CB-12236) - Fixed RELEASENOTES for cordova-plugin-camera
+* [CB-12230](https://issues.apache.org/jira/browse/CB-12230) Removed Windows 8.1 build badges
+
 ### 2.3.1 (Dec 07, 2016)
 * [CB-12224](https://issues.apache.org/jira/browse/CB-12224) Updated version and RELEASENOTES.md for release 2.3.1
 * Fix missing license headers.
