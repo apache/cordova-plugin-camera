@@ -20,7 +20,7 @@
 -->
 # Release Notes
 
-### 2.3.2 (Feb 28, 2017)
+### 2.4.0 (Feb 28, 2017)
 * [CB-12501](https://issues.apache.org/jira/browse/CB-12501) **Android**: Appium tests don't use `XPath` selectors anymore
 * [CB-12469](https://issues.apache.org/jira/browse/CB-12469) Appium tests can now run on **iOS 10**
 * [CB-12005](https://issues.apache.org/jira/browse/CB-12005) Changing the `getOrientation` method to return the defined enumerated `EXIF` instead of orientation in degrees for Consistency
