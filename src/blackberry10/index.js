@@ -18,6 +18,9 @@
  * under the License.
  *
 */
+
+/* globals qnx, FileError, PluginResult */
+
 var PictureSourceType = {
         PHOTOLIBRARY : 0,    // Choose image from picture library (same as SAVEDPHOTOALBUM for Android)
         CAMERA : 1,          // Take picture from camera
@@ -40,7 +43,7 @@ window.qnx.webplatform.getApplication().invocation.queryTargets(
     },
     function (error, targets) {
         invokeAvailable = !error && targets && targets instanceof Array &&
-            targets.filter(function (t) { return t.default === 'sys.camera.card' }).length > 0;
+            targets.filter(function (t) { return t.default === 'sys.camera.card'; }).length > 0;
     }
 );
 
@@ -85,7 +88,7 @@ function showCameraDialog (done, cancel, fail) {
 //create unique name for saved file (same pattern as BB10 camera app)
 function imgName() {
     var date = new Date(),
-        pad = function (n) { return n < 10 ? '0' + n : n };
+        pad = function (n) { return n < 10 ? '0' + n : n; };
     return 'IMG_' + date.getFullYear() + pad(date.getMonth() + 1) + pad(date.getDate()) + '_' +
             pad(date.getHours()) + pad(date.getMinutes()) + pad(date.getSeconds()) + '.png';
 }
@@ -145,7 +148,7 @@ function encodeBase64(filePath, callback) {
             default:
                 msg += "Unknown Error";
                 break;
-            };
+            }
 
             // set it back to original value
             window.qnx.webplatform.getController().setFileSystemSandbox = sandbox;

@@ -19,9 +19,8 @@
  *
 */
 
-var exec = require('cordova/exec');
-
 /**
+ * @ignore in favour of iOS' one
  * A handle to an image picker popover.
  */
 var CameraPopoverHandle = function() {

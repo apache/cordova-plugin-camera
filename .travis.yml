@@ -1,13 +1,8 @@
 language: objective-c
-git:
-  depth: 2
+sudo: false
 node_js:
-  - "0.10"
-install:
-  - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config 
-  - cd ..
-  - npm install -g cordova-paramedic
-  - npm install -g cordova
-  - npm install -g ios-sim
-script:
-  - cordova-paramedic --platform ios --plugin ${TRAVIS_BUILD_DIR}
+  - "4.2"
+env:
+  - TEST_DIR=.
+  - TEST_DIR=./tests/ios
+script: cd $TEST_DIR && npm install && npm test
