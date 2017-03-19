@@ -185,7 +185,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 }
                 else if ((this.srcType == PHOTOLIBRARY) || (this.srcType == SAVEDPHOTOALBUM)) {
                     // FIXME: Stop always requesting the permission
-                    if(!PermissionHelper.hasPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    if(!PermissionHelper.hasPermission(this, permissions[0])) {
                         PermissionHelper.requestPermission(this, SAVE_TO_ALBUM_SEC, Manifest.permission.READ_EXTERNAL_STORAGE);
                     } else {
                         this.getImage(this.srcType, destType, encodingType);
@@ -375,10 +375,14 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 if (targetHeight > 0) {
                     intent.putExtra("outputY", targetHeight);
                 }
-                if (targetHeight > 0 && targetWidth > 0 && targetWidth == targetHeight) {
-                    intent.putExtra("aspectX", 1);
-                    intent.putExtra("aspectY", 1);
-                }
+
+                //commented by subhash
+                intent.putExtra("aspectX", targetWidth);
+                intent.putExtra("aspectY", targetHeight);
+                // if (targetHeight > 0 && targetWidth > 0 && targetWidth == targetHeight) {
+                //     intent.putExtra("aspectX", 1);
+                //     intent.putExtra("aspectY", 1);
+                // }
                 File photo = createCaptureFile(JPEG);
                 croppedUri = Uri.fromFile(photo);
                 intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, croppedUri);
@@ -427,10 +431,14 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         if (targetHeight > 0) {
           cropIntent.putExtra("outputY", targetHeight);
         }
-        if (targetHeight > 0 && targetWidth > 0 && targetWidth == targetHeight) {
-          cropIntent.putExtra("aspectX", 1);
-          cropIntent.putExtra("aspectY", 1);
-        }
+        
+        //updated by subhash
+        cropIntent.putExtra("aspectX", targetWidth);
+        cropIntent.putExtra("aspectY", targetHeight);
+        // if (targetHeight > 0 && targetWidth > 0 && targetWidth == targetHeight) {
+        //   cropIntent.putExtra("aspectX", 1);
+        //   cropIntent.putExtra("aspectY", 1);
+        // }
         // create new file handle to get full resolution crop
         croppedUri = Uri.fromFile(createCaptureFile(this.encodingType, System.currentTimeMillis() + ""));
         cropIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -577,9 +585,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 if (this.encodingType == JPEG) {
                     String exifPath;
                     exifPath = uri.getPath();
-                    //We just finished rotating it by an arbitrary orientation, just make sure it's normal
-                    if(rotate != ExifInterface.ORIENTATION_NORMAL)
-                        exif.resetOrientation();
                     exif.createOutFile(exifPath);
                     exif.writeExifData();
                 }
@@ -1048,7 +1053,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
             // Load in the smallest bitmap possible that is closest to the size we want
             options.inJustDecodeBounds = false;
-            options.inSampleSize = calculateSampleSize(rotatedWidth, rotatedHeight,  widthHeight[0], widthHeight[1]);
+            //changed by subhash
+            //options.inSampleSize = calculateSampleSize(rotatedWidth, rotatedHeight,  widthHeight[0], widthHeight[1]);
             Bitmap unscaledBitmap = null;
             try {
                 fileStream = FileHelper.getInputStreamFromUriString(galleryUri.toString(), cordova);
@@ -1111,30 +1117,31 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             newWidth = origWidth;
             newHeight = origHeight;
         }
+        // changes done by subhash
         // Only the width was specified
-        else if (newWidth > 0 && newHeight <= 0) {
-            newHeight = (int)((double)(newWidth / (double)origWidth) * origHeight);
-        }
-        // only the height was specified
-        else if (newWidth <= 0 && newHeight > 0) {
-            newWidth = (int)((double)(newHeight / (double)origHeight) * origWidth);
-        }
-        // If the user specified both a positive width and height
-        // (potentially different aspect ratio) then the width or height is
-        // scaled so that the image fits while maintaining aspect ratio.
-        // Alternatively, the specified width and height could have been
-        // kept and Bitmap.SCALE_TO_FIT specified when scaling, but this
-        // would result in whitespace in the new image.
-        else {
-            double newRatio = newWidth / (double) newHeight;
-            double origRatio = origWidth / (double) origHeight;
+                        // else if (newWidth > 0 && newHeight <= 0) {
+                        //     newHeight = (int)((double)(newWidth / (double)origWidth) * origHeight);
+                        // }
+                        // // only the height was specified
+                        // else if (newWidth <= 0 && newHeight > 0) {
+                        //     newWidth = (int)((double)(newHeight / (double)origHeight) * origWidth);
+                        // }
+                        // // If the user specified both a positive width and height
+                        // // (potentially different aspect ratio) then the width or height is
+                        // // scaled so that the image fits while maintaining aspect ratio.
+                        // // Alternatively, the specified width and height could have been
+                        // // kept and Bitmap.SCALE_TO_FIT specified when scaling, but this
+                        // // would result in whitespace in the new image.
+                        // else {
+                        //     double newRatio = newWidth / (double) newHeight;
+                        //     double origRatio = origWidth / (double) origHeight;
 
-            if (origRatio > newRatio) {
-                newHeight = (newWidth * origHeight) / origWidth;
-            } else if (origRatio < newRatio) {
-                newWidth = (newHeight * origWidth) / origHeight;
-            }
-        }
+                        //     if (origRatio > newRatio) {
+                        //         newHeight = (newWidth * origHeight) / origWidth;
+                        //     } else if (origRatio < newRatio) {
+                        //         newWidth = (newHeight * origWidth) / origHeight;
+                        //     }
+                        // }
 
         int[] retval = new int[2];
         retval[0] = newWidth;
