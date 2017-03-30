@@ -610,6 +610,15 @@ describe('Camera tests Android.', function () {
                 .deviceKeyEvent(BACK_BUTTON)
                 .elementById('Apps')
                 .click()
+                .then(function () {
+                    return driver
+                        .elementByXPath('//android.widget.Button[@text="OK"]')
+                        .click()
+                        .fail(function () {
+                            // no cling is all right
+                            // it is not a brand new emulator, then
+                        });
+                })
                 .elementByAndroidUIAutomator('new UiSelector().text("Gallery")')
                 .click()
                 .elementByAndroidUIAutomator('new UiSelector().textContains("Pictures")')
