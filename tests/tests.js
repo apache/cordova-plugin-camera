@@ -177,7 +177,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         ft.onprogress = function (progressEvent) {
             console.log('progress: ' + progressEvent.loaded + ' of ' + progressEvent.total);
         };
-        var server = "http://cordova-filetransfer.jitsu.com";
+        var server = "http://sheltered-retreat-43956.herokuapp.com";
 
         ft.upload(pictureUrl, server + '/upload', win, fail, options);
         function win(information_back) {
