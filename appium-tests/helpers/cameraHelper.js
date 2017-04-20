@@ -169,6 +169,7 @@ module.exports.checkPicture = function (pid, options, cb) {
                 return;
             }
         }
+
         try {
             if (result.indexOf('file:') === 0 ||
                 result.indexOf('content:') === 0 ||
@@ -184,6 +185,8 @@ module.exports.checkPicture = function (pid, options, cb) {
                     } else {
                         verifyFile(entry);
                     }
+                }, function (err) {
+                    errorCallback(err);
                 });
             } else {
                 displayImage(result);

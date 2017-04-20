@@ -225,6 +225,40 @@ describe('Camera tests Android.', function () {
             })
             .waitForDeviceReady()
             .injectLibraries()
+            .then(function () {
+                var options = {
+                    quality: 50,
+                    allowEdit: false,
+                    sourceType: cameraConstants.PictureSourceType.SAVEDPHOTOALBUM,
+                    saveToPhotoAlbum: false,
+                    targetWidth: 210,
+                    targetHeight: 210
+                };
+                return driver
+                    .then(function () { return getPicture(options, true); })
+                    .context(CONTEXT_NATIVE_APP)
+                    // case insensitive select, will be handy with Android 7 support
+                    .elementByXPath('//android.widget.Button[translate(@text, "alow", "ALOW")="ALLOW"]')
+                    .click()
+                    .fail(function noAlert() { })
+                    .deviceKeyEvent(BACK_BUTTON)
+                    .sleep(2000)
+                    .elementById('action_bar_title')
+                    .then(function () {
+                        // success means we're still in native app
+                        return driver
+                            .deviceKeyEvent(BACK_BUTTON);
+                        }, function () {
+                            // error means we're already in webview
+                            return driver;
+                        });
+            })
+            .then(function () {
+                // doing it inside a function because otherwise 
+                // it would not hook up to the webviewContext var change
+                // in the first methods of this chain
+                return driver.context(webviewContext);
+            })
             .deleteFillerImage(fillerImagePath)
             .then(function () {
                 fillerImagePath = null;
@@ -291,6 +325,7 @@ describe('Camera tests Android.', function () {
             pending('This test requires a functioning camera on the Android device/emulator, and this test suite\'s functional camera test failed on your target environment.');
         }
     }
+
     afterAll(function (done) {
         checkSession(done);
         driver
@@ -390,7 +425,7 @@ describe('Camera tests Android.', function () {
                         return driver
                             .elementByAndroidUIAutomator('new UiSelector().text("Choose video")')
                             .fail(function () {
-                                throw 'Couldn\'t find "Choose video" element.';
+                                throw 'Couldn\'t find a "Choose video" element.';
                             });
                     })
                     .deviceKeyEvent(BACK_BUTTON)
