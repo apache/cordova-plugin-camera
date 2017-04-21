@@ -783,7 +783,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
             }// If cancelled
             else if (resultCode == Activity.RESULT_CANCELED) {
-                this.failPicture("Camera cancelled.");
+                this.failPicture("No Image Selected");
             }
 
             // If something else
@@ -812,7 +812,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
             // If cancelled
             else if (resultCode == Activity.RESULT_CANCELED) {
-                this.failPicture("Camera cancelled.");
+                this.failPicture("No Image Selected");
             }
 
             // If something else
@@ -831,7 +831,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     }
                 });
             } else if (resultCode == Activity.RESULT_CANCELED) {
-                this.failPicture("Selection cancelled.");
+                this.failPicture("No Image Selected");
             } else {
                 this.failPicture("Selection did not complete!");
             }
@@ -849,7 +849,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             return 0;
         }
     }
-    
+
     /**
      * Write an inputstream to local disk
      *
