@@ -1,0 +1,14 @@
+{
+  "name": "cordova-plugin-camera-tests",
+  "version": "2.4.1-dev",
+  "description": "",
+  "cordova": {
+    "id": "cordova-plugin-camera-tests",
+    "platforms": []
+  },
+  "keywords": [
+    "ecosystem:cordova"
+  ],
+  "author": "",
+  "license": "Apache 2.0"
+}
