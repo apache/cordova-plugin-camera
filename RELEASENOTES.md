@@ -20,6 +20,13 @@
 -->
 # Release Notes
 
+### 2.4.1 (Apr 27, 2017)
+* [CB-12622](https://issues.apache.org/jira/browse/CB-12622) Updated build badges in `README`
+* [CB-12650](https://issues.apache.org/jira/browse/CB-12650) Fix manual test for uploading image
+* [CB-12685](https://issues.apache.org/jira/browse/CB-12685) added `package.json` to tests folder
+* [CB-12622](https://issues.apache.org/jira/browse/CB-12622) (android) Appium tests: Bust **Android** 6 and 7 permission dialogs
+* [CB-12618](https://issues.apache.org/jira/browse/CB-12618) (android) Appium tests: Handle native cling
+
 ### 2.4.0 (Feb 28, 2017)
 * [CB-12501](https://issues.apache.org/jira/browse/CB-12501) **Android**: Appium tests don't use `XPath` selectors anymore
 * [CB-12469](https://issues.apache.org/jira/browse/CB-12469) Appium tests can now run on **iOS 10**
