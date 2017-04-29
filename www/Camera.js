@@ -66,7 +66,7 @@ for (var key in Camera) {
  * @property {number} [quality=50] - Quality of the saved image, expressed as a range of 0-100, where 100 is typically full resolution with no loss from file compression. (Note that information about the camera's resolution is unavailable.)
  * @property {module:Camera.DestinationType} [destinationType=FILE_URI] - Choose the format of the return value.
  * @property {module:Camera.PictureSourceType} [sourceType=CAMERA] - Set the source of the picture.
- * @property {Boolean} [allowEdit=true] - Allow simple editing of image before selection.
+ * @property {Boolean} [allowEdit=false] - Allow simple editing of image before selection.
  * @property {module:Camera.EncodingType} [encodingType=JPEG] - Choose the  returned image file's encoding.
  * @property {number} [targetWidth] - Width in pixels to scale image. Must be used with `targetHeight`. Aspect ratio remains constant.
  * @property {number} [targetHeight] - Height in pixels to scale image. Must be used with `targetWidth`. Aspect ratio remains constant.
