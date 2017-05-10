@@ -50,6 +50,28 @@ It is also possible to install via repo url directly ( unstable )
 
     cordova plugin add https://github.com/apache/cordova-plugin-camera.git
 
+## FAILURE: Build failed with an exception.
+
+If it shows the error:
+
+```
+* What went wrong:
+A problem occurred configuring root project 'android'.
+> Could not resolve all dependencies for configuration ':_debugCompile'.
+   > Could not find any version that matches com.android.support:support-v4:24.1.1+.
+     Searched in the following locations:
+         https://repo1.maven.org/maven2/com/android/support/support-v4/maven-metadata.xml
+
+         https://repo1.maven.org/maven2/com/android/support/support-v4/
+     Required by:
+         :android:unspecified
+
+```
+
+Run the command on the console.
+
+`android.bat update sdk --no-ui --all --filter "extra-android-m2repository"`
+
 
 ## How to Contribute
 
