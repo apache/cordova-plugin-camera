@@ -35,6 +35,9 @@
     <js-module src="www/CameraConstants.js" name="Camera">
         <clobbers target="Camera" />
     </js-module>
+	
+	<js-module src="test/tests.js" name="tests">
+    </js-module>
 
     <js-module src="www/CameraPopoverOptions.js" name="CameraPopoverOptions">
         <clobbers target="CameraPopoverOptions" />
