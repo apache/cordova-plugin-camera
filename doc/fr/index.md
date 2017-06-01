@@ -19,9 +19,9 @@
 
 # cordova-plugin-camera
 
-Ce plugin définit un global `navigator.camera` objet qui fournit une API pour la prise de photos et de choisir des images de la bibliothèque d'images du système.
+Ce plugin définit un objet global `navigator.camera` qui fournit une API pour la prise de photos et pour le choix d'image depuis la bilbiothèque d'image du système.
 
-Bien que l'objet est attaché à la portée globale `navigator` , il n'est pas disponible jusqu'après la `deviceready` événement.
+Bien que l'objet soit attaché à la variable `navigator` , il n'est pas disponible avant le déclenchement de l'évènement `deviceready`.
 
     document.addEventListener (« deviceready », onDeviceReady, false) ;
     function onDeviceReady() {console.log(navigator.camera);}
@@ -29,10 +29,69 @@ Bien que l'objet est attaché à la portée globale `navigator` , il n'est pas d
 
 ## Installation
 
-    Cordova plugin ajouter cordova-plugin-camera
-    
+Cordova 5.0+ est requis
 
-## navigator.camera.getPicture
+    cordova plugin add cordova-plugin-camera
+	
+L'installation avec les anciennes version de cordova est toujours possible via l'ID obsolète
+
+	cordova plugin add org.apache.cordova.camera
+	
+C'est aussi possible de l'installer directement via l'URL du dépôt (non-stable)
+
+	cordova plugin add https://github.com/apache/cordova-plugin-camera.git
+	
+## Comment contribuer
+
+Les contributeurs sont les bienvenus! Nous avons besoin de vos contributions pour garder le projet actif. Vous pouvez [rapporter les bug](https://issues.apache.org/jira/issues/?jql=project%20%3D%20CB%20AND%20status%20in%20(Open%2C%20%22In%20Progress%22%2C%20Reopened)%20AND%20resolution%20%3D%20Unresolved%20AND%20component%20%3D%20%22Plugin%20Camera%22%20ORDER%20BY%20priority%20DESC%2C%20summary%20ASC%2C%20updatedDate%20DESC), améliorer la documentation, ou [participer au développement](https://github.com/apache/cordova-plugin-camera/pulls).
+
+Nous vous recommandons le [flux de travail](http://wiki.apache.org/cordova/ContributorWorkflow) sépcifique aux contributeurs. Plus d'information disponibles sur [notre wiki](http://wiki.apache.org/cordova).
+
+:warning: **Bug trouvé?** Reportez le sur le [JIRA issue tracker](https://issues.apache.org/jira/issues/?jql=project%20%3D%20CB%20AND%20status%20in%20(Open%2C%20%22In%20Progress%22%2C%20Reopened)%20AND%20resolution%20%3D%20Unresolved%20AND%20component%20%3D%20%22Plugin%20Camera%22%20ORDER%20BY%20priority%20DESC%2C%20summary%20ASC%2C%20updatedDate%20DESC).
+
+**Solution trouvée?** Envoyez la sur [Pull Request](https://github.com/apache/cordova-plugin-camera/pulls).
+
+Pour que vos modifications soient acceptées, vous devez signer et envoyer une Apache [ICLA](http://www.apache.org/licenses/#clas) (Individual Contributor License Agreement). Puis votre nom va apparaitre sur la liste des CLAs signés pas [non-committers](https://people.apache.org/committer-index.html#unlistedclas) ou [Cordova committers](http://people.apache.org/committers-by-project.html#cordova).
+
+**Et n'oubliez pas de tester et documenter votre code.**
+
+## Ce document est généré pas un outil
+
+:warning: Exécutez `npm install` dans le dépôt du plugin pour activer automatiquement la génération de la documentation si vous prévoyez de d'envoyer un PR.  
+[jsdoc-to-markdown](https://www.npmjs.com/package/jsdoc-to-markdown) est utilisé pour générer la documentation.
+La documentation consiste en un template et la documentation de l'API produit par par le plugin JS code et doit être regénéré avant chaque commit (fait automaticement via [husky](https://github.com/typicode/husky), exécutez le script `npm run gen-docs` comme un `precommit` - regardez `package.json` pour plus de détaille).
+
+
+---
+
+# API Reference
+
+
+* [camera](#module_camera)
+  * [.getPicture(successCallback, errorCallback, options)](#module_camera.getPicture)
+  * [.cleanup()](#module_camera.cleanup)
+  * [.onError](#module_camera.onError) : <code>function</code>
+  * [.onSuccess](#module_camera.onSuccess) : <code>function</code>
+  * [.CameraOptions](#module_camera.CameraOptions) : <code>Object</code>
+
+
+* [Camera](#module_Camera)
+  * [.DestinationType](#module_Camera.DestinationType) : <code>enum</code>
+  * [.EncodingType](#module_Camera.EncodingType) : <code>enum</code>
+  * [.MediaType](#module_Camera.MediaType) : <code>enum</code>
+  * [.PictureSourceType](#module_Camera.PictureSourceType) : <code>enum</code>
+  * [.PopoverArrowDirection](#module_Camera.PopoverArrowDirection) : <code>enum</code>
+  * [.Direction](#module_Camera.Direction) : <code>enum</code>
+
+* [CameraPopoverHandle](#module_CameraPopoverHandle)
+* [CameraPopoverOptions](#module_CameraPopoverOptions)
+
+---
+
+<a name="module_camera"></a>
+## camera
+<a name="module_camera.getPicture"></a>
+### navigator.camera.getPicture
 
 Prend une photo à l'aide de la caméra, ou récupère une photo de la Galerie d'images de l'appareil. L'image est passé au rappel succès comme un codage base64 `String` , ou comme l'URI du fichier de l'image. La méthode elle-même retourne un `CameraPopoverHandle` objet qui permet de repositionner le kangourou de sélection de fichier.
 
