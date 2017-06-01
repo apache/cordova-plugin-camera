@@ -76,7 +76,17 @@
 
 - (UIImage*)imageCorrectedForCaptureOrientation:(UIImageOrientation)imageOrientation
 {
-    float rotation_radians = 0;
+ 
+    // start
+    if (self.imageOrientation == UIImageOrientationUp) return self;
+    
+    UIGraphicsBeginImageContextWithOptions(self.size, NO, self.scale);
+    [self drawInRect:(CGRect){0, 0, self.size}];
+    UIImage *normalizedImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return normalizedImage;
+    // end
+    /*float rotation_radians = 0;
     bool perpendicular = false;
     
     switch (imageOrientation) {
@@ -121,7 +131,7 @@
     
     UIImage* newImage = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
-    return newImage;
+    return newImage;*/
 }
 
 - (UIImage*)imageCorrectedForCaptureOrientation
