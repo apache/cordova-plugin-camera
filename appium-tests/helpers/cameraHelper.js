@@ -114,7 +114,7 @@ module.exports.getPicture = function (opts, pid) {
 // calls a callback with 'ERROR: <error message>' if something is wrong
 // note that this function is executed in the context of tested app
 // and not in the context of tests
-module.exports.checkPicture = function (pid, options, cb) {
+module.exports.checkPicture = function (pid, options, skipContentCheck, cb) {
     var isIos = cordova.platformId === "ios";
     var isAndroid = cordova.platformId === "android";
     // skip image type check if it's unmodified on Android:
@@ -177,6 +177,10 @@ module.exports.checkPicture = function (pid, options, cb) {
 
                 if (!window.resolveLocalFileSystemURL) {
                     errorCallback('Cannot read file. Please install cordova-plugin-file to fix this.');
+                    return;
+                }
+                if (skipContentCheck) {
+                    cb('OK');
                     return;
                 }
                 resolveLocalFileSystemURL(result, function (entry) {
