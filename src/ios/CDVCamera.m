@@ -240,13 +240,9 @@ static NSString* toBase64(NSData* data) {
 
 - (void)repositionPopover:(CDVInvokedUrlCommand*)command
 {
-    if (([[self pickerController] pickerPopoverController] != nil) && [[[self pickerController] pickerPopoverController] isPopoverVisible]) {
+    NSDictionary* options = [command argumentAtIndex:0 withDefault:nil];
 
-        [[[self pickerController] pickerPopoverController] dismissPopoverAnimated:NO];
-
-        NSDictionary* options = [command argumentAtIndex:0 withDefault:nil];
-        [self displayPopover:options];
-    }
+    [self displayPopover:options];
 }
 
 - (NSInteger)integerValueForKey:(NSDictionary*)dict key:(NSString*)key defaultValue:(NSInteger)defaultValue
@@ -348,47 +344,77 @@ static NSString* toBase64(NSData* data) {
     self.hasPendingOperation = NO;
 }
 
-- (NSData*)processImage:(UIImage*)image info:(NSDictionary*)info options:(CDVPictureOptions*)options
+// Modified by Leckie. 2016-08-12
+- (void)processImage:(UIImage*)image info:(NSDictionary*)info options:(CDVPictureOptions*)options completion:(void (^)())completion
 {
-    NSData* data = nil;
-    
     switch (options.encodingType) {
         case EncodingTypePNG:
-            data = UIImagePNGRepresentation(image);
+            self.data = UIImagePNGRepresentation(image);
+            completion();
             break;
         case EncodingTypeJPEG:
         {
             if ((options.allowsEditing == NO) && (options.targetSize.width <= 0) && (options.targetSize.height <= 0) && (options.correctOrientation == NO) && (([options.quality integerValue] == 100) || (options.sourceType != UIImagePickerControllerSourceTypeCamera))){
                 // use image unedited as requested , don't resize
-                data = UIImageJPEGRepresentation(image, 1.0);
+                self.data = UIImageJPEGRepresentation(image, 1.0);
             } else {
-                data = UIImageJPEGRepresentation(image, [options.quality floatValue] / 100.0f);
+                self.data = UIImageJPEGRepresentation(image, [options.quality floatValue] / 100.0f);
             }
             
-            if (options.usesGeolocation) {
-                NSDictionary* controllerMetadata = [info objectForKey:@"UIImagePickerControllerMediaMetadata"];
-                if (controllerMetadata) {
-                    self.data = data;
+            // add metedata as much as possible
+            NSDictionary* controllerMetadata = [info objectForKey:UIImagePickerControllerMediaMetadata];
+            if (controllerMetadata) {
+                /*NSMutableDictionary* EXIFDictionary = [[controllerMetadata objectForKey:(NSString*)kCGImagePropertyExifDictionary]mutableCopy];
+                if (EXIFDictionary)	{
                     self.metadata = [[NSMutableDictionary alloc] init];
-                    
-                    NSMutableDictionary* EXIFDictionary = [[controllerMetadata objectForKey:(NSString*)kCGImagePropertyExifDictionary]mutableCopy];
-                    if (EXIFDictionary)	{
+                    [self.metadata setObject:EXIFDictionary forKey:(NSString*)kCGImagePropertyExifDictionary];
+                }*/
+                self.metadata = [controllerMetadata mutableCopy];
+                completion();
+            } else {
+                // just try
+                NSURL *assertURL = [info objectForKey:UIImagePickerControllerReferenceURL];
+                if(!assertURL) {
+                    completion();
+                    break;
+                }
+                ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
+                [library assetForURL:assertURL resultBlock:^(ALAsset *asset) {
+                    NSDictionary *metadata = asset.defaultRepresentation.metadata;
+                    NSMutableDictionary *imageMetadata = [[NSMutableDictionary alloc] initWithDictionary:metadata];
+                    [info setValue:imageMetadata forKey:UIImagePickerControllerMediaMetadata];
+                    self.metadata = imageMetadata;
+                    /*NSMutableDictionary *EXIFDictionary = [[imageMetadata objectForKey:(NSString*)kCGImagePropertyExifDictionary]mutableCopy];
+                    if (EXIFDictionary) {
+                        self.metadata = [[NSMutableDictionary alloc] init];
                         [self.metadata setObject:EXIFDictionary forKey:(NSString*)kCGImagePropertyExifDictionary];
                     }
-                    
-                    if (IsAtLeastiOSVersion(@"8.0")) {
-                        [[self locationManager] performSelector:NSSelectorFromString(@"requestWhenInUseAuthorization") withObject:nil afterDelay:0];
-                    }
-                    [[self locationManager] startUpdatingLocation];
+                    NSMutableDictionary *GPSDictionary = [[imageMetadata objectForKey:(NSString*)kCGImagePropertyGPSDictionary] mutableCopy];
+                    if(GPSDictionary) {
+                        if(!self.metadata) {
+                            self.metadata = [[NSMutableDictionary alloc] init];
+                        }
+                        [self.metadata setObject:GPSDictionary forKey:(NSString*)kCGImagePropertyGPSDictionary];
+                    }*/
+                    completion();
+                } failureBlock:^(NSError *error) {
+                    completion();
+                    NSLog(@"error %@", [error description]);
+                }];
+            }
+            // only when source type is UIImagePickerControllerSourceTypeCamera
+            if (options.usesGeolocation && options.sourceType == UIImagePickerControllerSourceTypeCamera) {
+                if (IsAtLeastiOSVersion(@"8.0")) {
+                    [[self locationManager] performSelector:NSSelectorFromString(@"requestWhenInUseAuthorization") withObject:nil afterDelay:0];
                 }
+                [[self locationManager] startUpdatingLocation];
             }
         }
             break;
         default:
+            completion();
             break;
     };
-    
-    return data;
 }
 
 - (NSString*)tempFilePath:(NSString*)extension
@@ -436,7 +462,6 @@ static NSString* toBase64(NSData* data) {
 
 - (void)resultForImage:(CDVPictureOptions*)options info:(NSDictionary*)info completion:(void (^)(CDVPluginResult* res))completion
 {
-    CDVPluginResult* result = nil;
     BOOL saveToPhotoAlbum = options.saveToPhotoAlbum;
     UIImage* image = nil;
 
@@ -463,36 +488,36 @@ static NSString* toBase64(NSData* data) {
                 return;
             } else {
                 NSString* nativeUri = [[self urlTransformer:url] absoluteString];
-                result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:nativeUri];
+                CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:nativeUri];
+                completion(result);
             }
         }
             break;
         case DestinationTypeFileUri:
         {
             image = [self retrieveImage:info options:options];
-            NSData* data = [self processImage:image info:info options:options];
-            if (data) {
-                
+            [self processImage:image info:info options:options completion:^{
                 NSString* extension = options.encodingType == EncodingTypePNG? @"png" : @"jpg";
                 NSString* filePath = [self tempFilePath:extension];
                 NSError* err = nil;
-                
+                CDVPluginResult* result = nil;
                 // save file
-                if (![data writeToFile:filePath options:NSAtomicWrite error:&err]) {
+                if (![[self imageDataWithMetaData] writeToFile:filePath options:NSAtomicWrite error:&err]) {
                     result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
                 } else {
                     result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[[self urlTransformer:[NSURL fileURLWithPath:filePath]] absoluteString]];
                 }
-            }
+                completion(result);
+            }];
         }
             break;
         case DestinationTypeDataUrl:
         {
             image = [self retrieveImage:info options:options];
-            NSData* data = [self processImage:image info:info options:options];
-            if (data)  {
-                result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:toBase64(data)];
-            }
+            [self processImage:image info:info options:options completion:^{
+                CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:toBase64([self imageDataWithMetaData])];
+                completion(result);
+            }];
         }
             break;
         default:
@@ -503,8 +528,6 @@ static NSString* toBase64(NSData* data) {
         ALAssetsLibrary* library = [ALAssetsLibrary new];
         [library writeImageToSavedPhotosAlbum:image.CGImage orientation:(ALAssetOrientation)(image.imageOrientation) completionBlock:nil];
     }
-
-    completion(result);
 }
 
 - (CDVPluginResult*)resultForVideo:(NSDictionary*)info
@@ -513,6 +536,7 @@ static NSString* toBase64(NSData* data) {
     return [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:moviePath];
 }
 
+// Modified by Leckie. 2016-08-10
 - (void)imagePickerController:(UIImagePickerController*)picker didFinishPickingMediaWithInfo:(NSDictionary*)info
 {
     __weak CDVCameraPicker* cameraPicker = (CDVCameraPicker*)picker;
@@ -524,7 +548,8 @@ static NSString* toBase64(NSData* data) {
         NSString* mediaType = [info objectForKey:UIImagePickerControllerMediaType];
         if ([mediaType isEqualToString:(NSString*)kUTTypeImage]) {
             [weakSelf resultForImage:cameraPicker.pictureOptions info:info completion:^(CDVPluginResult* res) {
-                if (![self usesGeolocation] || picker.sourceType != UIImagePickerControllerSourceTypeCamera) {
+                if(!(self.pickerController.pictureOptions.usesGeolocation && self.pickerController.pictureOptions.sourceType == UIImagePickerControllerSourceTypeCamera)) {
+                    // If usesGeolocation and sourceType=Camera will sendPluginResult later. In imagePickerControllerReturnImageResult.
                     [weakSelf.commandDelegate sendPluginResult:res callbackId:cameraPicker.callbackId];
                     weakSelf.hasPendingOperation = NO;
                     weakSelf.pickerController = nil;
@@ -664,22 +689,28 @@ static NSString* toBase64(NSData* data) {
     [self imagePickerControllerReturnImageResult];
 }
 
-- (void)imagePickerControllerReturnImageResult
-{
-    CDVPictureOptions* options = self.pickerController.pictureOptions;
-    CDVPluginResult* result = nil;
-    
+// Added by Leckie. 2016-08-12
+- (NSData*)imageDataWithMetaData {
+    NSData *data = [self.data mutableCopy];
     if (self.metadata) {
         CGImageSourceRef sourceImage = CGImageSourceCreateWithData((__bridge CFDataRef)self.data, NULL);
         CFStringRef sourceType = CGImageSourceGetType(sourceImage);
         
-        CGImageDestinationRef destinationImage = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)self.data, sourceType, 1, NULL);
+        CGImageDestinationRef destinationImage = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)data, sourceType, 1, NULL);
         CGImageDestinationAddImageFromSource(destinationImage, sourceImage, 0, (__bridge CFDictionaryRef)self.metadata);
         CGImageDestinationFinalize(destinationImage);
         
         CFRelease(sourceImage);
         CFRelease(destinationImage);
     }
+    NSLog(@"metadata: %@", self.metadata);
+    return data;
+}
+
+- (void)imagePickerControllerReturnImageResult
+{
+    CDVPictureOptions* options = self.pickerController.pictureOptions;
+    CDVPluginResult* result = nil;
     
     switch (options.destinationType) {
         case DestinationTypeFileUri:
@@ -689,7 +720,7 @@ static NSString* toBase64(NSData* data) {
             NSString* filePath = [self tempFilePath:extension];
             
             // save file
-            if (![self.data writeToFile:filePath options:NSAtomicWrite error:&err]) {
+            if (![[self imageDataWithMetaData] writeToFile:filePath options:NSAtomicWrite error:&err]) {
                 result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
             }
             else {
@@ -699,7 +730,7 @@ static NSString* toBase64(NSData* data) {
             break;
         case DestinationTypeDataUrl:
         {
-            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:toBase64(self.data)];
+            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:toBase64([self imageDataWithMetaData])];
         }
             break;
         case DestinationTypeNativeUri:
@@ -716,10 +747,12 @@ static NSString* toBase64(NSData* data) {
     self.data = nil;
     self.metadata = nil;
     
+    // This is no use. In fact.
+    /*
     if (options.saveToPhotoAlbum) {
         ALAssetsLibrary *library = [ALAssetsLibrary new];
         [library writeImageDataToSavedPhotosAlbum:self.data metadata:self.metadata completionBlock:nil];
-    }
+    }*/
 }
 
 @end

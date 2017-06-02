@@ -33,7 +33,7 @@
 @interface CDVCamera ()
 
 // expose private interface
-- (NSData*)processImage:(UIImage*)image info:(NSDictionary*)info options:(CDVPictureOptions*)options;
+- (void)processImage:(UIImage*)image info:(NSDictionary*)info options:(CDVPictureOptions*)options completion:(void (^)())completion;
 - (UIImage*)retrieveImage:(NSDictionary*)info options:(CDVPictureOptions*)options;
 - (CDVPluginResult*)resultForImage:(CDVPictureOptions*)options info:(NSDictionary*)info;
 - (CDVPluginResult*)resultForVideo:(NSDictionary*)info;
@@ -464,7 +464,6 @@
 - (void) testProcessImage
 {
     CDVPictureOptions* pictureOptions = [[CDVPictureOptions alloc] init];
-    NSData* resultData;
     
     UIImage* originalImage = [self createImage:CGRectMake(0, 0, 1024, 768) orientation:UIImageOrientationDown];
     NSData* originalImageDataPNG = UIImagePNGRepresentation(originalImage);
@@ -478,9 +477,10 @@
     pictureOptions.correctOrientation = NO;
     pictureOptions.encodingType = EncodingTypePNG;
     
-    resultData = [self.plugin processImage:originalImage info:@{} options:pictureOptions];
-    XCTAssertEqualObjects([resultData base64EncodedStringWithOptions:0], [originalImageDataPNG base64EncodedStringWithOptions:0]);
-
+    [self.plugin processImage:originalImage info:@{} options:pictureOptions completion:^{
+        XCTAssertEqualObjects([self.plugin.data base64EncodedStringWithOptions:0], [originalImageDataPNG base64EncodedStringWithOptions:0]);
+    }];
+    
     // Original, JPEG, full quality
     
     pictureOptions.allowsEditing = NO;
@@ -489,8 +489,10 @@
     pictureOptions.correctOrientation = NO;
     pictureOptions.encodingType = EncodingTypeJPEG;
     
-    resultData = [self.plugin processImage:originalImage info:@{} options:pictureOptions];
-    XCTAssertEqualObjects([resultData base64EncodedStringWithOptions:0], [originalImageDataJPEG base64EncodedStringWithOptions:0]);
+    [self.plugin processImage:originalImage info:@{} options:pictureOptions completion:^{
+        XCTAssertEqualObjects([self.plugin.data base64EncodedStringWithOptions:0], [originalImageDataJPEG base64EncodedStringWithOptions:0]);
+    }];
+    
     
     // Original, JPEG, with quality value
     
@@ -502,8 +504,9 @@
     pictureOptions.quality = @(57);
     
     NSData* originalImageDataJPEGWithQuality = UIImageJPEGRepresentation(originalImage, [pictureOptions.quality floatValue]/ 100.f);
-    resultData = [self.plugin processImage:originalImage info:@{} options:pictureOptions];
-    XCTAssertEqualObjects([resultData base64EncodedStringWithOptions:0], [originalImageDataJPEGWithQuality base64EncodedStringWithOptions:0]);
+    [self.plugin processImage:originalImage info:@{} options:pictureOptions completion:^{
+        XCTAssertEqualObjects([self.plugin.data base64EncodedStringWithOptions:0], [originalImageDataJPEGWithQuality base64EncodedStringWithOptions:0]);
+    }];
     
     // TODO: usesGeolocation is not tested
 }
