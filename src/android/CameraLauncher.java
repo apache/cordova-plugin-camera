@@ -366,8 +366,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         croppedUri = null;
         if (this.mediaType == PICTURE) {
             intent.setType("image/*");
+            intent.setAction(Intent.ACTION_PICK);
             if (this.allowEdit) {
-                intent.setAction(Intent.ACTION_PICK);
                 intent.putExtra("crop", "true");
                 if (targetWidth > 0) {
                     intent.putExtra("outputX", targetWidth);
@@ -382,9 +382,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 File photo = createCaptureFile(JPEG);
                 croppedUri = Uri.fromFile(photo);
                 intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, croppedUri);
-            } else {
-                intent.setAction(Intent.ACTION_GET_CONTENT);
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
             }
         } else if (this.mediaType == VIDEO) {
             intent.setType("video/*");
