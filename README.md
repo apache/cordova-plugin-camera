@@ -100,20 +100,20 @@ If you don't pass the variable, the plugin will add an empty string as value.
 
 
 * [camera](#module_camera)
-    * [.getPicture(successCallback, errorCallback, options)](#module_camera.getPicture)
-    * [.cleanup()](#module_camera.cleanup)
-    * [.onError](#module_camera.onError) : <code>function</code>
-    * [.onSuccess](#module_camera.onSuccess) : <code>function</code>
-    * [.CameraOptions](#module_camera.CameraOptions) : <code>Object</code>
+  * [.getPicture(successCallback, errorCallback, options)](#module_camera.getPicture)
+  * [.cleanup()](#module_camera.cleanup)
+  * [.onError](#module_camera.onError) : <code>function</code>
+  * [.onSuccess](#module_camera.onSuccess) : <code>function</code>
+  * [.CameraOptions](#module_camera.CameraOptions) : <code>Object</code>
 
 
 * [Camera](#module_Camera)
-    * [.DestinationType](#module_Camera.DestinationType) : <code>enum</code>
-    * [.EncodingType](#module_Camera.EncodingType) : <code>enum</code>
-    * [.MediaType](#module_Camera.MediaType) : <code>enum</code>
-    * [.PictureSourceType](#module_Camera.PictureSourceType) : <code>enum</code>
-    * [.PopoverArrowDirection](#module_Camera.PopoverArrowDirection) : <code>enum</code>
-    * [.Direction](#module_Camera.Direction) : <code>enum</code>
+  * [.DestinationType](#module_Camera.DestinationType) : <code>enum</code>
+  * [.EncodingType](#module_Camera.EncodingType) : <code>enum</code>
+  * [.MediaType](#module_Camera.MediaType) : <code>enum</code>
+  * [.PictureSourceType](#module_Camera.PictureSourceType) : <code>enum</code>
+  * [.PopoverArrowDirection](#module_Camera.PopoverArrowDirection) : <code>enum</code>
+  * [.Direction](#module_Camera.Direction) : <code>enum</code>
 
 * [CameraPopoverHandle](#module_CameraPopoverHandle)
 * [CameraPopoverOptions](#module_CameraPopoverOptions)
@@ -360,13 +360,7 @@ Matches iOS UIPopoverArrowDirection constants to specify arrow location on popov
 <a name="module_CameraPopoverOptions"></a>
 
 ## CameraPopoverOptions
-iOS-only parameters that specify the anchor element location and arrow
-direction of the popover when selecting images from an iPad's library
-or album.
-Note that the size of the popover may change to adjust to the
-direction of the arrow and orientation of the screen.  Make sure to
-account for orientation changes when specifying the anchor element
-location.
+iOS-only parameters that specify the anchor element location and arrowdirection of the popover when selecting images from an iPad's libraryor album.Note that the size of the popover may change to adjust to thedirection of the arrow and orientation of the screen.  Make sure toaccount for orientation changes when specifying the anchor elementlocation.
 
 
 | Param | Type | Default | Description |
