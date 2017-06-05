@@ -114,9 +114,11 @@ If you don't pass the variable, the plugin will add an empty string as value.
     * [.PictureSourceType](#module_Camera.PictureSourceType) : <code>enum</code>
     * [.PopoverArrowDirection](#module_Camera.PopoverArrowDirection) : <code>enum</code>
     * [.Direction](#module_Camera.Direction) : <code>enum</code>
+    
+* [CameraPopoverOptions](#module_CameraPopoverOptions)
 
 * [CameraPopoverHandle](#module_CameraPopoverHandle)
-* [CameraPopoverOptions](#module_CameraPopoverOptions)
+	* [.setPosition(options)](#module_CameraPopoverHandle.setPosition)
 
 ---
 
@@ -382,7 +384,17 @@ location.
 <a name="module_CameraPopoverHandle"></a>
 
 ## CameraPopoverHandle
-A handle to an image picker popover.
+A handle to the image picker popover.
+
+<a name="module_CameraPopoverHandle.setPosition"></a>
+
+### CameraPopoverHandle.setPosition(options)
+Can be used to reposition the image selection dialog, for example, when the device orientation changes.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| options | <code>[CameraPopoverOptions](#module_CameraPopoverOptions)</code> | CameraPopoverOptions |
 
 __Supported Platforms__
 
