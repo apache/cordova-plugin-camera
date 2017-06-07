@@ -574,6 +574,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 os.close();
 
                 // Restore exif data to file
+                   /*
                 if (this.encodingType == JPEG) {
                     String exifPath;
                     exifPath = uri.getPath();
@@ -583,7 +584,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     exif.createOutFile(exifPath);
                     exif.writeExifData();
                 }
-
+                     */
                 // Send Uri back to JavaScript for viewing image
                 this.callbackContext.success(uri.toString());
 
