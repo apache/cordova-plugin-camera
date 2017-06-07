@@ -75,7 +75,7 @@ public class CordovaUri {
 
     public Uri getCorrectUri()
     {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+        if(Build.VERSION.SDK_INT >= 23)
             return androidUri;
         else
             return fileUri;
