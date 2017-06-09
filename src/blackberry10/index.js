@@ -22,19 +22,19 @@
 /* globals qnx, FileError, PluginResult */
 
 var PictureSourceType = {
-        PHOTOLIBRARY : 0,    // Choose image from picture library (same as SAVEDPHOTOALBUM for Android)
-        CAMERA : 1,          // Take picture from camera
-        SAVEDPHOTOALBUM : 2  // Choose image from picture library (same as PHOTOLIBRARY for Android)
+        PHOTOLIBRARY: 0,    // Choose image from picture library (same as SAVEDPHOTOALBUM for Android)
+        CAMERA: 1,          // Take picture from camera
+        SAVEDPHOTOALBUM: 2  // Choose image from picture library (same as PHOTOLIBRARY for Android)
     },
     DestinationType = {
         DATA_URL: 0,         // Return base64 encoded string
         FILE_URI: 1,         // Return file uri (content://media/external/images/media/2 for Android)
         NATIVE_URI: 2        // Return native uri (eg. asset-library://... for iOS)
     },
-    savePath = window.qnx.webplatform.getApplication().getEnv("HOME").replace('/data', '') + '/shared/camera/',
+    savePath = window.qnx.webplatform.getApplication().getEnv('HOME').replace('/data', '') + '/shared/camera/',
     invokeAvailable = true;
 
-//check for camera card - it isn't currently availble in work perimeter
+// check for camera card - it isn't currently availble in work perimeter
 window.qnx.webplatform.getApplication().invocation.queryTargets(
     {
         type: 'image/jpeg',
@@ -47,7 +47,7 @@ window.qnx.webplatform.getApplication().invocation.queryTargets(
     }
 );
 
-//open a webview with getUserMedia camera card implementation when camera card not available
+// open a webview with getUserMedia camera card implementation when camera card not available
 function showCameraDialog (done, cancel, fail) {
     var wv = qnx.webplatform.createWebView(function () {
         wv.url = 'local:///chrome/camera.html';
@@ -85,16 +85,16 @@ function showCameraDialog (done, cancel, fail) {
     });
 }
 
-//create unique name for saved file (same pattern as BB10 camera app)
-function imgName() {
+// create unique name for saved file (same pattern as BB10 camera app)
+function imgName () {
     var date = new Date(),
         pad = function (n) { return n < 10 ? '0' + n : n; };
     return 'IMG_' + date.getFullYear() + pad(date.getMonth() + 1) + pad(date.getDate()) + '_' +
             pad(date.getHours()) + pad(date.getMinutes()) + pad(date.getSeconds()) + '.png';
 }
 
-//convert dataURI to Blob
-function dataURItoBlob(dataURI) {
+// convert dataURI to Blob
+function dataURItoBlob (dataURI) {
     var byteString = atob(dataURI.split(',')[1]),
         mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0],
         arrayBuffer = new ArrayBuffer(byteString.length),
@@ -106,8 +106,8 @@ function dataURItoBlob(dataURI) {
     return new Blob([new DataView(arrayBuffer)], { type: mimeString });
 }
 
-//save dataURI to file system and call success with path
-function saveImage(data, success, fail) {
+// save dataURI to file system and call success with path
+function saveImage (data, success, fail) {
     var name = savePath + imgName();
     require('lib/webview').setSandbox(false);
     window.webkitRequestFileSystem(window.PERSISTENT, 0, function (fs) {
@@ -123,30 +123,30 @@ function saveImage(data, success, fail) {
     }, fail);
 }
 
-function encodeBase64(filePath, callback) {
+function encodeBase64 (filePath, callback) {
     var sandbox = window.qnx.webplatform.getController().setFileSystemSandbox, // save original sandbox value
         errorHandler = function (err) {
-            var msg = "An error occured: ";
+            var msg = 'An error occured: ';
 
             switch (err.code) {
             case FileError.NOT_FOUND_ERR:
-                msg += "File or directory not found";
+                msg += 'File or directory not found';
                 break;
 
             case FileError.NOT_READABLE_ERR:
-                msg += "File or directory not readable";
+                msg += 'File or directory not readable';
                 break;
 
             case FileError.PATH_EXISTS_ERR:
-                msg += "File or directory already exists";
+                msg += 'File or directory already exists';
                 break;
 
             case FileError.TYPE_MISMATCH_ERR:
-                msg += "Invalid file type";
+                msg += 'Invalid file type';
                 break;
 
             default:
-                msg += "Unknown Error";
+                msg += 'Unknown Error';
                 break;
             }
 
@@ -182,12 +182,12 @@ module.exports = {
             result = new PluginResult(args, env),
             done = function (data) {
                 if (destinationType === DestinationType.FILE_URI) {
-                    data = "file://" + data;
+                    data = 'file://' + data;
                     result.callbackOk(data, false);
                 } else {
                     encodeBase64(data, function (data) {
                         if (/^data:/.test(data)) {
-                            data = data.slice(data.indexOf(",") + 1);
+                            data = data.slice(data.indexOf(',') + 1);
                             result.callbackOk(data, false);
                         } else {
                             result.callbackError(data, false);
@@ -204,10 +204,10 @@ module.exports = {
                 }
             };
 
-        switch(sourceType) {
+        switch (sourceType) {
         case PictureSourceType.CAMERA:
             if (invokeAvailable) {
-                window.qnx.webplatform.getApplication().cards.camera.open("photo", done, cancel, invoked);
+                window.qnx.webplatform.getApplication().cards.camera.open('photo', done, cancel, invoked);
             } else {
                 showCameraDialog(done, cancel, fail);
             }
@@ -216,8 +216,8 @@ module.exports = {
         case PictureSourceType.PHOTOLIBRARY:
         case PictureSourceType.SAVEDPHOTOALBUM:
             window.qnx.webplatform.getApplication().cards.filePicker.open({
-                mode: "Picker",
-                type: ["picture"]
+                mode: 'Picker',
+                type: ['picture']
             }, done, cancel, invoked);
             break;
         }

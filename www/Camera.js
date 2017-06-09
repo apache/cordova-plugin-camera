@@ -19,11 +19,11 @@
  *
 */
 
-var argscheck = require('cordova/argscheck'),
-    exec = require('cordova/exec'),
-    Camera = require('./Camera');
-    // XXX: commented out
-    //CameraPopoverHandle = require('./CameraPopoverHandle');
+var argscheck = require('cordova/argscheck');
+var exec = require('cordova/exec');
+var Camera = require('./Camera');
+// XXX: commented out
+// CameraPopoverHandle = require('./CameraPopoverHandle');
 
 /**
  * @namespace navigator
@@ -131,7 +131,7 @@ for (var key in Camera) {
  * @param {module:camera.onError} errorCallback
  * @param {module:camera.CameraOptions} options CameraOptions
  */
-cameraExport.getPicture = function(successCallback, errorCallback, options) {
+cameraExport.getPicture = function (successCallback, errorCallback, options) {
     argscheck.checkArgs('fFO', 'Camera.getPicture', arguments);
     options = options || {};
     var getValue = argscheck.getValue;
@@ -150,11 +150,11 @@ cameraExport.getPicture = function(successCallback, errorCallback, options) {
     var cameraDirection = getValue(options.cameraDirection, Camera.Direction.BACK);
 
     var args = [quality, destinationType, sourceType, targetWidth, targetHeight, encodingType,
-                mediaType, allowEdit, correctOrientation, saveToPhotoAlbum, popoverOptions, cameraDirection];
+        mediaType, allowEdit, correctOrientation, saveToPhotoAlbum, popoverOptions, cameraDirection];
 
-    exec(successCallback, errorCallback, "Camera", "takePicture", args);
+    exec(successCallback, errorCallback, 'Camera', 'takePicture', args);
     // XXX: commented out
-    //return new CameraPopoverHandle();
+    // return new CameraPopoverHandle();
 };
 
 /**
@@ -178,8 +178,8 @@ cameraExport.getPicture = function(successCallback, errorCallback, options) {
  *     alert('Failed because: ' + message);
  * }
  */
-cameraExport.cleanup = function(successCallback, errorCallback) {
-    exec(successCallback, errorCallback, "Camera", "cleanup", []);
+cameraExport.cleanup = function (successCallback, errorCallback) {
+    exec(successCallback, errorCallback, 'Camera', 'cleanup', []);
 };
 
 module.exports = cameraExport;

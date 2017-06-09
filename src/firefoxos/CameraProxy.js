@@ -21,17 +21,17 @@
 
 /* globals MozActivity */
 
-function takePicture(success, error, opts) {
+function takePicture (success, error, opts) {
     var pick = new MozActivity({
-        name: "pick",
+        name: 'pick',
         data: {
-            type: ["image/*"]
+            type: ['image/*']
         }
     });
 
-    pick.onerror = error || function() {};
+    pick.onerror = error || function () {};
 
-    pick.onsuccess = function() {
+    pick.onsuccess = function () {
         // image is returned as Blob in this.result.blob
         // we need to call success with url or base64 encoded image
         if (opts && opts.destinationType === 0) {
@@ -47,7 +47,7 @@ function takePicture(success, error, opts) {
 
 module.exports = {
     takePicture: takePicture,
-    cleanup: function(){}
+    cleanup: function () {}
 };
 
-require("cordova/exec/proxy").add("Camera", module.exports);
+require('cordova/exec/proxy').add('Camera', module.exports);

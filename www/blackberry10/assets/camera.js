@@ -25,9 +25,9 @@ document.addEventListener('DOMContentLoaded', function () {
     window.navigator.webkitGetUserMedia(
         { video: true },
         function (stream) {
-            var video = document.getElementById('v'),
-                canvas = document.getElementById('c'),
-                camera = document.getElementById('camera');
+            var video = document.getElementById('v');
+            var canvas = document.getElementById('c');
+            var camera = document.getElementById('camera');
             video.autoplay = true;
             video.width = window.innerWidth;
             video.height = window.innerHeight - 100;

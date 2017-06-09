@@ -48,7 +48,7 @@ var exec = require('cordova/exec');
  * }
  * @module CameraPopoverHandle
  */
-var CameraPopoverHandle = function() {
+var CameraPopoverHandle = function () {
     /**
      * Can be used to reposition the image selection dialog,
      * for example, when the device orientation changes.
@@ -57,9 +57,9 @@ var CameraPopoverHandle = function() {
      * @method setPosition
      * @param {module:CameraPopoverOptions} popoverOptions
      */
-    this.setPosition = function(popoverOptions) {
+    this.setPosition = function (popoverOptions) {
         var args = [ popoverOptions ];
-        exec(null, null, "Camera", "repositionPopover", args);
+        exec(null, null, 'Camera', 'repositionPopover', args);
     };
 };
 
