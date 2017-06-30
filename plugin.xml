@@ -31,6 +31,7 @@
     <issue>https://issues.apache.org/jira/browse/CB/component/12320645</issue>
 
     <dependency id="cordova-plugin-compat" version="^1.1.0" />
+    <dependency id="cordova-plugin-file-provider" url="https://github.com/cjpearson/cordova-plugin-file-provider" />
 
     <js-module src="www/CameraConstants.js" name="Camera">
         <clobbers target="Camera" />
@@ -69,29 +70,19 @@
         <config-file target="AndroidManifest.xml" parent="/*">
             <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
         </config-file>
-        <config-file target="AndroidManifest.xml" parent="application">
-          <provider
-              android:name="android.support.v4.content.FileProvider"
-              android:authorities="${applicationId}.provider"
-              android:exported="false"
-              android:grantUriPermissions="true" >
-              <meta-data
-                  android:name="android.support.FILE_PROVIDER_PATHS"
-                  android:resource="@xml/provider_paths"/>
-          </provider>
+
+        <config-file target="res/xml/provider_paths.xml" parent="/paths">
+            <external-path name="external_files" path="."/>
         </config-file>
 
         <source-file src="src/android/CameraLauncher.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/CordovaUri.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/FileHelper.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/ExifHelper.java" target-dir="src/org/apache/cordova/camera" />
-        <source-file src="src/android/xml/provider_paths.xml" target-dir="res/xml" />
 
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />
-          </js-module>
-
-        <framework src="com.android.support:support-v4:24.1.1+" />
+        </js-module>
 
       </platform>
 
