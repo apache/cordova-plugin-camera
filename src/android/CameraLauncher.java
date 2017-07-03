@@ -601,6 +601,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         String imageFileName = "IMG_" + timeStamp + (this.encodingType == JPEG ? ".jpg" : ".png");
         File storageDir = Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_PICTURES);
+        storageDir.mkdirs();
         String galleryPath = storageDir.getAbsolutePath() + "/" + imageFileName;
         return galleryPath;
     }
