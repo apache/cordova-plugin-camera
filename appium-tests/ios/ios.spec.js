@@ -273,10 +273,18 @@ describe('Camera tests iOS.', function () {
     }
 
     it('camera.ui.util configure driver and start a session', function (done) {
+        // retry up to 3 times
         getDriver()
+            .fail(function () {
+                return getDriver()
+                    .fail(function () {
+                        return getDriver()
+                            .fail(fail);
+                    });
+            })
             .fail(fail)
             .done(done);
-    }, 15 * MINUTE);
+    }, 30 * MINUTE);
 
     describe('Specs.', function () {
         afterEach(function (done) {
@@ -291,13 +299,20 @@ describe('Camera tests iOS.', function () {
                 return driver
                     .quit()
                     .then(function () {
-                        return getDriver();
+                        return getDriver()
+                            .fail(function () {
+                                return getDriver()
+                                    .fail(function () {
+                                        return getDriver()
+                                            .fail(fail);
+                                    });
+                            });
                     })
                     .done(done);
             } else {
                 done();
             }
-        }, 15 * MINUTE);
+        }, 30 * MINUTE);
 
         // getPicture() with mediaType: VIDEO, sourceType: PHOTOLIBRARY
         it('camera.ui.spec.1 Selecting only videos', function (done) {

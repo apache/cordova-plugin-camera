@@ -369,12 +369,20 @@ describe('Camera tests Android.', function () {
     }, MINUTE);
 
     it('camera.ui.util configuring driver and starting a session', function (done) {
+        // retry up to 3 times
         getDriver()
+            .fail(function () {
+                return getDriver()
+                    .fail(function () {
+                        return getDriver()
+                            .fail(fail);
+                    });
+            })
             .then(function () {
                 appiumSessionStarted = true;
-            }, fail)
+            })
             .done(done);
-    }, 10 * MINUTE);
+    }, 30 * MINUTE);
 
     it('camera.ui.util determine screen dimensions', function (done) {
         checkSession(done, /*skipResolutionCheck?*/ true); // skip the resolution check here since we are about to find out in this spec!
@@ -732,3 +740,4 @@ describe('Camera tests Android.', function () {
     });
 
 });
+
