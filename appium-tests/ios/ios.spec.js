@@ -81,18 +81,18 @@ describe('Camera tests iOS.', function () {
         return cameraHelper.generateSpecs(sourceTypes, destinationTypes, encodingTypes, allowEditOptions, correctOrientationOptions);
     }
 
-    function usePicture() {
+    function usePicture(allowEdit) {
         return driver
-            .elementByXPath('//*[@label="Use"]')
-            .click()
-            .fail(function () {
+            .sleep(10)
+            .then(function () {
                 if (isXCUI) {
-                    return driver
-                        .waitForElementByAccessibilityId('Choose', MINUTE / 3)
-                        .click();
+                    return driver.waitForElementByAccessibilityId('Choose', MINUTE / 3).click();
+                } else {
+                    if (allowEdit) {
+                        return wdHelper.tapElementByXPath('//UIAButton[@label="Choose"]', driver);
+                    }
+                    return driver.elementByXPath('//*[@label="Use"]').click();
                 }
-                // For some reason "Choose" element is not clickable by standard Appium methods on iOS <= 9
-                return wdHelper.tapElementByXPath('//UIAButton[@label="Choose"]', driver);
             });
     }
 
@@ -148,7 +148,7 @@ describe('Camera tests iOS.', function () {
                             if (!options.allowEdit) {
                                 return driver;
                             }
-                            return usePicture();
+                            return usePicture(options.allowEdit);
                         });
                 }
                 if (options.hasOwnProperty('sourceType') && options.sourceType === cameraConstants.PictureSourceType.SAVEDPHOTOALBUM) {
@@ -157,7 +157,7 @@ describe('Camera tests iOS.', function () {
                             if (!options.allowEdit) {
                                 return driver;
                             }
-                            return usePicture();
+                            return usePicture(options.allowEdit);
                         });
                 }
                 if (cancelCamera) {
@@ -288,7 +288,7 @@ describe('Camera tests iOS.', function () {
 
     describe('Specs.', function () {
         afterEach(function (done) {
-            if (specsRun >= 15) {
+            if (specsRun >= 19) {
                 specsRun = 0;
                 // we need to restart the session regularly because for some reason
                 // when running against iOS 10 simulator on SauceLabs, 
