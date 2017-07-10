@@ -115,6 +115,16 @@ describe('Camera tests Android.', function () {
         if (!options) {
             options = {};
         }
+        // assign default values
+        if (!options.hasOwnProperty('allowEdit')) {
+            options.allowEdit = true;
+        }
+        if (!options.hasOwnProperty('destinationType')) {
+            options.destinationType = cameraConstants.DestinationType.FILE_URI;
+        }
+        if (!options.hasOwnProperty('sourceType')) {
+            options.destinationType = cameraConstants.PictureSourceType.CAMERA;
+        }
 
         return driver
             .context(webviewContext)

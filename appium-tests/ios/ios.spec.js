@@ -128,6 +128,16 @@ describe('Camera tests iOS.', function () {
         if (!options) {
             options = {};
         }
+        // assign defaults
+        if (!options.hasOwnProperty('allowEdit')) {
+            options.allowEdit = true;
+        }
+        if (!options.hasOwnProperty('destinationType')) {
+            options.destinationType = cameraConstants.DestinationType.FILE_URI;
+        }
+        if (!options.hasOwnProperty('sourceType')) {
+            options.destinationType = cameraConstants.PictureSourceType.CAMERA;
+        }
 
         return driver
             .context(webviewContext)
