@@ -33,7 +33,7 @@ function takePicture (success, error, opts) {
         input.name = 'files[]';
 
         input.onchange = function (inputEvent) {
-            var reader = new FileReader();
+            var reader = new FileReader(); /* eslint no-undef : 0 */
             reader.onload = function (readerEvent) {
                 input.parentNode.removeChild(input);
 
@@ -54,8 +54,8 @@ function capture (success, errorCallback, opts) {
     var targetWidth = opts[3];
     var targetHeight = opts[4];
 
-    targetWidth = targetWidth == -1 ? 320 : targetWidth;
-    targetHeight = targetHeight == -1 ? 240 : targetHeight;
+    targetWidth = targetWidth === -1 ? 320 : targetWidth;
+    targetHeight = targetHeight === -1 ? 240 : targetHeight;
 
     var video = document.createElement('video');
     var button = document.createElement('button');

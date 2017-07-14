@@ -22,17 +22,17 @@
 /* globals qnx, FileError, PluginResult */
 
 var PictureSourceType = {
-        PHOTOLIBRARY: 0,    // Choose image from picture library (same as SAVEDPHOTOALBUM for Android)
-        CAMERA: 1,          // Take picture from camera
-        SAVEDPHOTOALBUM: 2  // Choose image from picture library (same as PHOTOLIBRARY for Android)
-    },
-    DestinationType = {
-        DATA_URL: 0,         // Return base64 encoded string
-        FILE_URI: 1,         // Return file uri (content://media/external/images/media/2 for Android)
-        NATIVE_URI: 2        // Return native uri (eg. asset-library://... for iOS)
-    },
-    savePath = window.qnx.webplatform.getApplication().getEnv('HOME').replace('/data', '') + '/shared/camera/',
-    invokeAvailable = true;
+    PHOTOLIBRARY: 0, // Choose image from picture library (same as SAVEDPHOTOALBUM for Android)
+    CAMERA: 1, // Take picture from camera
+    SAVEDPHOTOALBUM: 2 // Choose image from picture library (same as PHOTOLIBRARY for Android)
+};
+var DestinationType = {
+    DATA_URL: 0, // Return base64 encoded string
+    FILE_URI: 1, // Return file uri (content://media/external/images/media/2 for Android)
+    NATIVE_URI: 2 // Return native uri (eg. asset-library://... for iOS)
+};
+var savePath = window.qnx.webplatform.getApplication().getEnv('HOME').replace('/data', '') + '/shared/camera/';
+var invokeAvailable = true;
 
 // check for camera card - it isn't currently availble in work perimeter
 window.qnx.webplatform.getApplication().invocation.queryTargets(
@@ -54,7 +54,7 @@ function showCameraDialog (done, cancel, fail) {
         wv.allowQnxObject = true;
         wv.allowRpc = true;
         wv.zOrder = 1;
-        wv.setGeometry(0, 0, screen.width, screen.height);
+        wv.setGeometry(0, 0, screen.width, screen.height); /* eslint no-undef : 0 */
         wv.backgroundColor = 0x00000000;
         wv.active = true;
         wv.visible = true;
@@ -71,7 +71,7 @@ function showCameraDialog (done, cancel, fail) {
                 } else {
                     saveImage(args[1], done, fail);
                 }
-                wv.un('JavaScriptCallback', arguments.callee);
+                wv.un('JavaScriptCallback', arguments.callee); /* eslint no-caller : 0 */
                 wv.visible = false;
                 wv.destroy();
                 qnx.webplatform.getApplication().unlockRotation();
@@ -87,19 +87,19 @@ function showCameraDialog (done, cancel, fail) {
 
 // create unique name for saved file (same pattern as BB10 camera app)
 function imgName () {
-    var date = new Date(),
-        pad = function (n) { return n < 10 ? '0' + n : n; };
+    var date = new Date();
+    var pad = function (n) { return n < 10 ? '0' + n : n; };
     return 'IMG_' + date.getFullYear() + pad(date.getMonth() + 1) + pad(date.getDate()) + '_' +
             pad(date.getHours()) + pad(date.getMinutes()) + pad(date.getSeconds()) + '.png';
 }
 
 // convert dataURI to Blob
 function dataURItoBlob (dataURI) {
-    var byteString = atob(dataURI.split(',')[1]),
-        mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0],
-        arrayBuffer = new ArrayBuffer(byteString.length),
-        ia = new Uint8Array(arrayBuffer),
-        i;
+    var byteString = atob(dataURI.split(',')[1]);
+    var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+    var arrayBuffer = new ArrayBuffer(byteString.length);
+    var ia = new Uint8Array(arrayBuffer);
+    var i;
     for (i = 0; i < byteString.length; i++) {
         ia[i] = byteString.charCodeAt(i);
     }
@@ -124,85 +124,85 @@ function saveImage (data, success, fail) {
 }
 
 function encodeBase64 (filePath, callback) {
-    var sandbox = window.qnx.webplatform.getController().setFileSystemSandbox, // save original sandbox value
-        errorHandler = function (err) {
-            var msg = 'An error occured: ';
+    var sandbox = window.qnx.webplatform.getController().setFileSystemSandbox; // save original sandbox value
+    var errorHandler = function (err) {
+        var msg = 'An error occured: ';
 
-            switch (err.code) {
-            case FileError.NOT_FOUND_ERR:
-                msg += 'File or directory not found';
-                break;
+        switch (err.code) {
+        case FileError.NOT_FOUND_ERR:
+            msg += 'File or directory not found';
+            break;
 
-            case FileError.NOT_READABLE_ERR:
-                msg += 'File or directory not readable';
-                break;
+        case FileError.NOT_READABLE_ERR:
+            msg += 'File or directory not readable';
+            break;
 
-            case FileError.PATH_EXISTS_ERR:
-                msg += 'File or directory already exists';
-                break;
+        case FileError.PATH_EXISTS_ERR:
+            msg += 'File or directory already exists';
+            break;
 
-            case FileError.TYPE_MISMATCH_ERR:
-                msg += 'Invalid file type';
-                break;
+        case FileError.TYPE_MISMATCH_ERR:
+            msg += 'Invalid file type';
+            break;
 
-            default:
-                msg += 'Unknown Error';
-                break;
-            }
+        default:
+            msg += 'Unknown Error';
+            break;
+        }
 
-            // set it back to original value
-            window.qnx.webplatform.getController().setFileSystemSandbox = sandbox;
-            callback(msg);
-        },
-        gotFile = function (fileEntry) {
-            fileEntry.file(function (file) {
-                var reader = new FileReader();
+        // set it back to original value
+        window.qnx.webplatform.getController().setFileSystemSandbox = sandbox;
+        callback(msg);
+    };
+    var gotFile = function (fileEntry) {
+        fileEntry.file(function (file) {
+            var reader = new FileReader();
 
-                reader.onloadend = function (e) {
-                    // set it back to original value
-                    window.qnx.webplatform.getController().setFileSystemSandbox = sandbox;
-                    callback(this.result);
-                };
+            reader.onloadend = function (e) {
+                // set it back to original value
+                window.qnx.webplatform.getController().setFileSystemSandbox = sandbox;
+                callback(this.result);
+            };
 
-                reader.readAsDataURL(file);
-            }, errorHandler);
-        },
-        onInitFs = function (fs) {
-            window.qnx.webplatform.getController().setFileSystemSandbox = false;
-            fs.root.getFile(filePath, {create: false}, gotFile, errorHandler);
-        };
+            reader.readAsDataURL(file);
+        }, errorHandler);
+    };
+    var onInitFs = function (fs) {
+        window.qnx.webplatform.getController().setFileSystemSandbox = false;
+        fs.root.getFile(filePath, {create: false}, gotFile, errorHandler);
+    };
 
     window.webkitRequestFileSystem(window.TEMPORARY, 10 * 1024 * 1024, onInitFs, errorHandler); // set size to 10MB max
 }
 
 module.exports = {
     takePicture: function (success, fail, args, env) {
-        var destinationType = JSON.parse(decodeURIComponent(args[1])),
-            sourceType = JSON.parse(decodeURIComponent(args[2])),
-            result = new PluginResult(args, env),
-            done = function (data) {
-                if (destinationType === DestinationType.FILE_URI) {
-                    data = 'file://' + data;
-                    result.callbackOk(data, false);
-                } else {
-                    encodeBase64(data, function (data) {
-                        if (/^data:/.test(data)) {
-                            data = data.slice(data.indexOf(',') + 1);
-                            result.callbackOk(data, false);
-                        } else {
-                            result.callbackError(data, false);
-                        }
-                    });
-                }
-            },
-            cancel = function (reason) {
-                result.callbackError(reason, false);
-            },
-            invoked = function (error) {
-                if (error) {
-                    result.callbackError(error, false);
-                }
-            };
+        var destinationType = JSON.parse(decodeURIComponent(args[1]));
+        var sourceType = JSON.parse(decodeURIComponent(args[2]));
+        var result = new PluginResult(args, env);
+        var done = function (data) {
+            if (destinationType === DestinationType.FILE_URI) {
+                data = 'file://' + data;
+                result.callbackOk(data, false);
+            } else {
+                encodeBase64(data, function (data) {
+                    if (/^data:/.test(data)) {
+                        data = data.slice(data.indexOf(',') + 1);
+                        result.callbackOk(data, false);
+                    } else {
+                        result.callbackError(data, false);
+                    }
+                });
+            }
+        };
+        var cancel = function (reason) {
+            result.callbackError(reason, false);
+        };
+        var invoked = function (error) {
+            if (error) {
+                result.callbackError(error, false);
+            }
+        };
 
         switch (sourceType) {
         case PictureSourceType.CAMERA:
