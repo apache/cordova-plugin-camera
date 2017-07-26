@@ -263,7 +263,8 @@ Optional parameters to customize the camera settings.
 | correctOrientation | <code>Boolean</code> |  | Rotate the image to correct for the orientation of the device during capture. |
 | saveToPhotoAlbum | <code>Boolean</code> |  | Save the image to the photo album on the device after capture. |
 | popoverOptions | <code>[CameraPopoverOptions](#module_CameraPopoverOptions)</code> |  | iOS-only options that specify popover location in iPad. |
-| cameraDirection | <code>[Direction](#module_Camera.Direction)</code> | <code>BACK</code> | Choose the camera to use (front- or back-facing). |
+| cameraDirection | <code>[Direction](#module_Camera.Direction)</code> | <code>BACK</code> | Choose the camera to use (front- or back-facing). | 
+| onlyGalleries | <code>Boolean</code> |  | Android-only option to allow getImage to only get from gallery apps, excluding dropbox, drive, onedrive and filesystem explorers. |
 
 ---
 
@@ -511,6 +512,7 @@ Tizen only supports a `destinationType` of
 
 
 ## `CameraOptions` Errata <a name="CameraOptions-quirks"></a>
+
 
 #### Amazon Fire OS Quirks
 

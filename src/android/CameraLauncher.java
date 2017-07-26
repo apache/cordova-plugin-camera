@@ -112,6 +112,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private boolean correctOrientation;     // Should the pictures orientation be corrected
     private boolean orientationCorrected;   // Has the picture's orientation been corrected
     private boolean allowEdit;              // Should we allow the user to crop the image.
+    private JSONObject popoverOptions;      // not used on android
+    private int cameraDirection;            // not used on android
+    private boolean onlyGalleries;          // Should we force the user to only be able to select images from the gallery apps on the device.
 
     protected final static String[] permissions = { Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE };
 
@@ -151,17 +154,22 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             this.mediaType = PICTURE;
             this.mQuality = 50;
 
-            //Take the values from the arguments if they're not already defined (this is tricky)
-            this.destType = args.getInt(1);
-            this.srcType = args.getInt(2);
-            this.mQuality = args.getInt(0);
-            this.targetWidth = args.getInt(3);
-            this.targetHeight = args.getInt(4);
-            this.encodingType = args.getInt(5);
-            this.mediaType = args.getInt(6);
-            this.allowEdit = args.getBoolean(7);
-            this.correctOrientation = args.getBoolean(8);
-            this.saveToPhotoAlbum = args.getBoolean(9);
+            this.mQuality = args.optInt(0);
+            destType = args.optInt(1);
+            srcType = args.optInt(2);
+            this.targetWidth = args.optInt(3);
+            this.targetHeight = args.optInt(4);
+            this.encodingType = args.optInt(5);
+            this.mediaType = args.optInt(6);
+            this.allowEdit = args.optBoolean(7);
+            this.correctOrientation = args.optBoolean(8);
+            this.saveToPhotoAlbum = args.optBoolean(9);
+            this.popoverOptions = args.optJSONObject(10);
+            this.cameraDirection = args.optInt(11);
+            this.onlyGalleries = args.optBoolean(12);
+            if (this.allowEdit){
+                this.onlyGalleries = true;
+            }
 
             // If the user specifies a 0 or smaller width/height
             // make it -1 so later comparisons succeed
@@ -366,18 +374,20 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         croppedUri = null;
         if (this.mediaType == PICTURE) {
             intent.setType("image/*");
-            if (this.allowEdit) {
+            if (this.onlyGalleries) {
                 intent.setAction(Intent.ACTION_PICK);
-                intent.putExtra("crop", "true");
-                if (targetWidth > 0) {
-                    intent.putExtra("outputX", targetWidth);
-                }
-                if (targetHeight > 0) {
-                    intent.putExtra("outputY", targetHeight);
-                }
-                if (targetHeight > 0 && targetWidth > 0 && targetWidth == targetHeight) {
-                    intent.putExtra("aspectX", 1);
-                    intent.putExtra("aspectY", 1);
+                if (this.allowEdit) {
+                    intent.putExtra("crop", "true");
+                    if (targetWidth > 0) {
+                        intent.putExtra("outputX", targetWidth);
+                    }
+                    if (targetHeight > 0) {
+                        intent.putExtra("outputY", targetHeight);
+                    }
+                    if (targetHeight > 0 && targetWidth > 0 && targetWidth == targetHeight) {
+                        intent.putExtra("aspectX", 1);
+                        intent.putExtra("aspectY", 1);
+                    }
                 }
                 File photo = createCaptureFile(JPEG);
                 croppedUri = Uri.fromFile(photo);
