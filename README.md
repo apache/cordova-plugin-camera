@@ -471,7 +471,7 @@ successful.
 
 #### Browser Quirks
 
-Can only return photos as Base64-encoded image.
+Ignores the `targetHeight` and  `targetWidth` parameters.
 
 #### Firefox OS Quirks
 
