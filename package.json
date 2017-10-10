@@ -16,7 +16,8 @@
       "wp8",
       "windows8",
       "browser",
-      "windows"
+      "windows",
+      "osx"
     ]
   },
   "repository": {
@@ -40,7 +41,8 @@
     "cordova-wp8",
     "cordova-windows8",
     "cordova-browser",
-    "cordova-windows"
+    "cordova-windows",
+    "cordova-osx"
   ],
   "scripts": {
     "precommit": "npm run gen-docs && git add README.md",
