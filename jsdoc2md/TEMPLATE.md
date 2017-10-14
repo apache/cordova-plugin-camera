@@ -18,23 +18,33 @@ the system's image library.
 
 ### iOS Quirks
 
-Since iOS 10 it's mandatory to add a `NSCameraUsageDescription` and `NSPhotoLibraryUsageDescription` in the info.plist.
+Since iOS 10 it's mandatory to provide an usage description in the `info.plist` if trying to access privacy-sensitive data. When the system prompts the user to allow access, this usage description string will displayed as part of the permission dialog box, but if you didn't provide the usage description, the app will crash before showing the dialog. Also, Apple will reject apps that access private data but don't provide an usage description.
 
-- `NSCameraUsageDescription` describes the reason that the app accesses the user’s camera.
+This plugins requires the following usage descriptions:
+
+- `NSCameraUsageDescription` describes the reason that the app accesses the user's camera.
 - `NSPhotoLibraryUsageDescription` describes the reason the app accesses the user's photo library. 
+- `NSLocationWhenInUseUsageDescription` describes the reason the app accesses the user's location. (Set it if you have `CameraUsesGeolocation` preference set to `true`)
 
-When the system prompts the user to allow access, this string is displayed as part of the dialog box. 
+To add these entries into the `info.plist`, you can use the `edit-config` tag in the `config.xml` like this:
 
-To add this entry you can pass the following variables on plugin install.
+```
+<edit-config target="NSCameraUsageDescription" file="*-Info.plist" mode="merge">
+    <string>need camera access to take pictures</string>
+</edit-config>
+```
 
-- `CAMERA_USAGE_DESCRIPTION` for `NSCameraUsageDescription`
-- `PHOTOLIBRARY_USAGE_DESCRIPTION` for `NSPhotoLibraryUsageDescription`
+```
+<edit-config target="NSPhotoLibraryUsageDescription" file="*-Info.plist" mode="merge">
+    <string>need to photo library access to get pictures from there</string>
+</edit-config>
+```
 
-Example:
-
-    cordova plugin add cordova-plugin-camera --variable CAMERA_USAGE_DESCRIPTION="your usage message" --variable PHOTOLIBRARY_USAGE_DESCRIPTION="your usage message"
-
-If you don't pass the variable, the plugin will add an empty string as value.
+```
+<edit-config target="NSLocationWhenInUseUsageDescription" file="*-Info.plist" mode="merge">
+    <string>need location access to find things nearby</string>
+</edit-config>
+```
 
 ---
 
