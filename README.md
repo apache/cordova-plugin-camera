@@ -80,9 +80,10 @@ Since iOS 10 it's mandatory to provide an usage description in the `info.plist` 
 
 This plugins requires the following usage descriptions:
 
-- `NSCameraUsageDescription` describes the reason that the app accesses the user's camera.
-- `NSPhotoLibraryUsageDescription` describes the reason the app accesses the user's photo library. 
-- `NSLocationWhenInUseUsageDescription` describes the reason the app accesses the user's location. (Set it if you have `CameraUsesGeolocation` preference set to `true`)
+- `NSCameraUsageDescription` specifies the reason for your app to access the device's camera.
+- `NSPhotoLibraryUsageDescription` specifies the reason for your app to access the user's photo library.
+- `NSLocationWhenInUseUsageDescription` specifies the reason for your app to access the user's location information while your app is in use. (Set it if you have `CameraUsesGeolocation` preference set to `true`)
+- `NSPhotoLibraryAddUsageDescription` specifies the reason for your app to get write-only access to the user's photo library
 
 To add these entries into the `info.plist`, you can use the `edit-config` tag in the `config.xml` like this:
 
@@ -101,6 +102,12 @@ To add these entries into the `info.plist`, you can use the `edit-config` tag in
 ```
 <edit-config target="NSLocationWhenInUseUsageDescription" file="*-Info.plist" mode="merge">
     <string>need location access to find things nearby</string>
+</edit-config>
+```
+
+```
+<edit-config target="NSPhotoLibraryAddUsageDescription" file="*-Info.plist" mode="merge">
+    <string>need to photo library access to save pictures there</string>
 </edit-config>
 ```
 
