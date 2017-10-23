@@ -123,6 +123,7 @@
          <config-file target="config.xml" parent="/*">
              <feature name="Camera">
                  <param policy_group="camera" policy_version="1" />
+                 <param policy_group="content_exchange" policy_version="1" />
              </feature>
          </config-file>
          <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
@@ -133,6 +134,7 @@
 
          <resource-file src="src/ubuntu/back.png" />
          <resource-file src="src/ubuntu/CaptureWidget.qml" />
+         <resource-file src="src/ubuntu/CameraWidgetContentHub.qml" />
          <resource-file src="src/ubuntu/shoot.png" />
          <resource-file src="src/ubuntu/toolbar-left.png" />
          <resource-file src="src/ubuntu/toolbar-middle.png" />

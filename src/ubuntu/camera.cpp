@@ -22,12 +22,6 @@
 #include "camera.h"
 #include <cordova.h>
 
-#include <QCameraViewfinder>
-#include <QCameraImageCapture>
-#include <QGraphicsObject>
-#include <QCloseEvent>
-#include <QQuickItem>
-
 const char code[] = "\
 var component, object;                                                  \
 function createObject() {                                               \
@@ -50,7 +44,7 @@ Camera::Camera(Cordova *cordova):
     _lastEcId(0) {
 }
 
-bool Camera::preprocessImage(QString &path) {
+QString Camera::preprocessImage(const QString &path) {
     bool convertToPNG = (*_options.find("encodingType")).toInt() == Camera::PNG;
     int quality = (*_options.find("quality")).toInt();
     int width = (*_options.find("targetWidth")).toInt();
@@ -67,36 +61,35 @@ bool Camera::preprocessImage(QString &path) {
     QTemporaryFile newImage;
 
     const char *type;
+    QString newPath;
     if (convertToPNG) {
-        path = generateLocation("png");
+        newPath = generateLocation("png");
         type = "png";
     } else {
-        path = generateLocation("jpg");
+        newPath = generateLocation("jpg");
         type = "jpg";
     }
 
-    image.save(path, type, quality);
+    image.save(newPath, type, quality);
 
     oldImage.remove();
 
-    return true;
+    return newPath;
 }
 
-void Camera::onImageSaved(QString path) {
+void Camera::onImageSaved(const QString &path) {
     bool dataURL = _options.find("destinationType")->toInt() == Camera::DATA_URL;
 
     QString cbParams;
-    if (preprocessImage(path)) {
-        QString absolutePath = QFileInfo(path).absoluteFilePath();
-        if (dataURL) {
-            QFile image(absolutePath);
-            image.open(QIODevice::ReadOnly);
-            QByteArray content = image.readAll().toBase64();
-            cbParams = QString("\"%1\"").arg(content.data());
-            image.remove();
-        } else {
-            cbParams = CordovaInternal::format(QString("file://localhost") + absolutePath);
-        }
+    QString absolutePath = QFileInfo(preprocessImage(path)).absoluteFilePath();
+    if (dataURL) {
+        QFile image(absolutePath);
+        image.open(QIODevice::ReadOnly);
+        QByteArray content = image.readAll().toBase64();
+        cbParams = QString("\"%1\"").arg(content.data());
+        image.remove();
+    } else {
+        cbParams = CordovaInternal::format(QString("file://localhost") + absolutePath);
     }
 
     this->callback(_lastScId, cbParams);
@@ -125,7 +118,12 @@ void Camera::takePicture(int scId, int ecId, int quality, int destinationType, i
     _lastScId = scId;
     _lastEcId = ecId;
 
-    QString path = m_cordova->get_app_dir() + "/../qml/CaptureWidget.qml";
+    QString path;
+#ifdef Q_PROCESSOR_X86
+    path = m_cordova->get_app_dir() + "/../qml/CaptureWidget.qml";
+#else
+    path = m_cordova->get_app_dir() + "/../qml/CameraWidgetContentHub.qml";
+#endif
 
     // TODO: relative url
     QString qml = QString(code).arg(CordovaInternal::format(path));
