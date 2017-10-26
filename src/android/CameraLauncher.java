@@ -96,7 +96,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
     private static final String DEFAULT_EDIT_CHOOSER_TITLE = "Complete action using";
     private static final int FILTER_INTENT_FLAG = 0;    // Filter intent metadata (0=none)
-    private static final String GOOGLE_PLUS_APP_PACKAGE = "com.google.android.apps.plus";
     private static final String INTENT_ACTION_CROP = "com.android.camera.action.CROP";
 
     private static final String LOG_TAG = "CameraLauncher";
@@ -233,8 +232,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 }
             }
         }
-        // By default, we have added Google+, as forbidden editor, since we have seen that it always returns an old picture when you try to edit other one
-        this.forbiddenPicEditors.add(GOOGLE_PLUS_APP_PACKAGE);
     }
 
     private void setEditChooserTitle(String title) {
