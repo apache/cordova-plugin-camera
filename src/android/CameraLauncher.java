@@ -864,6 +864,18 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      */
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
 
+        /* Interrupting the plugin execution if the cordova application was restarted by OS.
+        * We detect that the application was restarted because class variables are cleaned up (not initialized)
+        * This check avoids a frequent crash with {@see android.support.v4.content.FileProvider} which
+        * happens because the plugin invoke the 'getUriForFile' method (FileProvider method) with a NULL authority (=applicationId).
+        *
+        * Stacktrace:
+        * java.lang.NullPointerException: Attempt to invoke virtual method ‘android.content.res.XmlResourceParser
+        * android.content.pm.ProviderInfo.loadXmlMetaData(android.content.pm.PackageManager, java.lang.String)’ on a null object reference
+        *
+        */
+        if (this.applicationId == null) return;
+
         // Get src and dest types from request code for a Camera Activity
         int srcType = (requestCode / 16) - 1;
         int destType = (requestCode % 16) - 1;
