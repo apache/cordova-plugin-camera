@@ -227,6 +227,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             for (int i = 0; i < forbiddenEditors.length(); i++) {
                 try {
                     String forbiddenPicEditor = forbiddenEditors.getString(i);
+                    this.forbiddenPicEditors.add(forbiddenPicEditor);
                 } catch (JSONException e) {
                     Log.e(LOG_TAG, "Error processing forbidden pic editor. Error: " + e);
                 }
