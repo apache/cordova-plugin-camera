@@ -455,6 +455,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
             if(cropIntents.isEmpty()) {
                 Log.w(LOG_TAG, "The mobile has no applications to edit a picture");
+                this.allowEdit = false;
                 this.processCamareResultSafely(cameraIntent);
                 return;
             }
@@ -472,6 +473,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             }
         } catch (ActivityNotFoundException anfe) {
             LOG.e(LOG_TAG, "Crop operation not supported on this device");
+            this.allowEdit = false;
             this.processCamareResultSafely(cameraIntent);
         }
     }
