@@ -505,7 +505,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         Log.d(LOG_TAG, "Getting intents to edit a picture");
         final List<Intent> targetedIntents = new ArrayList<Intent>();
         Intent cropIntent = new Intent(INTENT_ACTION_CROP);
-        this.addExtraDataToCropIntent(cropIntent, picUri);
+        // create new file handle to get full resolution crop
+        croppedUri = Uri.fromFile(createCaptureFile(this.encodingType, System.currentTimeMillis() + ""));
+        this.addExtraDataToCropIntent(cropIntent, picUri, croppedUri);
         // Get the applications which can handle the Intent
         List<ResolveInfo> resolveInfos = this.cordova.getActivity().getPackageManager().queryIntentActivities(cropIntent, FILTER_INTENT_FLAG);
         Log.d(LOG_TAG, "Getting applications that are capable of edit a picture");
@@ -518,7 +520,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 if(!this.forbiddenPicEditors.contains(packageName)) {
                     Log.d(LOG_TAG, String.format("Pic editor (application) package name: %s", packageName));
                     targetedCropIntent.setPackage(packageName);
-                    this.addExtraDataToCropIntent(targetedCropIntent, picUri);
+                    this.addExtraDataToCropIntent(targetedCropIntent, picUri, croppedUri);
                     targetedIntents.add(targetedCropIntent);
                 }
 
@@ -532,8 +534,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * , also received as parameter (URI).
      * @param intent
      * @param picUri
+     * @param croppedUri
      */
-    private void addExtraDataToCropIntent(Intent intent, Uri picUri) {
+    private void addExtraDataToCropIntent(Intent intent, Uri picUri, Uri croppedUri) {
         // indicate image type and Uri
         intent.setDataAndType(picUri, "image/*");
         // set crop properties
@@ -550,8 +553,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             intent.putExtra("aspectX", 1);
             intent.putExtra("aspectY", 1);
         }
-        // create new file handle to get full resolution crop
-        croppedUri = Uri.fromFile(createCaptureFile(this.encodingType, System.currentTimeMillis() + ""));
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         intent.putExtra("output", croppedUri);
