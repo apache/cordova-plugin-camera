@@ -95,7 +95,7 @@ To add these entries into the `info.plist`, you can use the `edit-config` tag in
 
 ```
 <edit-config target="NSPhotoLibraryUsageDescription" file="*-Info.plist" mode="merge">
-    <string>need to photo library access to get pictures from there</string>
+    <string>need photo library access to get pictures from there</string>
 </edit-config>
 ```
 
@@ -107,7 +107,7 @@ To add these entries into the `info.plist`, you can use the `edit-config` tag in
 
 ```
 <edit-config target="NSPhotoLibraryAddUsageDescription" file="*-Info.plist" mode="merge">
-    <string>need to photo library access to save pictures there</string>
+    <string>need photo library access to save pictures there</string>
 </edit-config>
 ```
 
