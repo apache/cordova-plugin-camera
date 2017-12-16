@@ -20,6 +20,9 @@
 -->
 # Release Notes
 
+### 4.0.0 (Dec 15, 2017)
+* [CB-13661](https://issues.apache.org/jira/browse/CB-13661) Remove deprecated platforms
+
 ### 3.0.0 (Nov 06, 2017)
 * Added `cordova-OSX` support
 * [CB-13515](https://issues.apache.org/jira/browse/CB-13515) (all): Add 'protective' entry to `cordovaDependencies`
