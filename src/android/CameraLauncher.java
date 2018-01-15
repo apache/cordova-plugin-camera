@@ -18,34 +18,14 @@
 */
 package org.apache.cordova.camera;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-import org.apache.cordova.BuildHelper;
-import org.apache.cordova.CallbackContext;
-import org.apache.cordova.CordovaPlugin;
-import org.apache.cordova.CordovaResourceApi;
-import org.apache.cordova.LOG;
-import org.apache.cordova.PermissionHelper;
-import org.apache.cordova.PluginResult;
-import org.json.JSONArray;
-import org.json.JSONException;
-
 import android.Manifest;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
@@ -55,16 +35,35 @@ import android.media.ExifInterface;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.DocumentsContract;
+import android.os.Parcelable;
 import android.provider.MediaStore;
-import android.provider.OpenableColumns;
 import android.support.v4.content.FileProvider;
 import android.util.Base64;
-import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
+import android.util.Log;
+
+import org.apache.cordova.BuildHelper;
+import org.apache.cordova.CallbackContext;
+import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.LOG;
+import org.apache.cordova.PermissionHelper;
+import org.apache.cordova.PluginResult;
+import org.json.JSONArray;
+import org.json.JSONException;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
  * This class launches the camera view, allows the user to take a picture, closes the camera view,
@@ -95,6 +94,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     public static final int TAKE_PIC_SEC = 0;
     public static final int SAVE_TO_ALBUM_SEC = 1;
 
+    private static final String DEFAULT_EDIT_CHOOSER_TITLE = "Complete action using";
+    private static final int FILTER_INTENT_FLAG = 0;    // Filter intent metadata (0=none)
+    private static final String INTENT_ACTION_CROP = "com.android.camera.action.CROP";
+
     private static final String LOG_TAG = "CameraLauncher";
 
     //Where did this come from?
@@ -112,8 +115,11 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private boolean correctOrientation;     // Should the pictures orientation be corrected
     private boolean orientationCorrected;   // Has the picture's orientation been corrected
     private boolean allowEdit;              // Should we allow the user to crop the image.
+    private String editChooserTitle;        // Text shown after taking a picture and picture edition is enabled
 
-    protected final static String[] permissions = { Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE };
+    protected final static String[] permissions = { Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE };
+    // Forbidden picture editors they have a strange behaviour editing pictures (returning old photos, etc)
+    protected final List<String> forbiddenPicEditors = new ArrayList<String>();
 
     public CallbackContext callbackContext;
     private int numPics;
@@ -162,7 +168,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             this.allowEdit = args.getBoolean(7);
             this.correctOrientation = args.getBoolean(8);
             this.saveToPhotoAlbum = args.getBoolean(9);
-
+            // Look at Camera javascript file to know the right index values for every option
+            this.setForbiddenPicEditors(args.getJSONArray(12));
+            this.setEditChooserTitle(args.getString(13));
             // If the user specifies a 0 or smaller width/height
             // make it -1 so later comparisons succeed
             if (this.targetWidth < 1) {
@@ -213,6 +221,36 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     // LOCAL METHODS
     //--------------------------------------------------------------------------
 
+    private void setForbiddenPicEditors(JSONArray forbiddenEditors) {
+        this.forbiddenPicEditors.clear();
+        if (forbiddenEditors != null) {
+            for (int i = 0; i < forbiddenEditors.length(); i++) {
+                try {
+                    String forbiddenPicEditor = forbiddenEditors.getString(i);
+                    this.forbiddenPicEditors.add(forbiddenPicEditor);
+                } catch (JSONException e) {
+                    Log.e(LOG_TAG, "Error processing forbidden pic editor. Error: " + e);
+                }
+            }
+        }
+    }
+
+    private void setEditChooserTitle(String title) {
+        this.editChooserTitle = title != null ? title : DEFAULT_EDIT_CHOOSER_TITLE;
+    }
+
+    private String getForbiddenPicEditors() {
+        final String separator = ",";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < this.forbiddenPicEditors.size(); i++) {
+            sb.append(this.forbiddenPicEditors.get(i));
+            if (i < this.forbiddenPicEditors.size() - 1) {
+                sb.append(separator);
+            }
+        }
+        return sb.toString();
+    }
+
     private String getTempDirectoryPath() {
         File cache = null;
 
@@ -245,7 +283,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @param encodingType           Compression quality hint (0-100: 0=low quality & high compression, 100=compress of max quality)
      */
     public void callTakePicture(int returnType, int encodingType) {
-        boolean saveAlbumPermission = PermissionHelper.hasPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
+        boolean saveAlbumPermission = PermissionHelper.hasPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                && PermissionHelper.hasPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         boolean takePicturePermission = PermissionHelper.hasPermission(this, Manifest.permission.CAMERA);
 
         // CB-10120: The CAMERA permission does not need to be requested unless it is declared
@@ -276,7 +315,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         } else if (saveAlbumPermission && !takePicturePermission) {
             PermissionHelper.requestPermission(this, TAKE_PIC_SEC, Manifest.permission.CAMERA);
         } else if (!saveAlbumPermission && takePicturePermission) {
-            PermissionHelper.requestPermission(this, TAKE_PIC_SEC, Manifest.permission.READ_EXTERNAL_STORAGE);
+            PermissionHelper.requestPermissions(this, TAKE_PIC_SEC,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE});
         } else {
             PermissionHelper.requestPermissions(this, TAKE_PIC_SEC, permissions);
         }
@@ -406,56 +446,119 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     }
 
 
-  /**
-   * Brings up the UI to perform crop on passed image URI
-   *
-   * @param picUri
-   */
-  private void performCrop(Uri picUri, int destType, Intent cameraIntent) {
-    try {
-        Intent cropIntent = new Intent("com.android.camera.action.CROP");
-        // indicate image type and Uri
-        cropIntent.setDataAndType(picUri, "image/*");
-        // set crop properties
-        cropIntent.putExtra("crop", "true");
+    /**
+     * Brings up the UI to perform crop on passed image URI
+     *
+     * @param picUri
+     */
+    private void performCrop(Uri picUri, int destType, Intent cameraIntent) {
+        try {
+            final List<Intent> cropIntents = this.getIntentsForEdition(picUri, destType);
 
+            if(cropIntents.isEmpty()) {
+                Log.w(LOG_TAG, "The mobile has no applications to edit a picture");
+                this.allowEdit = false;
+                this.processCamareResultSafely(cameraIntent);
+                return;
+            }
+
+            Intent chooserIntent = Intent.createChooser(cropIntents.remove(0), this.editChooserTitle);
+            chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS,
+                    cropIntents.toArray(new Parcelable[]{}));
+
+
+            // start the activity - we handle returning in onActivityResult
+
+            if (this.cordova != null) {
+                this.cordova.startActivityForResult((CordovaPlugin) this,
+                        chooserIntent, CROP_CAMERA + destType);
+            }
+        } catch (ActivityNotFoundException anfe) {
+            LOG.e(LOG_TAG, "Crop operation not supported on this device");
+            this.allowEdit = false;
+            this.processCamareResultSafely(cameraIntent);
+        }
+    }
+
+    /**
+     * Tries to safely process the camera result, catching IOExcepction, in order to avoid
+     * that app crashes
+     * @param cameraIntent
+     */
+    private void processCamareResultSafely(Intent cameraIntent) {
+        try {
+            processResultFromCamera(destType, cameraIntent);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+            LOG.e(LOG_TAG, "Unable to write to file");
+        }
+    }
+
+    /**
+     * Returns the list of available picture editors on the mobile phone but ignoring
+     * those declared as forbidden {@link #forbiddenPicEditors}
+     * @param picUri
+     * @param destType
+     * @return
+     */
+    private List<Intent> getIntentsForEdition(Uri picUri, int destType) {
+        Log.d(LOG_TAG, "Getting intents to edit a picture");
+        final List<Intent> targetedIntents = new ArrayList<Intent>();
+        Intent cropIntent = new Intent(INTENT_ACTION_CROP);
+        // create new file handle to get full resolution crop
+        croppedUri = Uri.fromFile(createCaptureFile(this.encodingType, System.currentTimeMillis() + ""));
+        this.addExtraDataToCropIntent(cropIntent, picUri, croppedUri);
+        // Get the applications which can handle the Intent
+        List<ResolveInfo> resolveInfos = this.cordova.getActivity().getPackageManager().queryIntentActivities(cropIntent, FILTER_INTENT_FLAG);
+        Log.d(LOG_TAG, "Getting applications that are capable of edit a picture");
+        // Loop on your Activities, filter and construct your own list here
+        if (!resolveInfos.isEmpty()){
+            Log.d(LOG_TAG, "Application list ignoring those on the black list: " + this.getForbiddenPicEditors());
+            for (ResolveInfo resolveInfo : resolveInfos) {
+                Intent targetedCropIntent = new Intent("com.android.camera.action.CROP");
+                String packageName = resolveInfo.activityInfo.packageName;
+                if(!this.forbiddenPicEditors.contains(packageName)) {
+                    Log.d(LOG_TAG, String.format("Pic editor (application) package name: %s", packageName));
+                    targetedCropIntent.setPackage(packageName);
+                    this.addExtraDataToCropIntent(targetedCropIntent, picUri, croppedUri);
+                    targetedIntents.add(targetedCropIntent);
+                }
+
+            }
+        }
+        return new ArrayList<Intent>(targetedIntents);
+    }
+
+    /**
+     * Modifies the intent received as parameter adding extra data needed to edit the picture
+     * , also received as parameter (URI).
+     * @param intent
+     * @param picUri
+     * @param croppedUri
+     */
+    private void addExtraDataToCropIntent(Intent intent, Uri picUri, Uri croppedUri) {
+        // indicate image type and Uri
+        intent.setDataAndType(picUri, "image/*");
+        // set crop properties
+        intent.putExtra("crop", "true");
 
         // indicate output X and Y
         if (targetWidth > 0) {
-          cropIntent.putExtra("outputX", targetWidth);
+            intent.putExtra("outputX", targetWidth);
         }
         if (targetHeight > 0) {
-          cropIntent.putExtra("outputY", targetHeight);
+            intent.putExtra("outputY", targetHeight);
         }
         if (targetHeight > 0 && targetWidth > 0 && targetWidth == targetHeight) {
-          cropIntent.putExtra("aspectX", 1);
-          cropIntent.putExtra("aspectY", 1);
+            intent.putExtra("aspectX", 1);
+            intent.putExtra("aspectY", 1);
         }
-        // create new file handle to get full resolution crop
-        croppedUri = Uri.fromFile(createCaptureFile(this.encodingType, System.currentTimeMillis() + ""));
-        cropIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        cropIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        cropIntent.putExtra("output", croppedUri);
-
-
-        // start the activity - we handle returning in onActivityResult
-
-        if (this.cordova != null) {
-            this.cordova.startActivityForResult((CordovaPlugin) this,
-                cropIntent, CROP_CAMERA + destType);
-        }
-    } catch (ActivityNotFoundException anfe) {
-      LOG.e(LOG_TAG, "Crop operation not supported on this device");
-      try {
-          processResultFromCamera(destType, cameraIntent);
-      }
-      catch (IOException e)
-      {
-          e.printStackTrace();
-          LOG.e(LOG_TAG, "Unable to write to file");
-      }
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        intent.putExtra("output", croppedUri);
     }
-  }
 
     /**
      * Applies all needed transformation to the image received from the camera.
@@ -763,6 +866,18 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @param intent      An Intent, which can return result data to the caller (various data can be attached to Intent "extras").
      */
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
+
+        /* Interrupting the plugin execution if the cordova application was restarted by OS.
+        * We detect that the application was restarted because class variables are cleaned up (not initialized)
+        * This check avoids a frequent crash with {@see android.support.v4.content.FileProvider} which
+        * happens because the plugin invoke the 'getUriForFile' method (FileProvider method) with a NULL authority (=applicationId).
+        *
+        * Stacktrace:
+        * java.lang.NullPointerException: Attempt to invoke virtual method ‘android.content.res.XmlResourceParser
+        * android.content.pm.ProviderInfo.loadXmlMetaData(android.content.pm.PackageManager, java.lang.String)’ on a null object reference
+        *
+        */
+        if (this.applicationId == null) return;
 
         // Get src and dest types from request code for a Camera Activity
         int srcType = (requestCode / 16) - 1;
