@@ -943,6 +943,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             try {
                 fileStream = FileHelper.getInputStreamFromUriString(imageUrl, cordova);
                 image = BitmapFactory.decodeStream(fileStream);
+            }  catch (OutOfMemoryError e) {
+                // If we get courrupted image
+                callbackContext.error("Corrupted image selected.");
             } finally {
                 if (fileStream != null) {
                     try {
