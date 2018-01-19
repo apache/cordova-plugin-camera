@@ -360,7 +360,50 @@ static NSString* toBase64(NSData* data) {
         {
             if ((options.allowsEditing == NO) && (options.targetSize.width <= 0) && (options.targetSize.height <= 0) && (options.correctOrientation == NO) && (([options.quality integerValue] == 100) || (options.sourceType != UIImagePickerControllerSourceTypeCamera))){
                 // use image unedited as requested , don't resize
-                data = UIImageJPEGRepresentation(image, 1.0);
+                if(options.sourceType != UIImagePickerControllerSourceTypeCamera){
+                    NSURL *url = info[UIImagePickerControllerReferenceURL];
+                    
+                    ALAssetsLibrary* library = [[ALAssetsLibrary alloc] init];
+                    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+                    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,0);
+                    
+                    dispatch_async(queue, ^{
+                        
+                        [library assetForURL:url resultBlock:^(ALAsset *asset) {
+                            ALAssetRepresentation *representation = [asset defaultRepresentation];
+                            long long remaining = representation.size;
+                            NSString *filename  = representation.filename;
+                            
+                            long long representationOffset = 0ll;
+                            NSError *error;
+                            NSMutableData *data1 = [NSMutableData data];
+                            
+                            uint8_t buffer[kBufferSize];
+                            
+                            while (remaining > 0ll) {
+                                NSInteger bytesRetrieved = [representation getBytes:buffer fromOffset:representationOffset length:sizeof(buffer) error:&error];
+                                if (bytesRetrieved <= 0) {
+                                    NSLog(@"failed getBytes: %@", error);
+                                    return;
+                                } else {
+                                    remaining -= bytesRetrieved;
+                                    representationOffset += bytesRetrieved;
+                                    [data1 appendBytes:buffer length:bytesRetrieved];
+                                }
+                            }
+                            data = data1;
+                            dispatch_semaphore_signal(sema);
+                        } failureBlock:^(NSError *error) {
+                            NSLog(@"assetForURL error = %@", error);
+                            dispatch_semaphore_signal(sema);
+                        }];
+                    });
+                    dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+                    return data;
+                }
+                else{
+                    return data = UIImageJPEGRepresentation(image, 1.0);
+                }
             } else {
                 data = UIImageJPEGRepresentation(image, [options.quality floatValue] / 100.0f);
             }
