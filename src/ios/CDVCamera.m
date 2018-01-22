@@ -35,6 +35,7 @@
 #endif
 
 #define CDV_PHOTO_PREFIX @"cdv_photo_"
+static NSInteger kBufferSize = 1024 * 10;
 
 static NSSet* org_apache_cordova_validArrowDirections;
 
@@ -350,7 +351,7 @@ static NSString* toBase64(NSData* data) {
 
 - (NSData*)processImage:(UIImage*)image info:(NSDictionary*)info options:(CDVPictureOptions*)options
 {
-    NSData* data = nil;
+   __block NSData* data = nil;
 
     switch (options.encodingType) {
         case EncodingTypePNG:
