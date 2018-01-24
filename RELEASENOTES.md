@@ -20,6 +20,10 @@
 -->
 # Release Notes
 
+### 4.0.2 (Jan 24, 2018)
+* [CB-13781](https://issues.apache.org/jira/browse/CB-13781) (android) Fixed permissions request on **Android** 8 to save a photo into the photo album
+* [CB-13747](https://issues.apache.org/jira/browse/CB-13747) Add build-tools-26.0.2 to travis
+
 ### 4.0.1 (Dec 27, 2017)
 * CB-13701Fix to allow 4.0.0 version install
 
