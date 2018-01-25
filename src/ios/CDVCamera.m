@@ -350,7 +350,7 @@ static NSString* toBase64(NSData* data) {
 
 - (NSData*)processImage:(UIImage*)image info:(NSDictionary*)info options:(CDVPictureOptions*)options
 {
-   NSData* data = nil;
+    NSData* data = nil;
 
     switch (options.encodingType) {
         case EncodingTypePNG:
@@ -359,7 +359,8 @@ static NSString* toBase64(NSData* data) {
         case EncodingTypeJPEG:
         {
             if ((options.allowsEditing == NO) && (options.targetSize.width <= 0) && (options.targetSize.height <= 0) && (options.correctOrientation == NO) && (([options.quality integerValue] == 100) || (options.sourceType != UIImagePickerControllerSourceTypeCamera))){
-                 data = UIImageJPEGRepresentation(image, 1.0);
+                // use image unedited as requested , don't resize
+                data = UIImageJPEGRepresentation(image, 1.0);
             } else {
                 data = UIImageJPEGRepresentation(image, [options.quality floatValue] / 100.0f);
             }
