@@ -29,6 +29,7 @@
 #import <ImageIO/CGImageDestination.h>
 #import <MobileCoreServices/UTCoreTypes.h>
 #import <objc/message.h>
+#import <Photos/Photos.h>
 
 #ifndef __CORDOVA_4_0_0
     #import <Cordova/NSData+Base64.h>
@@ -360,7 +361,22 @@ static NSString* toBase64(NSData* data) {
         {
             if ((options.allowsEditing == NO) && (options.targetSize.width <= 0) && (options.targetSize.height <= 0) && (options.correctOrientation == NO) && (([options.quality integerValue] == 100) || (options.sourceType != UIImagePickerControllerSourceTypeCamera))){
                 // use image unedited as requested , don't resize
-                data = UIImageJPEGRepresentation(image, 1.0);
+                  if(options.sourceType != UIImagePickerControllerSourceTypeCamera){
+                    NSURL *url = info[UIImagePickerControllerReferenceURL];
+                    PHFetchResult *result = [PHAsset fetchAssetsWithALAssetURLs:@[url] options:nil];
+                    PHAsset *asset = [result firstObject];
+                    if (asset) {
+                        PHImageManager *manager = [PHImageManager defaultManager];
+                        PHImageRequestOptions *option = [PHImageRequestOptions alloc];
+                        option.synchronous = true;
+                        [manager requestImageDataForAsset:asset options:option resultHandler:^(NSData *imageData, NSString *dataUTI, UIImageOrientation orientation, NSDictionary *info) {
+                              data = imageData;
+                        }];
+                    }
+                }
+                else{
+                    return data = UIImageJPEGRepresentation(image, 1.0);
+                }
             } else {
                 data = UIImageJPEGRepresentation(image, [options.quality floatValue] / 100.0f);
             }
