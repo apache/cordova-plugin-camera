@@ -351,7 +351,7 @@ static NSString* toBase64(NSData* data) {
 
 - (NSData*)processImage:(UIImage*)image info:(NSDictionary*)info options:(CDVPictureOptions*)options
 {
-    NSData* data = nil;
+    __block NSData* data = nil;
 
     switch (options.encodingType) {
         case EncodingTypePNG:
