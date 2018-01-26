@@ -833,12 +833,16 @@ function savePhoto (picture, options, successCallback, errorCallback) {
         };
         savePicker.suggestedStartLocation = pickerLocId.picturesLibrary;
 
+        var date = new Date();
+        var isoDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString();
+        var fileName = "IMG_" + isoDate.replace(/T/g, "_").replace(/[^\d^_]/g, "");
+
         if (options.encodingType === Camera.EncodingType.PNG) {
             savePicker.fileTypeChoices.insert('PNG', ['.png']);
-            savePicker.suggestedFileName = 'photo.png';
+            savePicker.suggestedFileName = fileName + '.png';
         } else {
             savePicker.fileTypeChoices.insert('JPEG', ['.jpg']);
-            savePicker.suggestedFileName = 'photo.jpg';
+            savePicker.suggestedFileName = fileName + '.jpg';
         }
 
         // If Windows Phone 8.1 use pickSaveFileAndContinue()
