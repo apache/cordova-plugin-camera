@@ -835,7 +835,7 @@ function savePhoto (picture, options, successCallback, errorCallback) {
 
         var date = new Date();
         var isoDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString();
-        var fileName = "IMG_" + isoDate.replace(/T/g, "_").replace(/[^\d^_]/g, "");
+        var fileName = 'IMG_' + isoDate.replace(/T/g, '_').replace(/[^\d^_]/g, '');
 
         if (options.encodingType === Camera.EncodingType.PNG) {
             savePicker.fileTypeChoices.insert('PNG', ['.png']);
