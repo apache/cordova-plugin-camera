@@ -349,13 +349,18 @@ static NSString* toBase64(NSData* data) {
     self.hasPendingOperation = NO;
 }
 typedef void(^successBlock)(NSData *);
--(void) newProcessImage:(UIImage*)image info:(NSDictionary*)info options:(CDVPictureOptions*)options block:(successBlock)success {
+-(void) processImage:(UIImage*)image info:(NSDictionary*)info options:(CDVPictureOptions*)options block:(successBlock)success {
     __block NSData* data = nil;
     
     switch (options.encodingType) {
-        case EncodingTypePNG:
-            success(UIImagePNGRepresentation(image));
+        case EncodingTypePNG: {
+            NSData *tempData = UIImagePNGRepresentation(image);
+            if (options.usesGeolocation) {
+                [self checkGeoLocation:info withData:tempData];
+            }
+            success(tempData);
             break;
+        }
         case EncodingTypeJPEG:
         {
             if ((options.allowsEditing == NO) && (options.targetSize.width <= 0) && (options.targetSize.height <= 0) && (options.correctOrientation == NO) && (([options.quality integerValue] == 100) || (options.sourceType != UIImagePickerControllerSourceTypeCamera))){
@@ -373,41 +378,56 @@ typedef void(^successBlock)(NSData *);
                     if (asset) {
                         [manager requestImageDataForAsset:asset options:option resultHandler:^(NSData *imageData, NSString *dataUTI, UIImageOrientation orientation, NSDictionary *info) {
                             data = imageData;
+                            if (options.usesGeolocation) {
+                                [self checkGeoLocation:info withData:data];
+                            }
                             success(imageData);
                         }];
                     }
+                    else{
+                        success(nil);
+                    }
                 }
                 else{
-                    success(UIImageJPEGRepresentation(image, 1.0));
+                    NSData *tempData = UIImageJPEGRepresentation(image, 1.0);
+                    if (options.usesGeolocation) {
+                        [self checkGeoLocation:info withData:tempData];
+                    }
+                    success(tempData);
                 }
                 
             } else {
-                success(UIImageJPEGRepresentation(image, [options.quality floatValue] / 100.0f));
+                NSData *tempData = UIImageJPEGRepresentation(image, [options.quality floatValue] / 100.0f);
+                if (options.usesGeolocation) {
+                    [self checkGeoLocation:info withData:tempData];
+                }
+                success(tempData);
             }
             
-            if (options.usesGeolocation) {
-                NSDictionary* controllerMetadata = [info objectForKey:@"UIImagePickerControllerMediaMetadata"];
-                if (controllerMetadata) {
-                    self.data = data;
-                    self.metadata = [[NSMutableDictionary alloc] init];
-                    
-                    NSMutableDictionary* EXIFDictionary = [[controllerMetadata objectForKey:(NSString*)kCGImagePropertyExifDictionary]mutableCopy];
-                    if (EXIFDictionary)    {
-                        [self.metadata setObject:EXIFDictionary forKey:(NSString*)kCGImagePropertyExifDictionary];
-                    }
-                    
-                    if (IsAtLeastiOSVersion(@"8.0")) {
-                        [[self locationManager] performSelector:NSSelectorFromString(@"requestWhenInUseAuthorization") withObject:nil afterDelay:0];
-                    }
-                    [[self locationManager] startUpdatingLocation];
-                }
-            }
         }
             break;
         default:
             success(nil);
             break;
     };
+}
+
+-(void)checkGeoLocation:(NSDictionary*)info withData:(NSData*)data{
+    NSDictionary* controllerMetadata = [info objectForKey:@"UIImagePickerControllerMediaMetadata"];
+    if (controllerMetadata) {
+        self.data = data;
+        self.metadata = [[NSMutableDictionary alloc] init];
+        
+        NSMutableDictionary* EXIFDictionary = [[controllerMetadata objectForKey:(NSString*)kCGImagePropertyExifDictionary]mutableCopy];
+        if (EXIFDictionary)    {
+            [self.metadata setObject:EXIFDictionary forKey:(NSString*)kCGImagePropertyExifDictionary];
+        }
+        
+        if (IsAtLeastiOSVersion(@"8.0")) {
+            [[self locationManager] performSelector:NSSelectorFromString(@"requestWhenInUseAuthorization") withObject:nil afterDelay:0];
+        }
+        [[self locationManager] startUpdatingLocation];
+    }
 }
 
 - (NSString*)tempFilePath:(NSString*)extension
@@ -495,8 +515,7 @@ typedef void(^successBlock)(NSData *);
         case DestinationTypeFileUri:
         {
             image = [self retrieveImage:info options:options];
-            //NSData* data = [self processImage:image info:info options:options];
-            [self newProcessImage:image info:info options:options block:^(NSData* data) {
+            [self processImage:image info:info options:options block:^(NSData* data) {
                 if (data) {
                     
                     NSString* extension = options.encodingType == EncodingTypePNG? @"png" : @"jpg";
@@ -522,7 +541,7 @@ typedef void(^successBlock)(NSData *);
         case DestinationTypeDataUrl:
         {
             image = [self retrieveImage:info options:options];
-            [self newProcessImage:image info:info options:options block:^(NSData* data) {
+            [self processImage:image info:info options:options block:^(NSData* data) {
                 if (data) {
                     result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:toBase64(data)];
                 }
@@ -538,13 +557,6 @@ typedef void(^successBlock)(NSData *);
         default:
             break;
     };
-    
-    /*if (saveToPhotoAlbum && image) {
-     ALAssetsLibrary* library = [ALAssetsLibrary new];
-     [library writeImageToSavedPhotosAlbum:image.CGImage orientation:(ALAssetOrientation)(image.imageOrientation) completionBlock:nil];
-     }
-     
-     completion(result);*/
 }
 
 - (CDVPluginResult*)resultForVideo:(NSDictionary*)info
