@@ -948,7 +948,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 callbackContext.error(e.getLocalizedMessage());
             } catch (Exception e){
                 // If we get any other exception
-                callbackContext.error(e.getMessage());
+                callbackContext.error(e.getLocalizedMessage());
             }
             finally {
                 if (fileStream != null) {
