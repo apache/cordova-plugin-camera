@@ -944,10 +944,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 fileStream = FileHelper.getInputStreamFromUriString(imageUrl, cordova);
                 image = BitmapFactory.decodeStream(fileStream);
             }  catch (OutOfMemoryError e) {
-                // If we get OutOfMemoryError
                 callbackContext.error(e.getLocalizedMessage());
             } catch (Exception e){
-                // If we get any other exception
                 callbackContext.error(e.getLocalizedMessage());
             }
             finally {
