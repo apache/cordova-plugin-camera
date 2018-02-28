@@ -393,6 +393,8 @@ location.
 | [width] | <code>Number</code> | <code>320</code> | width, in pixels, of the screen element onto which to anchor the popover. |
 | [height] | <code>Number</code> | <code>480</code> | height, in pixels, of the screen element onto which to anchor the popover. |
 | [arrowDir] | <code>[PopoverArrowDirection](#module_Camera.PopoverArrowDirection)</code> | <code>ARROW_ANY</code> | Direction the arrow on the popover should point. |
+| [popoverWidth] | <code>Number</code> | <code>0</code> | width of the popover (0 or not specified will use apple's default width). |
+| [popoverHeight] | <code>Number</code> | <code>0</code> | height of the popover (0 or not specified will use apple's default height). |
 
 ---
 
@@ -411,13 +413,13 @@ navigator.camera.getPicture(onSuccess, onFail,
 {
     destinationType: Camera.DestinationType.FILE_URI,
     sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
-    popoverOptions: new CameraPopoverOptions(300, 300, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY)
+    popoverOptions: new CameraPopoverOptions(300, 300, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY, 300, 600)
 });
 
 // Reposition the popover if the orientation changes.
 window.onorientationchange = function() {
     var cameraPopoverHandle = new CameraPopoverHandle();
-    var cameraPopoverOptions = new CameraPopoverOptions(0, 0, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY);
+    var cameraPopoverOptions = new CameraPopoverOptions(0, 0, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY, 400, 500);
     cameraPopoverHandle.setPosition(cameraPopoverOptions);
 }
 ```

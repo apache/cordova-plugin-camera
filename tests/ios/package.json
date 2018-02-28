@@ -8,6 +8,6 @@
         "cordova-ios": "*"
     },
     "scripts": {
-        "test": "xcodebuild -scheme CordovaLib && xcodebuild test -scheme CDVCameraLibTests -destination 'platform=iOS Simulator,name=iPhone 5'"
+        "test": "xcodebuild -scheme CordovaLib && xcodebuild test -scheme CDVCameraLibTests -destination 'platform=iOS Simulator,name=iPhone 5s'"
     }
 }
