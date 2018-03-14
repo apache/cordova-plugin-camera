@@ -1077,7 +1077,13 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             int scaledWidth = (!rotated) ? widthHeight[0] : widthHeight[1];
             int scaledHeight = (!rotated) ? widthHeight[1] : widthHeight[0];
 
-            Bitmap scaledBitmap = Bitmap.createScaledBitmap(unscaledBitmap, scaledWidth, scaledHeight, true);
+            Bitmap scaledBitmap;
+            try {
+                scaledBitmap = Bitmap.createScaledBitmap(unscaledBitmap, scaledWidth, scaledHeight, true);
+            }
+            catch (Error e) { // Throws OutOfMemoryError on some low-end devices
+                scaledBitmap = unscaledBitmap;
+            }
             if (scaledBitmap != unscaledBitmap) {
                 unscaledBitmap.recycle();
                 unscaledBitmap = null;
