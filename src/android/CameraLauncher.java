@@ -65,6 +65,13 @@ import android.support.v4.content.FileProvider;
 import android.util.Base64;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.widget.Toast;
+import android.widget.TextView;
+import android.view.Gravity;
+import android.os.CountDownTimer;
+import android.view.ViewGroup.LayoutParams;
+import android.graphics.Color;
+import android.widget.RelativeLayout;
 
 /**
  * This class launches the camera view, allows the user to take a picture, closes the camera view,
@@ -112,6 +119,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private boolean correctOrientation;     // Should the pictures orientation be corrected
     private boolean orientationCorrected;   // Has the picture's orientation been corrected
     private boolean allowEdit;              // Should we allow the user to crop the image.
+    private String caption;              // Used to show caption over the camera
+    private static Toast toast;
+    private static CountDownTimer toastCountDown;
 
     protected final static String[] permissions = { Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE };
 
@@ -150,6 +160,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             this.encodingType = JPEG;
             this.mediaType = PICTURE;
             this.mQuality = 50;
+            this.caption = "";
 
             //Take the values from the arguments if they're not already defined (this is tricky)
             this.destType = args.getInt(1);
@@ -162,6 +173,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             this.allowEdit = args.getBoolean(7);
             this.correctOrientation = args.getBoolean(8);
             this.saveToPhotoAlbum = args.getBoolean(9);
+            this.caption = args.getString(12);
 
             // If the user specifies a 0 or smaller width/height
             // make it -1 so later comparisons succeed
@@ -308,6 +320,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             {
 
                 this.cordova.startActivityForResult((CordovaPlugin) this, intent, (CAMERA + 1) * 16 + returnType + 1);
+
+                if (this.caption != null && !this.caption.isEmpty()) {
+                    showCameraCaption();
+                }
             }
             else
             {
@@ -326,6 +342,57 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      */
     private File createCaptureFile(int encodingType) {
         return createCaptureFile(encodingType, "");
+    }
+
+     /**
+     * Show camera caption.
+     *
+     */
+    private void showCameraCaption() {
+        hideCameraCaption();
+        Context context = this.cordova.getActivity().getApplicationContext();
+
+        RelativeLayout layout = new RelativeLayout(this.cordova.getActivity());
+        layout.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+         
+        layout.setBackgroundColor(Color.parseColor("#80000000"));
+
+        TextView text = new TextView(this.cordova.getActivity());
+        text.setPadding(50, 10, 50, 10);
+        text.setText(this.caption);
+        layout.addView(text);
+        this.caption = null;
+        toast = new Toast(context);
+        toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 0);
+        toast.setDuration(Toast.LENGTH_LONG);
+        toast.setView(layout);
+         
+        // Set the countdown to display the toast
+        toastCountDown = new CountDownTimer(300000, 3000 /*Tick duration*/) {
+          public void onTick(long millisUntilFinished) {
+            toast.show();
+          }
+          public void onFinish() {
+            toast.cancel();
+          }
+        };
+
+        // Show the toast and starts the countdown
+        toast.show();
+        toastCountDown.start();
+    }
+
+    /**
+     * Hide camera caption.
+     *
+     */
+    private void hideCameraCaption() {
+        if (toast != null) {
+            toast.cancel();
+        }
+        if (toastCountDown != null) {
+            toastCountDown.cancel();
+        }
     }
 
     /**
@@ -810,17 +877,20 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 } catch (IOException e) {
                     e.printStackTrace();
                     this.failPicture("Error capturing image.");
+                    hideCameraCaption();
                 }
             }
 
             // If cancelled
             else if (resultCode == Activity.RESULT_CANCELED) {
                 this.failPicture("No Image Selected");
+                hideCameraCaption();
             }
 
             // If something else
             else {
                 this.failPicture("Did not complete!");
+                hideCameraCaption();
             }
         }
         // If retrieving photo from library
