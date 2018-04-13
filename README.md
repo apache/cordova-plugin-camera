@@ -95,7 +95,7 @@ To add these entries into the `info.plist`, you can use the `edit-config` tag in
 
 ```
 <edit-config target="NSPhotoLibraryUsageDescription" file="*-Info.plist" mode="merge">
-    <string>need to photo library access to get pictures from there</string>
+    <string>need photo library access to get pictures from there</string>
 </edit-config>
 ```
 
@@ -107,7 +107,7 @@ To add these entries into the `info.plist`, you can use the `edit-config` tag in
 
 ```
 <edit-config target="NSPhotoLibraryAddUsageDescription" file="*-Info.plist" mode="merge">
-    <string>need to photo library access to save pictures there</string>
+    <string>need photo library access to save pictures there</string>
 </edit-config>
 ```
 
@@ -272,7 +272,7 @@ Optional parameters to customize the camera settings.
 | quality | <code>number</code> | <code>50</code> | Quality of the saved image, expressed as a range of 0-100, where 100 is typically full resolution with no loss from file compression. (Note that information about the camera's resolution is unavailable.) |
 | destinationType | <code>[DestinationType](#module_Camera.DestinationType)</code> | <code>FILE_URI</code> | Choose the format of the return value. |
 | sourceType | <code>[PictureSourceType](#module_Camera.PictureSourceType)</code> | <code>CAMERA</code> | Set the source of the picture. |
-| allowEdit | <code>Boolean</code> | <code>true</code> | Allow simple editing of image before selection. |
+| allowEdit | <code>Boolean</code> | <code>false</code> | Allow simple editing of image before selection. |
 | encodingType | <code>[EncodingType](#module_Camera.EncodingType)</code> | <code>JPEG</code> | Choose the  returned image file's encoding. |
 | targetWidth | <code>number</code> |  | Width in pixels to scale image. Must be used with `targetHeight`. Aspect ratio remains constant. |
 | targetHeight | <code>number</code> |  | Height in pixels to scale image. Must be used with `targetWidth`. Aspect ratio remains constant. |
