@@ -179,6 +179,22 @@ static NSString* toBase64(NSData* data) {
                                       cancelButtonTitle:NSLocalizedString(@"OK", nil)
                                       otherButtonTitles:settingsButton, nil] show];
                 });
+            } else if (authStatus == AVAuthorizationStatusNotDetermined){
+                [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted)
+                 {
+                     if(!granted)
+                     {
+                         // Dismiss the view
+                         [[self.pickerController presentingViewController] dismissViewControllerAnimated:YES completion:nil];
+
+                         CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"has no access to camera"];   // error callback expects string ATM
+
+                         [self.commandDelegate sendPluginResult:result callbackId:self.pickerController.callbackId];
+
+                         self.hasPendingOperation = NO;
+                         self.pickerController = nil;
+                     }
+                 }];
             }
         }
 
