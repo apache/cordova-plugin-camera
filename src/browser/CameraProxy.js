@@ -109,7 +109,7 @@ function capture (success, errorCallback, opts) {
     };
 
     if (navigator.getUserMedia) {
-        navigator.getUserMedia({video: true, audio: true}, successCallback, errorCallback);
+        navigator.getUserMedia({video: true, audio: false}, successCallback, errorCallback);
     } else {
         alert('Browser does not support camera :(');
     }
