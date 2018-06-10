@@ -19,27 +19,27 @@
  *
 */
 
-/* globals Camera, resolveLocalFileSystemURI, FileEntry, CameraPopoverOptions, FileTransfer, FileUploadOptions, LocalFileSystem, MSApp */
-/* jshint jasmine: true */
+/* globals Camera, resolveLocalFileSystemURL, FileEntry, CameraPopoverOptions, FileTransfer, FileUploadOptions, LocalFileSystem, MSApp */
+/* eslint-env jasmine */
 
 exports.defineAutoTests = function () {
     describe('Camera (navigator.camera)', function () {
-        it("should exist", function () {
+        it('should exist', function () {
             expect(navigator.camera).toBeDefined();
         });
 
-        it("should contain a getPicture function", function () {
+        it('should contain a getPicture function', function () {
             expect(navigator.camera.getPicture).toBeDefined();
-            expect(typeof navigator.camera.getPicture == 'function').toBe(true);
+            expect(typeof navigator.camera.getPicture === 'function').toBe(true);
         });
     });
 
     describe('Camera Constants (window.Camera + navigator.camera)', function () {
-        it("camera.spec.1 window.Camera should exist", function () {
+        it('camera.spec.1 window.Camera should exist', function () {
             expect(window.Camera).toBeDefined();
         });
 
-        it("camera.spec.2 should contain three DestinationType constants", function () {
+        it('camera.spec.2 should contain three DestinationType constants', function () {
             expect(Camera.DestinationType.DATA_URL).toBe(0);
             expect(Camera.DestinationType.FILE_URI).toBe(1);
             expect(Camera.DestinationType.NATIVE_URI).toBe(2);
@@ -48,14 +48,14 @@ exports.defineAutoTests = function () {
             expect(navigator.camera.DestinationType.NATIVE_URI).toBe(2);
         });
 
-        it("camera.spec.3 should contain two EncodingType constants", function () {
+        it('camera.spec.3 should contain two EncodingType constants', function () {
             expect(Camera.EncodingType.JPEG).toBe(0);
             expect(Camera.EncodingType.PNG).toBe(1);
             expect(navigator.camera.EncodingType.JPEG).toBe(0);
             expect(navigator.camera.EncodingType.PNG).toBe(1);
         });
 
-        it("camera.spec.4 should contain three MediaType constants", function () {
+        it('camera.spec.4 should contain three MediaType constants', function () {
             expect(Camera.MediaType.PICTURE).toBe(0);
             expect(Camera.MediaType.VIDEO).toBe(1);
             expect(Camera.MediaType.ALLMEDIA).toBe(2);
@@ -64,7 +64,7 @@ exports.defineAutoTests = function () {
             expect(navigator.camera.MediaType.ALLMEDIA).toBe(2);
         });
 
-        it("camera.spec.5 should contain three PictureSourceType constants", function () {
+        it('camera.spec.5 should contain three PictureSourceType constants', function () {
             expect(Camera.PictureSourceType.PHOTOLIBRARY).toBe(0);
             expect(Camera.PictureSourceType.CAMERA).toBe(1);
             expect(Camera.PictureSourceType.SAVEDPHOTOALBUM).toBe(2);
@@ -74,7 +74,6 @@ exports.defineAutoTests = function () {
         });
     });
 };
-
 
 /******************************************************************************/
 /******************************************************************************/
@@ -86,7 +85,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     var fileEntry = null;
     var pageStartTime = +new Date();
 
-    //default camera options
+    // default camera options
     var camQualityDefault = ['50', 50];
     var camDestinationTypeDefault = ['FILE_URI', 1];
     var camPictureSourceTypeDefault = ['CAMERA', 1];
@@ -96,12 +95,12 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     var camCorrectOrientationDefault = ['correctOrientation', false];
     var camSaveToPhotoAlbumDefault = ['saveToPhotoAlbum', true];
 
-    function log(value) {
+    function log (value) {
         console.log(value);
         document.getElementById('camera_status').textContent += (new Date() - pageStartTime) / 1000 + ': ' + value + '\n';
     }
 
-    function clearStatus() {
+    function clearStatus () {
         document.getElementById('camera_status').innerHTML = '';
         document.getElementById('camera_image').src = 'about:blank';
         var canvas = document.getElementById('canvas');
@@ -111,11 +110,11 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         fileEntry = null;
     }
 
-    function setPicture(url, callback) {
+    function setPicture (url, callback) {
         try {
             window.atob(url);
             // if we got here it is a base64 string (DATA_URL)
-            url = "data:image/jpeg;base64," + url;
+            url = 'data:image/jpeg;base64,' + url;
         } catch (e) {
             // not DATA_URL
         }
@@ -134,19 +133,19 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         };
     }
 
-    function onGetPictureError(e) {
+    function onGetPictureError (e) {
         log('Error getting picture: ' + (e.code || e));
     }
 
-    function getPictureWin(data) {
+    function getPictureWin (data) {
         setPicture(data);
         // TODO: Fix resolveLocalFileSystemURI to work with native-uri.
         if (pictureUrl.indexOf('file:') === 0 || pictureUrl.indexOf('content:') === 0 || pictureUrl.indexOf('ms-appdata:') === 0 || pictureUrl.indexOf('assets-library:') === 0) {
-            resolveLocalFileSystemURI(data, function (e) {
+            resolveLocalFileSystemURL(data, function (e) {
                 fileEntry = e;
-                logCallback('resolveLocalFileSystemURI()', true)(e.toURL());
+                logCallback('resolveLocalFileSystemURL()', true)(e.toURL());
                 readFile();
-            }, logCallback('resolveLocalFileSystemURI()', false));
+            }, logCallback('resolveLocalFileSystemURL()', false));
         } else if (pictureUrl.indexOf('data:image/jpeg;base64') === 0) {
             // do nothing
         } else {
@@ -155,7 +154,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         }
     }
 
-    function getPicture() {
+    function getPicture () {
         clearStatus();
         var options = extractOptions();
         log('Getting picture with options: ' + JSON.stringify(options));
@@ -168,27 +167,27 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         };
     }
 
-    function uploadImage() {
-        var ft = new FileTransfer(),
-            options = new FileUploadOptions();
-        options.fileKey = "photo";
+    function uploadImage () {
+        var ft = new FileTransfer();
+        var options = new FileUploadOptions();
+        options.fileKey = 'photo';
         options.fileName = 'test.jpg';
-        options.mimeType = "image/jpeg";
+        options.mimeType = 'image/jpeg';
         ft.onprogress = function (progressEvent) {
             console.log('progress: ' + progressEvent.loaded + ' of ' + progressEvent.total);
         };
-        var server = "http://cordova-filetransfer.jitsu.com";
+        var server = 'http://sheltered-retreat-43956.herokuapp.com';
 
         ft.upload(pictureUrl, server + '/upload', win, fail, options);
-        function win(information_back) {
+        function win (information_back) {
             log('upload complete');
         }
-        function fail(message) {
+        function fail (message) {
             log('upload failed: ' + JSON.stringify(message));
         }
     }
 
-    function logCallback(apiName, success) {
+    function logCallback (apiName, success) {
         return function () {
             log('Call to ' + apiName + (success ? ' success: ' : ' failed: ') + JSON.stringify([].slice.call(arguments)));
         };
@@ -198,20 +197,21 @@ exports.defineManualTests = function (contentEl, createActionButton) {
      * Select image from library using a NATIVE_URI destination type
      * This calls FileEntry.getMetadata, FileEntry.setMetadata, FileEntry.getParent, FileEntry.file, and FileReader.readAsDataURL.
      */
-    function readFile() {
-        function onFileReadAsDataURL(evt) {
+    function readFile () {
+        function onFileReadAsDataURL (evt) {
             var img = document.getElementById('camera_image');
-            img.style.visibility = "visible";
-            img.style.display = "block";
+            img.style.visibility = 'visible';
+            img.style.display = 'block';
             img.src = evt.target.result;
-            log("FileReader.readAsDataURL success");
+            log('FileReader.readAsDataURL success');
         }
 
-        function onFileReceived(file) {
+        function onFileReceived (file) {
             log('Got file: ' + JSON.stringify(file));
             fileObj = file;
-
+            /* eslint-disable no-undef */
             var reader = new FileReader();
+            /* eslint-enable no-undef */
             reader.onload = function () {
                 log('FileReader.readAsDataURL() - length = ' + reader.result.length);
             };
@@ -228,10 +228,10 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         }
     }
 
-    function getFileInfo() {
+    function getFileInfo () {
         // Test FileEntry API here.
         fileEntry.getMetadata(logCallback('FileEntry.getMetadata', true), logCallback('FileEntry.getMetadata', false));
-        fileEntry.setMetadata(logCallback('FileEntry.setMetadata', true), logCallback('FileEntry.setMetadata', false), { "com.apple.MobileBackup": 1 });
+        fileEntry.setMetadata(logCallback('FileEntry.setMetadata', true), logCallback('FileEntry.setMetadata', false), { 'com.apple.MobileBackup': 1 });
         fileEntry.getParent(logCallback('FileEntry.getParent', true), logCallback('FileEntry.getParent', false));
         fileEntry.getParent(logCallback('FileEntry.getParent', true), logCallback('FileEntry.getParent', false));
     }
@@ -240,7 +240,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
      * Copy image from library using a NATIVE_URI destination type
      * This calls FileEntry.copyTo and FileEntry.moveTo.
      */
-    function copyImage() {
+    function copyImage () {
         var onFileSystemReceived = function (fileSystem) {
             var destDirEntry = fileSystem.root;
             var origName = fileEntry.name;
@@ -249,17 +249,17 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             fileEntry.copyTo(destDirEntry, 'copied_file.png', logCallback('FileEntry.copyTo', true), logCallback('FileEntry.copyTo', false));
             fileEntry.moveTo(destDirEntry, 'moved_file.png', logCallback('FileEntry.moveTo', true), logCallback('FileEntry.moveTo', false));
 
-            //cleanup
-            //rename moved file back to original name so other tests can reference image
-            resolveLocalFileSystemURI(destDirEntry.nativeURL+'moved_file.png', function(fileEntry) {
+            // cleanup
+            // rename moved file back to original name so other tests can reference image
+            resolveLocalFileSystemURL(destDirEntry.nativeURL + 'moved_file.png', function (fileEntry) {
                 fileEntry.moveTo(destDirEntry, origName, logCallback('FileEntry.moveTo', true), logCallback('FileEntry.moveTo', false));
                 console.log('Cleanup: successfully renamed file back to original name');
             }, function () {
                 console.log('Cleanup: failed to rename file back to original name');
             });
 
-            //remove copied file
-            resolveLocalFileSystemURI(destDirEntry.nativeURL+'copied_file.png', function(fileEntry) {
+            // remove copied file
+            resolveLocalFileSystemURL(destDirEntry.nativeURL + 'copied_file.png', function (fileEntry) {
                 fileEntry.remove(logCallback('FileEntry.remove', true), logCallback('FileEntry.remove', false));
                 console.log('Cleanup: successfully removed copied file');
             }, function () {
@@ -274,11 +274,11 @@ exports.defineManualTests = function (contentEl, createActionButton) {
      * Write image to library using a NATIVE_URI destination type
      * This calls FileEntry.createWriter, FileWriter.write, and FileWriter.truncate.
      */
-    function writeImage() {
+    function writeImage () {
         var onFileWriterReceived = function (fileWriter) {
             fileWriter.onwrite = logCallback('FileWriter.write', true);
             fileWriter.onerror = logCallback('FileWriter.write', false);
-            fileWriter.write("some text!");
+            fileWriter.write('some text!');
         };
 
         var onFileTruncateWriterReceived = function (fileWriter) {
@@ -291,7 +291,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         fileEntry.createWriter(onFileTruncateWriterReceived, null);
     }
 
-    function displayImageUsingCanvas() {
+    function displayImageUsingCanvas () {
         var canvas = document.getElementById('canvas');
         var img = document.getElementById('camera_image');
         var w = img.width;
@@ -308,11 +308,11 @@ exports.defineManualTests = function (contentEl, createActionButton) {
      * Remove image from library using a NATIVE_URI destination type
      * This calls FileEntry.remove.
      */
-    function removeImage() {
+    function removeImage () {
         fileEntry.remove(logCallback('FileEntry.remove', true), logCallback('FileEntry.remove', false));
     }
 
-    function testInputTag(inputEl) {
+    function testInputTag (inputEl) {
         clearStatus();
         // iOS 6 likes to dead-lock in the onchange context if you
         // do any alerts or try to remote-debug.
@@ -321,7 +321,8 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         }, 0);
     }
 
-    function testNativeFile2(inputEl) {
+    function testNativeFile2 (inputEl) {
+        /* eslint-disable no-undef */
         if (!inputEl.value) {
             alert('No file selected.');
             return;
@@ -331,6 +332,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             alert('Got value but no file.');
             return;
         }
+        /* eslint-enable no-undef */
         var URLApi = window.URL || window.webkitURL;
         if (URLApi) {
             var blobURL = URLApi.createObjectURL(fileObj);
@@ -346,26 +348,26 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         }
     }
 
-    function extractOptions() {
+    function extractOptions () {
         var els = document.querySelectorAll('#image-options select');
         var ret = {};
-        /*jshint -W084 */
+        /* eslint-disable no-cond-assign */
         for (var i = 0, el; el = els[i]; ++i) {
             var value = el.value;
             if (value === '') continue;
             value = +value;
 
             if (el.isBool) {
-                ret[el.getAttribute("name")] = !!value;
+                ret[el.getAttribute('name')] = !!value;
             } else {
-                ret[el.getAttribute("name")] = value;
+                ret[el.getAttribute('name')] = value;
             }
         }
-        /*jshint +W084 */
+        /* eslint-enable no-cond-assign */
         return ret;
     }
 
-    function createOptionsEl(name, values, selectionDefault) {
+    function createOptionsEl (name, values, selectionDefault) {
         var openDiv = '<div style="display: inline-block">' + name + ': ';
         var select = '<select name=' + name + ' id="' + name + '">';
 
@@ -375,13 +377,13 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         }
 
         var options = '';
-        if (typeof values == 'boolean') {
+        if (typeof values === 'boolean') {
             values = { 'true': 1, 'false': 0 };
         }
         for (var k in values) {
             var isSelected = '';
             if (selectionDefault) {
-                if (selectionDefault[0] == k) {
+                if (selectionDefault[0] === k) {
                     isSelected = 'selected';
                 }
             }
@@ -400,8 +402,8 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             '<b>Status:</b> <div id="camera_status"></div>' +
             'img: <img width="100" id="camera_image">' +
             'canvas: <canvas id="canvas" width="1" height="1"></canvas>' +
-            '</div>',
-        options_div = '<h2>Cordova Camera API Options</h2>' +
+            '</div>';
+    var options_div = '<h2>Cordova Camera API Options</h2>' +
             '<div id="image-options">' +
             createOptionsEl('sourceType', Camera.PictureSourceType, camPictureSourceTypeDefault) +
             createOptionsEl('destinationType', Camera.DestinationType, camDestinationTypeDefault) +
@@ -414,9 +416,9 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             createOptionsEl('correctOrientation', true, camCorrectOrientationDefault) +
             createOptionsEl('saveToPhotoAlbum', true, camSaveToPhotoAlbumDefault) +
             createOptionsEl('cameraDirection', Camera.Direction) +
-            '</div>',
-        getpicture_div = '<div id="getpicture"></div>',
-        test_procedure = '<h4>Recommended Test Procedure</h4>' +
+            '</div>';
+    var getpicture_div = '<div id="getpicture"></div>';
+    var test_procedure = '<h4>Recommended Test Procedure</h4>' +
             'Options not specified should be the default value' +
             '<br>Status box should update with image and info whenever an image is taken or selected from library' +
             '</p><div style="background:#B0C4DE;border:1px solid #FFA07A;margin:15px 6px 0px;min-width:295px;max-width:97%;padding:4px 0px 2px 10px;min-height:160px;max-height:200px;overflow:auto">' +
@@ -429,14 +431,14 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             '</p><li>sourceType=PHOTOLIBRARY<br>mediaType=ALLMEDIA<br>allowEdit=true<br>Should be able to select pics and videos and edit picture if selected</li>' +
             '</p><li>sourceType=CAMERA<br>targetWidth & targetHeight=50<br>allowEdit=false<br>Do Get File Metadata test below and take note of size<br>Repeat test but with width and height=800. Size should be significantly larger.</li>' +
             '</p><li>quality=0<br>targetWidth & targetHeight=default<br>allowEdit=false<br>Do Get File Metadata test below and take note of size<br>Repeat test but with quality=80. Size should be significantly larger.</li>' +
-            '</ol></div>',
-        inputs_div = '<h2>Native File Inputs</h2>' +
+            '</ol></div>';
+    var inputs_div = '<h2>Native File Inputs</h2>' +
             'For the following tests, status box should update with file selected' +
             '</p><div>input type=file <input type="file" class="testInputTag"></div>' +
             '<div>capture=camera <input type="file" accept="image/*;capture=camera" class="testInputTag"></div>' +
             '<div>capture=camcorder <input type="file" accept="video/*;capture=camcorder" class="testInputTag"></div>' +
-            '<div>capture=microphone <input type="file" accept="audio/*;capture=microphone" class="testInputTag"></div>',
-        actions_div = '<h2>Actions</h2>' +
+            '<div>capture=microphone <input type="file" accept="audio/*;capture=microphone" class="testInputTag"></div>';
+    var actions_div = '<h2>Actions</h2>' +
             'For the following tests, ensure that an image is set in status box' +
             '</p><div id="metadata"></div>' +
             'Expected result: Get metadata about file selected.<br>Status box will show, along with the metadata, "Call to FileEntry.getMetadata success, Call to FileEntry.setMetadata success, Call to FileEntry.getParent success"' +
@@ -456,20 +458,20 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     // We need to wrap this code due to Windows security restrictions
     // see http://msdn.microsoft.com/en-us/library/windows/apps/hh465380.aspx#differences for details
     if (window.MSApp && window.MSApp.execUnsafeLocalFunction) {
-        MSApp.execUnsafeLocalFunction(function() {
+        MSApp.execUnsafeLocalFunction(function () {
             contentEl.innerHTML = info_div + options_div + getpicture_div + test_procedure + inputs_div + actions_div;
         });
     } else {
         contentEl.innerHTML = info_div + options_div + getpicture_div + test_procedure + inputs_div + actions_div;
     }
 
-    var elements = document.getElementsByClassName("testInputTag");
+    var elements = document.getElementsByClassName('testInputTag');
     var listener = function (e) {
         testInputTag(e.target);
     };
     for (var i = 0; i < elements.length; ++i) {
         var item = elements[i];
-        item.addEventListener("change", listener, false);
+        item.addEventListener('change', listener, false);
     }
 
     createActionButton('Get picture', function () {

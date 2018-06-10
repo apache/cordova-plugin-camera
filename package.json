@@ -1,58 +1,67 @@
 {
   "name": "cordova-plugin-camera",
-  "version": "2.2.0",
+  "version": "4.0.4-dev",
   "description": "Cordova Camera Plugin",
+  "types": "./types/index.d.ts",
   "cordova": {
     "id": "cordova-plugin-camera",
     "platforms": [
-      "firefoxos",
       "android",
-      "amazon-fireos",
-      "ubuntu",
       "ios",
-      "blackberry10",
-      "wp7",
-      "wp8",
-      "windows8",
       "browser",
-      "windows"
+      "windows",
+      "osx"
     ]
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/apache/cordova-plugin-camera"
   },
+  "bugs": {
+    "url": "https://issues.apache.org/jira/browse/CB"
+  },
   "keywords": [
     "cordova",
     "camera",
     "ecosystem:cordova",
-    "cordova-firefoxos",
     "cordova-android",
-    "cordova-amazon-fireos",
-    "cordova-ubuntu",
     "cordova-ios",
-    "cordova-blackberry10",
-    "cordova-wp7",
-    "cordova-wp8",
-    "cordova-windows8",
     "cordova-browser",
-    "cordova-windows"
+    "cordova-windows",
+    "cordova-osx"
   ],
-  "peerDependencies": {
-    "cordova-plugin-file": ">=2.0.0"
-  },
   "scripts": {
     "precommit": "npm run gen-docs && git add README.md",
     "gen-docs": "jsdoc2md --template \"jsdoc2md/TEMPLATE.md\" \"www/**/*.js\" --plugin \"dmd-plugin-cordova-plugin\" > README.md",
-    "test": "npm run jshint",
-    "jshint": "node node_modules/jshint/bin/jshint www && node node_modules/jshint/bin/jshint src && node node_modules/jshint/bin/jshint tests"
+    "test": "npm run eslint",
+    "eslint": "node node_modules/eslint/bin/eslint www && node node_modules/eslint/bin/eslint src && node node_modules/eslint/bin/eslint tests"
   },
   "author": "Apache Software Foundation",
   "license": "Apache-2.0",
+  "engines": {
+    "cordovaDependencies": {
+      "3.0.0": {
+        "cordova-android": ">=6.3.0"
+      },
+      "4.1.0": {
+        "cordova-android": ">=6.3.0",
+        "cordova": ">=7.1.0"
+      },
+      "5.0.0": {
+        "cordova": ">100"
+      }
+    }
+  },
   "devDependencies": {
     "dmd-plugin-cordova-plugin": "^0.1.0",
+    "eslint": "^4.3.0",
+    "eslint-config-semistandard": "^11.0.0",
+    "eslint-config-standard": "^10.2.1",
+    "eslint-plugin-import": "^2.3.0",
+    "eslint-plugin-node": "^5.0.0",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-standard": "^3.0.1",
     "husky": "^0.10.1",
-    "jsdoc-to-markdown": "^1.2.0",
-    "jshint": "^2.6.0"
+    "jsdoc-to-markdown": "^1.2.0"
   }
 }

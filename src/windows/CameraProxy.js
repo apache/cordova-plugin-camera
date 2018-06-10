@@ -19,12 +19,9 @@
  *
 */
 
-/*jshint unused:true, undef:true, browser:true */
-/*global Windows:true, URL:true, module:true, require:true, WinJS:true */
-
+/* global Windows:true, URL:true, module:true, require:true, WinJS:true */
 
 var Camera = require('./Camera');
-
 
 var getAppData = function () {
     return Windows.Storage.ApplicationData.current;
@@ -58,7 +55,7 @@ module.exports = {
     takePicture: function (successCallback, errorCallback, args) {
         var sourceType = args[2];
 
-        if (sourceType != Camera.PictureSourceType.CAMERA) {
+        if (sourceType !== Camera.PictureSourceType.CAMERA) {
             takePictureFromFile(successCallback, errorCallback, args);
         } else {
             takePictureFromCamera(successCallback, errorCallback, args);
@@ -67,8 +64,8 @@ module.exports = {
 };
 
 // https://msdn.microsoft.com/en-us/library/windows/apps/ff462087(v=vs.105).aspx
-var windowsVideoContainers = [".avi", ".flv", ".asx", ".asf", ".mov", ".mp4", ".mpg", ".rm", ".srt", ".swf", ".wmv", ".vob"];
-var windowsPhoneVideoContainers =  [".avi", ".3gp", ".3g2", ".wmv", ".3gp", ".3g2", ".mp4", ".m4v"];
+var windowsVideoContainers = ['.avi', '.flv', '.asx', '.asf', '.mov', '.mp4', '.mpg', '.rm', '.srt', '.swf', '.wmv', '.vob'];
+var windowsPhoneVideoContainers = ['.avi', '.3gp', '.3g2', '.wmv', '.3gp', '.3g2', '.mp4', '.m4v'];
 
 // Default aspect ratio 1.78 (16:9 hd video standard)
 var DEFAULT_ASPECT_RATIO = '1.8';
@@ -77,12 +74,16 @@ var DEFAULT_ASPECT_RATIO = '1.8';
 var HIGHEST_POSSIBLE_Z_INDEX = 2147483647;
 
 // Resize method
-function resizeImage(successCallback, errorCallback, file, targetWidth, targetHeight, encodingType) {
-    var tempPhotoFileName = "";
-    if (encodingType == Camera.EncodingType.PNG) {
-        tempPhotoFileName = "camera_cordova_temp_return.png";
+function resizeImage (successCallback, errorCallback, file, targetWidth, targetHeight, encodingType) {
+    var tempPhotoFileName = '';
+    var targetContentType = '';
+
+    if (encodingType === Camera.EncodingType.PNG) {
+        tempPhotoFileName = 'camera_cordova_temp_return.png';
+        targetContentType = 'image/png';
     } else {
-        tempPhotoFileName = "camera_cordova_temp_return.jpg";
+        tempPhotoFileName = 'camera_cordova_temp_return.jpg';
+        targetContentType = 'image/jpeg';
     }
 
     var storageFolder = getAppData().localFolder;
@@ -90,12 +91,12 @@ function resizeImage(successCallback, errorCallback, file, targetWidth, targetHe
         .then(function (storageFile) {
             return fileIO.readBufferAsync(storageFile);
         })
-        .then(function(buffer) {
+        .then(function (buffer) {
             var strBase64 = encodeToBase64String(buffer);
-            var imageData = "data:" + file.contentType + ";base64," + strBase64;
-            var image = new Image();
+            var imageData = 'data:' + file.contentType + ';base64,' + strBase64;
+            var image = new Image(); /* eslint no-undef : 0 */
             image.src = imageData;
-            image.onload = function() {
+            image.onload = function () {
                 var ratio = Math.min(targetWidth / this.width, targetHeight / this.height);
                 var imageWidth = ratio * this.width;
                 var imageHeight = ratio * this.height;
@@ -106,9 +107,9 @@ function resizeImage(successCallback, errorCallback, file, targetWidth, targetHe
                 canvas.width = imageWidth;
                 canvas.height = imageHeight;
 
-                canvas.getContext("2d").drawImage(this, 0, 0, imageWidth, imageHeight);
+                canvas.getContext('2d').drawImage(this, 0, 0, imageWidth, imageHeight);
 
-                var fileContent = canvas.toDataURL(file.contentType).split(',')[1];
+                var fileContent = canvas.toDataURL(targetContentType).split(',')[1];
 
                 var storageFolder = getAppData().localFolder;
 
@@ -119,26 +120,25 @@ function resizeImage(successCallback, errorCallback, file, targetWidth, targetHe
                         return fileIO.writeBufferAsync(storagefile, content);
                     })
                     .done(function () {
-                        successCallback("ms-appdata:///local/" + storageFileName);
+                        successCallback('ms-appdata:///local/' + storageFileName);
                     }, errorCallback);
             };
         })
-        .done(null, function(err) {
+        .done(null, function (err) {
             errorCallback(err);
-        }
-    );
+        });
 }
 
 // Because of asynchronous method, so let the successCallback be called in it.
-function resizeImageBase64(successCallback, errorCallback, file, targetWidth, targetHeight) {
-    fileIO.readBufferAsync(file).done( function(buffer) {
+function resizeImageBase64 (successCallback, errorCallback, file, targetWidth, targetHeight) {
+    fileIO.readBufferAsync(file).done(function (buffer) {
         var strBase64 = encodeToBase64String(buffer);
-        var imageData = "data:" + file.contentType + ";base64," + strBase64;
+        var imageData = 'data:' + file.contentType + ';base64,' + strBase64;
 
-        var image = new Image();
+        var image = new Image(); /* eslint no-undef : 0 */
         image.src = imageData;
 
-        image.onload = function() {
+        image.onload = function () {
             var ratio = Math.min(targetWidth / this.width, targetHeight / this.height);
             var imageWidth = ratio * this.width;
             var imageHeight = ratio * this.height;
@@ -147,21 +147,21 @@ function resizeImageBase64(successCallback, errorCallback, file, targetWidth, ta
             canvas.width = imageWidth;
             canvas.height = imageHeight;
 
-            var ctx = canvas.getContext("2d");
+            var ctx = canvas.getContext('2d');
             ctx.drawImage(this, 0, 0, imageWidth, imageHeight);
 
             // The resized file ready for upload
             var finalFile = canvas.toDataURL(file.contentType);
 
             // Remove the prefix such as "data:" + contentType + ";base64," , in order to meet the Cordova API.
-            var arr = finalFile.split(",");
+            var arr = finalFile.split(',');
             var newStr = finalFile.substr(arr[0].length + 1);
             successCallback(newStr);
         };
-    }, function(err) { errorCallback(err); });
+    }, function (err) { errorCallback(err); });
 }
 
-function takePictureFromFile(successCallback, errorCallback, args) {
+function takePictureFromFile (successCallback, errorCallback, args) {
     // Detect Windows Phone
     if (navigator.appVersion.indexOf('Windows Phone 8.1') >= 0) {
         takePictureFromFileWP(successCallback, errorCallback, args);
@@ -170,94 +170,87 @@ function takePictureFromFile(successCallback, errorCallback, args) {
     }
 }
 
-function takePictureFromFileWP(successCallback, errorCallback, args) {
-    var mediaType = args[6],
-        destinationType = args[1],
-        targetWidth = args[3],
-        targetHeight = args[4],
-        encodingType = args[5];
+function takePictureFromFileWP (successCallback, errorCallback, args) {
+    var mediaType = args[6];
+    var destinationType = args[1];
+    var targetWidth = args[3];
+    var targetHeight = args[4];
+    var encodingType = args[5];
 
     /*
         Need to add and remove an event listener to catch activation state
         Using FileOpenPicker will suspend the app and it's required to catch the PickSingleFileAndContinue
         https://msdn.microsoft.com/en-us/library/windows/apps/xaml/dn631755.aspx
     */
-    var filePickerActivationHandler = function(eventArgs) {
+    var filePickerActivationHandler = function (eventArgs) {
         if (eventArgs.kind === Windows.ApplicationModel.Activation.ActivationKind.pickFileContinuation) {
             var file = eventArgs.files[0];
             if (!file) {
                 errorCallback("User didn't choose a file.");
-                webUIApp.removeEventListener("activated", filePickerActivationHandler);
+                webUIApp.removeEventListener('activated', filePickerActivationHandler);
                 return;
             }
-            if (destinationType == Camera.DestinationType.FILE_URI || destinationType == Camera.DestinationType.NATIVE_URI) {
+            if (destinationType === Camera.DestinationType.FILE_URI || destinationType === Camera.DestinationType.NATIVE_URI) {
                 if (targetHeight > 0 && targetWidth > 0) {
                     resizeImage(successCallback, errorCallback, file, targetWidth, targetHeight, encodingType);
-                }
-                else {
+                } else {
                     var storageFolder = getAppData().localFolder;
                     file.copyAsync(storageFolder, file.name, Windows.Storage.NameCollisionOption.replaceExisting).done(function (storageFile) {
-                        if(destinationType == Camera.DestinationType.NATIVE_URI) {
-                            successCallback("ms-appdata:///local/" + storageFile.name);
-                        }
-                        else {
+                        if (destinationType === Camera.DestinationType.NATIVE_URI) {
+                            successCallback('ms-appdata:///local/' + storageFile.name);
+                        } else {
                             successCallback(URL.createObjectURL(storageFile));
                         }
                     }, function () {
                         errorCallback("Can't access localStorage folder.");
                     });
                 }
-            }
-            else {
+            } else {
                 if (targetHeight > 0 && targetWidth > 0) {
                     resizeImageBase64(successCallback, errorCallback, file, targetWidth, targetHeight);
                 } else {
                     fileIO.readBufferAsync(file).done(function (buffer) {
-                        var strBase64 =encodeToBase64String(buffer);
+                        var strBase64 = encodeToBase64String(buffer);
                         successCallback(strBase64);
                     }, errorCallback);
                 }
             }
-            webUIApp.removeEventListener("activated", filePickerActivationHandler);
+            webUIApp.removeEventListener('activated', filePickerActivationHandler);
         }
     };
 
     var fileOpenPicker = new Windows.Storage.Pickers.FileOpenPicker();
-    if (mediaType == Camera.MediaType.PICTURE) {
-        fileOpenPicker.fileTypeFilter.replaceAll([".png", ".jpg", ".jpeg"]);
+    if (mediaType === Camera.MediaType.PICTURE) {
+        fileOpenPicker.fileTypeFilter.replaceAll(['.png', '.jpg', '.jpeg']);
         fileOpenPicker.suggestedStartLocation = pickerLocId.picturesLibrary;
-    }
-    else if (mediaType == Camera.MediaType.VIDEO) {
+    } else if (mediaType === Camera.MediaType.VIDEO) {
         fileOpenPicker.fileTypeFilter.replaceAll(windowsPhoneVideoContainers);
         fileOpenPicker.suggestedStartLocation = pickerLocId.videosLibrary;
-    }
-    else {
-        fileOpenPicker.fileTypeFilter.replaceAll(["*"]);
+    } else {
+        fileOpenPicker.fileTypeFilter.replaceAll(['*']);
         fileOpenPicker.suggestedStartLocation = pickerLocId.documentsLibrary;
     }
 
-    webUIApp.addEventListener("activated", filePickerActivationHandler);
+    webUIApp.addEventListener('activated', filePickerActivationHandler);
     fileOpenPicker.pickSingleFileAndContinue();
 }
 
-function takePictureFromFileWindows(successCallback, errorCallback, args) {
-    var mediaType = args[6],
-        destinationType = args[1],
-        targetWidth = args[3],
-        targetHeight = args[4],
-        encodingType = args[5];
+function takePictureFromFileWindows (successCallback, errorCallback, args) {
+    var mediaType = args[6];
+    var destinationType = args[1];
+    var targetWidth = args[3];
+    var targetHeight = args[4];
+    var encodingType = args[5];
 
     var fileOpenPicker = new Windows.Storage.Pickers.FileOpenPicker();
-    if (mediaType == Camera.MediaType.PICTURE) {
-        fileOpenPicker.fileTypeFilter.replaceAll([".png", ".jpg", ".jpeg"]);
+    if (mediaType === Camera.MediaType.PICTURE) {
+        fileOpenPicker.fileTypeFilter.replaceAll(['.png', '.jpg', '.jpeg']);
         fileOpenPicker.suggestedStartLocation = pickerLocId.picturesLibrary;
-    }
-    else if (mediaType == Camera.MediaType.VIDEO) {
+    } else if (mediaType === Camera.MediaType.VIDEO) {
         fileOpenPicker.fileTypeFilter.replaceAll(windowsVideoContainers);
         fileOpenPicker.suggestedStartLocation = pickerLocId.videosLibrary;
-    }
-    else {
-        fileOpenPicker.fileTypeFilter.replaceAll(["*"]);
+    } else {
+        fileOpenPicker.fileTypeFilter.replaceAll(['*']);
         fileOpenPicker.suggestedStartLocation = pickerLocId.documentsLibrary;
     }
 
@@ -266,30 +259,27 @@ function takePictureFromFileWindows(successCallback, errorCallback, args) {
             errorCallback("User didn't choose a file.");
             return;
         }
-        if (destinationType == Camera.DestinationType.FILE_URI || destinationType == Camera.DestinationType.NATIVE_URI) {
+        if (destinationType === Camera.DestinationType.FILE_URI || destinationType === Camera.DestinationType.NATIVE_URI) {
             if (targetHeight > 0 && targetWidth > 0) {
                 resizeImage(successCallback, errorCallback, file, targetWidth, targetHeight, encodingType);
-            }
-            else {
+            } else {
                 var storageFolder = getAppData().localFolder;
                 file.copyAsync(storageFolder, file.name, Windows.Storage.NameCollisionOption.replaceExisting).done(function (storageFile) {
-                        if(destinationType == Camera.DestinationType.NATIVE_URI) {
-                            successCallback("ms-appdata:///local/" + storageFile.name);
-                        }
-                        else {
-                            successCallback(URL.createObjectURL(storageFile));
-                        }
+                    if (destinationType === Camera.DestinationType.NATIVE_URI) {
+                        successCallback('ms-appdata:///local/' + storageFile.name);
+                    } else {
+                        successCallback(URL.createObjectURL(storageFile));
+                    }
                 }, function () {
                     errorCallback("Can't access localStorage folder.");
                 });
             }
-        }
-        else {
+        } else {
             if (targetHeight > 0 && targetWidth > 0) {
                 resizeImageBase64(successCallback, errorCallback, file, targetWidth, targetHeight);
             } else {
                 fileIO.readBufferAsync(file).done(function (buffer) {
-                    var strBase64 =encodeToBase64String(buffer);
+                    var strBase64 = encodeToBase64String(buffer);
                     successCallback(strBase64);
                 }, errorCallback);
             }
@@ -299,7 +289,7 @@ function takePictureFromFileWindows(successCallback, errorCallback, args) {
     });
 }
 
-function takePictureFromCamera(successCallback, errorCallback, args) {
+function takePictureFromCamera (successCallback, errorCallback, args) {
     // Check if necessary API available
     if (!Windows.Media.Capture.CameraCaptureUI) {
         takePictureFromCameraWP(successCallback, errorCallback, args);
@@ -308,42 +298,42 @@ function takePictureFromCamera(successCallback, errorCallback, args) {
     }
 }
 
-function takePictureFromCameraWP(successCallback, errorCallback, args) {
+function takePictureFromCameraWP (successCallback, errorCallback, args) {
     // We are running on WP8.1 which lacks CameraCaptureUI class
     // so we need to use MediaCapture class instead and implement custom UI for camera
-    var destinationType = args[1],
-        targetWidth = args[3],
-        targetHeight = args[4],
-        encodingType = args[5],
-        saveToPhotoAlbum = args[9],
-        cameraDirection = args[11],
-        capturePreview = null,
-        cameraCaptureButton = null,
-        cameraCancelButton = null,
-        capture = null,
-        captureSettings = null,
-        CaptureNS = Windows.Media.Capture,
-        sensor = null;
+    var destinationType = args[1];
+    var targetWidth = args[3];
+    var targetHeight = args[4];
+    var encodingType = args[5];
+    var saveToPhotoAlbum = args[9];
+    var cameraDirection = args[11];
+    var capturePreview = null;
+    var cameraCaptureButton = null;
+    var cameraCancelButton = null;
+    var capture = null;
+    var captureSettings = null;
+    var CaptureNS = Windows.Media.Capture;
+    var sensor = null;
 
-    function createCameraUI() {
+    function createCameraUI () {
         // create style for take and cancel buttons
-        var buttonStyle = "width:45%;padding: 10px 16px;font-size: 18px;line-height: 1.3333333;color: #333;background-color: #fff;border-color: #ccc; border: 1px solid transparent;border-radius: 6px; display: block; margin: 20px; z-index: 1000;border-color: #adadad;";
+        var buttonStyle = 'width:45%;padding: 10px 16px;font-size: 18px;line-height: 1.3333333;color: #333;background-color: #fff;border-color: #ccc; border: 1px solid transparent;border-radius: 6px; display: block; margin: 20px; z-index: 1000;border-color: #adadad;';
 
         // Create fullscreen preview
         // z-order style element for capturePreview and cameraCancelButton elts
         // is necessary to avoid overriding by another page elements, -1 sometimes is not enough
-        capturePreview = document.createElement("video");
-        capturePreview.style.cssText = "position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: " + (HIGHEST_POSSIBLE_Z_INDEX - 1) + ";";
+        capturePreview = document.createElement('video');
+        capturePreview.style.cssText = 'position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: ' + (HIGHEST_POSSIBLE_Z_INDEX - 1) + ';';
 
         // Create capture button
-        cameraCaptureButton = document.createElement("button");
-        cameraCaptureButton.innerText = "Take";
-        cameraCaptureButton.style.cssText = buttonStyle + "position: fixed; left: 0; bottom: 0; margin: 20px; z-index: " + HIGHEST_POSSIBLE_Z_INDEX + ";";
+        cameraCaptureButton = document.createElement('button');
+        cameraCaptureButton.innerText = 'Take';
+        cameraCaptureButton.style.cssText = buttonStyle + 'position: fixed; left: 0; bottom: 0; margin: 20px; z-index: ' + HIGHEST_POSSIBLE_Z_INDEX + ';';
 
         // Create cancel button
-        cameraCancelButton = document.createElement("button");
-        cameraCancelButton.innerText = "Cancel";
-        cameraCancelButton.style.cssText = buttonStyle + "position: fixed; right: 0; bottom: 0; margin: 20px; z-index: " + HIGHEST_POSSIBLE_Z_INDEX + ";";
+        cameraCancelButton = document.createElement('button');
+        cameraCancelButton.innerText = 'Cancel';
+        cameraCancelButton.style.cssText = buttonStyle + 'position: fixed; right: 0; bottom: 0; margin: 20px; z-index: ' + HIGHEST_POSSIBLE_Z_INDEX + ';';
 
         capture = new CaptureNS.MediaCapture();
 
@@ -351,21 +341,21 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
         captureSettings.streamingCaptureMode = CaptureNS.StreamingCaptureMode.video;
     }
 
-    function continueVideoOnFocus() {
+    function continueVideoOnFocus () {
         // if preview is defined it would be stuck, play it
         if (capturePreview) {
             capturePreview.play();
         }
     }
 
-    function startCameraPreview() {
+    function startCameraPreview () {
         // Search for available camera devices
         // This is necessary to detect which camera (front or back) we should use
         var DeviceEnum = Windows.Devices.Enumeration;
         var expectedPanel = cameraDirection === 1 ? DeviceEnum.Panel.front : DeviceEnum.Panel.back;
 
         // Add focus event handler to capture the event when user suspends the app and comes back while the preview is on
-        window.addEventListener("focus", continueVideoOnFocus);
+        window.addEventListener('focus', continueVideoOnFocus);
 
         DeviceEnum.DeviceInformation.findAllAsync(DeviceEnum.DeviceClass.videoCapture).then(function (devices) {
             if (devices.length <= 0) {
@@ -374,8 +364,8 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
                 return;
             }
 
-            devices.forEach(function(currDev) {
-                if (currDev.enclosureLocation.panel && currDev.enclosureLocation.panel == expectedPanel) {
+            devices.forEach(function (currDev) {
+                if (currDev.enclosureLocation.panel && currDev.enclosureLocation.panel === expectedPanel) {
                     captureSettings.videoDeviceId = currDev.id;
                 }
             });
@@ -414,7 +404,7 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
             // Bind events to controls
             sensor = Windows.Devices.Sensors.SimpleOrientationSensor.getDefault();
             if (sensor !== null) {
-                sensor.addEventListener("orientationchanged", onOrientationChange);
+                sensor.addEventListener('orientationchanged', onOrientationChange);
             }
 
             // add click events to capture and cancel buttons
@@ -455,7 +445,7 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
         });
     }
 
-    function destroyCameraPreview() {
+    function destroyCameraPreview () {
         // If sensor is available, remove event listener
         if (sensor !== null) {
             sensor.removeEventListener('orientationchanged', onOrientationChange);
@@ -470,7 +460,7 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
         cameraCancelButton.removeEventListener('click', onCameraCancelButtonClick);
 
         // Remove the focus event handler
-        window.removeEventListener("focus", continueVideoOnFocus);
+        window.removeEventListener('focus', continueVideoOnFocus);
 
         // Remove elements
         [capturePreview, cameraCaptureButton, cameraCancelButton].forEach(function (elem) {
@@ -486,13 +476,13 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
         }
     }
 
-    function captureAction() {
+    function captureAction () {
 
-        var encodingProperties,
-            fileName,
-            tempFolder = getAppData().temporaryFolder;
+        var encodingProperties;
+        var fileName;
+        var tempFolder = getAppData().temporaryFolder;
 
-        if (encodingType == Camera.EncodingType.PNG) {
+        if (encodingType === Camera.EncodingType.PNG) {
             fileName = 'photo.png';
             encodingProperties = Windows.Media.MediaProperties.ImageEncodingProperties.createPng();
         } else {
@@ -501,41 +491,41 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
         }
 
         tempFolder.createFileAsync(fileName, OptUnique)
-            .then(function(tempCapturedFile) {
+            .then(function (tempCapturedFile) {
                 return new WinJS.Promise(function (complete) {
                     var photoStream = new Windows.Storage.Streams.InMemoryRandomAccessStream();
                     var finalStream = new Windows.Storage.Streams.InMemoryRandomAccessStream();
                     capture.capturePhotoToStreamAsync(encodingProperties, photoStream)
-                        .then(function() {
+                        .then(function () {
                             return Windows.Graphics.Imaging.BitmapDecoder.createAsync(photoStream);
                         })
-                        .then(function(dec) {
+                        .then(function (dec) {
                             finalStream.size = 0; // BitmapEncoder requires the output stream to be empty
                             return Windows.Graphics.Imaging.BitmapEncoder.createForTranscodingAsync(finalStream, dec);
                         })
-                        .then(function(enc) {
+                        .then(function (enc) {
                             // We need to rotate the photo wrt sensor orientation
                             enc.bitmapTransform.rotation = orientationToRotation(sensor.getCurrentOrientation());
                             return enc.flushAsync();
                         })
-                        .then(function() {
+                        .then(function () {
                             return tempCapturedFile.openAsync(Windows.Storage.FileAccessMode.readWrite);
                         })
-                        .then(function(fileStream) {
+                        .then(function (fileStream) {
                             return Windows.Storage.Streams.RandomAccessStream.copyAndCloseAsync(finalStream, fileStream);
                         })
-                        .done(function() {
+                        .done(function () {
                             photoStream.close();
                             finalStream.close();
                             complete(tempCapturedFile);
-                        }, function() {
+                        }, function () {
                             photoStream.close();
                             finalStream.close();
-                            throw new Error("An error has occured while capturing the photo.");
+                            throw new Error('An error has occured while capturing the photo.');
                         });
                 });
             })
-            .done(function(capturedFile) {
+            .done(function (capturedFile) {
                 destroyCameraPreview();
                 savePhoto(capturedFile, {
                     destinationType: destinationType,
@@ -544,13 +534,13 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
                     encodingType: encodingType,
                     saveToPhotoAlbum: saveToPhotoAlbum
                 }, successCallback, errorCallback);
-            }, function(err) {
+            }, function (err) {
                 destroyCameraPreview();
                 errorCallback(err);
             });
     }
 
-    function getAspectRatios(capture) {
+    function getAspectRatios (capture) {
         var videoDeviceController = capture.videoDeviceController;
         var photoAspectRatios = videoDeviceController.getAvailableMediaStreamProperties(CapMSType.photo).map(function (element) {
             return (element.width / element.height).toFixed(1);
@@ -579,7 +569,7 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
         });
     }
 
-    function setAspectRatio(capture, aspect) {
+    function setAspectRatio (capture, aspect) {
         // Max photo resolution with desired aspect ratio
         var videoDeviceController = capture.videoDeviceController;
         var photoResolution = videoDeviceController.getAvailableMediaStreamProperties(CapMSType.photo)
@@ -620,7 +610,7 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
     /**
      * When Capture button is clicked, try to capture a picture and return
      */
-    function onCameraCaptureButtonClick() {
+    function onCameraCaptureButtonClick () {
         // Make sure user can't click more than once
         if (this.getAttribute('clicked') === '1') {
             return false;
@@ -633,7 +623,7 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
     /**
      * When Cancel button is clicked, destroy camera preview and return with error callback
      */
-    function onCameraCancelButtonClick() {
+    function onCameraCancelButtonClick () {
         // Make sure user can't click more than once
         if (this.getAttribute('clicked') === '1') {
             return false;
@@ -648,7 +638,7 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
      * When the phone orientation change, get the event and change camera preview rotation
      * @param  {Object} e - SimpleOrientationSensorOrientationChangedEventArgs
      */
-    function onOrientationChange(e) {
+    function onOrientationChange (e) {
         setPreviewRotation(e.orientation);
     }
 
@@ -658,29 +648,29 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
      * @param  {number} orientation - Windows.Devices.Sensors.SimpleOrientation
      * @return {number} - Windows.Media.Capture.VideoRotation
      */
-    function orientationToRotation(orientation) {
+    function orientationToRotation (orientation) {
         // VideoRotation enumerable and BitmapRotation enumerable have the same values
         // https://msdn.microsoft.com/en-us/library/windows/apps/windows.media.capture.videorotation.aspx
         // https://msdn.microsoft.com/en-us/library/windows/apps/windows.graphics.imaging.bitmaprotation.aspx
 
         switch (orientation) {
-            // portrait
-            case Windows.Devices.Sensors.SimpleOrientation.notRotated:
-                return Windows.Media.Capture.VideoRotation.clockwise90Degrees;
-            // landscape
-            case Windows.Devices.Sensors.SimpleOrientation.rotated90DegreesCounterclockwise:
-                return Windows.Media.Capture.VideoRotation.none;
-            // portrait-flipped (not supported by WinPhone Apps)
-            case Windows.Devices.Sensors.SimpleOrientation.rotated180DegreesCounterclockwise:
-                // Falling back to portrait default
-                return Windows.Media.Capture.VideoRotation.clockwise90Degrees;
-            // landscape-flipped
-            case Windows.Devices.Sensors.SimpleOrientation.rotated270DegreesCounterclockwise:
-                return Windows.Media.Capture.VideoRotation.clockwise180Degrees;
-            // faceup & facedown
-            default:
-                // Falling back to portrait default
-                return Windows.Media.Capture.VideoRotation.clockwise90Degrees;
+        // portrait
+        case Windows.Devices.Sensors.SimpleOrientation.notRotated:
+            return Windows.Media.Capture.VideoRotation.clockwise90Degrees;
+        // landscape
+        case Windows.Devices.Sensors.SimpleOrientation.rotated90DegreesCounterclockwise:
+            return Windows.Media.Capture.VideoRotation.none;
+        // portrait-flipped (not supported by WinPhone Apps)
+        case Windows.Devices.Sensors.SimpleOrientation.rotated180DegreesCounterclockwise:
+            // Falling back to portrait default
+            return Windows.Media.Capture.VideoRotation.clockwise90Degrees;
+        // landscape-flipped
+        case Windows.Devices.Sensors.SimpleOrientation.rotated270DegreesCounterclockwise:
+            return Windows.Media.Capture.VideoRotation.clockwise180Degrees;
+        // faceup & facedown
+        default:
+            // Falling back to portrait default
+            return Windows.Media.Capture.VideoRotation.clockwise90Degrees;
         }
     }
 
@@ -688,7 +678,7 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
      * Rotates the current MediaCapture's video
      * @param {number} orientation - Windows.Devices.Sensors.SimpleOrientation
      */
-    function setPreviewRotation(orientation) {
+    function setPreviewRotation (orientation) {
         capture.setPreviewRotation(orientationToRotation(orientation));
     }
 
@@ -700,19 +690,19 @@ function takePictureFromCameraWP(successCallback, errorCallback, args) {
     }
 }
 
-function takePictureFromCameraWindows(successCallback, errorCallback, args) {
-    var destinationType = args[1],
-        targetWidth = args[3],
-        targetHeight = args[4],
-        encodingType = args[5],
-        allowCrop = !!args[7],
-        saveToPhotoAlbum = args[9],
-        WMCapture = Windows.Media.Capture,
-        cameraCaptureUI = new WMCapture.CameraCaptureUI();
+function takePictureFromCameraWindows (successCallback, errorCallback, args) {
+    var destinationType = args[1];
+    var targetWidth = args[3];
+    var targetHeight = args[4];
+    var encodingType = args[5];
+    var allowCrop = !!args[7];
+    var saveToPhotoAlbum = args[9];
+    var WMCapture = Windows.Media.Capture;
+    var cameraCaptureUI = new WMCapture.CameraCaptureUI();
 
     cameraCaptureUI.photoSettings.allowCropping = allowCrop;
 
-    if (encodingType == Camera.EncodingType.PNG) {
+    if (encodingType === Camera.EncodingType.PNG) {
         cameraCaptureUI.photoSettings.format = WMCapture.CameraCaptureUIPhotoFormat.png;
     } else {
         cameraCaptureUI.photoSettings.format = WMCapture.CameraCaptureUIPhotoFormat.jpeg;
@@ -723,14 +713,13 @@ function takePictureFromCameraWindows(successCallback, errorCallback, args) {
     var UIMaxRes = WMCapture.CameraCaptureUIMaxPhotoResolution;
     var totalPixels = targetWidth * targetHeight;
 
-    if (targetWidth == -1 && targetHeight == -1) {
+    if (targetWidth === -1 && targetHeight === -1) {
         maxRes = UIMaxRes.highestAvailable;
-    }
     // Temp fix for CB-10539
-    /*else if (totalPixels <= 320 * 240) {
+    /* else if (totalPixels <= 320 * 240) {
         maxRes = UIMaxRes.verySmallQvga;
-    }*/
-    else if (totalPixels <= 640 * 480) {
+    } */
+    } else if (totalPixels <= 640 * 480) {
         maxRes = UIMaxRes.smallVga;
     } else if (totalPixels <= 1024 * 768) {
         maxRes = UIMaxRes.mediumXga;
@@ -745,10 +734,10 @@ function takePictureFromCameraWindows(successCallback, errorCallback, args) {
     cameraCaptureUI.photoSettings.maxResolution = maxRes;
 
     var cameraPicture;
-    
+
     // define focus handler for windows phone 10.0
     var savePhotoOnFocus = function () {
-        window.removeEventListener("focus", savePhotoOnFocus);
+        window.removeEventListener('focus', savePhotoOnFocus);
         // call only when the app is in focus again
         savePhoto(cameraPicture, {
             destinationType: destinationType,
@@ -760,15 +749,15 @@ function takePictureFromCameraWindows(successCallback, errorCallback, args) {
     };
 
     // if windows phone 10, add and delete focus eventHandler to capture the focus back from cameraUI to app
-    if (navigator.appVersion.indexOf('Windows Phone 10.0') >= 0) { 
-        window.addEventListener("focus", savePhotoOnFocus);
+    if (navigator.appVersion.indexOf('Windows Phone 10.0') >= 0) {
+        window.addEventListener('focus', savePhotoOnFocus);
     }
 
     cameraCaptureUI.captureFileAsync(WMCapture.CameraCaptureUIMode.photo).done(function (picture) {
         if (!picture) {
             errorCallback("User didn't capture a photo.");
             // Remove the focus handler if present
-            window.removeEventListener("focus", savePhotoOnFocus);
+            window.removeEventListener('focus', savePhotoOnFocus);
             return;
         }
         cameraPicture = picture;
@@ -784,31 +773,31 @@ function takePictureFromCameraWindows(successCallback, errorCallback, args) {
             }, successCallback, errorCallback);
         }
     }, function () {
-        errorCallback("Fail to capture a photo.");
-        window.removeEventListener("focus", savePhotoOnFocus);
+        errorCallback('Fail to capture a photo.');
+        window.removeEventListener('focus', savePhotoOnFocus);
     });
 }
 
-function savePhoto(picture, options, successCallback, errorCallback) {
+function savePhoto (picture, options, successCallback, errorCallback) {
     // success callback for capture operation
-    var success = function(picture) {
-        if (options.destinationType == Camera.DestinationType.FILE_URI || options.destinationType == Camera.DestinationType.NATIVE_URI) {
+    var success = function (picture) {
+        if (options.destinationType === Camera.DestinationType.FILE_URI || options.destinationType === Camera.DestinationType.NATIVE_URI) {
             if (options.targetHeight > 0 && options.targetWidth > 0) {
                 resizeImage(successCallback, errorCallback, picture, options.targetWidth, options.targetHeight, options.encodingType);
             } else {
                 picture.copyAsync(getAppData().localFolder, picture.name, OptUnique).done(function (copiedFile) {
-                    successCallback("ms-appdata:///local/" + copiedFile.name);
-                },errorCallback);
+                    successCallback('ms-appdata:///local/' + copiedFile.name);
+                }, errorCallback);
             }
         } else {
             if (options.targetHeight > 0 && options.targetWidth > 0) {
                 resizeImageBase64(successCallback, errorCallback, picture, options.targetWidth, options.targetHeight);
             } else {
-                fileIO.readBufferAsync(picture).done(function(buffer) {
+                fileIO.readBufferAsync(picture).done(function (buffer) {
                     var strBase64 = encodeToBase64String(buffer);
-                    picture.deleteAsync().done(function() {
+                    picture.deleteAsync().done(function () {
                         successCallback(strBase64);
-                    }, function(err) {
+                    }, function (err) {
                         errorCallback(err);
                     });
                 }, errorCallback);
@@ -818,38 +807,38 @@ function savePhoto(picture, options, successCallback, errorCallback) {
 
     if (!options.saveToPhotoAlbum) {
         success(picture);
-        return;
+
     } else {
         var savePicker = new Windows.Storage.Pickers.FileSavePicker();
-        var saveFile = function(file) {
+        var saveFile = function (file) {
             if (file) {
                 // Prevent updates to the remote version of the file until we're done
                 Windows.Storage.CachedFileManager.deferUpdates(file);
                 picture.moveAndReplaceAsync(file)
-                    .then(function() {
+                    .then(function () {
                         // Let Windows know that we're finished changing the file so
                         // the other app can update the remote version of the file.
                         return Windows.Storage.CachedFileManager.completeUpdatesAsync(file);
                     })
-                    .done(function(updateStatus) {
+                    .done(function (updateStatus) {
                         if (updateStatus === Windows.Storage.Provider.FileUpdateStatus.complete) {
                             success(picture);
                         } else {
-                            errorCallback("File update status is not complete.");
+                            errorCallback('File update status is not complete.');
                         }
                     }, errorCallback);
             } else {
-                errorCallback("Failed to select a file.");
+                errorCallback('Failed to select a file.');
             }
         };
         savePicker.suggestedStartLocation = pickerLocId.picturesLibrary;
 
         if (options.encodingType === Camera.EncodingType.PNG) {
-            savePicker.fileTypeChoices.insert("PNG", [".png"]);
-            savePicker.suggestedFileName = "photo.png";
+            savePicker.fileTypeChoices.insert('PNG', ['.png']);
+            savePicker.suggestedFileName = 'photo.png';
         } else {
-            savePicker.fileTypeChoices.insert("JPEG", [".jpg"]);
-            savePicker.suggestedFileName = "photo.jpg";
+            savePicker.fileTypeChoices.insert('JPEG', ['.jpg']);
+            savePicker.suggestedFileName = 'photo.jpg';
         }
 
         // If Windows Phone 8.1 use pickSaveFileAndContinue()
@@ -859,14 +848,14 @@ function savePhoto(picture, options, successCallback, errorCallback) {
                 Using FileSavePicker will suspend the app and it's required to catch the pickSaveFileContinuation
                 https://msdn.microsoft.com/en-us/library/windows/apps/xaml/dn631755.aspx
             */
-            var fileSaveHandler = function(eventArgs) {
+            var fileSaveHandler = function (eventArgs) {
                 if (eventArgs.kind === Windows.ApplicationModel.Activation.ActivationKind.pickSaveFileContinuation) {
                     var file = eventArgs.file;
                     saveFile(file);
-                    webUIApp.removeEventListener("activated", fileSaveHandler);
+                    webUIApp.removeEventListener('activated', fileSaveHandler);
                 }
             };
-            webUIApp.addEventListener("activated", fileSaveHandler);
+            webUIApp.addEventListener('activated', fileSaveHandler);
             savePicker.pickSaveFileAndContinue();
         } else {
             savePicker.pickSaveFileAsync()
@@ -875,4 +864,4 @@ function savePhoto(picture, options, successCallback, errorCallback) {
     }
 }
 
-require("cordova/exec/proxy").add("Camera",module.exports);
+require('cordova/exec/proxy').add('Camera', module.exports);
