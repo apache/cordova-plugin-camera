@@ -31,7 +31,7 @@
     <issue>https://issues.apache.org/jira/browse/CB/component/12320645</issue>
 
     <engines>
-        <engine name="cordova" version=">=7.1.0"/>
+        <engine name="cordova" version=">=6.5.0"/>
         <engine name="cordova-android" version=">=6.3.0" />
     </engines>
 
