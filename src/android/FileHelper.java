@@ -26,7 +26,6 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
-import android.text.TextUtils;
 import android.webkit.MimeTypeMap;
 
 import org.apache.cordova.CordovaInterface;
@@ -98,7 +97,7 @@ public class FileHelper {
             else if (isDownloadsDocument(uri)) {
 
                 final String id = DocumentsContract.getDocumentId(uri);
-                if (!TextUtils.isEmpty(id)) {
+                if (id != null && id.length() > 0) {
                     if (id.startsWith("raw:")) {
                         return id.replaceFirst("raw:", "");
                     }
@@ -110,6 +109,8 @@ public class FileHelper {
                     } catch (NumberFormatException e) {
                         return null;
                     }
+                } else {
+                    return null;
                 }
             }
             // MediaProvider
