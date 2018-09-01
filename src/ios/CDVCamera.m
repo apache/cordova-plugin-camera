@@ -397,11 +397,9 @@ static NSString* toBase64(NSData* data) {
     NSFileManager* fileMgr = [[NSFileManager alloc] init]; // recommended by Apple (vs [NSFileManager defaultManager]) to be threadsafe
     NSString* filePath;
     
-    // generate unique file name
-    //int i = 1; 
-	NSTimeInterval timeStamp = [[NSDate date] timeIntervalSince1970];
-	// NSTimeInterval is defined as double
-	NSNumber *timeStampObj = [NSNumber numberWithDouble: timeStamp];
+    // unique file name
+    NSTimeInterval timeStamp = [[NSDate date] timeIntervalSince1970];
+    NSNumber *timeStampObj = [NSNumber numberWithDouble: timeStamp];
     do {
         filePath = [NSString stringWithFormat:@"%@/%@%ld.%@", docsPath, CDV_PHOTO_PREFIX, [timeStampObj longValue], extension];
     } while ([fileMgr fileExistsAtPath:filePath]);
