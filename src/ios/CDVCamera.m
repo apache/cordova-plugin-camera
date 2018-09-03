@@ -398,10 +398,10 @@ static NSString* toBase64(NSData* data) {
     NSString* filePath;
     
     // generate unique file name
-    //int i = 1; 
-	NSTimeInterval timeStamp = [[NSDate date] timeIntervalSince1970];
-	// NSTimeInterval is defined as double
-	NSNumber *timeStampObj = [NSNumber numberWithDouble: timeStamp];
+    NSTimeInterval timeStamp = [[NSDate date] timeIntervalSince1970];
+    // NSTimeInterval is defined as double
+    NSNumber *timeStampObj = [NSNumber numberWithDouble: timeStamp];
+    
     do {
         filePath = [NSString stringWithFormat:@"%@/%@%ld.%@", docsPath, CDV_PHOTO_PREFIX, [timeStampObj longValue], extension];
     } while ([fileMgr fileExistsAtPath:filePath]);
