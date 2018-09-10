@@ -166,7 +166,7 @@ static NSString* toBase64(NSData* data) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wtautological-pointer-compare"
                 NSString* settingsButton = (&UIApplicationOpenSettingsURLString != NULL)
-                    ? NSLocalizedString(@"Settings", nil)
+                    ? NSLocalizedStringFromTable(@"camera.settings", @"Camera", nil)
                     : nil;
 #pragma clang diagnostic pop
 
@@ -176,7 +176,7 @@ static NSString* toBase64(NSData* data) {
                                                          objectForInfoDictionaryKey:@"CFBundleDisplayName"]
                                                 message:NSLocalizedStringFromTable(@"camera.prohibited", @"Camera", nil)
                                                delegate:weakSelf
-                                      cancelButtonTitle:NSLocalizedString(@"OK", nil)
+                                      cancelButtonTitle:NSLocalizedStringFromTable(@"camera.ok", @"Camera", nil)
                                       otherButtonTitles:settingsButton, nil] show];
                 });
             }
