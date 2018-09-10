@@ -100,6 +100,7 @@
             <clobbers target="CameraPopoverHandle" />
          </js-module>
 
+         <resource-file src="src/ios/Camera.strings" target="Resources/en.lproj/Camera.strings" />
          <header-file src="src/ios/UIImage+CropScaleOrientation.h" />
          <source-file src="src/ios/UIImage+CropScaleOrientation.m" />
          <header-file src="src/ios/CDVCamera.h" />
