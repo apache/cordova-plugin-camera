@@ -22,7 +22,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:rim="http://www.blackberry.com/ns/widgets"
     id="cordova-plugin-camera"
-    version="2.4.2-dev">
+    version="4.0.4-dev">
     <name>Camera</name>
     <description>Cordova Camera Plugin</description>
     <license>Apache 2.0</license>
@@ -30,7 +30,10 @@
     <repo>https://git-wip-us.apache.org/repos/asf/cordova-plugin-camera.git</repo>
     <issue>https://issues.apache.org/jira/browse/CB/component/12320645</issue>
 
-    <dependency id="cordova-plugin-compat" version="^1.1.0" />
+    <engines>
+        <engine name="cordova" version=">=7.1.0"/>
+        <engine name="cordova-android" version=">=6.3.0" />
+    </engines>
 
     <js-module src="www/CameraConstants.js" name="Camera">
         <clobbers target="Camera" />
@@ -46,19 +49,6 @@
         <clobbers target="navigator.camera" />
     </js-module>
 
-    <!-- firefoxos -->
-    <platform name="firefoxos">
-        <config-file target="config.xml" parent="/*">
-            <feature name="Camera">
-                <param name="firefoxos-package" value="Camera" />
-            </feature>
-        </config-file>
-
-        <js-module src="src/firefoxos/CameraProxy.js" name="CameraProxy">
-          <runs />
-        </js-module>
-    </platform>
-
     <!-- android -->
     <platform name="android">
         <config-file target="res/xml/config.xml" parent="/*">
@@ -71,13 +61,13 @@
         </config-file>
         <config-file target="AndroidManifest.xml" parent="application">
           <provider
-              android:name="android.support.v4.content.FileProvider"
+              android:name="org.apache.cordova.camera.FileProvider"
               android:authorities="${applicationId}.provider"
               android:exported="false"
               android:grantUriPermissions="true" >
               <meta-data
                   android:name="android.support.FILE_PROVIDER_PATHS"
-                  android:resource="@xml/provider_paths"/>
+                  android:resource="@xml/camera_provider_paths"/>
           </provider>
         </config-file>
 
@@ -85,57 +75,17 @@
         <source-file src="src/android/CordovaUri.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/FileHelper.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/ExifHelper.java" target-dir="src/org/apache/cordova/camera" />
-        <source-file src="src/android/xml/provider_paths.xml" target-dir="res/xml" />
+        <source-file src="src/android/FileProvider.java" target-dir="src/org/apache/cordova/camera" />
+        <source-file src="src/android/xml/camera_provider_paths.xml" target-dir="res/xml" />
 
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />
           </js-module>
 
-        <framework src="com.android.support:support-v4:24.1.1+" />
+        <preference name="ANDROID_SUPPORT_V4_VERSION" default="27.+"/>
+        <framework src="com.android.support:support-v4:$ANDROID_SUPPORT_V4_VERSION"/>
 
       </platform>
-
-    <!-- amazon-fireos -->
-    <platform name="amazon-fireos">
-        <config-file target="res/xml/config.xml" parent="/*">
-            <feature name="Camera">
-                <param name="android-package" value="org.apache.cordova.camera.CameraLauncher"/>
-            </feature>
-        </config-file>
-        <config-file target="AndroidManifest.xml" parent="/*">
-            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-        </config-file>
-
-        <source-file src="src/android/CameraLauncher.java" target-dir="src/org/apache/cordova/camera" />
-        <source-file src="src/android/FileHelper.java" target-dir="src/org/apache/cordova/camera" />
-        <source-file src="src/android/ExifHelper.java" target-dir="src/org/apache/cordova/camera" />
-
-        <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
-            <clobbers target="CameraPopoverHandle" />
-        </js-module>
-
-     </platform>
-
-     <!-- ubuntu -->
-     <platform name="ubuntu">
-         <config-file target="config.xml" parent="/*">
-             <feature name="Camera">
-                 <param policy_group="camera" policy_version="1" />
-             </feature>
-         </config-file>
-         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
-            <clobbers target="CameraPopoverHandle" />
-         </js-module>
-         <header-file src="src/ubuntu/camera.h" />
-         <source-file src="src/ubuntu/camera.cpp" />
-
-         <resource-file src="src/ubuntu/back.png" />
-         <resource-file src="src/ubuntu/CaptureWidget.qml" />
-         <resource-file src="src/ubuntu/shoot.png" />
-         <resource-file src="src/ubuntu/toolbar-left.png" />
-         <resource-file src="src/ubuntu/toolbar-middle.png" />
-         <resource-file src="src/ubuntu/toolbar-right.png" />
-     </platform>
 
      <!-- ios -->
      <platform name="ios">
@@ -165,94 +115,7 @@
          <framework src="CoreGraphics.framework" />
          <framework src="AVFoundation.framework" />
 
-         <preference name="CAMERA_USAGE_DESCRIPTION" default=" " />
-         <config-file target="*-Info.plist" parent="NSCameraUsageDescription">
-             <string>$CAMERA_USAGE_DESCRIPTION</string>
-         </config-file>
-
-         <preference name="PHOTOLIBRARY_USAGE_DESCRIPTION" default=" " />
-         <config-file target="*-Info.plist" parent="NSPhotoLibraryUsageDescription">
-             <string>$PHOTOLIBRARY_USAGE_DESCRIPTION</string>
-         </config-file>
-
-         <config-file target="*-Info.plist" parent="NSLocationWhenInUseUsageDescription">
-             <string></string>
-         </config-file>
-
      </platform>
-
-    <!-- blackberry10 -->
-    <platform name="blackberry10">
-        <source-file src="src/blackberry10/index.js" target-dir="Camera" />
-        <config-file target="www/config.xml" parent="/widget">
-            <feature name="Camera" value="Camera"/>
-        </config-file>
-        <config-file target="www/config.xml" parent="/widget/rim:permissions">
-          <rim:permit>access_shared</rim:permit>
-          <rim:permit>use_camera</rim:permit>
-        </config-file>
-        <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
-            <clobbers target="CameraPopoverHandle" />
-        </js-module>
-        <asset src="www/blackberry10/assets" target="chrome" />
-    </platform>
-
-     <!-- wp7 -->
-    <platform name="wp7">
-        <config-file target="config.xml" parent="/*">
-            <feature name="Camera">
-                <param name="wp-package" value="Camera"/>
-            </feature>
-        </config-file>
-
-        <config-file target="Properties/WMAppManifest.xml" parent="/Deployment/App/Capabilities">
-            <Capability Name="ID_CAP_ISV_CAMERA" />
-            <Capability Name="ID_CAP_MEDIALIB" />
-        </config-file>
-
-        <source-file src="src/wp/Camera.cs" />
-
-
-        <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
-            <clobbers target="CameraPopoverHandle" />
-        </js-module>
-    </platform>
-
-    <!-- wp8 -->
-    <platform name="wp8">
-        <config-file target="config.xml" parent="/*">
-            <feature name="Camera">
-                <param name="wp-package" value="Camera"/>
-            </feature>
-        </config-file>
-
-        <config-file target="Properties/WMAppManifest.xml" parent="/Deployment/App/Capabilities">
-            <Capability Name="ID_CAP_ISV_CAMERA" />
-            <Capability Name="ID_CAP_MEDIALIB_PHOTO"/>
-        </config-file>
-
-        <source-file src="src/wp/Camera.cs" />
-
-        <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
-            <clobbers target="CameraPopoverHandle" />
-        </js-module>
-    </platform>
-
-    <!-- windows8 -->
-    <platform name="windows8">
-
-        <config-file target="package.appxmanifest" parent="/Package/Capabilities">
-            <Capability Name="picturesLibrary" />
-            <DeviceCapability Name="webcam" />
-        </config-file>
-        <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
-            <clobbers target="CameraPopoverHandle" />
-        </js-module>
-        <js-module src="src/windows/CameraProxy.js" name="CameraProxy">
-            <runs />
-        </js-module>
-
-    </platform>
 
     <!-- browser -->
     <platform name="browser">
@@ -280,6 +143,23 @@
         </js-module>
     </platform>
 
+    <!-- osx -->
+    <platform name="osx">
+        <config-file target="config.xml" parent="/*">
+            <feature name="Camera">
+                <param name="osx-package" value="CDVCamera"/>
+            </feature>
+        </config-file>
 
-
+        <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
+            <clobbers target="CameraPopoverHandle" />
+        </js-module>
+        
+        <header-file src="src/osx/CDVCamera.h" />
+        <source-file src="src/osx/CDVCamera.m" />
+                
+        <framework src="Quartz.framework" />
+        <framework src="AppKit.framework" />
+    </platform>
+    
 </plugin>
