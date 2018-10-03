@@ -802,7 +802,7 @@ function savePhoto(picture, options, successCallback, errorCallback) {
             } else {
                 // CB-11714: check if target content-type is PNG to just rename as *.jpg since camera is captured as JPEG
                 if (options.encodingType === Camera.EncodingType.PNG) {
-                    picture.name = picture.name.replace(/\.png$/, ".jpg");
+                    picture.name = picture.name.replace(/\.png$/, '.jpg');
                 }
 
                 picture.copyAsync(getAppData().localFolder, picture.name, OptUnique).done(function (copiedFile) {
