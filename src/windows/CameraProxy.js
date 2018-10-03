@@ -785,6 +785,11 @@ function savePhoto (picture, options, successCallback, errorCallback) {
             if (options.targetHeight > 0 && options.targetWidth > 0) {
                 resizeImage(successCallback, errorCallback, picture, options.targetWidth, options.targetHeight, options.encodingType);
             } else {
+                // CB-11714: check if target content-type is PNG to just rename as *.jpg since camera is captured as JPEG
+                if (options.encodingType === Camera.EncodingType.PNG) {
+                    picture.name = picture.name.replace(/\.png$/, '.jpg');
+                }
+
                 picture.copyAsync(getAppData().localFolder, picture.name, OptUnique).done(function (copiedFile) {
                     successCallback('ms-appdata:///local/' + copiedFile.name);
                 }, errorCallback);
