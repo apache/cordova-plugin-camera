@@ -141,9 +141,14 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      */
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         this.callbackContext = callbackContext;
-        //Adding an API to CoreAndroid to get the BuildConfigValue
-        //This allows us to not make this a breaking change to embedding
-        this.applicationId = (String) BuildHelper.getBuildConfigValue(cordova.getActivity(), "APPLICATION_ID");
+        // Reference to BuildHelper provokes ClassNotFoundException if applicationId is not same
+        // as manifest package name (this will be case for example if ".debug" has been appended
+        // to applicationId in build-extras.gradle.)
+        // Here we only need the applicationId. As Context.getPackageName() returns the applicationId and
+        // not the package name (despite documentation for Context class) we can use the value returned by
+        // getPackageName directly. See note on applicationId in:
+        //   https://developer.android.com/studio/build/application-id
+        this.applicationId = cordova.getContext().getPackageName();
         this.applicationId = preferences.getString("applicationId", this.applicationId);
 
 
