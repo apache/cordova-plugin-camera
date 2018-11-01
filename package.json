@@ -31,8 +31,6 @@
     "cordova-osx"
   ],
   "scripts": {
-    "precommit": "npm run gen-docs && git add README.md",
-    "gen-docs": "jsdoc2md --template \"jsdoc2md/TEMPLATE.md\" \"www/**/*.js\" --plugin \"dmd-plugin-cordova-plugin\" > README.md",
     "test": "npm run eslint",
     "eslint": "node node_modules/eslint/bin/eslint www && node node_modules/eslint/bin/eslint src && node node_modules/eslint/bin/eslint tests"
   },
@@ -53,15 +51,12 @@
     }
   },
   "devDependencies": {
-    "dmd-plugin-cordova-plugin": "^0.1.0",
     "eslint": "^4.3.0",
     "eslint-config-semistandard": "^11.0.0",
     "eslint-config-standard": "^10.2.1",
     "eslint-plugin-import": "^2.3.0",
     "eslint-plugin-node": "^5.0.0",
     "eslint-plugin-promise": "^3.5.0",
-    "eslint-plugin-standard": "^3.0.1",
-    "husky": "^0.10.1",
-    "jsdoc-to-markdown": "^1.2.0"
+    "eslint-plugin-standard": "^3.0.1"
   }
 }
