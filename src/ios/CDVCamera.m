@@ -206,6 +206,7 @@ static NSString* toBase64(NSData* data) {
                 [weakSelf displayPopover:pictureOptions.popoverOptions];
                 weakSelf.hasPendingOperation = NO;
             } else {
+                cameraPicker.modalPresentationStyle = UIModalPresentationCurrentContext;
                 [weakSelf.viewController presentViewController:cameraPicker animated:YES completion:^{
                     weakSelf.hasPendingOperation = NO;
                 }];
