@@ -520,7 +520,7 @@ Tizen only supports a `destinationType` of
 
 #### Amazon Fire OS Quirks
 
-- Any `cameraDirection` value results in a back-facing photo.
+- Any `cameraDirection` value results in a back-facing photo (= You can only use the back camera).
 
 - Ignores the `allowEdit` parameter.
 
