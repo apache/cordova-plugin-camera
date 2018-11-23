@@ -520,7 +520,7 @@ Tizen only supports a `destinationType` of
 
 #### Amazon Fire OS Quirks
 
-- Any `cameraDirection` value results in a back-facing photo (= You can only use the back camera).
+- Any `cameraDirection` value results in a back-facing photo.
 
 - Ignores the `allowEdit` parameter.
 
@@ -528,7 +528,7 @@ Tizen only supports a `destinationType` of
 
 #### Android Quirks
 
-- Any `cameraDirection` value results in a back-facing photo.
+- Any `cameraDirection` value results in a back-facing photo. (= You can only use the back camera)
 
 - **`allowEdit` is unpredictable on Android and it should not be used!** The Android implementation of this plugin tries to find and use an application on the user's device to do image cropping. The plugin has no control over what application the user selects to perform the image cropping and it is very possible that the user could choose an incompatible option and cause the plugin to fail. This sometimes works because most devices come with an application that handles cropping in a way that is compatible with this plugin (Google Plus Photos), but it is unwise to rely on that being the case. If image editing is essential to your application, consider seeking a third party library or plugin that provides its own image editing utility for a more robust solution.
 
