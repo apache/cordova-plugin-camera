@@ -138,6 +138,10 @@ interface CameraPopoverOptions {
     arrowDir : number;
 }
 
+declare class CameraPopoverOptions implements CameraPopoverOptions {
+    constructor(x?: number, y?: number, width?: number, height?: number, arrowDir?: number);
+}
+
 declare var Camera: {
     // Camera constants, defined in Camera plugin
     DestinationType: {
