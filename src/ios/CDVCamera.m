@@ -291,6 +291,19 @@ static NSString* toBase64(NSData* data) {
 - (void)navigationController:(UINavigationController *)navigationController willShowViewController:(UIViewController *)viewController animated:(BOOL)animated
 {
     if([navigationController isKindOfClass:[UIImagePickerController class]]){
+        
+        // If popoverWidth and popoverHeight are specified and are greater than 0, then set popover size, else use apple's default popoverSize
+        NSDictionary* options = self.pickerController.pictureOptions.popoverOptions;
+        if(options) {
+            NSInteger popoverWidth = [self integerValueForKey:options key:@"popoverWidth" defaultValue:0];
+            NSInteger popoverHeight = [self integerValueForKey:options key:@"popoverHeight" defaultValue:0];
+            if(popoverWidth > 0 && popoverHeight > 0)
+            {
+                [viewController setPreferredContentSize:CGSizeMake(popoverWidth,popoverHeight)];
+            }
+        }
+        
+        
         UIImagePickerController* cameraPicker = (UIImagePickerController*)navigationController;
 
         if(![cameraPicker.mediaTypes containsObject:(NSString*)kUTTypeImage]){

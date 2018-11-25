@@ -37,13 +37,13 @@ var exec = require('cordova/exec');
  * {
  *     destinationType: Camera.DestinationType.FILE_URI,
  *     sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
- *     popoverOptions: new CameraPopoverOptions(300, 300, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY)
+ *     popoverOptions: new CameraPopoverOptions(300, 300, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY, 300, 600)
  * });
  *
  * // Reposition the popover if the orientation changes.
  * window.onorientationchange = function() {
  *     var cameraPopoverHandle = new CameraPopoverHandle();
- *     var cameraPopoverOptions = new CameraPopoverOptions(0, 0, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY);
+ *     var cameraPopoverOptions = new CameraPopoverOptions(0, 0, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY, 400, 500);
  *     cameraPopoverHandle.setPosition(cameraPopoverOptions);
  * }
  * @module CameraPopoverHandle

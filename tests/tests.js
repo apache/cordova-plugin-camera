@@ -162,7 +162,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
 
         // Reposition the popover if the orientation changes.
         window.onorientationchange = function () {
-            var newPopoverOptions = new CameraPopoverOptions(0, 0, 100, 100, 0);
+            var newPopoverOptions = new CameraPopoverOptions(0, 0, 100, 100, 0, 300, 400);
             popoverHandle.setPosition(newPopoverOptions);
         };
     }
