@@ -91,6 +91,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private static final String PNG_EXTENSION = ".png";
     private static final String PNG_MIME_TYPE = "image/png";
     private static final String JPEG_MIME_TYPE = "image/jpeg";
+    private static final String WILD_MIME_TYPE = "image/*";
     private static final String GET_PICTURE = "Get Picture";
     private static final String GET_VIDEO = "Get Video";
     private static final String GET_All = "Get All";
@@ -710,7 +711,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 this.callbackContext.success(uriString);
             } else {
                 // If we don't have a valid image so quit.
-                if (!(JPEG_MIME_TYPE.equalsIgnoreCase(mimeType) || PNG_MIME_TYPE.equalsIgnoreCase(mimeType))) {
+                if (!(JPEG_MIME_TYPE.equalsIgnoreCase(mimeType) || PNG_MIME_TYPE.equalsIgnoreCase(mimeType) || WILD_MIME_TYPE.equalsIgnoreCase(mimeType))) {
                     LOG.d(LOG_TAG, "I either have a null image path or bitmap");
                     this.failPicture("Unable to retrieve path to picture!");
                     return;
