@@ -139,11 +139,9 @@ static NSString* toBase64(NSData* data) {
 - (void)takePicture:(CDVInvokedUrlCommand*)command
 {
     self.hasPendingOperation = YES;
-
     __weak CDVCamera* weakSelf = self;
 
     [self.commandDelegate runInBackground:^{
-
         CDVPictureOptions* pictureOptions = [CDVPictureOptions createFromTakePictureArguments:command];
         pictureOptions.popoverSupported = [weakSelf popoverSupported];
         pictureOptions.usesGeolocation = [weakSelf usesGeolocation];
@@ -158,82 +156,72 @@ static NSString* toBase64(NSData* data) {
         }
 
         // Validate the app has permission to access the camera
-        if (pictureOptions.sourceType == UIImagePickerControllerSourceTypeCamera && [AVCaptureDevice respondsToSelector:@selector(authorizationStatusForMediaType:)]) {
-            AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
-            if (authStatus == AVAuthorizationStatusDenied ||
-                authStatus == AVAuthorizationStatusRestricted) {
-                // If iOS 8+, offer a link to the Settings app
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wtautological-pointer-compare"
-                NSString* settingsButton = (&UIApplicationOpenSettingsURLString != NULL)
-                    ? NSLocalizedString(@"Settings", nil)
-                    : nil;
-#pragma clang diagnostic pop
-
-                // Denied; show an alert
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [[[UIAlertView alloc] initWithTitle:[[NSBundle mainBundle]
-                                                         objectForInfoDictionaryKey:@"CFBundleDisplayName"]
-                                                message:NSLocalizedString(@"Access to the camera has been prohibited; please enable it in the Settings app to continue.", nil)
-                                               delegate:weakSelf
-                                      cancelButtonTitle:NSLocalizedString(@"OK", nil)
-                                      otherButtonTitles:settingsButton, nil] show];
-                });
-            }
+        if (pictureOptions.sourceType == UIImagePickerControllerSourceTypeCamera) {
+            [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted)
+             {
+                 if(!granted)
+                 {
+                     // Denied; show an alert
+                     dispatch_async(dispatch_get_main_queue(), ^{
+                         UIAlertController *alertController = [UIAlertController alertControllerWithTitle:[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"] message:NSLocalizedString(@"Access to the camera has been prohibited; please enable it in the Settings app to continue.", nil) preferredStyle:UIAlertControllerStyleAlert];
+                         [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"OK", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                             [weakSelf sendNoPermissionResult:command.callbackId];
+                         }]];
+                         [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"Settings", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                             [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
+                             [weakSelf sendNoPermissionResult:command.callbackId];
+                         }]];
+                         [weakSelf.viewController presentViewController:alertController animated:YES completion:nil];
+                     });
+                 } else {
+                     [weakSelf showCameraPicker:command.callbackId withOptions:pictureOptions];
+                 }
+             }];
+        } else {
+            [weakSelf showCameraPicker:command.callbackId withOptions:pictureOptions];
         }
-
-        CDVCameraPicker* cameraPicker = [CDVCameraPicker createFromPictureOptions:pictureOptions];
-        weakSelf.pickerController = cameraPicker;
-
-        cameraPicker.delegate = weakSelf;
-        cameraPicker.callbackId = command.callbackId;
-        // we need to capture this state for memory warnings that dealloc this object
-        cameraPicker.webView = weakSelf.webView;
-
-        // Perform UI operations on the main thread
-        dispatch_async(dispatch_get_main_queue(), ^{
-            // If a popover is already open, close it; we only want one at a time.
-            if (([[weakSelf pickerController] pickerPopoverController] != nil) && [[[weakSelf pickerController] pickerPopoverController] isPopoverVisible]) {
-                [[[weakSelf pickerController] pickerPopoverController] dismissPopoverAnimated:YES];
-                [[[weakSelf pickerController] pickerPopoverController] setDelegate:nil];
-                [[weakSelf pickerController] setPickerPopoverController:nil];
-            }
-
-            if ([weakSelf popoverSupported] && (pictureOptions.sourceType != UIImagePickerControllerSourceTypeCamera)) {
-                if (cameraPicker.pickerPopoverController == nil) {
-                    cameraPicker.pickerPopoverController = [[NSClassFromString(@"UIPopoverController") alloc] initWithContentViewController:cameraPicker];
-                }
-                [weakSelf displayPopover:pictureOptions.popoverOptions];
-                weakSelf.hasPendingOperation = NO;
-            } else {
-                cameraPicker.modalPresentationStyle = UIModalPresentationCurrentContext;
-                [weakSelf.viewController presentViewController:cameraPicker animated:YES completion:^{
-                    weakSelf.hasPendingOperation = NO;
-                }];
-            }
-        });
     }];
 }
 
-// Delegate for camera permission UIAlertView
-- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+- (void)showCameraPicker:(NSString*)callbackId withOptions:(CDVPictureOptions *) pictureOptions
 {
-    // If Settings button (on iOS 8), open the settings app
-    if (buttonIndex == 1) {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wtautological-pointer-compare"
-        if (&UIApplicationOpenSettingsURLString != NULL) {
-            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
+    CDVCameraPicker* cameraPicker = [CDVCameraPicker createFromPictureOptions:pictureOptions];
+    self.pickerController = cameraPicker;
+
+    cameraPicker.delegate = self;
+    cameraPicker.callbackId = callbackId;
+    // we need to capture this state for memory warnings that dealloc this object
+    cameraPicker.webView = self.webView;
+
+    // Perform UI operations on the main thread
+    dispatch_async(dispatch_get_main_queue(), ^{
+        // If a popover is already open, close it; we only want one at a time.
+        if (([[self pickerController] pickerPopoverController] != nil) && [[[self pickerController] pickerPopoverController] isPopoverVisible]) {
+            [[[self pickerController] pickerPopoverController] dismissPopoverAnimated:YES];
+            [[[self pickerController] pickerPopoverController] setDelegate:nil];
+            [[self pickerController] setPickerPopoverController:nil];
         }
-#pragma clang diagnostic pop
-    }
 
-    // Dismiss the view
-    [[self.pickerController presentingViewController] dismissViewControllerAnimated:YES completion:nil];
+        if ([self popoverSupported] && (pictureOptions.sourceType != UIImagePickerControllerSourceTypeCamera)) {
+            if (cameraPicker.pickerPopoverController == nil) {
+                cameraPicker.pickerPopoverController = [[NSClassFromString(@"UIPopoverController") alloc] initWithContentViewController:cameraPicker];
+            }
+            [self displayPopover:pictureOptions.popoverOptions];
+            self.hasPendingOperation = NO;
+        } else {
+            cameraPicker.modalPresentationStyle = UIModalPresentationCurrentContext;
+            [self.viewController presentViewController:cameraPicker animated:YES completion:^{
+                self.hasPendingOperation = NO;
+            }];
+        }
+    });
+}
 
+- (void)sendNoPermissionResult:(NSString*)callbackId
+{
     CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"has no access to camera"];   // error callback expects string ATM
 
-    [self.commandDelegate sendPluginResult:result callbackId:self.pickerController.callbackId];
+    [self.commandDelegate sendPluginResult:result callbackId:callbackId];
 
     self.hasPendingOperation = NO;
     self.pickerController = nil;
