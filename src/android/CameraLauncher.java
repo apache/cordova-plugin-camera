@@ -691,15 +691,15 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         String fileLocation = FileHelper.getRealPath(uri, this.cordova);
         LOG.d(LOG_TAG, "File locaton is: " + fileLocation);
 
-        // If you ask for video or all media type you will automatically get back a file URI
-        // and there will be no attempt to resize any returned data
-        if (this.mediaType != PICTURE) {
+        String uriString = uri.toString();
+        String mimeType = FileHelper.getMimeType(uriString, this.cordova);
+
+        // If you ask for video or the selected file doesn't have JPEG or PNG mime type
+        //  there will be no attempt to resize any returned data
+        if (this.mediaType == VIDEO || !(JPEG_MIME_TYPE.equalsIgnoreCase(mimeType) || PNG_MIME_TYPE.equalsIgnoreCase(mimeType))) {
             this.callbackContext.success(fileLocation);
         }
         else {
-            String uriString = uri.toString();
-            // Get the path to the image. Makes loading so much easier.
-            String mimeType = FileHelper.getMimeType(uriString, this.cordova);
 
             // This is a special case to just return the path as no scaling,
             // rotating, nor compressing needs to be done
@@ -709,12 +709,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             {
                 this.callbackContext.success(uriString);
             } else {
-                // If we don't have a valid image so quit.
-                if (!(JPEG_MIME_TYPE.equalsIgnoreCase(mimeType) || PNG_MIME_TYPE.equalsIgnoreCase(mimeType))) {
-                    LOG.d(LOG_TAG, "I either have a null image path or bitmap");
-                    this.failPicture("Unable to retrieve path to picture!");
-                    return;
-                }
                 Bitmap bitmap = null;
                 try {
                     bitmap = getScaledAndRotatedBitmap(uriString);
