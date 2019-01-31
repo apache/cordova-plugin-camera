@@ -42,6 +42,7 @@ matrix:
     os: linux
     language: android
     jdk: oraclejdk8
+    node_js: '10.15.1'
     android:
       components:
       - tools
