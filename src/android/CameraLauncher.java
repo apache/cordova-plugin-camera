@@ -988,6 +988,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                         // read exifData of source
                         exifData = new ExifHelper();
                         exifData.createInFile(filePath);
+                        exifData.readExifData();
                         // Use ExifInterface to pull rotation information
                         if (this.correctOrientation) {
                             ExifInterface exif = new ExifInterface(filePath);
