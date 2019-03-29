@@ -19,103 +19,174 @@
  *
  */
 
-var HIGHEST_POSSIBLE_Z_INDEX = 2147483647;
+let localMediaStream;
 
-function takePicture (success, error, opts) {
+function takePicture (successCallback, errorCallback, opts) {
     if (opts && opts[2] === 1) {
-        capture(success, error, opts);
+        capture(successCallback, errorCallback, opts);
     } else {
-        var input = document.createElement('input');
-        input.style.position = 'relative';
-        input.style.zIndex = HIGHEST_POSSIBLE_Z_INDEX;
-        input.className = 'cordova-camera-select';
-        input.type = 'file';
-        input.name = 'files[]';
+        const customSourceInput = opts[15];
 
-        input.onchange = function (inputEvent) {
-            var reader = new FileReader(); /* eslint no-undef : 0 */
-            reader.onload = function (readerEvent) {
-                input.parentNode.removeChild(input);
+        let sourceInput = customSourceInput ? document.getElementById(customSourceInput) : createSourceInput();
 
-                var imageData = readerEvent.target.result;
+        handleSourceInput(successCallback, sourceInput);
 
-                return success(imageData.substr(imageData.indexOf(',') + 1));
-            };
-
-            reader.readAsDataURL(inputEvent.target.files[0]);
-        };
-
-        document.body.appendChild(input);
+        if (!customSourceInput) {
+            document.body.appendChild(sourceInput);
+        }
     }
 }
 
-function capture (success, errorCallback, opts) {
-    var localMediaStream;
-    var targetWidth = opts[3];
-    var targetHeight = opts[4];
+function capture (successCallback, errorCallback, opts) {
+    let targetWidth = opts[3];
+    let targetHeight = opts[4];
+    const customCameraContainer = opts[12];
+    const customCaptureButton = opts[13];
+    const customCancelButton = opts[14];
 
+    let parent = customCameraContainer ? document.getElementById(customCameraContainer) : createCameraContainer();
+    let video = createVideoStreamContainer(parent, targetWidth, targetHeight);
+    let captureButton = customCaptureButton ? document.getElementById(customCaptureButton) : createButton(parent, 'Capture');
+    let cancelButton = customCancelButton ? document.getElementById(customCancelButton) : createButton(parent, 'Cancel');
+
+    // start video stream
+    startLocalMediaStream(errorCallback, video);
+
+    // if custom camera container is not set by the user,
+    // append parent to the document.body
+    if (!customCameraContainer) {
+        document.body.appendChild(video.parentNode);
+    }
+
+    // handle button click events
+    handleCaptureButton(successCallback, errorCallback, captureButton, video, customCameraContainer);
+    handleCancelButton(cancelButton, video, customCameraContainer);
+}
+
+function createCameraContainer () {
+    let parent = document.createElement('div');
+    parent.style.position = 'relative';
+    parent.style.zIndex = '2147483647'; // set highest possible z index
+    parent.className = 'cordova-camera-capture';
+
+    return parent;
+}
+
+function createVideoStreamContainer (parent, targetWidth, targetHeight) {
     targetWidth = targetWidth === -1 ? 320 : targetWidth;
     targetHeight = targetHeight === -1 ? 240 : targetHeight;
 
-    var video = document.createElement('video');
-    var button = document.createElement('button');
-    var parent = document.createElement('div');
-    parent.style.position = 'relative';
-    parent.style.zIndex = HIGHEST_POSSIBLE_Z_INDEX;
-    parent.className = 'cordova-camera-capture';
-    parent.appendChild(video);
-    parent.appendChild(button);
-
+    let video = document.createElement('video');
     video.width = targetWidth;
     video.height = targetHeight;
-    button.innerHTML = 'Capture!';
 
-    button.onclick = function () {
+    parent.appendChild(video);
+
+    return video;
+}
+
+function createButton (parent, innerText) {
+    let button = document.createElement('button');
+    button.innerHTML = innerText;
+
+    parent.appendChild(button);
+
+    return button;
+}
+
+function handleCaptureButton (successCallback, errorCallback, captureButton, video, customCameraContainer) {
+    captureButton.onclick = function () {
         // create a canvas and capture a frame from video stream
-        var canvas = document.createElement('canvas');
-        canvas.width = targetWidth;
-        canvas.height = targetHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0, targetWidth, targetHeight);
+        let canvas = document.createElement('canvas');
+        canvas.width = video.width;
+        canvas.height = video.height;
+        canvas.getContext('2d').drawImage(video, 0, 0, video.width, video.height);
 
         // convert image stored in canvas to base64 encoded image
-        var imageData = canvas.toDataURL('image/png');
+        let imageData = canvas.toDataURL('image/png');
         imageData = imageData.replace('data:image/png;base64,', '');
 
-        // stop video stream, remove video and button.
-        // Note that MediaStream.stop() is deprecated as of Chrome 47.
-        if (localMediaStream.stop) {
-            localMediaStream.stop();
-        } else {
-            localMediaStream.getTracks().forEach(function (track) {
-                track.stop();
-            });
-        }
-        parent.parentNode.removeChild(parent);
+        // stop video stream
+        stopLocalMediaStream(video, customCameraContainer);
 
-        return success(imageData);
+        return successCallback(imageData);
+    };
+}
+
+function handleCancelButton (cancelButton, video, customCameraContainer) {
+    cancelButton.onclick = function () {
+        // stop video stream
+        stopLocalMediaStream(video, customCameraContainer);
+    };
+}
+
+function startLocalMediaStream (errorCallback, video) {
+
+    const successCallback = function (stream) {
+        localMediaStream = stream;
+        video.src = window.URL.createObjectURL(localMediaStream);
+        video.play();
     };
 
     navigator.getUserMedia = navigator.getUserMedia ||
-                             navigator.webkitGetUserMedia ||
-                             navigator.mozGetUserMedia ||
-                             navigator.msGetUserMedia;
-
-    var successCallback = function (stream) {
-        localMediaStream = stream;
-        if ('srcObject' in video) {
-            video.srcObject = localMediaStream;
-        } else {
-            video.src = window.URL.createObjectURL(localMediaStream);
-        }
-        video.play();
-        document.body.appendChild(parent);
-    };
+        navigator.webkitGetUserMedia ||
+        navigator.mozGetUserMedia ||
+        navigator.msGetUserMedia;
 
     if (navigator.getUserMedia) {
-        navigator.getUserMedia({video: true, audio: false}, successCallback, errorCallback);
+        navigator.getUserMedia({video: true, audio: true}, successCallback, errorCallback);
     } else {
-        alert('Browser does not support camera :(');
+        alert('Your browser does not support camera.');
     }
+}
+
+function stopLocalMediaStream (video, customCameraContainer) {
+    // stop video stream, remove video and captureButton.
+    // note: MediaStream.stop() is deprecated as of Chrome 47.
+    if (localMediaStream.stop) {
+        localMediaStream.stop();
+    } else {
+        localMediaStream.getTracks().forEach(function (track) {
+            track.stop();
+        });
+    }
+
+    // remove newly created elements
+    removeAppendedCameraElements(video, customCameraContainer);
+}
+
+function removeAppendedCameraElements (video, customCameraContainer) {
+    const parent = video.parentNode;
+    if (!customCameraContainer) {
+        parent.parentNode.removeChild(parent);
+    } else {
+        parent.removeChild(video);
+    }
+}
+
+function createSourceInput () {
+    let input = document.createElement('input');
+    input.style.position = 'relative';
+    input.style.zIndex = '2147483647'; // set highest possible z index
+    input.className = 'cordova-camera-select';
+    input.type = 'file';
+    input.name = 'files[]';
+
+    return input;
+}
+
+function handleSourceInput (successCallback, sourceInput) {
+    sourceInput.onchange = function (inputEvent) {
+        let reader = new FileReader(); /* eslint no-undef : 0 */
+        reader.onload = function (readerEvent) {
+            sourceInput.parentNode.removeChild(sourceInput);
+
+            const imageData = readerEvent.target.result;
+
+            return successCallback(imageData.substr(imageData.indexOf(',') + 1));
+        };
+        reader.readAsDataURL(inputEvent.target.files[0]);
+    };
 }
 
 module.exports = {
