@@ -44,11 +44,12 @@ function capture (successCallback, errorCallback, opts) {
     const customCaptureButton = opts[13];
     const customCancelButton = opts[14];
 
+    const customElements = {customCameraContainer, customCaptureButton, customCancelButton};
+
     let parent = customCameraContainer ? document.getElementById(customCameraContainer) : createCameraContainer();
     let video = createVideoStreamContainer(parent, targetWidth, targetHeight);
     let captureButton = customCaptureButton ? document.getElementById(customCaptureButton) : createButton(parent, 'Capture');
     let cancelButton = customCancelButton ? document.getElementById(customCancelButton) : createButton(parent, 'Cancel');
-
     // start video stream
     startLocalMediaStream(errorCallback, video);
 
@@ -59,8 +60,8 @@ function capture (successCallback, errorCallback, opts) {
     }
 
     // handle button click events
-    handleCaptureButton(successCallback, errorCallback, captureButton, video, customCameraContainer);
-    handleCancelButton(cancelButton, video, customCameraContainer);
+    handleCaptureButton(successCallback, errorCallback, captureButton, video, customElements);
+    handleCancelButton(cancelButton, video, customElements);
 }
 
 function createCameraContainer () {
@@ -94,7 +95,7 @@ function createButton (parent, innerText) {
     return button;
 }
 
-function handleCaptureButton (successCallback, errorCallback, captureButton, video, customCameraContainer) {
+function handleCaptureButton (successCallback, errorCallback, captureButton, video, customElements) {
     captureButton.onclick = function () {
         // create a canvas and capture a frame from video stream
         let canvas = document.createElement('canvas');
@@ -107,16 +108,16 @@ function handleCaptureButton (successCallback, errorCallback, captureButton, vid
         imageData = imageData.replace('data:image/png;base64,', '');
 
         // stop video stream
-        stopLocalMediaStream(video, customCameraContainer);
+        stopLocalMediaStream(video, customElements);
 
         return successCallback(imageData);
     };
 }
 
-function handleCancelButton (cancelButton, video, customCameraContainer) {
+function handleCancelButton (cancelButton, video, customElements) {
     cancelButton.onclick = function () {
         // stop video stream
-        stopLocalMediaStream(video, customCameraContainer);
+        stopLocalMediaStream(video, customElements);
     };
 }
 
@@ -140,7 +141,7 @@ function startLocalMediaStream (errorCallback, video) {
     }
 }
 
-function stopLocalMediaStream (video, customCameraContainer) {
+function stopLocalMediaStream (video, customElements) {
     // stop video stream, remove video and captureButton.
     // note: MediaStream.stop() is deprecated as of Chrome 47.
     if (localMediaStream.stop) {
@@ -152,13 +153,25 @@ function stopLocalMediaStream (video, customCameraContainer) {
     }
 
     // remove newly created elements
-    removeAppendedCameraElements(video, customCameraContainer);
+    removeAppendedCameraElements(video, customElements);
 }
 
-function removeAppendedCameraElements (video, customCameraContainer) {
+function removeAppendedCameraElements (video, customElements) {
+
     const parent = video.parentNode;
-    if (!customCameraContainer) {
+
+    if (!customElements.customCameraContainer) {
         parent.parentNode.removeChild(parent);
+    } else if (!customElements.customCaptureButton && !customElements.customCancelButton) {
+        while (parent.hasChildNodes()) {
+            parent.removeChild(parent.lastChild);
+        }
+    } else if (parent.hasChildNodes() && !customElements.customCaptureButton) {
+        parent.removeChild(video);
+        parent.removeChild(parent.lastChild);
+    } else if (parent.hasChildNodes() && !customElements.customCancelButton) {
+        parent.removeChild(video);
+        parent.removeChild(parent.lastChild);
     } else {
         parent.removeChild(video);
     }
