@@ -12,7 +12,7 @@ image:
   - Visual Studio 2017
 
 environment:
-  nodejs_version: "4"
+  nodejs_version: "6"
   matrix:
     - PLATFORM: windows-10-store
       JUST_BUILD: --justBuild
