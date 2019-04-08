@@ -12,17 +12,17 @@ image:
   - Visual Studio 2017
 
 environment:
-  nodejs_version: "4"
+  nodejs_version: "6"
+
   matrix:
     - PLATFORM: windows-10-store
-      JUST_BUILD: --justBuild
+
 install:
-  - npm cache clean -f
   - node --version
-  - npm install -g cordova-paramedic@https://github.com/apache/cordova-paramedic.git
+  - npm install -g github:apache/cordova-paramedic
   - npm install -g cordova
 
 build: off
 
 test_script:
-  - cordova-paramedic --config pr\%PLATFORM% --plugin . %JUST_BUILD%
+  - cordova-paramedic --config pr\%PLATFORM% --plugin . --justBuild
