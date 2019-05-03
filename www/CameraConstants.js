@@ -97,5 +97,16 @@ module.exports = {
         BACK: 0,
         /** Use the front-facing camera */
         FRONT: 1
+    },
+    /**
+     * @enum {number}
+     */
+    FlashMode: {
+        /** Let the Camera control flash light automatically */
+        AUTO: 0,
+        /** Enable flash light by default */
+        ON: 1,
+        /** Disable flash light by default */
+        OFF: -1
     }
 };

@@ -120,6 +120,7 @@ To add these entries into the `info.plist`, you can use the `edit-config` tag in
     * [.PictureSourceType](#module_Camera.PictureSourceType) : <code>enum</code>
     * [.PopoverArrowDirection](#module_Camera.PopoverArrowDirection) : <code>enum</code>
     * [.Direction](#module_Camera.Direction) : <code>enum</code>
+    * [.FlashMode](#module_Camera.FlashMode) : <code>enum</code>  
 
 * [CameraPopoverHandle](#module_CameraPopoverHandle)
 * [CameraPopoverOptions](#module_CameraPopoverOptions)
@@ -266,6 +267,7 @@ Optional parameters to customize the camera settings.
 | saveToPhotoAlbum | <code>Boolean</code> |  | Save the image to the photo album on the device after capture. |
 | popoverOptions | <code>[CameraPopoverOptions](#module_CameraPopoverOptions)</code> |  | iOS-only options that specify popover location in iPad. |
 | cameraDirection | <code>[Direction](#module_Camera.Direction)</code> | <code>BACK</code> | Choose the camera to use (front- or back-facing). |
+| flashMode | <code>[FlashMode](#module_Camera.FlashMode)</code> | <code>AUTO</code> | Choose the default flash mode of Camera. |
 
 ---
 
@@ -356,6 +358,22 @@ Matches iOS UIPopoverArrowDirection constants to specify arrow location on popov
 | --- | --- | --- | --- |
 | BACK | <code>number</code> | <code>0</code> | Use the back-facing camera |
 | FRONT | <code>number</code> | <code>1</code> | Use the front-facing camera |
+
+<a name="module_Camera.FlashMode"></a>
+
+### Camera.FlashMode : <code>enum</code>  
+__Supported Platforms__  
+  
+- iOS  
+
+**Kind**: static enum property of <code>[Camera](#module_Camera)</code>    
+**Properties**  
+  
+| Name | Type | Default | Description |  
+| --- | --- | --- | --- |  
+| AUTO | <code>number</code> | <code>0</code> | Let the camera control the flash mode automatically |  
+| ON | <code>number</code> | <code>1</code> | Enable flash mode by default |  
+| OFF | <code>number</code> | <code>-1</code> | Disable flash mode by default |  
 
 ---
 
