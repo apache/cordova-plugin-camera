@@ -37,13 +37,11 @@ _android: &_android
 
 matrix:
   include:
-    # ???
-    - env: TEST_DIR=.
-      language: objective-c
-    - env: TEST_DIR=./tests/ios
+    # additional tests
+    - env: ADDITIONAL_TESTS=./tests/ios
       language: objective-c
 
-    # one local test, without saucelabs
+    # local tests, without saucelabs
     - env: PLATFORM=local/browser
       <<: *_ios
     - env: PLATFORM=local/ios-10.0
@@ -95,7 +93,7 @@ before_script:
     if [[ "$TRAVIS_REPO_SLUG" =~ cordova-paramedic ]]; then 
       # when used in the cordova-paramedic repo
       TEST_COMMAND="npm run eslint"
-      PARAMEDIC_PLUGIN_TO_TEST=""./spec/testable-plugin/""
+      PARAMEDIC_PLUGIN_TO_TEST="./spec/testable-plugin/"
       PARAMEDIC_COMMAND="node main.js"
     else 
       # when used in any other (plugin) repo
@@ -107,4 +105,8 @@ before_script:
   
 script:
   - $TEST_COMMAND
-  - $PARAMEDIC_COMMAND --config ./pr/$PLATFORM --plugin $PARAMEDIC_PLUGIN_TO_TEST --buildName $PARAMEDIC_BUILDNAME
+  - if [[ "$ADDITIONAL_TESTS" != "" ]]; 
+      then cd $ADDITIONAL_TESTS && npm install && npm test;
+    else 
+      $PARAMEDIC_COMMAND --config ./pr/$PLATFORM --plugin $PARAMEDIC_PLUGIN_TO_TEST --buildName $PARAMEDIC_BUILDNAME; 
+    fi
