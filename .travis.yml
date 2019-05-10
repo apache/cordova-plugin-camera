@@ -38,7 +38,7 @@ _android: &_android
 matrix:
   include:
     # additional tests
-    - env: ADDITIONAL_TESTS=./tests/ios
+    - env: ADDITIONAL_TESTS_DIR=./tests/ios
       language: objective-c
 
     # local tests, without saucelabs
@@ -105,8 +105,8 @@ before_script:
   
 script:
   - $TEST_COMMAND
-  - if [[ "$ADDITIONAL_TESTS" != "" ]]; 
-      then cd $ADDITIONAL_TESTS && npm install && npm test;
+  - if [[ "$ADDITIONAL_TESTS_DIR" != "" ]]; 
+      then cd $ADDITIONAL_TESTS_DIR && npm install && npm test;
     else 
       $PARAMEDIC_COMMAND --config ./pr/$PLATFORM --plugin $PARAMEDIC_PLUGIN_TO_TEST --buildName $PARAMEDIC_BUILDNAME; 
     fi
