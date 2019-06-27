@@ -18,7 +18,7 @@
     "url": "https://github.com/apache/cordova-plugin-camera"
   },
   "bugs": {
-    "url": "https://issues.apache.org/jira/browse/CB"
+    "url": "https://github.com/apache/cordova-plugin-camera/issues"
   },
   "keywords": [
     "cordova",
