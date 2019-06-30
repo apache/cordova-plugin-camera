@@ -101,8 +101,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
     private static final String LOG_TAG = "CameraLauncher";
 
-    //Where did this come from?
-    private static final int CROP_CAMERA = 100;
+    //Crop Codes
+    private static final int CROP_OPERATION = 100;
+    private static final int CROP_CAMERA = CROP_OPERATION;
+    private static final int CROP_PHOTO_ALBUM = CROP_OPERATION + 900;
 
     private static final String TIME_FORMAT = "yyyyMMdd_HHmmss";
 
@@ -303,7 +305,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         this.imageUri = new CordovaUri(FileProvider.getUriForFile(cordova.getActivity(),
                 applicationId + ".provider",
                 photo));
-        intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, imageUri.getCorrectUri());
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri.getCorrectUri());
         //We can write to this URI, this will hopefully allow us to write files to get to the next step
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 
@@ -387,7 +389,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 }
                 File photo = createCaptureFile(JPEG);
                 croppedUri = Uri.fromFile(photo);
-                intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, croppedUri);
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, croppedUri);
             } else {
                 intent.setAction(Intent.ACTION_GET_CONTENT);
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -417,7 +419,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
    *
    * @param picUri
    */
-  private void performCrop(Uri picUri, int destType, Intent cameraIntent) {
+  private void performCrop(Uri picUri, int destType, Intent sourceIntent, int srcType) {
     try {
         Intent cropIntent = new Intent("com.android.camera.action.CROP");
         // indicate image type and Uri
@@ -447,19 +449,30 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         // start the activity - we handle returning in onActivityResult
 
         if (this.cordova != null) {
-            this.cordova.startActivityForResult((CordovaPlugin) this,
-                cropIntent, CROP_CAMERA + destType);
+
+            if (srcType == CAMERA) {
+                this.cordova.startActivityForResult((CordovaPlugin) this,
+                        cropIntent, CROP_CAMERA + destType);
+            } else {
+                this.cordova.startActivityForResult((CordovaPlugin) this,
+                        cropIntent, CROP_PHOTO_ALBUM + destType);
+            }
         }
     } catch (ActivityNotFoundException anfe) {
-      LOG.e(LOG_TAG, "Crop operation not supported on this device");
-      try {
-          processResultFromCamera(destType, cameraIntent);
-      }
-      catch (IOException e)
-      {
+        LOG.e(LOG_TAG, "Crop operation not supported on this device");
+        try {
+          if (srcType == CAMERA) {
+              processResultFromCamera(destType, sourceIntent);
+          } else {
+              processResultFromGalleryAsync(destType, sourceIntent);
+          }
+
+        }
+        catch (IOException e)
+        {
           e.printStackTrace();
           LOG.e(LOG_TAG, "Unable to write to file");
-      }
+        }
     }
   }
 
@@ -768,18 +781,24 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         int srcType = (requestCode / 16) - 1;
         int destType = (requestCode % 16) - 1;
 
-        // If Camera Crop
-        if (requestCode >= CROP_CAMERA) {
+        // If Photo Album Crop or Camera Crop.
+        if (requestCode >= CROP_OPERATION) {
+
             if (resultCode == Activity.RESULT_OK) {
 
                 // Because of the inability to pass through multiple intents, this hack will allow us
                 // to pass arcane codes back.
-                destType = requestCode - CROP_CAMERA;
-                try {
-                    processResultFromCamera(destType, intent);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    LOG.e(LOG_TAG, "Unable to write to file");
+                destType = (requestCode >= CROP_PHOTO_ALBUM) ? (requestCode - CROP_PHOTO_ALBUM) : (requestCode - CROP_CAMERA);
+
+                if (requestCode >= CROP_PHOTO_ALBUM) {
+                    processResultFromGalleryAsync(destType, intent);
+                } else {
+                    try {
+                        processResultFromCamera(destType, intent);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        LOG.e(LOG_TAG, "Unable to write to file");
+                    }
                 }
 
             }// If cancelled
@@ -801,7 +820,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                         Uri tmpFile = FileProvider.getUriForFile(cordova.getActivity(),
                                 applicationId + ".provider",
                                 createCaptureFile(this.encodingType));
-                        performCrop(tmpFile, destType, intent);
+                        performCrop(tmpFile, destType, intent, srcType);
                     } else {
                         this.processResultFromCamera(destType, intent);
                     }
@@ -824,19 +843,30 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         // If retrieving photo from library
         else if ((srcType == PHOTOLIBRARY) || (srcType == SAVEDPHOTOALBUM)) {
             if (resultCode == Activity.RESULT_OK && intent != null) {
-                final Intent i = intent;
-                final int finalDestType = destType;
-                cordova.getThreadPool().execute(new Runnable() {
-                    public void run() {
-                        processResultFromGallery(finalDestType, i);
-                    }
-                });
+
+                // We have to explicitly perform image cropping in Marshmallow and later since it is not implicitly
+                // Invoked by ACTION_PICK
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M && this.allowEdit) {
+                    performCrop(intent.getData(), destType, intent, srcType);
+                } else {
+                    processResultFromGalleryAsync(destType, intent);
+                }
             } else if (resultCode == Activity.RESULT_CANCELED) {
                 this.failPicture("No Image Selected");
             } else {
                 this.failPicture("Selection did not complete!");
             }
         }
+    }
+
+    private void processResultFromGalleryAsync(int destType, Intent intent) {
+        final Intent finalIntent = intent;
+        final int finalDestType = destType;
+        cordova.getThreadPool().execute(new Runnable() {
+            public void run() {
+                processResultFromGallery(finalDestType, finalIntent);
+            }
+        });
     }
 
     private int exifToDegrees(int exifOrientation) {
@@ -910,14 +940,14 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      */
     private Uri getUriFromMediaStore() {
         ContentValues values = new ContentValues();
-        values.put(android.provider.MediaStore.Images.Media.MIME_TYPE, JPEG_MIME_TYPE);
+        values.put(MediaStore.Images.Media.MIME_TYPE, JPEG_MIME_TYPE);
         Uri uri;
         try {
-            uri = this.cordova.getActivity().getContentResolver().insert(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+            uri = this.cordova.getActivity().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
         } catch (RuntimeException e) {
             LOG.d(LOG_TAG, "Can't write to external media storage.");
             try {
-                uri = this.cordova.getActivity().getContentResolver().insert(android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI, values);
+                uri = this.cordova.getActivity().getContentResolver().insert(MediaStore.Images.Media.INTERNAL_CONTENT_URI, values);
             } catch (RuntimeException ex) {
                 LOG.d(LOG_TAG, "Can't write to internal media storage.");
                 return null;
@@ -1243,9 +1273,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      */
     private Uri whichContentStore() {
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-            return android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+            return MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
         } else {
-            return android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI;
+            return MediaStore.Images.Media.INTERNAL_CONTENT_URI;
         }
     }
 
@@ -1297,7 +1327,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     public void onMediaScannerConnected() {
         try {
             this.conn.scanFile(this.scanMe.toString(), "image/*");
-        } catch (java.lang.IllegalStateException e) {
+        } catch (IllegalStateException e) {
             LOG.e(LOG_TAG, "Can't scan file in MediaScanner after taking picture");
         }
 
