@@ -180,7 +180,10 @@ static NSMutableArray *cleanUpFiles;
         NSData *processedImageData = [self processImage:image options:pictureOptions];
 
         if (pictureOptions.destinationType == DestinationTypeDataUrl) {
-            CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[processedImageData base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithLineFeed]];
+            NSString* mimeType = pictureOptions.encodingType == EncodingTypeJPEG? @"image/jpeg" : @"image/png";
+            NSString* finalDataURL = [NSString stringWithFormat:@"%@%@%@%@", @"data:", mimeType, @";base64,", [processedImageData base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithLineFeed]];
+            
+            CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:finalDataURL];
             [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
         } else {
             NSString *tempFilePath = [self uniqueImageName:pictureOptions];

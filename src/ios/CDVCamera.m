@@ -493,7 +493,10 @@ static NSString* toBase64(NSData* data) {
             image = [self retrieveImage:info options:options];
             NSData* data = [self processImage:image info:info options:options];
             if (data)  {
-                result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:toBase64(data)];
+                NSString* mimeType = options.encodingType == EncodingTypePNG? @"image/png" : @"image/jpeg";
+                NSString* finalDataURL = [NSString stringWithFormat:@"%@%@%@%@", @"data:", mimeType, @";base64,", toBase64(data)];
+                                
+                result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:finalDataURL];
             }
         }
             break;
@@ -701,7 +704,10 @@ static NSString* toBase64(NSData* data) {
             break;
         case DestinationTypeDataUrl:
         {
-            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:toBase64(self.data)];
+            NSString* mimeType = self.pickerController.pictureOptions.encodingType == EncodingTypePNG ? @"image/png" : @"image/jpeg";
+            NSString* finalDataURL = [NSString stringWithFormat:@"%@%@%@%@", @"data:", mimeType, @";base64,", toBase64(self.data)];
+            
+            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:finalDataURL];
         }
             break;
         case DestinationTypeNativeUri:
