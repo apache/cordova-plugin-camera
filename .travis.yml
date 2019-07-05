@@ -92,7 +92,7 @@ before_install:
   # install paramedic if not running on paramedic repo
   - |
     if ! [[ "$TRAVIS_REPO_SLUG" =~ cordova-paramedic ]]; then 
-      npm install -g github:apache/cordova-paramedic#janpio-androidx; 
+      npm install -g github:apache/cordova-paramedicjanpio-androidx; 
     fi 
 
 install:
