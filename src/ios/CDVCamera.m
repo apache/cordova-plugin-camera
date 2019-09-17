@@ -671,20 +671,20 @@ static NSString* toBase64(NSData* data) {
     CDVPictureOptions* options = self.pickerController.pictureOptions;
     CDVPluginResult* result = nil;
    
-    NSMutableData *dest_data = [NSMutableData data];
+    NSMutableData *imageDataWithExif = [NSMutableData data];
 
     if (self.metadata) {
         CGImageSourceRef sourceImage = CGImageSourceCreateWithData((__bridge CFDataRef)self.data, NULL);
         CFStringRef sourceType = CGImageSourceGetType(sourceImage);
 
-        CGImageDestinationRef destinationImage = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)dest_data, sourceType, 1, NULL);
+        CGImageDestinationRef destinationImage = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)imageDataWithExif, sourceType, 1, NULL);
         CGImageDestinationAddImageFromSource(destinationImage, sourceImage, 0, (__bridge CFDictionaryRef)self.metadata);
         CGImageDestinationFinalize(destinationImage);
 
         CFRelease(sourceImage);
         CFRelease(destinationImage);
-    } else{
-        dest_data = [self.data mutableCopy];
+    } else {
+        imageDataWithExif = [self.data mutableCopy];
     }
 
     switch (options.destinationType) {
@@ -695,7 +695,7 @@ static NSString* toBase64(NSData* data) {
             NSString* filePath = [self tempFilePath:extension];
 
             // save file
-            if (![dest_data writeToFile:filePath options:NSAtomicWrite error:&err]) {
+            if (![imageDataWithExif writeToFile:filePath options:NSAtomicWrite error:&err]) {
                 result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
             }
             else {
@@ -705,7 +705,7 @@ static NSString* toBase64(NSData* data) {
             break;
         case DestinationTypeDataUrl:
         {
-            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:toBase64(dest_data)];
+            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:toBase64(imageDataWithExif)];
         }
             break;
         case DestinationTypeNativeUri:
@@ -721,7 +721,7 @@ static NSString* toBase64(NSData* data) {
     self.pickerController = nil;
     self.data = nil;
     self.metadata = nil;
-    dest_data = nil;
+    imageDataWithExif = nil;
     if (options.saveToPhotoAlbum) {
         ALAssetsLibrary *library = [ALAssetsLibrary new];
         [library writeImageDataToSavedPhotosAlbum:self.data metadata:self.metadata completionBlock:nil];
