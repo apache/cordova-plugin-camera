@@ -59,7 +59,7 @@
         <config-file target="AndroidManifest.xml" parent="application">
           <provider
               android:name="org.apache.cordova.camera.FileProvider"
-              android:authorities="${applicationId}.provider"
+              android:authorities="${applicationId}.camera.provider"
               android:exported="false"
               android:grantUriPermissions="true" >
               <meta-data
@@ -151,12 +151,12 @@
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />
         </js-module>
-        
+
         <header-file src="src/osx/CDVCamera.h" />
         <source-file src="src/osx/CDVCamera.m" />
-                
+
         <framework src="Quartz.framework" />
         <framework src="AppKit.framework" />
     </platform>
-    
+
 </plugin>
