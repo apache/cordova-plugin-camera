@@ -482,11 +482,6 @@ displays:
         // do your thing here!
     }, 0);
 
-#### Windows Phone 7 Quirks
-
-Invoking the native camera application while the device is connected
-via Zune does not work, and triggers an error callback.
-
 #### Windows quirks
 
 On Windows Phone 8.1 using `SAVEDPHOTOALBUM` or `PHOTOLIBRARY` as a source type causes application to suspend until file picker returns the selected image and
