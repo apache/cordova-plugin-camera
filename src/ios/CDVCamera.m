@@ -569,18 +569,32 @@ static NSString* toBase64(NSData* data) {
                         result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[[self urlTransformer:[NSURL fileURLWithPath:filePath]] absoluteString]];
                     }
                     
-                } else {
-                    NSString* extension = options.encodingType == EncodingTypePNG? @"png" : @"jpg";
-                    NSString* filePath = [self tempFilePath:extension];
-                    NSError* err = nil;
+                } else if(pickerController.sourceType == UIImagePickerControllerSourceTypeCamera) {
+                    // No need to save file if usesGeolocation is true since it will be saved after the location is tracked
+                    if (!options.usesGeolocation) {
+                        NSString* extension = options.encodingType == EncodingTypePNG? @"png" : @"jpg";
+                        NSString* filePath = [self tempFilePath:extension];
+                        NSError* err = nil;
 
-                    // save file
-                    if (![data writeToFile:filePath options:NSAtomicWrite error:&err]) {
-                        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
-                    } else {
-                        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[[self urlTransformer:[NSURL fileURLWithPath:filePath]] absoluteString]];
+                        // save file
+                        if (![data writeToFile:filePath options:NSAtomicWrite error:&err]) {
+                            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
+                        } else {
+                            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[[self urlTransformer:[NSURL fileURLWithPath:filePath]] absoluteString]];
+                        }
                     }
-                }
+                } else {
+                        NSString* extension = options.encodingType == EncodingTypePNG? @"png" : @"jpg";
+                        NSString* filePath = [self tempFilePath:extension];
+                        NSError* err = nil;
+
+                        // save file
+                        if (![data writeToFile:filePath options:NSAtomicWrite error:&err]) {
+                            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
+                        } else {
+                            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[[self urlTransformer:[NSURL fileURLWithPath:filePath]] absoluteString]];
+                        }
+                    }
                 
             }
         }
