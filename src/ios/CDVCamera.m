@@ -512,17 +512,21 @@ static NSString* toBase64(NSData* data) {
 
 - (CDVPluginResult*)resultForVideo:(NSDictionary*)info
 {
-    NSString* moviePath = [[info objectForKey:UIImagePickerControllerMediaURL] path];
+    @try {
+        NSString* moviePath = [[info objectForKey:UIImagePickerControllerMediaURL] path];
 
-    NSArray* spliteArray = [moviePath componentsSeparatedByString: @"/"];
-    NSString* lastString = [spliteArray lastObject];
-    NSError *error;
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSString *documentsDirectory = [NSHomeDirectory() stringByAppendingPathComponent:@"tmp"];
-    NSString *filePath = [documentsDirectory stringByAppendingPathComponent:lastString];
-    [fileManager copyItemAtPath:moviePath toPath:filePath error:&error];
-
-    return [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:filePath];
+        NSArray* spliteArray = [moviePath componentsSeparatedByString: @"/"];
+        NSString* lastString = [spliteArray lastObject];
+        NSError *error;
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+        NSString *documentsDirectory = [NSHomeDirectory() stringByAppendingPathComponent:@"tmp"];
+        NSString *filePath = [documentsDirectory stringByAppendingPathComponent:lastString];
+        [fileManager copyItemAtPath:moviePath toPath:filePath error:&error];
+        return [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:filePath];
+    } @catch (NSException *exception) {
+        NSLog(@"Camera.resultForVideo: error retrieving file path");
+        return [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@""];
+    }
 }
 
 - (void)imagePickerController:(UIImagePickerController*)picker didFinishPickingMediaWithInfo:(NSDictionary*)info
