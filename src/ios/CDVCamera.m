@@ -516,8 +516,8 @@ static NSString* toBase64(NSData* data) {
         NSString* moviePath = [[info objectForKey:UIImagePickerControllerMediaURL] absoluteString];
         return [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:moviePath];
     } @catch (NSException *exception) {
-        NSLog(@"Camera.resultForVideo: error retrieving file path");
-        return [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@""];
+        NSLog(@"Camera.resultForVideo: error retrieving file path. Original exception: %@: %@", exception.name, exception.reason);
+        return CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[@"%@: %@", exception.name, exception.reason];
     }
 }
 
