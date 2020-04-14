@@ -513,7 +513,20 @@ static NSString* toBase64(NSData* data) {
 - (CDVPluginResult*)resultForVideo:(NSDictionary*)info
 {
     NSString* moviePath = [[info objectForKey:UIImagePickerControllerMediaURL] absoluteString];
+    // On iOS 13 the movie path becomes inaccessible, create and return a copy
+    if (IsAtLeastiOSVersion(@"13.0")) {
+        moviePath = [self createTmpVideo:[[info objectForKey:UIImagePickerControllerMediaURL] path]];
+    }
     return [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:moviePath];
+}
+
+- (NSString *) createTmpVideo:(NSString *) moviePath {
+    NSString* moviePathExtension = [moviePath pathExtension];
+    NSString* copyMoviePath = [self tempFilePath:moviePathExtension];
+    NSFileManager* fileMgr = [[NSFileManager alloc] init];
+    NSError *error;
+    [fileMgr copyItemAtPath:moviePath toPath:copyMoviePath error:&error];
+    return [[NSURL fileURLWithPath:copyMoviePath] absoluteString];
 }
 
 - (void)imagePickerController:(UIImagePickerController*)picker didFinishPickingMediaWithInfo:(NSDictionary*)info
