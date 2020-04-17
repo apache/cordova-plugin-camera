@@ -25,6 +25,7 @@ import android.media.ExifInterface;
 public class ExifHelper {
     private String aperture = null;
     private String datetime = null;
+    private String datetimeOriginal = null;
     private String exposureTime = null;
     private String flash = null;
     private String focalLength = null;
@@ -72,6 +73,7 @@ public class ExifHelper {
     public void readExifData() {
         this.aperture = inFile.getAttribute(ExifInterface.TAG_APERTURE);
         this.datetime = inFile.getAttribute(ExifInterface.TAG_DATETIME);
+        this.datetimeOriginal = inFile.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL);
         this.exposureTime = inFile.getAttribute(ExifInterface.TAG_EXPOSURE_TIME);
         this.flash = inFile.getAttribute(ExifInterface.TAG_FLASH);
         this.focalLength = inFile.getAttribute(ExifInterface.TAG_FOCAL_LENGTH);
@@ -107,6 +109,9 @@ public class ExifHelper {
         }
         if (this.datetime != null) {
             this.outFile.setAttribute(ExifInterface.TAG_DATETIME, this.datetime);
+        }
+        if (this.datetimeOriginal != null) {
+            this.outFile.setAttribute(ExifInterface.TAG_DATETIME_ORIGINAL, this.datetimeOriginal);
         }
         if (this.exposureTime != null) {
             this.outFile.setAttribute(ExifInterface.TAG_EXPOSURE_TIME, this.exposureTime);
