@@ -20,6 +20,19 @@
 -->
 # Release Notes
 
+### 4.2.0 (May 07, 2020)
+* Cache images in device storage, devices have enough space now.
+* docs(readme): app renamed to Google Photos
+* chore(asf): update git notification settings
+* fix(ios): return copy of video when picking from gallery on **iOS** 13 (#580)
+* Update CONTRIBUTING.md
+* Fix UI API called on a background thread (#550, #530, #447) (#551)
+* ci: updates Node.js versions (#576)
+* chore(npm): adds ignore list (#575)
+* docs(README): remove confusing comment (#513)
+* docs(README): remove orphan **Windows** phone 7 note (#512)
+* ImagePicker returning same image (#306)
+
 ### 4.1.0 (Jun 27, 2019)
 
 -   docs: remove outdated test docs translations ([`06dc38f`](https://github.com/apache/cordova-plugin-camera/commit/06dc38f))
