@@ -190,16 +190,16 @@ static NSString* toBase64(NSData* data) {
 
 - (void)showCameraPicker:(NSString*)callbackId withOptions:(CDVPictureOptions *) pictureOptions
 {
-    CDVCameraPicker* cameraPicker = [CDVCameraPicker createFromPictureOptions:pictureOptions];
-    self.pickerController = cameraPicker;
-
-    cameraPicker.delegate = self;
-    cameraPicker.callbackId = callbackId;
-    // we need to capture this state for memory warnings that dealloc this object
-    cameraPicker.webView = self.webView;
-
     // Perform UI operations on the main thread
     dispatch_async(dispatch_get_main_queue(), ^{
+        CDVCameraPicker* cameraPicker = [CDVCameraPicker createFromPictureOptions:pictureOptions];
+        self.pickerController = cameraPicker;
+
+        cameraPicker.delegate = self;
+        cameraPicker.callbackId = callbackId;
+        // we need to capture this state for memory warnings that dealloc this object
+        cameraPicker.webView = self.webView;
+
         // If a popover is already open, close it; we only want one at a time.
         if (([[self pickerController] pickerPopoverController] != nil) && [[[self pickerController] pickerPopoverController] isPopoverVisible]) {
             [[[self pickerController] pickerPopoverController] dismissPopoverAnimated:YES];
@@ -467,7 +467,7 @@ static NSString* toBase64(NSData* data) {
     NSString* docsPath = [NSTemporaryDirectory()stringByStandardizingPath];
     NSFileManager* fileMgr = [[NSFileManager alloc] init]; // recommended by Apple (vs [NSFileManager defaultManager]) to be threadsafe
     NSString* filePath;
-    
+
     // unique file name
     NSTimeInterval timeStamp = [[NSDate date] timeIntervalSince1970];
     NSNumber *timeStampObj = [NSNumber numberWithDouble: timeStamp];
@@ -627,7 +627,20 @@ static NSString* toBase64(NSData* data) {
 - (CDVPluginResult*)resultForVideo:(NSDictionary*)info
 {
     NSString* moviePath = [[info objectForKey:UIImagePickerControllerMediaURL] absoluteString];
+    // On iOS 13 the movie path becomes inaccessible, create and return a copy
+    if (IsAtLeastiOSVersion(@"13.0")) {
+        moviePath = [self createTmpVideo:[[info objectForKey:UIImagePickerControllerMediaURL] path]];
+    }
     return [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:moviePath];
+}
+
+- (NSString *) createTmpVideo:(NSString *) moviePath {
+    NSString* moviePathExtension = [moviePath pathExtension];
+    NSString* copyMoviePath = [self tempFilePath:moviePathExtension];
+    NSFileManager* fileMgr = [[NSFileManager alloc] init];
+    NSError *error;
+    [fileMgr copyItemAtPath:moviePath toPath:copyMoviePath error:&error];
+    return [[NSURL fileURLWithPath:copyMoviePath] absoluteString];
 }
 
 - (void)imagePickerController:(UIImagePickerController*)picker didFinishPickingMediaWithInfo:(NSDictionary*)info
@@ -701,15 +714,15 @@ static NSString* toBase64(NSData* data) {
 
 - (CLLocationManager*)locationManager
 {
-	if (locationManager != nil) {
-		return locationManager;
-	}
+    if (locationManager != nil) {
+        return locationManager;
+    }
 
-	locationManager = [[CLLocationManager alloc] init];
-	[locationManager setDesiredAccuracy:kCLLocationAccuracyNearestTenMeters];
-	[locationManager setDelegate:self];
+    locationManager = [[CLLocationManager alloc] init];
+    [locationManager setDesiredAccuracy:kCLLocationAccuracyNearestTenMeters];
+    [locationManager setDelegate:self];
 
-	return locationManager;
+    return locationManager;
 }
 
 - (void)locationManager:(CLLocationManager*)manager didUpdateToLocation:(CLLocation*)newLocation fromLocation:(CLLocation*)oldLocation
