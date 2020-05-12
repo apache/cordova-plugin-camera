@@ -175,11 +175,15 @@ static NSString* toBase64(NSData* data) {
                          [weakSelf.viewController presentViewController:alertController animated:YES completion:nil];
                      });
                  } else {
-                     [weakSelf showCameraPicker:command.callbackId withOptions:pictureOptions];
+                     dispatch_async(dispatch_get_main_queue(), ^{
+                         [weakSelf showCameraPicker:command.callbackId withOptions:pictureOptions];
+                     });
                  }
              }];
         } else {
-            [weakSelf showCameraPicker:command.callbackId withOptions:pictureOptions];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [weakSelf showCameraPicker:command.callbackId withOptions:pictureOptions];
+            });
         }
     }];
 }
