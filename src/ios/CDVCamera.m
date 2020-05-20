@@ -181,9 +181,27 @@ static NSString* toBase64(NSData* data) {
                  }
              }];
         } else {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [weakSelf showCameraPicker:command.callbackId withOptions:pictureOptions];
-            });
+            [weakSelf options:pictureOptions requestPhotoPermissions:^(BOOL granted) {
+                if(!granted)
+                {
+                    // Denied; show an alert
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"] message:NSLocalizedString(@"Access to the camera roll has been prohibited; please enable it in the Settings to continue.", nil) preferredStyle:UIAlertControllerStyleAlert];
+                        [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"OK", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                            [weakSelf sendNoPermissionResult:command.callbackId];
+                        }]];
+                        [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"Settings", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
+                            [weakSelf sendNoPermissionResult:command.callbackId];
+                        }]];
+                        [weakSelf.viewController presentViewController:alertController animated:YES completion:nil];
+                    });
+                } else {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [weakSelf showCameraPicker:command.callbackId withOptions:pictureOptions];
+                    });
+                }
+            }];
         }
     }];
 }
@@ -460,6 +478,37 @@ static NSString* toBase64(NSData* data) {
     
     NSLog(@"Can't read image metadata");
     return nil;
+}
+
+- (void)options:(CDVPictureOptions*)options requestPhotoPermissions:(void (^)(BOOL auth))completion
+{
+    if((unsigned long)options.sourceType == 1){
+        completion(YES);
+    }
+    else{
+        PHAuthorizationStatus status = [PHPhotoLibrary authorizationStatus];
+
+        switch (status) {
+            case PHAuthorizationStatusAuthorized:
+                completion(YES);
+                break;
+            case PHAuthorizationStatusNotDetermined: {
+                [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus authorizationStatus) {
+                    if (authorizationStatus == PHAuthorizationStatusAuthorized) {
+                        completion(YES);
+                    } else {
+                        completion(NO);
+                    }
+                }];
+                break;
+            }
+            default:
+                completion(NO);
+                break;
+        }
+
+    }
+
 }
 
 - (NSString*)tempFilePath:(NSString*)extension
