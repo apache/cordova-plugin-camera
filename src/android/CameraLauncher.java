@@ -1249,14 +1249,23 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         CompressFormat compressFormat = encodingType == JPEG ?
                 CompressFormat.JPEG :
                 CompressFormat.PNG;
+        String imageMimeType = encodingType == JPEG ?
+                JPEG_MIME_TYPE :
+                PNG_MIME_TYPE;
 
         try {
             if (bitmap.compress(compressFormat, mQuality, jpeg_data)) {
                 byte[] code = jpeg_data.toByteArray();
                 byte[] output = Base64.encode(code, Base64.NO_WRAP);
                 String js_out = new String(output);
-                this.callbackContext.success(js_out);
+                String base64Prefix = "data:" + imageMimeType + ";base64,";
+                String finalJsOut = base64Prefix + js_out;
+
+                this.callbackContext.success(finalJsOut);
+
                 js_out = null;
+                base64Prefix = null;
+                finalJsOut = null;
                 output = null;
                 code = null;
             }

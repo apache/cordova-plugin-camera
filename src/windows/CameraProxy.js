@@ -153,10 +153,7 @@ function resizeImageBase64 (successCallback, errorCallback, file, targetWidth, t
             // The resized file ready for upload
             var finalFile = canvas.toDataURL(file.contentType);
 
-            // Remove the prefix such as "data:" + contentType + ";base64," , in order to meet the Cordova API.
-            var arr = finalFile.split(',');
-            var newStr = finalFile.substr(arr[0].length + 1);
-            successCallback(newStr);
+            successCallback(finalFile);
         };
     }, function (err) { errorCallback(err); });
 }
