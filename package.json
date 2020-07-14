@@ -13,13 +13,8 @@
       "osx"
     ]
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/apache/cordova-plugin-camera"
-  },
-  "bugs": {
-    "url": "https://github.com/apache/cordova-plugin-camera/issues"
-  },
+  "repository": "github:apache/cordova-plugin-camera",
+  "bugs": "https://github.com/apache/cordova-plugin-camera/issues",
   "keywords": [
     "cordova",
     "camera",
