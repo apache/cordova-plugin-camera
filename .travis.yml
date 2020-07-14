@@ -43,7 +43,8 @@ matrix:
   include:
     # additional tests
     - env: ADDITIONAL_TESTS_DIR=./tests/ios
-      language: objective-c
+      os: osx
+      osx_image: xcode11.5
 
     # local tests, without saucelabs
     - env: PLATFORM=local/browser
