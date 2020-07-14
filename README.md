@@ -266,6 +266,10 @@ Optional parameters to customize the camera settings.
 | saveToPhotoAlbum | <code>Boolean</code> |  | Save the image to the photo album on the device after capture. |
 | popoverOptions | <code>[CameraPopoverOptions](#module_CameraPopoverOptions)</code> |  | iOS-only options that specify popover location in iPad. |
 | cameraDirection | <code>[Direction](#module_Camera.Direction)</code> | <code>BACK</code> | Choose the camera to use (front- or back-facing). |
+| customCameraContainer | <code>string</code> |  | Browser-only option, specify the id of custom camera's container element.  |
+| customCaptureButton | <code>string</code> |  | Browser-only option, specify the id of custom camera's capture button. |
+| customCancelButton | <code>string</code> |  | Browser-only option, specify the id of custom camera's cancel button.  |
+| customSourceInput | <code>string</code> |  | Browser-only option, specify the id of custom  source input element, when using diffrerent mode than the default `sourceType`. |
 
 ---
 
