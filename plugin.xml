@@ -59,7 +59,7 @@
         <config-file target="AndroidManifest.xml" parent="application">
           <provider
               android:name="org.apache.cordova.camera.FileProvider"
-              android:authorities="${applicationId}.provider"
+              android:authorities="${applicationId}.provider.CameraFilesProvider"
               android:exported="false"
               android:grantUriPermissions="true" >
               <meta-data
