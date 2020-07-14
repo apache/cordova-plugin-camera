@@ -292,12 +292,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
         // Specify file so that large image is captured and returned
         File photo = createCaptureFile(encodingType);
-        System.out.println("photo "+photo.getAbsolutePath());
         this.imageFilePath = photo.getAbsolutePath();
         this.imageUri = FileProvider.getUriForFile(cordova.getActivity(),
                 applicationId + ".provider",
                 photo);
-        System.out.println("image uri "+this.imageUri);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
         //We can write to this URI, this will hopefully allow us to write files to get to the next step
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
