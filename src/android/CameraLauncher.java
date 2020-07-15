@@ -109,7 +109,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private int mQuality;                   // Compression quality hint (0-100: 0=low quality & high compression, 100=compress of max quality)
     private int targetWidth;                // desired width of the image
     private int targetHeight;               // desired height of the image
-    private CordovaUri imageUri;            // Uri of captured image
+    private Uri imageUri;                   // Uri of captured image
+    private String imageFilePath;           // File where the image is stored
     private int encodingType;               // Type of encoding to use
     private int mediaType;                  // What type of media to retrieve
     private int destType;                   // Source type (needs to be saved for the permission handling)
@@ -127,6 +128,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private MediaScannerConnection conn;    // Used to update gallery app with newly-written files
     private Uri scanMe;                     // Uri of image to be added to content store
     private Uri croppedUri;
+    private String croppedFilePath;
     private ExifHelper exifData;            // Exif data from source
     private String applicationId;
 
@@ -220,17 +222,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     //--------------------------------------------------------------------------
 
     private String getTempDirectoryPath() {
-        File cache = null;
-
-        // SD Card Mounted
-        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-            cache = cordova.getActivity().getExternalCacheDir();
-        }
-        // Use internal storage
-        else {
-            cache = cordova.getActivity().getCacheDir();
-        }
-
+        File cache = cordova.getActivity().getCacheDir();
         // Create the cache directory if it doesn't exist
         cache.mkdirs();
         return cache.getAbsolutePath();
@@ -300,10 +292,11 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
         // Specify file so that large image is captured and returned
         File photo = createCaptureFile(encodingType);
-        this.imageUri = new CordovaUri(FileProvider.getUriForFile(cordova.getActivity(),
+        this.imageFilePath = photo.getAbsolutePath();
+        this.imageUri = FileProvider.getUriForFile(cordova.getActivity(),
                 applicationId + ".cordova.plugin.camera.provider",
-                photo));
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri.getCorrectUri());
+                photo);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
         //We can write to this URI, this will hopefully allow us to write files to get to the next step
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 
@@ -370,6 +363,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         Intent intent = new Intent();
         String title = GET_PICTURE;
         croppedUri = null;
+        croppedFilePath = null;
         if (this.mediaType == PICTURE) {
             intent.setType("image/*");
             if (this.allowEdit) {
@@ -385,8 +379,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     intent.putExtra("aspectX", 1);
                     intent.putExtra("aspectY", 1);
                 }
-                File photo = createCaptureFile(JPEG);
-                croppedUri = Uri.fromFile(photo);
+                File croppedFile = createCaptureFile(JPEG);
+                croppedFilePath = croppedFile.getAbsolutePath();
+                croppedUri = Uri.fromFile(croppedFile);
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, croppedUri);
             } else {
                 intent.setAction(Intent.ACTION_GET_CONTENT);
@@ -438,7 +433,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
           cropIntent.putExtra("aspectY", 1);
         }
         // create new file handle to get full resolution crop
-        croppedUri = Uri.fromFile(createCaptureFile(this.encodingType, System.currentTimeMillis() + ""));
+        croppedFilePath = createCaptureFile(this.encodingType, System.currentTimeMillis() + "").getAbsolutePath();
+        croppedUri = Uri.parse(croppedFilePath);
         cropIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         cropIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         cropIntent.putExtra("output", croppedUri);
@@ -476,8 +472,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         ExifHelper exif = new ExifHelper();
 
         String sourcePath = (this.allowEdit && this.croppedUri != null) ?
-                FileHelper.stripFileProtocol(this.croppedUri.toString()) :
-                this.imageUri.getFilePath();
+                this.croppedFilePath :
+                this.imageFilePath;
 
 
         if (this.encodingType == JPEG) {
@@ -504,7 +500,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             if (this.allowEdit && this.croppedUri != null) {
                 writeUncompressedImage(croppedUri, galleryUri);
             } else {
-                Uri imageUri = this.imageUri.getFileUri();
+                Uri imageUri = this.imageUri;
                 writeUncompressedImage(imageUri, galleryUri);
             }
 
@@ -549,10 +545,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     Uri uri = Uri.fromFile(createCaptureFile(this.encodingType, System.currentTimeMillis() + ""));
 
                     if (this.allowEdit && this.croppedUri != null) {
-                        Uri croppedUri = Uri.fromFile(new File(getFileNameFromUri(this.croppedUri)));
+                        Uri croppedUri = Uri.parse(croppedFilePath);
                         writeUncompressedImage(croppedUri, uri);
                     } else {
-                        Uri imageUri = this.imageUri.getFileUri();
+                        Uri imageUri = this.imageUri;
                         writeUncompressedImage(imageUri, uri);
                     }
 
@@ -598,7 +594,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             throw new IllegalStateException();
         }
 
-        this.cleanup(FILE_URI, this.imageUri.getFileUri(), galleryUri, bitmap);
+        this.cleanup(FILE_URI, this.imageUri, galleryUri, bitmap);
         bitmap = null;
     }
 
@@ -1346,11 +1342,11 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         state.putBoolean("saveToPhotoAlbum", this.saveToPhotoAlbum);
 
         if (this.croppedUri != null) {
-            state.putString(CROPPED_URI_KEY, this.croppedUri.toString());
+            state.putString(CROPPED_URI_KEY, this.croppedFilePath);
         }
 
         if (this.imageUri != null) {
-            state.putString(IMAGE_URI_KEY, this.imageUri.getFileUri().toString());
+            state.putString(IMAGE_URI_KEY, this.imageFilePath);
         }
 
         return state;
@@ -1375,28 +1371,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
         if (state.containsKey(IMAGE_URI_KEY)) {
             //I have no idea what type of URI is being passed in
-            this.imageUri = new CordovaUri(Uri.parse(state.getString(IMAGE_URI_KEY)));
+            this.imageUri = Uri.parse(state.getString(IMAGE_URI_KEY));
         }
 
         this.callbackContext = callbackContext;
-    }
-
-     /*
-      * This is dirty, but it does the job.
-      *
-      * Since the FilesProvider doesn't really provide you a way of getting a URL from the file,
-      * and since we actually need the Camera to create the file for us most of the time, we don't
-      * actually write the file, just generate the location based on a timestamp, we need to get it
-      * back from the Intent.
-      *
-      * However, the FilesProvider preserves the path, so we can at least write to it from here, since
-      * we own the context in this case.
-     */
-    private String getFileNameFromUri(Uri uri) {
-        String fullUri = uri.toString();
-        String partial_path = fullUri.split("external_files")[1];
-        File external_storage = Environment.getExternalStorageDirectory();
-        String path = external_storage.getAbsolutePath() + partial_path;
-        return path;
     }
 }

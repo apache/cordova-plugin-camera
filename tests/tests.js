@@ -378,7 +378,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
 
         var options = '';
         if (typeof values === 'boolean') {
-            values = { 'true': 1, 'false': 0 };
+            values = { true: 1, false: 0 };
         }
         for (var k in values) {
             var isSelected = '';
@@ -409,9 +409,9 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             createOptionsEl('destinationType', Camera.DestinationType, camDestinationTypeDefault) +
             createOptionsEl('encodingType', Camera.EncodingType, camEncodingTypeDefault) +
             createOptionsEl('mediaType', Camera.MediaType, camMediaTypeDefault) +
-            createOptionsEl('quality', { '0': 0, '50': 50, '80': 80, '100': 100 }, camQualityDefault) +
-            createOptionsEl('targetWidth', { '50': 50, '200': 200, '800': 800, '2048': 2048 }) +
-            createOptionsEl('targetHeight', { '50': 50, '200': 200, '800': 800, '2048': 2048 }) +
+            createOptionsEl('quality', { 0: 0, 50: 50, 80: 80, 100: 100 }, camQualityDefault) +
+            createOptionsEl('targetWidth', { 50: 50, 200: 200, 800: 800, 2048: 2048 }) +
+            createOptionsEl('targetHeight', { 50: 50, 200: 200, 800: 800, 2048: 2048 }) +
             createOptionsEl('allowEdit', true, camAllowEditDefault) +
             createOptionsEl('correctOrientation', true, camCorrectOrientationDefault) +
             createOptionsEl('saveToPhotoAlbum', true, camSaveToPhotoAlbumDefault) +
