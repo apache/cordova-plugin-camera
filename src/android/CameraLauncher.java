@@ -294,7 +294,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         File photo = createCaptureFile(encodingType);
         this.imageFilePath = photo.getAbsolutePath();
         this.imageUri = FileProvider.getUriForFile(cordova.getActivity(),
-                applicationId + ".provider",
+                applicationId + ".cordova.plugin.camera.provider",
                 photo);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
         //We can write to this URI, this will hopefully allow us to write files to get to the next step
@@ -795,7 +795,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 try {
                     if (this.allowEdit) {
                         Uri tmpFile = FileProvider.getUriForFile(cordova.getActivity(),
-                                applicationId + ".provider",
+                                applicationId + ".cordova.plugin.camera.provider",
                                 createCaptureFile(this.encodingType));
                         performCrop(tmpFile, destType, intent);
                     } else {
