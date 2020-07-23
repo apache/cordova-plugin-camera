@@ -19,7 +19,7 @@
  *
 */
 
-/* globals Camera, resolveLocalFileSystemURL, FileEntry, CameraPopoverOptions, FileTransfer, FileUploadOptions, LocalFileSystem, MSApp */
+/* globals Camera, resolveLocalFileSystemURL, FileEntry, CameraPopoverOptions, LocalFileSystem, MSApp */
 /* eslint-env jasmine */
 
 exports.defineAutoTests = function () {
@@ -165,26 +165,6 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             var newPopoverOptions = new CameraPopoverOptions(0, 0, 100, 100, 0, 300, 400);
             popoverHandle.setPosition(newPopoverOptions);
         };
-    }
-
-    function uploadImage () {
-        var ft = new FileTransfer();
-        var options = new FileUploadOptions();
-        options.fileKey = 'photo';
-        options.fileName = 'test.jpg';
-        options.mimeType = 'image/jpeg';
-        ft.onprogress = function (progressEvent) {
-            console.log('progress: ' + progressEvent.loaded + ' of ' + progressEvent.total);
-        };
-        var server = 'http://sheltered-retreat-43956.herokuapp.com';
-
-        ft.upload(pictureUrl, server + '/upload', win, fail, options);
-        function win (information_back) {
-            log('upload complete');
-        }
-        function fail (message) {
-            log('upload failed: ' + JSON.stringify(message));
-        }
     }
 
     function logCallback (apiName, success) {
@@ -497,10 +477,6 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     createActionButton('Write Image', function () {
         writeImage();
     }, 'write');
-
-    createActionButton('Upload Image', function () {
-        uploadImage();
-    }, 'upload');
 
     createActionButton('Draw Using Canvas', function () {
         displayImageUsingCanvas();

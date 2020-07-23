@@ -26,8 +26,6 @@
     <name>Cordova Camera Plugin Tests</name>
     <license>Apache 2.0</license>
 
-    <dependency id="cordova-plugin-file-transfer" />
-
     <js-module src="tests.js" name="tests">
     </js-module>
 </plugin>
