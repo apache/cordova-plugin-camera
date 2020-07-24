@@ -69,7 +69,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
     private static final int DATA_URL = 0;              // Return base64 encoded string
     private static final int FILE_URI = 1;              // Return file uri (content://media/external/images/media/2 for Android)
-    private static final int NATIVE_URI = 2;                    // On Android, this is the same as FILE_URI
 
     private static final int PHOTOLIBRARY = 0;          // Choose image from picture library (same as SAVEDPHOTOALBUM for Android)
     private static final int CAMERA = 1;                // Take picture from camera
@@ -532,7 +531,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         }
 
         // If sending filename back
-        else if (destType == FILE_URI || destType == NATIVE_URI) {
+        else if (destType == FILE_URI) {
             // If all this is true we shouldn't compress the image.
             if (this.targetHeight == -1 && this.targetWidth == -1 && this.mQuality == 100 &&
                     !this.correctOrientation) {
@@ -703,7 +702,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 // This is a special case to just return the path as no scaling,
                 // rotating, nor compressing needs to be done
                 if (this.targetHeight == -1 && this.targetWidth == -1 &&
-                        (destType == FILE_URI || destType == NATIVE_URI) && !this.correctOrientation &&
+                        destType == FILE_URI && !this.correctOrientation &&
                         mimeType != null && mimeType.equalsIgnoreCase(getMimetypeForFormat(encodingType)))
                 {
                     this.callbackContext.success(finalLocation);
@@ -726,7 +725,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     }
 
                     // If sending filename back
-                    else if (destType == FILE_URI || destType == NATIVE_URI) {
+                    else if (destType == FILE_URI) {
                         // Did we modify the image?
                         if ( (this.targetHeight > 0 && this.targetWidth > 0) ||
                                 (this.correctOrientation && this.orientationCorrected) ||

@@ -42,10 +42,8 @@ exports.defineAutoTests = function () {
         it('camera.spec.2 should contain three DestinationType constants', function () {
             expect(Camera.DestinationType.DATA_URL).toBe(0);
             expect(Camera.DestinationType.FILE_URI).toBe(1);
-            expect(Camera.DestinationType.NATIVE_URI).toBe(2);
             expect(navigator.camera.DestinationType.DATA_URL).toBe(0);
             expect(navigator.camera.DestinationType.FILE_URI).toBe(1);
-            expect(navigator.camera.DestinationType.NATIVE_URI).toBe(2);
         });
 
         it('camera.spec.3 should contain two EncodingType constants', function () {
@@ -140,7 +138,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     function getPictureWin (data) {
         setPicture(data);
         // TODO: Fix resolveLocalFileSystemURI to work with native-uri.
-        if (pictureUrl.indexOf('file:') === 0 || pictureUrl.indexOf('content:') === 0 || pictureUrl.indexOf('ms-appdata:') === 0 || pictureUrl.indexOf('assets-library:') === 0) {
+        if (pictureUrl.indexOf('file:') === 0 || pictureUrl.indexOf('content:') === 0) {
             resolveLocalFileSystemURL(data, function (e) {
                 fileEntry = e;
                 logCallback('resolveLocalFileSystemURL()', true)(e.toURL());
@@ -174,7 +172,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     }
 
     /**
-     * Select image from library using a NATIVE_URI destination type
+     * Select image from library
      * This calls FileEntry.getMetadata, FileEntry.setMetadata, FileEntry.getParent, FileEntry.file, and FileReader.readAsDataURL.
      */
     function readFile () {
@@ -217,7 +215,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     }
 
     /**
-     * Copy image from library using a NATIVE_URI destination type
+     * Copy image from library
      * This calls FileEntry.copyTo and FileEntry.moveTo.
      */
     function copyImage () {
@@ -251,7 +249,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     }
 
     /**
-     * Write image to library using a NATIVE_URI destination type
+     * Write image to library
      * This calls FileEntry.createWriter, FileWriter.write, and FileWriter.truncate.
      */
     function writeImage () {
@@ -285,7 +283,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     }
 
     /**
-     * Remove image from library using a NATIVE_URI destination type
+     * Remove image from library
      * This calls FileEntry.remove.
      */
     function removeImage () {
