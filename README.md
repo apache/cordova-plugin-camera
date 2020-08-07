@@ -276,19 +276,14 @@ Optional parameters to customize the camera settings.
 
 ### Camera.DestinationType : <code>enum</code>
 Defines the output format of `Camera.getPicture` call.
-_Note:_ On iOS passing `DestinationType.NATIVE_URI` along with
-`PictureSourceType.PHOTOLIBRARY` or `PictureSourceType.SAVEDPHOTOALBUM` will
-disable any image modifications (resize, quality change, cropping, etc.) due
-to implementation specific.
 
 **Kind**: static enum property of <code>[Camera](#module_Camera)</code>  
 **Properties**
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| DATA_URL | <code>number</code> | <code>0</code> | Return base64 encoded string. DATA_URL can be very memory intensive and cause app crashes or out of memory errors. Use FILE_URI or NATIVE_URI if possible |
+| DATA_URL | <code>number</code> | <code>0</code> | Return base64 encoded string. DATA_URL can be very memory intensive and cause app crashes or out of memory errors. Use FILE_URI if possible |
 | FILE_URI | <code>number</code> | <code>1</code> | Return file uri (content://media/external/images/media/2 for Android) |
-| NATIVE_URI | <code>number</code> | <code>2</code> | Return native uri (eg. asset-library://... for iOS) |
 
 <a name="module_Camera.EncodingType"></a>
 
@@ -317,9 +312,6 @@ to implementation specific.
 
 ### Camera.PictureSourceType : <code>enum</code>
 Defines the output format of `Camera.getPicture` call.
-_Note:_ On iOS passing `PictureSourceType.PHOTOLIBRARY` or `PictureSourceType.SAVEDPHOTOALBUM`
-along with `DestinationType.NATIVE_URI` will disable any image modifications (resize, quality
-change, cropping, etc.) due to implementation specific.
 
 **Kind**: static enum property of <code>[Camera](#module_Camera)</code>  
 **Properties**
@@ -435,7 +427,7 @@ Take a photo and retrieve it as a Base64-encoded image:
      * Warning: Using DATA_URL is not recommended! The DATA_URL destination
      * type is very memory intensive, even with a low quality setting. Using it
      * can result in out of memory errors and application crashes. Use FILE_URI
-     * or NATIVE_URI instead.
+     * instead.
      */
     navigator.camera.getPicture(onSuccess, onFail, { quality: 25,
         destinationType: Camera.DestinationType.DATA_URL
@@ -508,9 +500,6 @@ More information about Windows Phone 8.1 picker APIs is here: [How to continue y
 
 - When using `destinationType.FILE_URI`, photos are saved in the application's temporary directory. The contents of the application's temporary directory is deleted when the application ends.
 
-- When using `destinationType.NATIVE_URI` and `sourceType.CAMERA`, photos are saved in the saved photo album regardless on the value of `saveToPhotoAlbum` parameter.
-
-- When using `destinationType.NATIVE_URI` and `sourceType.PHOTOLIBRARY` or `sourceType.SAVEDPHOTOALBUM`, all editing options are ignored and link is returned to original picture.
 
 [android_lifecycle]: http://cordova.apache.org/docs/en/dev/guide/platforms/android/lifecycle.html
 

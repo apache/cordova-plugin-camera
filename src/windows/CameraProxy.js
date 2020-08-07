@@ -190,17 +190,13 @@ function takePictureFromFileWP (successCallback, errorCallback, args) {
                 webUIApp.removeEventListener('activated', filePickerActivationHandler);
                 return;
             }
-            if (destinationType === Camera.DestinationType.FILE_URI || destinationType === Camera.DestinationType.NATIVE_URI) {
+            if (destinationType === Camera.DestinationType.FILE_URI) {
                 if (targetHeight > 0 && targetWidth > 0) {
                     resizeImage(successCallback, errorCallback, file, targetWidth, targetHeight, encodingType);
                 } else {
                     var storageFolder = getAppData().localFolder;
                     file.copyAsync(storageFolder, file.name, Windows.Storage.NameCollisionOption.replaceExisting).done(function (storageFile) {
-                        if (destinationType === Camera.DestinationType.NATIVE_URI) {
-                            successCallback('ms-appdata:///local/' + storageFile.name);
-                        } else {
-                            successCallback(URL.createObjectURL(storageFile));
-                        }
+                        successCallback(URL.createObjectURL(storageFile));
                     }, function () {
                         errorCallback("Can't access localStorage folder.");
                     });
@@ -259,17 +255,13 @@ function takePictureFromFileWindows (successCallback, errorCallback, args) {
             errorCallback("User didn't choose a file.");
             return;
         }
-        if (destinationType === Camera.DestinationType.FILE_URI || destinationType === Camera.DestinationType.NATIVE_URI) {
+        if (destinationType === Camera.DestinationType.FILE_URI) {
             if (targetHeight > 0 && targetWidth > 0) {
                 resizeImage(successCallback, errorCallback, file, targetWidth, targetHeight, encodingType);
             } else {
                 var storageFolder = getAppData().localFolder;
                 file.copyAsync(storageFolder, file.name, Windows.Storage.NameCollisionOption.replaceExisting).done(function (storageFile) {
-                    if (destinationType === Camera.DestinationType.NATIVE_URI) {
-                        successCallback('ms-appdata:///local/' + storageFile.name);
-                    } else {
-                        successCallback(URL.createObjectURL(storageFile));
-                    }
+                    successCallback(URL.createObjectURL(storageFile));
                 }, function () {
                     errorCallback("Can't access localStorage folder.");
                 });
@@ -779,7 +771,7 @@ function takePictureFromCameraWindows (successCallback, errorCallback, args) {
 function savePhoto (picture, options, successCallback, errorCallback) {
     // success callback for capture operation
     var success = function (picture) {
-        if (options.destinationType === Camera.DestinationType.FILE_URI || options.destinationType === Camera.DestinationType.NATIVE_URI) {
+        if (options.destinationType === Camera.DestinationType.FILE_URI) {
             if (options.targetHeight > 0 && options.targetWidth > 0) {
                 resizeImage(successCallback, errorCallback, picture, options.targetWidth, options.targetHeight, options.encodingType);
             } else {
