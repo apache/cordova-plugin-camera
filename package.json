@@ -1,6 +1,6 @@
 {
-  "name": "cordova-plugin-camera",
-  "version": "4.1.1-dev",
+  "name": "@spoonconsulting/cordova-plugin-camera",
+  "version": "4.1.2",
   "description": "Cordova Camera Plugin",
   "types": "./types/index.d.ts",
   "cordova": {
@@ -15,10 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apache/cordova-plugin-camera"
-  },
-  "bugs": {
-    "url": "https://github.com/apache/cordova-plugin-camera/issues"
+    "url": "https://github.com/spoonconsulting/cordova-plugin-camera"
   },
   "keywords": [
     "cordova",
@@ -34,7 +31,7 @@
     "test": "npm run eslint",
     "eslint": "node node_modules/eslint/bin/eslint www && node node_modules/eslint/bin/eslint src && node node_modules/eslint/bin/eslint tests"
   },
-  "author": "Apache Software Foundation",
+  "author": "Apache Software Foundation & spoonconsulting",
   "license": "Apache-2.0",
   "engines": {
     "cordovaDependencies": {
