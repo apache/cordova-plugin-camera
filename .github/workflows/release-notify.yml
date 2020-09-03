@@ -1,0 +1,16 @@
+name: Close issue asking for release
+
+on:
+  issues:
+    types: [opened]
+  issue_comment:
+    types: [created]
+    
+
+jobs:
+  action-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: niklasmerz/release-notify@master
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
