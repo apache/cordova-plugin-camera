@@ -20,6 +20,22 @@
 -->
 # Release Notes
 
+### 5.0.0 (Sep 14, 2020)
+
+* [GH-648](https://github.com/apache/cordova-plugin-camera/pull/648) ci(travis): update osx xcode image
+* [GH-637](https://github.com/apache/cordova-plugin-camera/pull/637) breaking: remove `NATIVE_URI` DestinationType
+* [GH-628](https://github.com/apache/cordova-plugin-camera/pull/628) breaking: bump project requirements
+* [GH-634](https://github.com/apache/cordova-plugin-camera/pull/634) chore: remove deprecated `file-transfer` plugin
+* [GH-632](https://github.com/apache/cordova-plugin-camera/pull/632) fix(android): return error if file url is null
+* [GH-510](https://github.com/apache/cordova-plugin-camera/pull/510) fix(android): use provider prefix to avoid conflicts other plugin providers
+* [GH-617](https://github.com/apache/cordova-plugin-camera/pull/617) breaking(android): stop using `CordovaUri` helper class
+* [GH-630](https://github.com/apache/cordova-plugin-camera/pull/630) chore: add `package-lock.json`
+* [GH-631](https://github.com/apache/cordova-plugin-camera/pull/631) chore(package): use short notation
+* [GH-629](https://github.com/apache/cordova-plugin-camera/pull/629) feat: migrate to `@cordova/eslint-config@3.x`
+* [GH-626](https://github.com/apache/cordova-plugin-camera/pull/626) ci: fix additional tests
+* [GH-627](https://github.com/apache/cordova-plugin-camera/pull/627) breaking: bump version 5.0.0-dev
+* [GH-612](https://github.com/apache/cordova-plugin-camera/pull/612) fix(ios): `tempFilePath` called twice if using `CameraUsesGeolocation`
+
 ### 4.2.0 (May 07, 2020)
 * Cache images in device storage, devices have enough space now.
 * docs(readme): app renamed to Google Photos
