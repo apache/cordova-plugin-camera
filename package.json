@@ -15,10 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/apache/cordova-plugin-camera"
-  },
-  "bugs": {
-    "url": "https://github.com/apache/cordova-plugin-camera/issues"
+    "url": "https://github.com/zhushiyao/cordova-plugin-camera.git"
   },
   "keywords": [
     "cordova",
