@@ -35,19 +35,17 @@
 * [GH-626](https://github.com/apache/cordova-plugin-camera/pull/626) ci: fix additional tests
 * [GH-627](https://github.com/apache/cordova-plugin-camera/pull/627) breaking: bump version 5.0.0-dev
 * [GH-612](https://github.com/apache/cordova-plugin-camera/pull/612) fix(ios): `tempFilePath` called twice if using `CameraUsesGeolocation`
-
-### 4.2.0 (May 07, 2020)
-* Cache images in device storage, devices have enough space now.
-* docs(readme): app renamed to Google Photos
+* [GH-588](https://github.com/apache/cordova-plugin-camera/pull/588) Cache images in device storage, devices have enough space now.
+* [GH-508](https://github.com/apache/cordova-plugin-camera/pull/508) docs(readme): app renamed to Google Photos
 * chore(asf): update git notification settings
-* fix(ios): return copy of video when picking from gallery on **iOS** 13 (#580)
+* [GH-580](https://github.com/apache/cordova-plugin-camera/pull/580) fix(ios): return copy of video when picking from gallery on **iOS** 13
 * Update CONTRIBUTING.md
-* Fix UI API called on a background thread (#550, #530, #447) (#551)
-* ci: updates Node.js versions (#576)
-* chore(npm): adds ignore list (#575)
-* docs(README): remove confusing comment (#513)
-* docs(README): remove orphan **Windows** phone 7 note (#512)
-* ImagePicker returning same image (#306)
+* [GH-551](https://github.com/apache/cordova-plugin-camera/pull/551) Fix UI API called on a background thread
+* [GH-576](https://github.com/apache/cordova-plugin-camera/pull/576) ci: updates Node.js versions
+* [GH-575](https://github.com/apache/cordova-plugin-camera/pull/575) chore(npm): adds ignore list 
+* [GH-513](https://github.com/apache/cordova-plugin-camera/pull/513) docs(README): remove confusing comment
+* [GH-512](https://github.com/apache/cordova-plugin-camera/pull/512) docs(README): remove orphan **Windows** phone 7 note
+* [GH-306](https://github.com/apache/cordova-plugin-camera/pull/306) ImagePicker returning same image
 
 ### 4.1.0 (Jun 27, 2019)
 
