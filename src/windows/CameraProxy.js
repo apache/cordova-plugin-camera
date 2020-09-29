@@ -77,6 +77,7 @@ var HIGHEST_POSSIBLE_Z_INDEX = 2147483647;
 function resizeImage (successCallback, errorCallback, file, targetWidth, targetHeight, encodingType) {
     var tempPhotoFileName = '';
     var targetContentType = '';
+    var temporaryStorageFile;
 
     if (encodingType === Camera.EncodingType.PNG) {
         tempPhotoFileName = 'camera_cordova_temp_return.png';
@@ -86,9 +87,10 @@ function resizeImage (successCallback, errorCallback, file, targetWidth, targetH
         targetContentType = 'image/jpeg';
     }
 
-    var storageFolder = getAppData().localFolder;
-    file.copyAsync(storageFolder, file.name, Windows.Storage.NameCollisionOption.replaceExisting)
+    var storageFolder = getAppData().temporaryFolder;
+    file.copyAsync(storageFolder, file.name, Windows.Storage.NameCollisionOption.generateUniqueName)
         .then(function (storageFile) {
+            temporaryStorageFile = storageFile;
             return fileIO.readBufferAsync(storageFile);
         })
         .then(function (buffer) {
@@ -118,6 +120,9 @@ function resizeImage (successCallback, errorCallback, file, targetWidth, targetH
                         var content = Windows.Security.Cryptography.CryptographicBuffer.decodeFromBase64String(fileContent);
                         storageFileName = storagefile.name;
                         return fileIO.writeBufferAsync(storagefile, content);
+                    })
+                    .then(function () {
+                        return temporaryStorageFile.deleteAsync(Windows.Storage.StorageDeleteOption.permanentDelete);
                     })
                     .done(function () {
                         successCallback('ms-appdata:///local/' + storageFileName);
@@ -261,7 +266,7 @@ function takePictureFromFileWindows (successCallback, errorCallback, args) {
             } else {
                 var storageFolder = getAppData().localFolder;
                 file.copyAsync(storageFolder, file.name, Windows.Storage.NameCollisionOption.replaceExisting).done(function (storageFile) {
-                    successCallback(URL.createObjectURL(storageFile));
+                    successCallback('ms-appdata:///local/' + storageFile.name);
                 }, function () {
                     errorCallback("Can't access localStorage folder.");
                 });
@@ -773,7 +778,15 @@ function savePhoto (picture, options, successCallback, errorCallback) {
     var success = function (picture) {
         if (options.destinationType === Camera.DestinationType.FILE_URI) {
             if (options.targetHeight > 0 && options.targetWidth > 0) {
-                resizeImage(successCallback, errorCallback, picture, options.targetWidth, options.targetHeight, options.encodingType);
+                resizeImage(function (uri) {
+                    // Don't need the originally captured file anymore now that we have the resized copy.
+                    picture.deleteAsync().done(function () {
+                        successCallback(uri);
+                    }, function () {
+                        // Still a success even if we cannot delete the original file since we do have the new file.
+                        successCallback(uri);
+                    });
+                }, errorCallback, picture, options.targetWidth, options.targetHeight, options.encodingType);
             } else {
                 // CB-11714: check if target content-type is PNG to just rename as *.jpg since camera is captured as JPEG
                 if (options.encodingType === Camera.EncodingType.PNG) {
@@ -781,19 +794,35 @@ function savePhoto (picture, options, successCallback, errorCallback) {
                 }
 
                 picture.copyAsync(getAppData().localFolder, picture.name, OptUnique).done(function (copiedFile) {
-                    successCallback('ms-appdata:///local/' + copiedFile.name);
+                    // Don't need the originally captured file anymore now that we have a copy.
+                    picture.deleteAsync().done(function () {
+                        successCallback('ms-appdata:///local/' + copiedFile.name);
+                    }, function () {
+                        // Still a success even if we cannot delete the original file since we do have the new file.
+                        successCallback('ms-appdata:///local/' + copiedFile.name);
+                    });
                 }, errorCallback);
             }
         } else {
             if (options.targetHeight > 0 && options.targetWidth > 0) {
-                resizeImageBase64(successCallback, errorCallback, picture, options.targetWidth, options.targetHeight);
+                resizeImageBase64(function (uri) {
+                    // Don't need the originally captured file anymore now that we have the encoded data.
+                    picture.deleteAsync().done(function () {
+                        successCallback(uri);
+                    }, function () {
+                        // Still a success even if we cannot delete the original file since we do have the encoded data.
+                        successCallback(uri);
+                    });
+                }, errorCallback, picture, options.targetWidth, options.targetHeight);
             } else {
                 fileIO.readBufferAsync(picture).done(function (buffer) {
                     var strBase64 = encodeToBase64String(buffer);
+                    // Don't need the originally captured file anymore now that we have the encoded data.
                     picture.deleteAsync().done(function () {
                         successCallback(strBase64);
-                    }, function (err) {
-                        errorCallback(err);
+                    }, function () {
+                        // Still a success even if we cannot delete the original file since we do have the data.
+                        successCallback(strBase64);
                     });
                 }, errorCallback);
             }
