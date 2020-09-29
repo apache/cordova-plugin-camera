@@ -1,3 +1,5 @@
+package org.apache.cordova.camera;
+
 public class GalleryPathVO {
     private final String galleryPath;
     private String picturesDirectory;
