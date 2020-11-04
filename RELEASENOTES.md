@@ -20,6 +20,14 @@
 -->
 # Release Notes
 
+### 5.0.1 (Nov 04, 2020)
+
+* [GH-686](https://github.com/apache/cordova-plugin-camera/pull/686) chore(android): add missing apache license header
+* [GH-685](https://github.com/apache/cordova-plugin-camera/pull/685) fix(ios): correctly append exif on **iOS** 14
+* [GH-669](https://github.com/apache/cordova-plugin-camera/pull/669) fix(android): save to photo gallery - fixes issues [#341](https://github.com/apache/cordova-plugin-camera/pull/341) & [#577](https://github.com/apache/cordova-plugin-camera/pull/577)
+* [GH-672](https://github.com/apache/cordova-plugin-camera/pull/672) chore: Fix JIRA links in RELEASENOTES.md
+* [GH-664](https://github.com/apache/cordova-plugin-camera/pull/664) chore: Update RELEASENOTES
+
 ### 5.0.0 (Sep 14, 2020)
 
 * [GH-648](https://github.com/apache/cordova-plugin-camera/pull/648) ci(travis): update osx xcode image
