@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-camera-tests",
-  "version": "5.0.1-dev",
+  "version": "5.0.2-dev",
   "description": "",
   "cordova": {
     "id": "cordova-plugin-camera-tests",
