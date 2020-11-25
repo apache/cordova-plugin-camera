@@ -412,8 +412,8 @@ static NSString* toBase64(NSData* data) {
                 PHAsset* asset = [info objectForKey:@"UIImagePickerControllerPHAsset"];
                 NSDictionary* controllerMetadata = [self getImageMetadataFromAsset:asset];
                 
+                self.data = data;
                 if (controllerMetadata) {
-                    self.data = data;
                     self.metadata = [[NSMutableDictionary alloc] init];
 
                     NSMutableDictionary* EXIFDictionary = [[controllerMetadata objectForKey:(NSString*)kCGImagePropertyExifDictionary]mutableCopy];
@@ -448,6 +448,10 @@ static NSString* toBase64(NSData* data) {
 -------------------------------------------------------------- */
 - (NSDictionary*)getImageMetadataFromAsset:(PHAsset*)asset {
     
+    if(asset == nil) {
+        return nil;
+    }
+
     // get photo info from this asset
     __block NSDictionary *dict = nil;
     PHImageRequestOptions *imageRequestOptions = [[PHImageRequestOptions alloc] init];
