@@ -440,6 +440,7 @@ static NSString* toBase64(NSData* data) {
     CDVPluginResult* result = nil;
     BOOL saveToPhotoAlbum = options.saveToPhotoAlbum;
     UIImage* image = nil;
+    NSMutableArray * result_all = [[NSMutableArray alloc] init];
 
     switch (options.destinationType) {
         case DestinationTypeDataUrl:
@@ -465,8 +466,21 @@ static NSString* toBase64(NSData* data) {
                 if (![data writeToFile:filePath options:NSAtomicWrite error:&err]) {
                     result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
                 } else {
-                    result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[[self urlTransformer:[NSURL fileURLWithPath:filePath]] absoluteString]];
+                    [result_all addObject:[[self urlTransformer:[NSURL fileURLWithPath:filePath]] absoluteString]];
                 }
+
+                // Generate thumbnail
+                NSString* thumbFilePath = [self tempFilePath:extension];
+                UIImage* scaledImage = [self imageByScalingNotCroppingForSize:image toSize:CGSizeMake(200, 0)];
+                NSData* thumbData = UIImageJPEGRepresentation(scaledImage, 1);
+
+                if (![thumbData writeToFile:thumbFilePath options:NSAtomicWrite error:&err]) {
+                    result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
+                } else {
+                    [result_all addObject:[[self urlTransformer:[NSURL fileURLWithPath:thumbFilePath]] absoluteString]];
+                }
+
+                result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:result_all];
             }
         }
             break;
