@@ -161,7 +161,7 @@ static NSMutableArray *cleanUpFiles;
 
 /*!
  Returns to JavaScript a URI.
- Called when Camera.DestinationType.FILE_URI or Camera.DestinationType.NATIVE_URI.
+ Called when Camera.DestinationType.FILE_URI.
  */
 - (void)returnUri:(NSString *)path command:(CDVInvokedUrlCommand *)command options:(CDVPictureOptions *)pictureOptions {
     NSString *protocol = (pictureOptions.destinationType == DestinationTypeFileUri) ? @"file://" : @"";
