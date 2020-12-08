@@ -19,7 +19,7 @@
  *
 */
 
-/* globals Camera, resolveLocalFileSystemURL, FileEntry, CameraPopoverOptions, FileTransfer, FileUploadOptions, LocalFileSystem, MSApp */
+/* globals Camera, resolveLocalFileSystemURL, FileEntry, CameraPopoverOptions, LocalFileSystem, MSApp */
 /* eslint-env jasmine */
 
 exports.defineAutoTests = function () {
@@ -42,10 +42,8 @@ exports.defineAutoTests = function () {
         it('camera.spec.2 should contain three DestinationType constants', function () {
             expect(Camera.DestinationType.DATA_URL).toBe(0);
             expect(Camera.DestinationType.FILE_URI).toBe(1);
-            expect(Camera.DestinationType.NATIVE_URI).toBe(2);
             expect(navigator.camera.DestinationType.DATA_URL).toBe(0);
             expect(navigator.camera.DestinationType.FILE_URI).toBe(1);
-            expect(navigator.camera.DestinationType.NATIVE_URI).toBe(2);
         });
 
         it('camera.spec.3 should contain two EncodingType constants', function () {
@@ -140,7 +138,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     function getPictureWin (data) {
         setPicture(data);
         // TODO: Fix resolveLocalFileSystemURI to work with native-uri.
-        if (pictureUrl.indexOf('file:') === 0 || pictureUrl.indexOf('content:') === 0 || pictureUrl.indexOf('ms-appdata:') === 0 || pictureUrl.indexOf('assets-library:') === 0) {
+        if (pictureUrl.indexOf('file:') === 0 || pictureUrl.indexOf('content:') === 0) {
             resolveLocalFileSystemURL(data, function (e) {
                 fileEntry = e;
                 logCallback('resolveLocalFileSystemURL()', true)(e.toURL());
@@ -167,26 +165,6 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         };
     }
 
-    function uploadImage () {
-        var ft = new FileTransfer();
-        var options = new FileUploadOptions();
-        options.fileKey = 'photo';
-        options.fileName = 'test.jpg';
-        options.mimeType = 'image/jpeg';
-        ft.onprogress = function (progressEvent) {
-            console.log('progress: ' + progressEvent.loaded + ' of ' + progressEvent.total);
-        };
-        var server = 'http://sheltered-retreat-43956.herokuapp.com';
-
-        ft.upload(pictureUrl, server + '/upload', win, fail, options);
-        function win (information_back) {
-            log('upload complete');
-        }
-        function fail (message) {
-            log('upload failed: ' + JSON.stringify(message));
-        }
-    }
-
     function logCallback (apiName, success) {
         return function () {
             log('Call to ' + apiName + (success ? ' success: ' : ' failed: ') + JSON.stringify([].slice.call(arguments)));
@@ -194,7 +172,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     }
 
     /**
-     * Select image from library using a NATIVE_URI destination type
+     * Select image from library
      * This calls FileEntry.getMetadata, FileEntry.setMetadata, FileEntry.getParent, FileEntry.file, and FileReader.readAsDataURL.
      */
     function readFile () {
@@ -237,7 +215,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     }
 
     /**
-     * Copy image from library using a NATIVE_URI destination type
+     * Copy image from library
      * This calls FileEntry.copyTo and FileEntry.moveTo.
      */
     function copyImage () {
@@ -271,7 +249,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     }
 
     /**
-     * Write image to library using a NATIVE_URI destination type
+     * Write image to library
      * This calls FileEntry.createWriter, FileWriter.write, and FileWriter.truncate.
      */
     function writeImage () {
@@ -305,7 +283,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     }
 
     /**
-     * Remove image from library using a NATIVE_URI destination type
+     * Remove image from library
      * This calls FileEntry.remove.
      */
     function removeImage () {
@@ -378,7 +356,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
 
         var options = '';
         if (typeof values === 'boolean') {
-            values = { 'true': 1, 'false': 0 };
+            values = { true: 1, false: 0 };
         }
         for (var k in values) {
             var isSelected = '';
@@ -409,9 +387,9 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             createOptionsEl('destinationType', Camera.DestinationType, camDestinationTypeDefault) +
             createOptionsEl('encodingType', Camera.EncodingType, camEncodingTypeDefault) +
             createOptionsEl('mediaType', Camera.MediaType, camMediaTypeDefault) +
-            createOptionsEl('quality', { '0': 0, '50': 50, '80': 80, '100': 100 }, camQualityDefault) +
-            createOptionsEl('targetWidth', { '50': 50, '200': 200, '800': 800, '2048': 2048 }) +
-            createOptionsEl('targetHeight', { '50': 50, '200': 200, '800': 800, '2048': 2048 }) +
+            createOptionsEl('quality', { 0: 0, 50: 50, 80: 80, 100: 100 }, camQualityDefault) +
+            createOptionsEl('targetWidth', { 50: 50, 200: 200, 800: 800, 2048: 2048 }) +
+            createOptionsEl('targetHeight', { 50: 50, 200: 200, 800: 800, 2048: 2048 }) +
             createOptionsEl('allowEdit', true, camAllowEditDefault) +
             createOptionsEl('correctOrientation', true, camCorrectOrientationDefault) +
             createOptionsEl('saveToPhotoAlbum', true, camSaveToPhotoAlbumDefault) +
@@ -497,10 +475,6 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     createActionButton('Write Image', function () {
         writeImage();
     }, 'write');
-
-    createActionButton('Upload Image', function () {
-        uploadImage();
-    }, 'upload');
 
     createActionButton('Draw Using Canvas', function () {
         displayImageUsingCanvas();
