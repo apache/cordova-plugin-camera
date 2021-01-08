@@ -651,13 +651,15 @@ static NSString* toBase64(NSData* data) {
     CDVPluginResult* result = nil;
 
     if (self.metadata) {
-        CGImageSourceRef sourceImage = CGImageSourceCreateWithData((__bridge CFDataRef)self.data, NULL);
+        NSData* dataCopy = [self.data mutableCopy];
+        CGImageSourceRef sourceImage = CGImageSourceCreateWithData((__bridge CFDataRef)dataCopy, NULL);
         CFStringRef sourceType = CGImageSourceGetType(sourceImage);
 
         CGImageDestinationRef destinationImage = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)self.data, sourceType, 1, NULL);
         CGImageDestinationAddImageFromSource(destinationImage, sourceImage, 0, (__bridge CFDictionaryRef)self.metadata);
         CGImageDestinationFinalize(destinationImage);
 
+        dataCopy = nil;
         CFRelease(sourceImage);
         CFRelease(destinationImage);
     }
