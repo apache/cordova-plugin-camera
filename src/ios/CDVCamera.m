@@ -104,7 +104,7 @@ static NSString* toBase64(NSData* data) {
     org_apache_cordova_validArrowDirections = [[NSSet alloc] initWithObjects:[NSNumber numberWithInt:UIPopoverArrowDirectionUp], [NSNumber numberWithInt:UIPopoverArrowDirectionDown], [NSNumber numberWithInt:UIPopoverArrowDirectionLeft], [NSNumber numberWithInt:UIPopoverArrowDirectionRight], [NSNumber numberWithInt:UIPopoverArrowDirectionAny], nil];
 }
 
-@synthesize hasPendingOperation, pickerController, locationManager;
+@synthesize hasPendingOperation, pickerController, locationManager, isOverlayView;
 
 - (NSURL*) urlTransformer:(NSURL*)url
 {
@@ -138,6 +138,7 @@ static NSString* toBase64(NSData* data) {
 
 - (void)takePicture:(CDVInvokedUrlCommand*)command
 {
+    isOverlayView = NO;
     self.hasPendingOperation = YES;
     __weak CDVCamera* weakSelf = self;
 
@@ -183,6 +184,12 @@ static NSString* toBase64(NSData* data) {
     }];
 }
 
+- (void)takePictureOverlayView:(CDVInvokedUrlCommand*)command
+{
+    isOverlayView = YES;
+    [self takePicture:command];
+
+}
 - (void)showCameraPicker:(NSString*)callbackId withOptions:(CDVPictureOptions *) pictureOptions
 {
     // Perform UI operations on the main thread
@@ -194,6 +201,26 @@ static NSString* toBase64(NSData* data) {
         cameraPicker.callbackId = callbackId;
         // we need to capture this state for memory warnings that dealloc this object
         cameraPicker.webView = self.webView;
+
+        //It's a overlay view block to show the indicated image titled "overlayImage.png"
+        if(isOverlayView) {
+            NSURL *bundleURL = [[NSBundle mainBundle] URLForResource:@"CDVCamera" withExtension:@"bundle"];
+            NSBundle *bundle = [NSBundle bundleWithURL:bundleURL];
+            NSString *imagePath = [bundle pathForResource:@"overlayImage" ofType:@"png"];
+            UIImage *imgSrc = [UIImage imageWithContentsOfFile:imagePath];
+            UIButton *btnOverlay = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, self.pickerController.view.bounds.size.width, self.pickerController.view.bounds.size.height)];
+            [btnOverlay setImage:imgSrc forState:UIControlStateNormal];
+            [btnOverlay setImage:imgSrc forState:UIControlStateSelected];
+            [btnOverlay setContentMode:UIViewContentModeCenter];
+            [self.overlayView addSubview:btnOverlay];
+            [self.overlayView.layer setOpaque:YES];
+            self.overlayView.opaque = NO;
+            [self.overlayView setBackgroundColor:UIColor.clearColor];
+            [self.overlayView setTintColor:UIColor.clearColor];
+            [self.overlayView setAlpha:1.0];
+            [self.overlayView setBackgroundColor:UIColor.whiteColor];
+            pickerController.cameraOverlayView = self.overlayView;
+            }
 
         // If a popover is already open, close it; we only want one at a time.
         if (([[self pickerController] pickerPopoverController] != nil) && [[[self pickerController] pickerPopoverController] isPopoverVisible]) {
