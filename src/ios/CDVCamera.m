@@ -399,10 +399,7 @@ static NSString* toBase64(NSData* data) {
 - (NSString*)tempFilePath:(NSString*)extension
 {
     NSString* docsPath = [NSTemporaryDirectory()stringByStandardizingPath];
-    // unique file name
-    NSTimeInterval timeStamp = [[NSDate date] timeIntervalSince1970];
-    NSNumber *timeStampObj = [NSNumber numberWithDouble: timeStamp];
-    NSString* filePath = [NSString stringWithFormat:@"%@/%@%ld.%@", docsPath, CDV_PHOTO_PREFIX, [timeStampObj longValue], extension];
+    NSString* filePath = [NSString stringWithFormat:@"%@/%@.%@", docsPath, [[NSUUID UUID] UUIDString], extension];
 
     return filePath;
 }
