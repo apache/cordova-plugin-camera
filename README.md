@@ -48,7 +48,7 @@ Older versions of cordova can still install via the __deprecated__ id
     cordova plugin add org.apache.cordova.camera
 It is also possible to install via repo url directly ( unstable )
 
-    cordova plugin add https://github.com/apache/cordova-plugin-camera.git
+    cordova plugin add https://github.com/mobiliarmad/cordova-plugin-camera.git
 
 
 ## How to Contribute
