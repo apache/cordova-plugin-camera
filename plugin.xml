@@ -20,19 +20,19 @@
 
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:rim="http://www.blackberry.com/ns/widgets"
     id="cordova-plugin-camera"
-    version="4.0.4-dev">
+    version="5.0.2-dev">
     <name>Camera</name>
     <description>Cordova Camera Plugin</description>
     <license>Apache 2.0</license>
     <keywords>cordova,camera</keywords>
-    <repo>https://git-wip-us.apache.org/repos/asf/cordova-plugin-camera.git</repo>
-    <issue>https://issues.apache.org/jira/browse/CB/component/12320645</issue>
+    <repo>https://github.com/apache/cordova-plugin-camera</repo>
+    <issue>https://github.com/apache/cordova-plugin-camera/issues</issue>
 
     <engines>
-        <engine name="cordova" version=">=7.1.0"/>
-        <engine name="cordova-android" version=">=6.3.0" />
+        <engine name="cordova" version=">=9.0.0"/>
+        <engine name="cordova-android" version=">=9.0.0" />
+        <engine name="cordova-ios" version=">=5.1.0" />
     </engines>
 
     <js-module src="www/CameraConstants.js" name="Camera">
@@ -42,8 +42,6 @@
     <js-module src="www/CameraPopoverOptions.js" name="CameraPopoverOptions">
         <clobbers target="CameraPopoverOptions" />
     </js-module>
-
-
 
     <js-module src="www/Camera.js" name="camera">
         <clobbers target="navigator.camera" />
@@ -62,7 +60,7 @@
         <config-file target="AndroidManifest.xml" parent="application">
           <provider
               android:name="org.apache.cordova.camera.FileProvider"
-              android:authorities="${applicationId}.provider"
+              android:authorities="${applicationId}.cordova.plugin.camera.provider"
               android:exported="false"
               android:grantUriPermissions="true" >
               <meta-data
@@ -72,10 +70,10 @@
         </config-file>
 
         <source-file src="src/android/CameraLauncher.java" target-dir="src/org/apache/cordova/camera" />
-        <source-file src="src/android/CordovaUri.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/FileHelper.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/ExifHelper.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/FileProvider.java" target-dir="src/org/apache/cordova/camera" />
+        <source-file src="src/android/GalleryPathVO.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/xml/camera_provider_paths.xml" target-dir="res/xml" />
 
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
@@ -154,12 +152,12 @@
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />
         </js-module>
-        
+
         <header-file src="src/osx/CDVCamera.h" />
         <source-file src="src/osx/CDVCamera.m" />
-                
+
         <framework src="Quartz.framework" />
         <framework src="AppKit.framework" />
     </platform>
-    
+
 </plugin>

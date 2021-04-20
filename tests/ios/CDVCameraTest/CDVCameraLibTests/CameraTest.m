@@ -82,7 +82,7 @@
     XCTAssertEqual(options.usesGeolocation, NO);
     
     // Set each argument, check whether they are set. different from defaults
-    popoverOptions = @{ @"x" : @1, @"y" : @2, @"width" : @3, @"height" : @4 };
+    popoverOptions = @{ @"x" : @1, @"y" : @2, @"width" : @3, @"height" : @4, @"popoverWidth": @200, @"popoverHeight": @300 };
     
     args = @[
              @(49),
@@ -127,7 +127,7 @@
     
     // Souce is Camera, and image type
     
-    popoverOptions = @{ @"x" : @1, @"y" : @2, @"width" : @3, @"height" : @4 };
+    popoverOptions = @{ @"x" : @1, @"y" : @2, @"width" : @3, @"height" : @4, @"popoverWidth": @200, @"popoverHeight": @300 };
     args = @[
              @(49),
              @(DestinationTypeDataUrl),

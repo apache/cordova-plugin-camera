@@ -232,7 +232,7 @@ function capture (success, errorCallback, opts) {
     };
 
     if (navigator.getUserMedia) {
-        navigator.getUserMedia({video: true, audio: opts[10].audio}, successCallback, errorCallback);
+        navigator.getUserMedia({ video: true, audio: opts[10].audio }, successCallback, errorCallback);
     } else {
         alert('Browser does not support camera :(');
     }
