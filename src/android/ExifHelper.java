@@ -18,6 +18,7 @@
 */
 package org.apache.cordova.camera;
 
+import java.io.FileDescriptor;
 import java.io.IOException;
 
 import android.media.ExifInterface;
@@ -49,9 +50,13 @@ public class ExifHelper {
     /**
      * The file before it is compressed
      *
-     * @param filePath
+     * @param fileDescriptor
      * @throws IOException
      */
+    public void createInFile(FileDescriptor fileDescriptor) throws IOException {
+        this.inFile = new ExifInterface(fileDescriptor);
+    }
+
     public void createInFile(String filePath) throws IOException {
         this.inFile = new ExifInterface(filePath);
     }
@@ -59,11 +64,11 @@ public class ExifHelper {
     /**
      * The file after it has been compressed
      *
-     * @param filePath
+     * @param fileDescriptor
      * @throws IOException
      */
-    public void createOutFile(String filePath) throws IOException {
-        this.outFile = new ExifInterface(filePath);
+    public void createOutFile(FileDescriptor fileDescriptor) throws IOException {
+        this.outFile = new ExifInterface(fileDescriptor);
     }
 
     /**

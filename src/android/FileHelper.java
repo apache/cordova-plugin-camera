@@ -17,9 +17,10 @@
 package org.apache.cordova.camera;
 
 import android.annotation.SuppressLint;
+import android.content.ContentResolver;
 import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Context;
-import android.content.CursorLoader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -31,21 +32,34 @@ import android.webkit.MimeTypeMap;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.LOG;
 
+import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
 
+import static org.apache.cordova.camera.CameraLauncher.JPEG;
+import static org.apache.cordova.camera.CameraLauncher.JPEG_EXTENSION;
+import static org.apache.cordova.camera.CameraLauncher.JPEG_MIME_TYPE;
+import static org.apache.cordova.camera.CameraLauncher.PNG;
+import static org.apache.cordova.camera.CameraLauncher.PNG_EXTENSION;
+import static org.apache.cordova.camera.CameraLauncher.PNG_MIME_TYPE;
+
 public class FileHelper {
-    private static final String LOG_TAG = "FileUtils";
-    private static final String _DATA = "_data";
+    private static final String TIME_FORMAT = "yyyyMMdd_HHmmss";
+    private static final String LOG_TAG = "FileHelper";
 
     /**
      * Returns the real path of the given URI string.
      * If the given URI string represents a content:// URI, the real path is retrieved from the media store.
      *
      * @param uriString the URI string of the audio/image/video
-     * @param cordova the current application context
+     * @param cordova   the current application context
      * @return the full path to the file
      */
     @SuppressWarnings("deprecation")
@@ -54,10 +68,83 @@ public class FileHelper {
     }
 
     /**
+     * Create a file in the applications temporary directory based upon the supplied encoding.
+     *
+     * @param encodingType of the image to be taken
+     * @return a File object pointing to the temporary picture
+     */
+    public static Uri createCaptureFile(ContentResolver resolver, int encodingType, String namePostfix) {
+        String volume = getMediaStoreVolume();
+        Uri imagesCollections = MediaStore.Images.Media.getContentUri(volume);
+        ContentValues contentValues = new ContentValues();
+        String timeStamp = new SimpleDateFormat(TIME_FORMAT).format(new Date());
+        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, "IMG_" + timeStamp + "_" + namePostfix + (encodingType == JPEG ? JPEG_EXTENSION : PNG_EXTENSION));
+        contentValues.put(MediaStore.MediaColumns.MIME_TYPE, getMimetypeForFormat(encodingType));
+        Uri galleryOutputUri = resolver.insert(imagesCollections, contentValues);
+        return galleryOutputUri;
+    }
+
+    public static Uri copyToInternalStorage(Context context, Uri sourceUri, int encodingType) throws IOException {
+        OutputStream os = null;
+        InputStream inputStream = context.getContentResolver().openInputStream(sourceUri);
+        Uri dest = createTempFile(context, encodingType);
+        try {
+            os = context.getContentResolver().openOutputStream(dest);
+            byte[] buffer = new byte[4096];
+            int len;
+            while ((len = inputStream.read(buffer)) != -1) {
+                os.write(buffer, 0, len);
+            }
+            os.flush();
+        } finally {
+            if (os != null) {
+                try {
+                    os.close();
+                } catch (IOException e) {
+                    LOG.d(LOG_TAG, "Exception while closing output stream.");
+                }
+            }
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    LOG.d(LOG_TAG, "Exception while closing file input stream.");
+                }
+            }
+        }
+        return dest;
+    }
+
+    private static String getMimetypeForFormat(int outputFormat) {
+        if (outputFormat == PNG) return PNG_MIME_TYPE;
+        if (outputFormat == JPEG) return JPEG_MIME_TYPE;
+        return "";
+    }
+
+    public static Uri createTempFile(Context context, int encodingType) {
+        String timeStamp = new SimpleDateFormat(TIME_FORMAT).format(new Date());
+        String fileName = "IMG_" + timeStamp + (encodingType == JPEG ? JPEG_EXTENSION : PNG_EXTENSION);
+        File file = new File(FileHelper.getTempDirectoryPath(context) + fileName);
+        return Uri.fromFile(file);
+    }
+
+    public static String getTempDirectoryPath(Context context) {
+        File cache = context.getCacheDir();
+        // Create the cache directory if it doesn't exist
+        cache.mkdirs();
+        return cache.getAbsolutePath();
+    }
+
+    public static void deleteFileFromMediaStore(ContentResolver contentResolver, Uri uri) {
+        if (uri == null) return;
+        contentResolver.delete(uri, null, null);
+    }
+
+    /**
      * Returns the real path of the given URI.
      * If the given URI is a content:// URI, the real path is retrieved from the media store.
      *
-     * @param uri the URI of the audio/image/video
+     * @param uri     the URI of the audio/image/video
      * @param cordova the current application context
      * @return the full path to the file
      */
@@ -118,7 +205,7 @@ public class FileHelper {
                 }
 
                 final String selection = "_id=?";
-                final String[] selectionArgs = new String[] {
+                final String[] selectionArgs = new String[]{
                         split[1]
                 };
 
@@ -143,7 +230,7 @@ public class FileHelper {
     }
 
     public static String getRealPathFromURI_BelowAPI11(Context context, Uri contentUri) {
-        String[] proj = { MediaStore.Images.Media.DATA };
+        String[] proj = {MediaStore.Images.Media.DATA};
         String result = null;
 
         try {
@@ -162,7 +249,7 @@ public class FileHelper {
      * Returns an input stream based on given URI string.
      *
      * @param uriString the URI string from which to obtain the input stream
-     * @param cordova the current application context
+     * @param cordova   the current application context
      * @return an input stream into the data at the given URI or null if given an invalid URI string
      * @throws IOException
      */
@@ -212,6 +299,18 @@ public class FileHelper {
         return uriString;
     }
 
+    public static FileDescriptor createFileDescriptor(Context context, Uri uri, String mode) throws FileNotFoundException {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            return context.getContentResolver().openFile(
+                    uri, mode, null
+            ).getFileDescriptor();
+        } else {
+            return context.getContentResolver().openFileDescriptor(
+                    uri, mode
+            ).getFileDescriptor();
+        }
+    }
+
     public static String getMimeTypeForExtension(String path) {
         String extension = path;
         int lastDot = extension.lastIndexOf('.');
@@ -225,7 +324,7 @@ public class FileHelper {
         }
         return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
     }
-    
+
     /**
      * Returns the mime type of the data specified by the given URI string.
      *
@@ -249,9 +348,9 @@ public class FileHelper {
      * Get the value of the data column for this Uri. This is useful for
      * MediaStore Uris, and other file-based ContentProviders.
      *
-     * @param context The context.
-     * @param uri The Uri to query.
-     * @param selection (Optional) Filter used in the query.
+     * @param context       The context.
+     * @param uri           The Uri to query.
+     * @param selection     (Optional) Filter used in the query.
      * @param selectionArgs (Optional) Selection arguments used in the query.
      * @return The value of the _data column, which is typically a file path.
      * @author paulburke
@@ -315,5 +414,14 @@ public class FileHelper {
      */
     public static boolean isGooglePhotosUri(Uri uri) {
         return "com.google.android.apps.photos.content".equals(uri.getAuthority());
+    }
+
+    public static String getMediaStoreVolume() {
+        // On API <= 28, use VOLUME_EXTERNAL instead
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+            return MediaStore.VOLUME_EXTERNAL;
+        } else {
+            return MediaStore.VOLUME_EXTERNAL_PRIMARY;
+        }
     }
 }
