@@ -22,7 +22,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -515,11 +514,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         this.cleanup(FILE_URI, this.imageUri, savedImageUri, bitmap);
     }
 
-    private void writeTakenPictureToGalleryLowerThanAndroidQ(Uri galleryUri) throws IOException {
-        writeUncompressedImage(imageUri, galleryUri);
-        refreshGallery(galleryUri);
-    }
-
     private void returnResultToApp(String uri, int encodingType) throws IOException {
         returnResultToApp(Uri.parse(uri), encodingType);
     }
@@ -567,56 +561,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         }
     }
 
-    private Uri saveToAlbum() throws IOException {
-        Uri galleryUri = null;
-
-        GalleryPathVO galleryPathVO = getPicturesPath();
-        galleryUri = Uri.fromFile(new File(galleryPathVO.getGalleryPath()));
-
-        if (this.allowEdit && this.croppedUri != null) {
-            writeUncompressedImage(croppedUri, galleryUri);
-        } else {
-            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) { // Between LOLLIPOP_MR1 and P, can be changed later to the constant Build.VERSION_CODES.P
-                writeTakenPictureToGalleryLowerThanAndroidQ(galleryUri);
-            } else { // Android Q or higher
-                writeTakenPictureToGalleryStartingFromAndroidQ(galleryPathVO);
-            }
-        }
-        return galleryUri;
-    }
-
-    private void writeTakenPictureToGalleryStartingFromAndroidQ(GalleryPathVO galleryPathVO) throws IOException {
-        // Starting from Android Q, working with the ACTION_MEDIA_SCANNER_SCAN_FILE intent is deprecated
-        // https://developer.android.com/reference/android/content/Intent#ACTION_MEDIA_SCANNER_SCAN_FILE
-        // we must start working with the MediaStore from Android Q on.
-        ContentResolver resolver = this.cordova.getActivity().getContentResolver();
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, galleryPathVO.getGalleryFileName());
-        contentValues.put(MediaStore.MediaColumns.MIME_TYPE, getMimetypeForFormat(encodingType));
-        Uri galleryOutputUri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
-
-        InputStream fileStream = org.apache.cordova.camera.FileHelper.getInputStreamFromUriString(imageUri.toString(), cordova);
-        writeUncompressedImage(fileStream, galleryOutputUri);
-    }
-
     private CompressFormat getCompressFormatForEncodingType(int encodingType) {
         return encodingType == JPEG ? CompressFormat.JPEG : CompressFormat.PNG;
-    }
-
-    private GalleryPathVO getPicturesPath() {
-        String timeStamp = new SimpleDateFormat(TIME_FORMAT).format(new Date());
-        String imageFileName = "IMG_" + timeStamp + (this.encodingType == JPEG ? JPEG_EXTENSION : PNG_EXTENSION);
-        File storageDir = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES);
-        storageDir.mkdirs();
-        return new GalleryPathVO(storageDir.getAbsolutePath(), imageFileName);
-    }
-
-    private void refreshGallery(Uri contentUri) {
-        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-        // Starting from Android Q, working with the ACTION_MEDIA_SCANNER_SCAN_FILE intent is deprecated
-        mediaScanIntent.setData(contentUri);
-        this.cordova.getActivity().sendBroadcast(mediaScanIntent);
     }
 
     /**

@@ -55,33 +55,16 @@
             </feature>
         </config-file>
         <config-file target="AndroidManifest.xml" parent="/*">
-            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-        </config-file>
-        <config-file target="AndroidManifest.xml" parent="application">
-          <provider
-              android:name="org.apache.cordova.camera.FileProvider"
-              android:authorities="${applicationId}.cordova.plugin.camera.provider"
-              android:exported="false"
-              android:grantUriPermissions="true" >
-              <meta-data
-                  android:name="android.support.FILE_PROVIDER_PATHS"
-                  android:resource="@xml/camera_provider_paths"/>
-          </provider>
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>
         </config-file>
 
         <source-file src="src/android/CameraLauncher.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/FileHelper.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/ExifHelper.java" target-dir="src/org/apache/cordova/camera" />
-        <source-file src="src/android/FileProvider.java" target-dir="src/org/apache/cordova/camera" />
-        <source-file src="src/android/GalleryPathVO.java" target-dir="src/org/apache/cordova/camera" />
-        <source-file src="src/android/xml/camera_provider_paths.xml" target-dir="res/xml" />
 
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />
           </js-module>
-
-        <preference name="ANDROID_SUPPORT_V4_VERSION" default="27.+"/>
-        <framework src="com.android.support:support-v4:$ANDROID_SUPPORT_V4_VERSION"/>
 
       </platform>
 
