@@ -81,6 +81,7 @@ static NSString* toBase64(NSData* data) {
     pictureOptions.saveToPhotoAlbum = [[command argumentAtIndex:9 withDefault:@(NO)] boolValue];
     pictureOptions.popoverOptions = [command argumentAtIndex:10 withDefault:nil];
     pictureOptions.cameraDirection = [[command argumentAtIndex:11 withDefault:@(UIImagePickerControllerCameraDeviceRear)] unsignedIntegerValue];
+    pictureOptions.flashMode = [[command argumentAtIndex:12 withDefault:@(UIImagePickerControllerCameraFlashModeAuto)] unsignedIntegerValue];
 
     pictureOptions.popoverSupported = NO;
     pictureOptions.usesGeolocation = NO;
@@ -188,6 +189,7 @@ static NSString* toBase64(NSData* data) {
     // Perform UI operations on the main thread
     dispatch_async(dispatch_get_main_queue(), ^{
         CDVCameraPicker* cameraPicker = [CDVCameraPicker createFromPictureOptions:pictureOptions];
+        cameraPicker.cameraFlashMode = pictureOptions.flashMode;
         self.pickerController = cameraPicker;
 
         cameraPicker.delegate = self;
@@ -279,7 +281,7 @@ static NSString* toBase64(NSData* data) {
 - (void)navigationController:(UINavigationController *)navigationController willShowViewController:(UIViewController *)viewController animated:(BOOL)animated
 {
     if([navigationController isKindOfClass:[UIImagePickerController class]]){
-        
+
         // If popoverWidth and popoverHeight are specified and are greater than 0, then set popover size, else use apple's default popoverSize
         NSDictionary* options = self.pickerController.pictureOptions.popoverOptions;
         if(options) {
@@ -290,8 +292,8 @@ static NSString* toBase64(NSData* data) {
                 [viewController setPreferredContentSize:CGSizeMake(popoverWidth,popoverHeight)];
             }
         }
-        
-        
+
+
         UIImagePickerController* cameraPicker = (UIImagePickerController*)navigationController;
 
         if(![cameraPicker.mediaTypes containsObject:(NSString*)kUTTypeImage]){
@@ -397,10 +399,7 @@ static NSString* toBase64(NSData* data) {
 - (NSString*)tempFilePath:(NSString*)extension
 {
     NSString* docsPath = [NSTemporaryDirectory()stringByStandardizingPath];
-    // unique file name
-    NSTimeInterval timeStamp = [[NSDate date] timeIntervalSince1970];
-    NSNumber *timeStampObj = [NSNumber numberWithDouble: timeStamp];
-    NSString* filePath = [NSString stringWithFormat:@"%@/%@%ld.%@", docsPath, CDV_PHOTO_PREFIX, [timeStampObj longValue], extension];
+    NSString* filePath = [NSString stringWithFormat:@"%@/%@.%@", docsPath, [[NSUUID UUID] UUIDString], extension];
 
     return filePath;
 }
@@ -433,11 +432,55 @@ static NSString* toBase64(NSData* data) {
     return (scaledImage == nil ? image : scaledImage);
 }
 
+- (UIImage*)imageByScalingNotCroppingForSize:(UIImage*)anImage toSize:(CGSize)frameSize
+{
+    UIImage* sourceImage = anImage;
+    UIImage* newImage = nil;
+    CGSize imageSize = sourceImage.size;
+    CGFloat width = imageSize.width;
+    CGFloat height = imageSize.height;
+    CGFloat targetWidth = frameSize.width;
+    CGFloat targetHeight = frameSize.height;
+    CGFloat scaleFactor = 0.0;
+    CGSize scaledSize = frameSize;
+
+    if (CGSizeEqualToSize(imageSize, frameSize) == NO) {
+        CGFloat widthFactor = targetWidth / width;
+        CGFloat heightFactor = targetHeight / height;
+
+        // opposite comparison to imageByScalingAndCroppingForSize in order to contain the image within the given bounds
+        if (widthFactor == 0.0) {
+            scaleFactor = heightFactor;
+        } else if (heightFactor == 0.0) {
+            scaleFactor = widthFactor;
+        } else if (widthFactor > heightFactor) {
+            scaleFactor = heightFactor; // scale to fit height
+        } else {
+            scaleFactor = widthFactor; // scale to fit width
+        }
+        scaledSize = CGSizeMake(floor(width * scaleFactor), floor(height * scaleFactor));
+    }
+
+    UIGraphicsBeginImageContext(scaledSize); // this will resize
+
+    [sourceImage drawInRect:CGRectMake(0, 0, scaledSize.width, scaledSize.height)];
+
+    newImage = UIGraphicsGetImageFromCurrentImageContext();
+    if (newImage == nil) {
+        NSLog(@"could not scale image");
+    }
+
+    // pop the context to get back to the default
+    UIGraphicsEndImageContext();
+    return newImage;
+}
+
 - (void)resultForImage:(CDVPictureOptions*)options info:(NSDictionary*)info completion:(void (^)(CDVPluginResult* res))completion
 {
     CDVPluginResult* result = nil;
     BOOL saveToPhotoAlbum = options.saveToPhotoAlbum;
     UIImage* image = nil;
+    NSMutableArray * result_all = [[NSMutableArray alloc] init];
 
     switch (options.destinationType) {
         case DestinationTypeDataUrl:
@@ -463,8 +506,21 @@ static NSString* toBase64(NSData* data) {
                 if (![data writeToFile:filePath options:NSAtomicWrite error:&err]) {
                     result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
                 } else {
-                    result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[[self urlTransformer:[NSURL fileURLWithPath:filePath]] absoluteString]];
+                    [result_all addObject:[[self urlTransformer:[NSURL fileURLWithPath:filePath]] absoluteString]];
                 }
+
+                // Generate thumbnail
+                NSString* thumbFilePath = [self tempFilePath:extension];
+                UIImage* scaledImage = [self imageByScalingNotCroppingForSize:image toSize:CGSizeMake(200, 0)];
+                NSData* thumbData = UIImageJPEGRepresentation(scaledImage, 1);
+
+                if (![thumbData writeToFile:thumbFilePath options:NSAtomicWrite error:&err]) {
+                    result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
+                } else {
+                    [result_all addObject:[[self urlTransformer:[NSURL fileURLWithPath:thumbFilePath]] absoluteString]];
+                }
+
+                result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsArray:result_all];
             }
         }
             break;
