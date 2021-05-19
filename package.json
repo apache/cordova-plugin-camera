@@ -1,10 +1,10 @@
 {
-  "name": "cordova-plugin-camera",
+  "name": "@capacitor-mobi/cordova-plugin-camera",
   "version": "5.0.2-dev",
   "description": "Cordova Camera Plugin",
   "types": "./types/index.d.ts",
   "cordova": {
-    "id": "cordova-plugin-camera",
+    "id": "@capacitor-mobi/cordova-plugin-camera",
     "platforms": [
       "android",
       "ios",
@@ -13,8 +13,8 @@
       "osx"
     ]
   },
-  "repository": "github:apache/cordova-plugin-camera",
-  "bugs": "https://github.com/apache/cordova-plugin-camera/issues",
+  "repository": "github:mobiliarmad/cordova-plugin-camera",
+  "bugs": "https://github.com/mobiliarmad/cordova-plugin-camera/issues",
   "keywords": [
     "cordova",
     "camera",

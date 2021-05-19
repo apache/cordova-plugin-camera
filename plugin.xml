@@ -20,14 +20,14 @@
 
 <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    id="cordova-plugin-camera"
+    id="@capacitor-mobi/cordova-plugin-camera"
     version="5.0.2-dev">
     <name>Camera</name>
     <description>Cordova Camera Plugin</description>
     <license>Apache 2.0</license>
     <keywords>cordova,camera</keywords>
-    <repo>https://github.com/apache/cordova-plugin-camera</repo>
-    <issue>https://github.com/apache/cordova-plugin-camera/issues</issue>
+    <repo>https://github.com/mobiliarmad/cordova-plugin-camera</repo>
+    <issue>https://github.com/mobiliarmad/cordova-plugin-camera/issues</issue>
 
     <engines>
         <engine name="cordova" version=">=9.0.0"/>
