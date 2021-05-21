@@ -142,22 +142,6 @@ public class FileHelper {
         return null;
     }
 
-    public static String getRealPathFromURI_BelowAPI11(Context context, Uri contentUri) {
-        String[] proj = { MediaStore.Images.Media.DATA };
-        String result = null;
-
-        try {
-            Cursor cursor = context.getContentResolver().query(contentUri, proj, null, null, null);
-            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-            cursor.moveToFirst();
-            result = cursor.getString(column_index);
-
-        } catch (Exception e) {
-            result = null;
-        }
-        return result;
-    }
-
     /**
      * Returns an input stream based on given URI string.
      *
@@ -225,7 +209,7 @@ public class FileHelper {
         }
         return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
     }
-    
+
     /**
      * Returns the mime type of the data specified by the given URI string.
      *
@@ -233,7 +217,7 @@ public class FileHelper {
      * @return the mime type of the specified data
      */
     public static String getMimeType(String uriString, CordovaInterface cordova) {
-        String mimeType = null;
+        String mimeType;
 
         Uri uri = Uri.parse(uriString);
         if (uriString.startsWith("content://")) {
