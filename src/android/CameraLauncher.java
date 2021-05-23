@@ -672,11 +672,11 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     }
 
     private String calculateModifiedBitmapOutputFileName(String mimeTypeOfOriginalFile, String realPath) {
-        if(realPath == null) {
+        if (realPath == null) {
             return "modified" + getExtensionForEncodingType();
         }
         String fileName = realPath.substring(realPath.lastIndexOf('/') + 1);
-        if(getMimetypeForEncodingType().equals(mimeTypeOfOriginalFile)) {
+        if (getMimetypeForEncodingType().equals(mimeTypeOfOriginalFile)) {
             return fileName;
         }
         // if the picture is not a jpeg or png, (a .heic for example) when processed to a bitmap
