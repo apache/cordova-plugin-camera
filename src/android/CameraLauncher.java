@@ -438,7 +438,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             cropIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
             cropIntent.putExtra("output", croppedUri);
 
-
             // start the activity - we handle returning in onActivityResult
 
             if (this.cordova != null) {
@@ -449,9 +448,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             LOG.e(LOG_TAG, "Crop operation not supported on this device");
             try {
                 processResultFromCamera(destType, cameraIntent);
-            }
-            catch (IOException e)
-            {
+            } catch (IOException e) {
                 e.printStackTrace();
                 LOG.e(LOG_TAG, "Unable to write to file");
             }
@@ -621,7 +618,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
     private GalleryPathVO getPicturesPath() {
         String timeStamp = new SimpleDateFormat(TIME_FORMAT).format(new Date());
-        String imageFileName = "IMG_" + timeStamp + (this.encodingType == JPEG ? JPEG_EXTENSION : PNG_EXTENSION);
+        String imageFileName = "IMG_" + timeStamp + getExtensionForEncodingType();
         File storageDir = Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_PICTURES);
         storageDir.mkdirs();
@@ -649,18 +646,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private String outputModifiedBitmap(Bitmap bitmap, Uri uri, String mimeTypeOfOriginalFile) throws IOException {
         // Some content: URIs do not map to file paths (e.g. picasa).
         String realPath = FileHelper.getRealPath(uri, this.cordova);
-
-        // Get filename from uri
-        String fileName;
-        if (realPath != null) {
-            fileName = realPath.substring(realPath.lastIndexOf('/') + 1);
-            if(!getMimetypeForEncodingType().equals(mimeTypeOfOriginalFile)) {
-                // todo piv improve code + write a comment why
-                fileName = fileName.substring(fileName.lastIndexOf(".") + 1) + (this.encodingType == JPEG ? JPEG_EXTENSION : PNG_EXTENSION);
-            }
-        } else {
-            fileName = "modified." + (this.encodingType == JPEG ? JPEG_TYPE : PNG_TYPE);
-        }
+        String fileName = calculateModifiedBitmapOutputFileName(mimeTypeOfOriginalFile, realPath);
 
         String modifiedPath = getTempDirectoryPath() + "/" + fileName;
 
@@ -683,6 +669,23 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             }
         }
         return modifiedPath;
+    }
+
+    private String calculateModifiedBitmapOutputFileName(String mimeTypeOfOriginalFile, String realPath) {
+        if(realPath == null) {
+            return "modified" + getExtensionForEncodingType();
+        }
+        String fileName = realPath.substring(realPath.lastIndexOf('/') + 1);
+        if(getMimetypeForEncodingType().equals(mimeTypeOfOriginalFile)) {
+            return fileName;
+        }
+        // if the picture is not a jpeg or png, (a .heic for example) when processed to a bitmap
+        // the file extension is changed to the output format, f.e. an input file my_photo.heic could become my_photo.jpg
+        return fileName.substring(fileName.lastIndexOf(".") + 1) + getExtensionForEncodingType();
+    }
+
+    private String getExtensionForEncodingType() {
+        return this.encodingType == JPEG ? JPEG_EXTENSION : PNG_EXTENSION;
     }
 
 
@@ -985,7 +988,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             if (fileStream != null) {
                 // Generate a temporary file
                 String timeStamp = new SimpleDateFormat(TIME_FORMAT).format(new Date());
-                String fileName = "IMG_" + timeStamp + (this.encodingType == JPEG ? JPEG_EXTENSION : PNG_EXTENSION);
+                String fileName = "IMG_" + timeStamp + (getExtensionForEncodingType());
                 localFile = new File(getTempDirectoryPath() + fileName);
                 galleryUri = Uri.fromFile(localFile);
                 writeUncompressedImage(fileStream, galleryUri);
@@ -1009,14 +1012,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     rotate = 0;
                 }
             }
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             LOG.e(LOG_TAG,"Exception while getting input stream: "+ e.toString());
             return null;
         }
-
-
 
         try {
             // figure out the original width and height of the image
@@ -1063,7 +1062,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             // determine the correct aspect ratio
             int[] widthHeight = calculateAspectRatio(rotatedWidth, rotatedHeight);
 
-
             // Load in the smallest bitmap possible that is closest to the size we want
             options.inJustDecodeBounds = false;
             options.inSampleSize = calculateSampleSize(rotatedWidth, rotatedHeight,  widthHeight[0], widthHeight[1]);
@@ -1103,8 +1101,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 }
             }
             return scaledBitmap;
-        }
-        finally {
+        } finally {
             // delete the temporary copy
             if (localFile != null) {
                 localFile.delete();
@@ -1315,7 +1312,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     public void onScanCompleted(String path, Uri uri) {
         this.conn.disconnect();
     }
-
 
     public void onRequestPermissionResult(int requestCode, String[] permissions,
                                           int[] grantResults) {
