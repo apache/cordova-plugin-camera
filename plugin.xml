@@ -77,6 +77,9 @@
                 <intent>
                     <action android:name="android.intent.action.GET_CONTENT" />
                 </intent>
+                <intent>
+                    <action android:name="android.intent.action.PICK" />
+                </intent>
             </queries>
         </config-file>
 
