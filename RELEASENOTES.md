@@ -20,6 +20,18 @@
 -->
 # Release Notes
 
+### 5.0.3 (Aug 04, 2021)
+
+* [GH-754](https://github.com/apache/cordova-plugin-camera/pull/754) chore: rebuilt `package-lock.json`
+* [GH-748](https://github.com/apache/cordova-plugin-camera/pull/748) fix: incorrect version in `package-lock`
+* [GH-747](https://github.com/apache/cordova-plugin-camera/pull/747) chore: set the 5.x versions locked to `cordova-android` `<10.0.0`
+* [GH-729](https://github.com/apache/cordova-plugin-camera/pull/729) chore(asf): Update GitHub repo metadata
+
+### 5.0.2 (May 11, 2021)
+* [GH-728](https://github.com/apache/cordova-plugin-camera/pull/728) plugin release preparation - audit fix
+* [GH-700](https://github.com/apache/cordova-plugin-camera/pull/700) Bugfix [issue 665](https://github.com/apache/cordova-plugin-camera/issues/665) - app crashes after taking a picture due to a bug in the camera plugin when app is resumed
+* [GH-691](https://github.com/apache/cordova-plugin-camera/pull/691) ci: add node-14.x to workflow (#691)
+
 ### 5.0.1 (Nov 04, 2020)
 
 * [GH-686](https://github.com/apache/cordova-plugin-camera/pull/686) chore(android): add missing apache license header
