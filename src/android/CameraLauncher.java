@@ -1268,7 +1268,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 code = null;
             }
         } catch (Exception e) {
-            this.failPicture("Error compressing image: "+e.getMessage());
+            this.failPicture("Error compressing image: "+e.getLocalizedMessage());
         }
         jpeg_data = null;
     }
