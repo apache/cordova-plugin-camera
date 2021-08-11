@@ -762,7 +762,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
                             } catch (Exception e) {
                                 e.printStackTrace();
-                                this.failPicture("Error retrieving image.");
+                                this.failPicture("Error retrieving image: "+e.getLocalizedMessage());
                             }
                         } else {
                             this.callbackContext.success(finalLocation);
@@ -844,7 +844,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
-                    this.failPicture("Error capturing image.");
+                    this.failPicture("Error capturing image: "+e.getLocalizedMessage());
                 }
             }
 
@@ -1277,7 +1277,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 code = null;
             }
         } catch (Exception e) {
-            this.failPicture("Error compressing image.");
+            this.failPicture("Error compressing image: "+e.getLocalizedMessage());
         }
         jpeg_data = null;
     }
