@@ -759,7 +759,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
                             } catch (Exception e) {
                                 e.printStackTrace();
-                                this.failPicture("Error retrieving image: "+e.getMessage());
+                                this.failPicture("Error retrieving image: "+e.getLocalizedMessage());
                             }
                         } else {
                             this.callbackContext.success(finalLocation);
