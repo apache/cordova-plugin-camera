@@ -19,7 +19,6 @@ package org.apache.cordova.camera;
 import android.annotation.SuppressLint;
 import android.content.ContentUris;
 import android.content.Context;
-import android.content.CursorLoader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -29,8 +28,8 @@ import android.provider.MediaStore;
 import android.webkit.MimeTypeMap;
 
 import org.apache.cordova.CordovaInterface;
-import org.apache.cordova.LOG;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,7 +43,7 @@ public class FileHelper {
      * Returns the real path of the given URI string.
      * If the given URI string represents a content:// URI, the real path is retrieved from the media store.
      *
-     * @param uriString the URI string of the audio/image/video
+     * @param uri the URI of the audio/image/video
      * @param cordova the current application context
      * @return the full path to the file
      */
@@ -57,7 +56,7 @@ public class FileHelper {
      * Returns the real path of the given URI.
      * If the given URI is a content:// URI, the real path is retrieved from the media store.
      *
-     * @param uri the URI of the audio/image/video
+     * @param uriString the URI string from which to obtain the input stream
      * @param cordova the current application context
      * @return the full path to the file
      */
@@ -132,6 +131,9 @@ public class FileHelper {
             if (isGooglePhotosUri(uri))
                 return uri.getLastPathSegment();
 
+            if (isFileProviderUri(context, uri))
+                return getFileProviderPath(context, uri);
+
             return getDataColumn(context, uri, null, null);
         }
         // File
@@ -161,6 +163,7 @@ public class FileHelper {
             if (question > -1) {
                 uriString = uriString.substring(0, question);
             }
+
             if (uriString.startsWith("file:///android_asset/")) {
                 Uri uri = Uri.parse(uriString);
                 String relativePath = uri.getPath().substring(15);
@@ -190,6 +193,7 @@ public class FileHelper {
      * @return a path without the "file://" prefix
      */
     public static String stripFileProtocol(String uriString) {
+
         if (uriString.startsWith("file://")) {
             uriString = uriString.substring(7);
         }
@@ -300,4 +304,28 @@ public class FileHelper {
     public static boolean isGooglePhotosUri(Uri uri) {
         return "com.google.android.apps.photos.content".equals(uri.getAuthority());
     }
+
+    /**
+     * @param context The Application context
+     * @param uri The Uri is checked by functions
+     * @return Whether the Uri authority is FileProvider
+     */
+    public static boolean isFileProviderUri(final Context context, final Uri uri) {
+        final String packageName = context.getPackageName();
+        final String authority = new StringBuilder(packageName).append(".provider").toString();
+        return authority.equals(uri.getAuthority());
+    }
+
+    /**
+     * @param context The Application context
+     * @param uri The Uri is checked by functions
+     * @return File path or null if file is missing
+     */
+    public static String getFileProviderPath(final Context context, final Uri uri)
+    {
+        final File appDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        final File file = new File(appDir, uri.getLastPathSegment());
+        return file.exists() ? file.toString(): null;
+    }
+
 }
