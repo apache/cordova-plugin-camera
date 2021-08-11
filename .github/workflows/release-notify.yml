@@ -3,7 +3,6 @@ name: Close issue asking for release
 on:
   issues:
     types: [opened]
-    
 
 jobs:
   action-test:
