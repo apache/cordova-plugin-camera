@@ -279,7 +279,6 @@ static NSString* toBase64(NSData* data) {
 - (void)navigationController:(UINavigationController *)navigationController willShowViewController:(UIViewController *)viewController animated:(BOOL)animated
 {
     if([navigationController isKindOfClass:[UIImagePickerController class]]){
-        
         // If popoverWidth and popoverHeight are specified and are greater than 0, then set popover size, else use apple's default popoverSize
         NSDictionary* options = self.pickerController.pictureOptions.popoverOptions;
         if(options) {
@@ -290,8 +289,6 @@ static NSString* toBase64(NSData* data) {
                 [viewController setPreferredContentSize:CGSizeMake(popoverWidth,popoverHeight)];
             }
         }
-        
-        
         UIImagePickerController* cameraPicker = (UIImagePickerController*)navigationController;
 
         if(![cameraPicker.mediaTypes containsObject:(NSString*)kUTTypeImage]){
@@ -742,6 +739,9 @@ static NSString* toBase64(NSData* data) {
     } else {
         NSArray* mediaArray = @[(NSString*)(pictureOptions.mediaType == MediaTypeVideo ? kUTTypeMovie : kUTTypeImage)];
         cameraPicker.mediaTypes = mediaArray;
+    }
+    if (@available(iOS 11.0, *)) {
+      cameraPicker.videoExportPreset = AVAssetExportPreset1920x1080; //full hd
     }
 
     return cameraPicker;
