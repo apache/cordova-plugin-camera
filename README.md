@@ -23,6 +23,8 @@ description: Take pictures with the device camera.
 
 # cordova-plugin-camera
 
+[![Android Testsuite](https://github.com/apache/cordova-plugin-camera/actions/workflows/android.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/android.yml) [![Chrome Testsuite](https://github.com/apache/cordova-plugin-camera/actions/workflows/chrome.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/chrome.yml) [![iOS Testsuite](https://github.com/apache/cordova-plugin-camera/actions/workflows/ios.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/ios.yml) [![Lint Test](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml)
+
 This plugin defines a global `navigator.camera` object, which provides an API for taking pictures and for choosing images from
 the system's image library.
 
