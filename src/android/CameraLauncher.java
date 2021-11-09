@@ -287,7 +287,11 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     public void takePicture(int returnType, int encodingType)
     {
         // Save the number of images currently on disk for later
-        this.numPics = queryImgDB(whichContentStore()).getCount();
+        Cursor cursor = queryImgDB(whichContentStore());
+        if (cursor != null) {
+            this.numPics = cursor.getCount();
+            cursor.close();
+        }
 
         // Let's use the intent and see what happens
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -299,13 +303,13 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 applicationId + ".cordova.plugin.camera.provider",
                 photo);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
-        //We can write to this URI, this will hopefully allow us to write files to get to the next step
+        // We can write to this URI, this will hopefully allow us to write files to get to the next step
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 
         if (this.cordova != null) {
             // Let's check to make sure the camera is actually installed. (Legacy Nexus 7 code)
             PackageManager mPm = this.cordova.getActivity().getPackageManager();
-            if(intent.resolveActivity(mPm) != null)
+            if (intent.resolveActivity(mPm) != null)
             {
                 this.cordova.startActivityForResult((CordovaPlugin) this, intent, (CAMERA + 1) * 16 + returnType + 1);
             }
@@ -520,7 +524,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 return;
             }
 
-
             this.processPicture(bitmap, this.encodingType);
 
             if (!this.saveToPhotoAlbum) {
@@ -574,8 +577,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 if (this.encodingType == JPEG) {
                     String exifPath;
                     exifPath = uri.getPath();
-                    //We just finished rotating it by an arbitrary orientation, just make sure it's normal
-                    if(rotate != ExifInterface.ORIENTATION_NORMAL)
+                    // We just finished rotating it by an arbitrary orientation, just make sure it's normal
+                    if (rotate != ExifInterface.ORIENTATION_NORMAL)
                         exif.resetOrientation();
                     exif.createOutFile(exifPath);
                     exif.writeExifData();
@@ -800,7 +803,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @param intent      An Intent, which can return result data to the caller (various data can be attached to Intent "extras").
      */
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
-
         // Get src and dest types from request code for a Camera Activity
         int srcType = (requestCode / 16) - 1;
         int destType = (requestCode % 16) - 1;
@@ -1225,21 +1227,23 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         int diff = 1;
         Uri contentStore = whichContentStore();
         Cursor cursor = queryImgDB(contentStore);
-        int currentNumOfImages = cursor.getCount();
+        if (cursor != null) {
+            int currentNumOfImages = cursor.getCount();
 
-        if (type == FILE_URI && this.saveToPhotoAlbum) {
-            diff = 2;
-        }
-
-        // delete the duplicate file if the difference is 2 for file URI or 1 for Data URL
-        if ((currentNumOfImages - numPics) == diff) {
-            cursor.moveToLast();
-            int id = Integer.valueOf(cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media._ID)));
-            if (diff == 2) {
-                id--;
+            if (type == FILE_URI && this.saveToPhotoAlbum) {
+                diff = 2;
             }
-            Uri uri = Uri.parse(contentStore + "/" + id);
-            this.cordova.getActivity().getContentResolver().delete(uri, null, null);
+
+            // delete the duplicate file if the difference is 2 for file URI or 1 for Data URL
+            if ((currentNumOfImages - this.numPics) == diff) {
+                cursor.moveToLast();
+                int id = Integer.valueOf(cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media._ID)));
+                if (diff == 2) {
+                    id--;
+                }
+                Uri uri = Uri.parse(contentStore + "/" + id);
+                this.cordova.getActivity().getContentResolver().delete(uri, null, null);
+            }
             cursor.close();
         }
     }
