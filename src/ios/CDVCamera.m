@@ -689,14 +689,6 @@ static NSString* toBase64(NSData* data) {
             }
         }
             break;
-        case DestinationTypeDataUrl:
-        {
-            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:toBase64(imageDataWithExif)];
-        }
-            break;
-        case DestinationTypeNativeUri:
-        default:
-            break;
     };
 
     if (result) {
