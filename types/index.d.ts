@@ -51,8 +51,6 @@ interface CameraOptions {
      * Defined in navigator.camera.DestinationType. Default is FILE_URI.
      *      DATA_URL : 0,   Return image as base64-encoded string
      *      FILE_URI : 1,   Return image file URI
-     *      NATIVE_URI : 2  Return image native URI
-     *          (e.g., assets-library:// on iOS or content:// on Android)
      */
     destinationType?: number;
     /**
@@ -149,7 +147,6 @@ declare var Camera: {
     DestinationType: {
         DATA_URL: number;
         FILE_URI: number;
-        NATIVE_URI: number
     }
     Direction: {
         BACK: number;
