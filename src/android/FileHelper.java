@@ -90,6 +90,27 @@ public class FileHelper {
                     if (id.startsWith("raw:")) {
                         return id.replaceFirst("raw:", "");
                     }
+                    if (id.startsWith("msf:")) {
+                      Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
+                      String path = null;
+                      if (cursor != null) {
+                        cursor.moveToFirst();
+                        String document_id = cursor.getString(0);
+                        document_id = document_id.substring(document_id.lastIndexOf(":") + 1);
+                        cursor.close();
+
+                        cursor = context.getContentResolver().query(
+                          android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                          null, MediaStore.Images.Media._ID + " = ? ", new String[]{document_id}, null);
+                        if (cursor != null) {
+                          cursor.moveToFirst();
+                          path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+                          cursor.close();
+                        }
+                      }
+                      return path;
+                    }
+
                     try {
                         final Uri contentUri = ContentUris.withAppendedId(
                                 Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
@@ -225,7 +246,7 @@ public class FileHelper {
         }
         return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
     }
-    
+
     /**
      * Returns the mime type of the data specified by the given URI string.
      *
