@@ -38,16 +38,20 @@ Although the object is attached to the global scoped `navigator`, it is not avai
 
 ## Installation
 
-This requires cordova 5.0+
-
     cordova plugin add cordova-plugin-camera
-Older versions of cordova can still install via the __deprecated__ id
 
-    cordova plugin add org.apache.cordova.camera
 It is also possible to install via repo url directly ( unstable )
 
     cordova plugin add https://github.com/apache/cordova-plugin-camera.git
 
+## Plugin variables
+
+The plugin uses the `ANDROIDX_CORE_VERSION` variable to configure `androidx.core:core` dependency. This allows to avoid conflicts with other plugins that have the dependency hardcoded.
+If no value is passed, it will use `1.6.+` as the default value.
+
+The variable is configured on install time
+
+    cordova plugin add cordova-plugin-camera --variable ANDROIDX_CORE_VERSION=1.8.0
 
 ## How to Contribute
 
