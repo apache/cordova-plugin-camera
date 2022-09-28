@@ -113,8 +113,8 @@ function capture (success, errorCallback, opts) {
 
     if (navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-        .then(successCallback)
-        .catch(errorCallback);
+            .then(successCallback)
+            .catch(errorCallback);
     } else if (navigator.getUserMedia) {
         navigator.getUserMedia({ video: true, audio: false }, successCallback, errorCallback);
     } else {
