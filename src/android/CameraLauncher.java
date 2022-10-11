@@ -22,10 +22,13 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
@@ -38,6 +41,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import androidx.core.content.FileProvider;
 import android.util.Base64;
@@ -51,6 +55,7 @@ import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -60,6 +65,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 /**
  * This class launches the camera view, allows the user to take a picture, closes the camera view,
@@ -134,6 +140,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private ExifHelper exifData;            // Exif data from source
     private String applicationId;
 
+    private CameraSettings settings = new CameraSettings();
 
     /**
      * Executes the request and returns PluginResult.
@@ -224,10 +231,28 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     //--------------------------------------------------------------------------
 
     private String getTempDirectoryPath() {
+//        File cache = cordova.getActivity().getCacheDir();
+//        // Create the cache directory if it doesn't exist
+//        cache.mkdirs();
+//        return cache.getAbsolutePath();
+
         File cache = cordova.getActivity().getCacheDir();
         // Create the cache directory if it doesn't exist
         cache.mkdirs();
-        return cache.getAbsolutePath();
+        String a = cache.getAbsolutePath();
+
+        File root = cordova.getActivity().getApplicationContext().getFilesDir();// context.getFilesDir();
+        File dir = new File(root, "TempDirectory/");
+        if (!dir.exists()) {
+            //创建失败
+            if (!dir.mkdir()) {
+                // Log.e(TAG, "createBitmapPdf: 创建失败");
+            }
+        }
+       String b =  dir.getPath();
+
+        return a;
+
     }
 
     /**
@@ -407,12 +432,181 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         }
     }
 
+    private void performCrop(Uri picUri, int destType, Intent cameraIntent) {
+        InputStream imageStream = null;
+        try {
+              imageStream =this.cordova.getContext().getContentResolver().openInputStream(picUri);
+            Bitmap  bitmap = BitmapFactory.decodeStream(imageStream);
+            ExifWrapper exif = ImageUtils.getExifData(this.cordova.getContext(), bitmap, picUri);
+
+            try {
+                bitmap = prepareBitmap(bitmap, imageUri, exif);
+            } catch (IOException e) {
+                LOG.e(LOG_TAG, "bitmap error");
+            }
+
+            // Compress the final image and prepare for output to client
+            ByteArrayOutputStream bitmapOutputStream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, bitmapOutputStream);
+
+            Uri tempImage = getTempImage(picUri, bitmapOutputStream);
+            Intent editIntent = createEditIntent(tempImage);
+
+            if (editIntent != null) {
+               // startActivityForResult(call, editIntent, "processEditedImage");
+                this.cordova.startActivityForResult((CordovaPlugin) this,
+                        editIntent, CROP_CAMERA + destType);
+                //this.callbackContext.success(tempImage.toString());
+                this.processPicture(bitmap, this.encodingType);
+            } else {
+                //call.reject(IMAGE_EDIT_ERROR);
+            }
+
+        } catch (ActivityNotFoundException | FileNotFoundException anfe) {
+            LOG.e(LOG_TAG, "Crop operation not supported on this device");
+            try {
+                processResultFromCamera(destType, cameraIntent);
+            } catch (IOException e) {
+                e.printStackTrace();
+                LOG.e(LOG_TAG, "Unable to write to file");
+            }
+        } finally {
+            if (imageStream != null) {
+                try {
+                    imageStream.close();
+                } catch (IOException e) {
+                   // Logger.error(getLogTag(), UNABLE_TO_PROCESS_IMAGE, e);
+                }
+            }
+        }
+    }
+
+
+
+    /**
+     * Apply our standard processing of the bitmap, returning a new one and
+     * recycling the old one in the process
+     * @param bitmap
+     * @param imageUri
+     * @param exif
+     * @return
+     */
+    private Bitmap prepareBitmap(Bitmap bitmap, Uri imageUri, ExifWrapper exif) throws IOException {
+        if (settings.isShouldCorrectOrientation()) {
+            final Bitmap newBitmap = ImageUtils.correctOrientation(this.cordova.getContext(), bitmap, imageUri, exif);
+            bitmap = replaceBitmap(bitmap, newBitmap);
+        }
+
+        if (settings.isShouldResize()) {
+            final Bitmap newBitmap = ImageUtils.resize(bitmap, settings.getWidth(), settings.getHeight());
+            bitmap = replaceBitmap(bitmap, newBitmap);
+        }
+
+        return bitmap;
+    }
+
+    private Bitmap replaceBitmap(Bitmap bitmap, final Bitmap newBitmap) {
+        if (bitmap != newBitmap) {
+            bitmap.recycle();
+        }
+        bitmap = newBitmap;
+        return bitmap;
+    }
+
+    private Uri getTempImage(Uri u, ByteArrayOutputStream bitmapOutputStream) {
+        ByteArrayInputStream bis = null;
+        Uri newUri = null;
+        try {
+            bis = new ByteArrayInputStream(bitmapOutputStream.toByteArray());
+            newUri = saveImage(u, bis);
+        } catch (IOException ex) {} finally {
+            if (bis != null) {
+                try {
+                    bis.close();
+                } catch (IOException e) {
+                   // Logger.error(getLogTag(), UNABLE_TO_PROCESS_IMAGE, e);
+                }
+            }
+        }
+        return newUri;
+    }
+
+    private Intent createEditIntent(Uri origPhotoUri) {
+        try {
+            File editFile = new File(origPhotoUri.getPath());
+           // Uri editUri = FileProvider.getUriForFile(this.cordova.getActivity(), this.cordova.getContext().getPackageName() + ".fileprovider", editFile);
+            Uri editUri  = FileProvider.getUriForFile(cordova.getActivity(),
+                    applicationId + ".cordova.plugin.camera.provider",
+                    editFile);
+            Intent editIntent = new Intent(Intent.ACTION_EDIT);
+            editIntent.setDataAndType(editUri, "image/*");
+            String imageEditedFileSavePath = editFile.getAbsolutePath();
+            int flags = Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
+            editIntent.addFlags(flags);
+            editIntent.putExtra(MediaStore.EXTRA_OUTPUT, editUri);
+            List<ResolveInfo> resInfoList = this.cordova.getContext()
+                    .getPackageManager()
+                    .queryIntentActivities(editIntent, PackageManager.MATCH_DEFAULT_ONLY);
+            for (ResolveInfo resolveInfo : resInfoList) {
+                String packageName = resolveInfo.activityInfo.packageName;
+                this.cordova.getContext().grantUriPermission(packageName, editUri, flags);
+            }
+            return editIntent;
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    /**
+     * Save the modified image on the same path,
+     * or on a temporary location if it's a content url
+     * @param uri
+     * @param is
+     * @return
+     * @throws IOException
+     */
+    private Uri saveImage(Uri uri, InputStream is) throws IOException {
+        File outFile = null;
+        if (uri.getScheme().equals("content")) {
+            outFile = getTempFile(uri);
+        } else {
+            outFile = new File(uri.getPath());
+        }
+        try {
+            writePhoto(outFile, is);
+        } catch (FileNotFoundException ex) {
+            // Some gallery apps return read only file url, create a temporary file for modifications
+            outFile = getTempFile(uri);
+            writePhoto(outFile, is);
+        }
+        return Uri.fromFile(outFile);
+    }
+
+    private void writePhoto(File outFile, InputStream is) throws IOException {
+        FileOutputStream fos = new FileOutputStream(outFile);
+        byte[] buffer = new byte[1024];
+        int len;
+        while ((len = is.read(buffer)) != -1) {
+            fos.write(buffer, 0, len);
+        }
+        fos.close();
+    }
+
+    private File getTempFile(Uri uri) {
+        String filename = Uri.parse(Uri.decode(uri.toString())).getLastPathSegment();
+        if (!filename.contains(".jpg") && !filename.contains(".jpeg")) {
+            filename += "." + (new java.util.Date()).getTime() + ".jpeg";
+        }
+        File cacheDir = this.cordova.getContext().getCacheDir();
+        return new File(cacheDir, filename);
+    }
+
     /**
      * Brings up the UI to perform crop on passed image URI
      *
      * @param picUri
      */
-    private void performCrop(Uri picUri, int destType, Intent cameraIntent) {
+    private void performCrop2(Uri picUri, int destType, Intent cameraIntent) {
         try {
             Intent cropIntent = new Intent("com.android.camera.action.CROP");
             // indicate image type and Uri
