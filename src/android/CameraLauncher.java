@@ -231,28 +231,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     //--------------------------------------------------------------------------
 
     private String getTempDirectoryPath() {
-//        File cache = cordova.getActivity().getCacheDir();
-//        // Create the cache directory if it doesn't exist
-//        cache.mkdirs();
-//        return cache.getAbsolutePath();
-
         File cache = cordova.getActivity().getCacheDir();
         // Create the cache directory if it doesn't exist
         cache.mkdirs();
-        String a = cache.getAbsolutePath();
-
-        File root = cordova.getActivity().getApplicationContext().getFilesDir();// context.getFilesDir();
-        File dir = new File(root, "TempDirectory/");
-        if (!dir.exists()) {
-            //创建失败
-            if (!dir.mkdir()) {
-                // Log.e(TAG, "createBitmapPdf: 创建失败");
-            }
-        }
-       String b =  dir.getPath();
-
-        return a;
-
+        return cache.getAbsolutePath();
     }
 
     /**
@@ -394,6 +376,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             intent.setType("image/*");
             if (this.allowEdit) {
                 intent.setAction(Intent.ACTION_PICK);
+                //intent.setAction(Intent.ACTION_EDIT);
+                int flags = Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
+                intent.addFlags(flags);
                 intent.putExtra("crop", "true");
                 if (targetWidth > 0) {
                     intent.putExtra("outputX", targetWidth);
@@ -409,6 +394,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 croppedFilePath = croppedFile.getAbsolutePath();
                 croppedUri = Uri.fromFile(croppedFile);
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, croppedUri);
+
             } else {
                 intent.setAction(Intent.ACTION_GET_CONTENT);
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -435,7 +421,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private void performCrop(Uri picUri, int destType, Intent cameraIntent) {
         InputStream imageStream = null;
         try {
-              imageStream =this.cordova.getContext().getContentResolver().openInputStream(picUri);
+            imageStream =this.cordova.getContext().getContentResolver().openInputStream(picUri);
             Bitmap  bitmap = BitmapFactory.decodeStream(imageStream);
             ExifWrapper exif = ImageUtils.getExifData(this.cordova.getContext(), bitmap, picUri);
 
@@ -456,8 +442,16 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                // startActivityForResult(call, editIntent, "processEditedImage");
                 this.cordova.startActivityForResult((CordovaPlugin) this,
                         editIntent, CROP_CAMERA + destType);
-                //this.callbackContext.success(tempImage.toString());
-                this.processPicture(bitmap, this.encodingType);
+
+                // If sending base64 image back
+                if (destType == DATA_URL) {
+                    this.processPicture(bitmap, this.encodingType);
+                }
+                // If sending filename back
+                else {
+                    this.callbackContext.success(tempImage.toString());
+                }
+
             } else {
                 //call.reject(IMAGE_EDIT_ERROR);
             }
@@ -935,6 +929,31 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                         this.failPicture("Unable to create bitmap!");
                         return;
                     }
+
+                    if(this.allowEdit) {
+                        // Compress the final image and prepare for output to client
+                        ByteArrayOutputStream bitmapOutputStream = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, bitmapOutputStream);
+
+                        Uri tempImage = getTempImage(uri, bitmapOutputStream);
+                        Intent editIntent = createEditIntent(tempImage);
+
+                        if (editIntent != null) {
+                            // startActivityForResult(call, editIntent, "processEditedImage");
+                            this.cordova.startActivityForResult((CordovaPlugin) this,
+                                    editIntent, CROP_CAMERA + destType);
+
+                            // If sending base64 image back
+                            if (destType == DATA_URL) {
+                                this.processPicture(bitmap, this.encodingType);
+                            }
+                            // If sending filename back
+                            else {
+                                this.callbackContext.success(tempImage.toString());
+                            }
+                        }
+                    }
+
 
                     // If sending base64 image back
                     if (destType == DATA_URL) {
