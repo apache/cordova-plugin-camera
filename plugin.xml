@@ -90,6 +90,13 @@
         <source-file src="src/android/ExifHelper.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/FileProvider.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/GalleryPathVO.java" target-dir="src/org/apache/cordova/camera" />
+		
+		<source-file src="src/android/CameraResultType.java" target-dir="src/org/apache/cordova/camera" />
+		<source-file src="src/android/CameraSettings.java" target-dir="src/org/apache/cordova/camera" />
+		<source-file src="src/android/CameraSource.java" target-dir="src/org/apache/cordova/camera" />
+		<source-file src="src/android/ExifWrapper.java" target-dir="src/org/apache/cordova/camera" />
+		<source-file src="src/android/ImageUtils.java" target-dir="src/org/apache/cordova/camera" />
+		
         <source-file src="src/android/xml/camera_provider_paths.xml" target-dir="res/xml" />
 
         <preference name="ANDROIDX_CORE_VERSION" default="1.6.+"/>
