@@ -20,6 +20,26 @@
 -->
 # Release Notes
 
+### 6.0.0 (Aug 19, 2021)
+
+**Feature:**
+
+* [GH-751](https://github.com/apache/cordova-plugin-camera/pull/751) feat(android)!: support **AndroidX**
+* [GH-750](https://github.com/apache/cordova-plugin-camera/pull/750) feat(android): bump `cordova-android` requirements for `10.x`
+* [GH-731](https://github.com/apache/cordova-plugin-camera/pull/731) feat(android): encode `heic` format to `EncodingType` for webview display [#711](https://github.com/apache/cordova-plugin-camera/issues/711)
+* [GH-684](https://github.com/apache/cordova-plugin-camera/pull/684) feat(android): `sdk-30` package visibility support
+
+**Fix:**
+
+* [GH-687](https://github.com/apache/cordova-plugin-camera/pull/687) fix(android): return exception message (where it exists)
+* [GH-585](https://github.com/apache/cordova-plugin-camera/pull/585) fix(android): file path correction if `Uri` authority is `FileProvider`
+
+**Chore & CI:**
+
+* [GH-749](https://github.com/apache/cordova-plugin-camera/pull/749) chore: bump plugin version for next major
+* [GH-654](https://github.com/apache/cordova-plugin-camera/pull/654) chore: add release notify action
+* [GH-745](https://github.com/apache/cordova-plugin-camera/pull/745) ci(gh-action): added workflow to run tests
+
 ### 5.0.3 (Aug 04, 2021)
 
 * [GH-754](https://github.com/apache/cordova-plugin-camera/pull/754) chore: rebuilt `package-lock.json`
