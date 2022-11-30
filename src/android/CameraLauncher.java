@@ -648,16 +648,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         String realPath = FileHelper.getRealPath(uri, this.cordova);
         String fileName = calculateModifiedBitmapOutputFileName(mimeTypeOfOriginalFile, realPath);
 
-<<<<<<< HEAD
-        // Get filename from uri
-        String timeStamp = new SimpleDateFormat(TIME_FORMAT).format(new Date());
-        String fileName = realPath != null ?
-                realPath.substring(realPath.lastIndexOf('/') + 1) :
-                "modified_" + timeStamp + "." + (this.encodingType == JPEG ? JPEG_TYPE : PNG_TYPE);
-
-        //String fileName = "IMG_" + timeStamp + (this.encodingType == JPEG ? ".jpg" : ".png");
-=======
->>>>>>> 827bb611eef9233ded58d58cdefce5f6d3c11151
         String modifiedPath = getTempDirectoryPath() + "/" + fileName;
 
         OutputStream os = new FileOutputStream(modifiedPath);
