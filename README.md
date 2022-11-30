@@ -21,11 +21,9 @@ description: Take pictures with the device camera.
 #         under the License.
 -->
 
-|AppVeyor|Travis CI|
-|:-:|:-:|
-|[![Build status](https://ci.appveyor.com/api/projects/status/github/apache/cordova-plugin-camera?branch=master)](https://ci.appveyor.com/project/ApacheSoftwareFoundation/cordova-plugin-camera)|[![Build Status](https://travis-ci.org/apache/cordova-plugin-camera.svg?branch=master)](https://travis-ci.org/apache/cordova-plugin-camera)|
-
 # cordova-plugin-camera
+
+[![Android Testsuite](https://github.com/apache/cordova-plugin-camera/actions/workflows/android.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/android.yml) [![Chrome Testsuite](https://github.com/apache/cordova-plugin-camera/actions/workflows/chrome.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/chrome.yml) [![iOS Testsuite](https://github.com/apache/cordova-plugin-camera/actions/workflows/ios.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/ios.yml) [![Lint Test](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml)
 
 This plugin defines a global `navigator.camera` object, which provides an API for taking pictures and for choosing images from
 the system's image library.
@@ -40,16 +38,20 @@ Although the object is attached to the global scoped `navigator`, it is not avai
 
 ## Installation
 
-This requires cordova 5.0+
-
     cordova plugin add cordova-plugin-camera
-Older versions of cordova can still install via the __deprecated__ id
 
-    cordova plugin add org.apache.cordova.camera
 It is also possible to install via repo url directly ( unstable )
 
     cordova plugin add https://github.com/apache/cordova-plugin-camera.git
 
+## Plugin variables
+
+The plugin uses the `ANDROIDX_CORE_VERSION` variable to configure `androidx.core:core` dependency. This allows to avoid conflicts with other plugins that have the dependency hardcoded.
+If no value is passed, it will use `1.6.+` as the default value.
+
+The variable is configured on install time
+
+    cordova plugin add cordova-plugin-camera --variable ANDROIDX_CORE_VERSION=1.8.0
 
 ## How to Contribute
 
