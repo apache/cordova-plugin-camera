@@ -86,7 +86,7 @@ jobs:
 
       - name: Run paramedic install
         if: ${{ endswith(env.repo, '/cordova-paramedic') != true }}
-        run: npm i -g github:apache/cordova-paramedic
+        run: npm i -g github:erisu/cordova-paramedic\#fix/plugin-install-order
 
       - name: Run paramedic tests
         env:
