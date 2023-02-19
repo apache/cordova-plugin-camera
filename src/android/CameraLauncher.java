@@ -276,6 +276,13 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     public void callTakePicture(int returnType, int encodingType) {
         String[] storagePermissions = getPermissions(true, mediaType);
         boolean storagePermission = hasPermissions(storagePermissions);
+        boolean saveAlbumPermission;
+        if (this.saveToPhotoAlbum) {
+            saveAlbumPermission = hasPermissions(storagePermissions);
+        } else {
+            saveAlbumPermission = true;
+        }
+
         boolean takePicturePermission = PermissionHelper.hasPermission(this, Manifest.permission.CAMERA);
 
         // CB-10120: The CAMERA permission does not need to be requested unless it is declared
@@ -301,9 +308,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             }
         }
 
-        if (takePicturePermission && storagePermission) {
+        if (takePicturePermission && saveAlbumPermission) {
             takePicture(returnType, encodingType);
-        } else if (storagePermission) {
+        } else if (saveAlbumPermission) {
             PermissionHelper.requestPermission(this, TAKE_PIC_SEC, Manifest.permission.CAMERA);
         } else if (takePicturePermission) {
             PermissionHelper.requestPermissions(this, TAKE_PIC_SEC, storagePermissions);
