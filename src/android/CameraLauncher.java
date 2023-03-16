@@ -149,8 +149,14 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         //This allows us to not make this a breaking change to embedding
         this.applicationId = (String) BuildHelper.getBuildConfigValue(cordova.getActivity(), "APPLICATION_ID");
         this.applicationId = preferences.getString("applicationId", this.applicationId);
-
-
+        
+        //ISSUE: https://github.com/apache/cordova-plugin-camera/issues/689
+        //FIX: Some time Building config class don't have APPLICATION ID and this is showing 
+        //blank on adding this if the application Id is blank then use get activity class to initialize application id
+        if(this.applicationId=="" || this.applicationId==null){
+          this.applicationId=cordova.getActivity().getPackageName();
+        }
+           
         if (action.equals(TAKE_PICTURE_ACTION)) {
             this.srcType = CAMERA;
             this.destType = FILE_URI;
