@@ -57,8 +57,8 @@ jobs:
       matrix:
         versions:
           # Test the lowest minimum supported APIs
-          - android: 5.1
-            android-api: 22
+          - android: 7
+            android-api: 24
 
           # Test the last 3-4 supported APIs
           - android: 10
@@ -67,11 +67,11 @@ jobs:
           - android: 11
             android-api: 30
 
-          - android: 12
-            android-api: 31
-
           - android: 12L
             android-api: 32
+
+          - android: 13
+            android-api: 33
 
     timeout-minutes: 60
 
