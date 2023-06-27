@@ -111,7 +111,11 @@ function capture (success, errorCallback, opts) {
         document.body.appendChild(parent);
     };
 
-    if (navigator.getUserMedia) {
+    if (navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            .then(successCallback)
+            .catch(errorCallback);
+    } else if (navigator.getUserMedia) {
         navigator.getUserMedia({ video: true, audio: false }, successCallback, errorCallback);
     } else {
         alert('Browser does not support camera :(');
