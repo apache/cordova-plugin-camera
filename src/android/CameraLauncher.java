@@ -294,7 +294,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
         // Let's use the intent and see what happens
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if(frontOrBack == 1) {
+        if(frontOrBack == 0) {
         	intent.putExtra("android.intent.extras.CAMERA_FACING", 1);
         }
 
