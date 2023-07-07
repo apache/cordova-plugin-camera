@@ -1355,7 +1355,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         state.putBoolean("allowEdit", this.allowEdit);
         state.putBoolean("correctOrientation", this.correctOrientation);
         state.putBoolean("saveToPhotoAlbum", this.saveToPhotoAlbum);
-        state.putBoolean("cameraDirection", this.cameraDirection);
+        state.putInt("cameraDirection", this.cameraDirection);
 
         if (this.croppedUri != null) {
             state.putString(CROPPED_URI_KEY, this.croppedFilePath);
