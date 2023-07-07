@@ -121,7 +121,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private boolean correctOrientation;     // Should the pictures orientation be corrected
     private boolean orientationCorrected;   // Has the picture's orientation been corrected
     private boolean allowEdit;              // Should we allow the user to crop the image.
-    private int cameraDirection;
+    private int cameraDirection = 0;
 
     protected final static String[] permissions = { Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE };
 
@@ -294,8 +294,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
         // Let's use the intent and see what happens
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if(frontOrBack == 0) {
+        if(frontOrBack == 1) {
         	intent.putExtra("android.intent.extras.CAMERA_FACING", 1);
+        } else {
+        	intent.putExtra("android.intent.extras.CAMERA_FACING", 0);
         }
 
         // Specify file so that large image is captured and returned
