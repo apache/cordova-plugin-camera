@@ -194,7 +194,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
             try {
                 if (this.srcType == CAMERA) {
-                    this.callTakePicture(destType, encodingType, cameraDirection);
+                    this.callTakePicture(destType, encodingType, this.cameraDirection);
                 }
                 else if ((this.srcType == PHOTOLIBRARY) || (this.srcType == SAVEDPHOTOALBUM)) {
                     // FIXME: Stop always requesting the permission
