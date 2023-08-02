@@ -27,7 +27,6 @@ import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.webkit.MimeTypeMap;
-import android.support.v4.provider.DocumentFile;
 import java.io.File;
 
 import org.apache.cordova.CordovaInterface;
@@ -147,7 +146,7 @@ public class FileHelper {
 				
             LOG.d(LOG_TAG, "Content Media Store: " + uri.getPath());
 			
-			if (isFileProviderUri(context, uri))
+	     if (isFileProviderUri(context, uri))
                 return getFileProviderPath(context, uri);
 				
             return getDataColumn(context, uri, null, null);
