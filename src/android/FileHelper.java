@@ -19,6 +19,7 @@ package org.apache.cordova.camera;
 import android.annotation.SuppressLint;
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.CursorLoader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -26,10 +27,13 @@ import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.webkit.MimeTypeMap;
+import android.support.v4.provider.DocumentFile;
+
 
 import org.apache.cordova.CordovaInterface;
+import org.apache.cordova.LOG;
 
-import java.io.File;
+					
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,20 +47,29 @@ public class FileHelper {
      * Returns the real path of the given URI string.
      * If the given URI string represents a content:// URI, the real path is retrieved from the media store.
      *
-     * @param uri the URI of the audio/image/video
+     * @param uriString the URI string of the audio/image/video
      * @param cordova the current application context
      * @return the full path to the file
      */
     @SuppressWarnings("deprecation")
     public static String getRealPath(Uri uri, CordovaInterface cordova) {
-        return FileHelper.getRealPathFromURI(cordova.getActivity(), uri);
+        String realPath = null;
+
+        if (Build.VERSION.SDK_INT < 11)
+            realPath = FileHelper.getRealPathFromURI_BelowAPI11(cordova.getActivity(), uri);
+
+        // SDK >= 11
+        else
+            realPath = FileHelper.getRealPathFromURI_API11_And_Above(cordova.getActivity(), uri);
+
+        return realPath;				
     }
 
     /**
      * Returns the real path of the given URI.
      * If the given URI is a content:// URI, the real path is retrieved from the media store.
      *
-     * @param uriString the URI string from which to obtain the input stream
+     * @param uri the URI of the audio/image/video
      * @param cordova the current application context
      * @return the full path to the file
      */
@@ -64,10 +77,19 @@ public class FileHelper {
         return FileHelper.getRealPath(Uri.parse(uriString), cordova);
     }
 
-    @SuppressLint("NewApi")
-    public static String getRealPathFromURI(final Context context, final Uri uri) {
+  @SuppressLint("NewApi")
+    public static String getRealPathFromURI_API11_And_Above(final Context context, final Uri uri) {
+
+        final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
+        LOG.d(LOG_TAG, "Version code: " + Build.VERSION.SDK_INT);
+        LOG.d(LOG_TAG, "Is Kitkat: " + isKitKat);
+        LOG.d(LOG_TAG, "File scheme is: " + uri.getScheme());
+        LOG.d(LOG_TAG, "File URI path is: " + uri.getPath());
+        LOG.d(LOG_TAG, "File URI auth is: " + uri.getAuthority());
+        LOG.d(LOG_TAG, "File URI last p seg is: " + uri.getLastPathSegment());
+        LOG.d(LOG_TAG, "Is Doc uri" + DocumentsContract.isDocumentUri(context, uri));
         // DocumentProvider
-        if (DocumentsContract.isDocumentUri(context, uri)) {
+        if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
 
             // ExternalStorageProvider
             if (isExternalStorageDocument(uri)) {
@@ -84,10 +106,19 @@ public class FileHelper {
             // DownloadsProvider
             else if (isDownloadsDocument(uri)) {
 
-                final String id = DocumentsContract.getDocumentId(uri);
+                String id = DocumentsContract.getDocumentId(uri);
+                LOG.d(LOG_TAG, "DocumentId: " + id);
                 if (id != null && id.length() > 0) {
                     if (id.startsWith("raw:")) {
                         return id.replaceFirst("raw:", "");
+                    }
+                    if (id.startsWith("msf:")) {
+                        // API 29+ Android 10
+                        // if pulling in from downloads or other path from file explorer
+                        String resolverType = context.getContentResolver().getType(uri);
+                        LOG.d(LOG_TAG, "Resolver type: " + resolverType);
+                        final String[] split = resolverType.split("/");
+                        return getMediaDocumentFromDocumentId(context, split[0] + ":" + id.replaceFirst("msf:", ""));                     
                     }
                     try {
                         final Uri contentUri = ContentUris.withAppendedId(
@@ -104,24 +135,7 @@ public class FileHelper {
             // MediaProvider
             else if (isMediaDocument(uri)) {
                 final String docId = DocumentsContract.getDocumentId(uri);
-                final String[] split = docId.split(":");
-                final String type = split[0];
-
-                Uri contentUri = null;
-                if ("image".equals(type)) {
-                    contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-                } else if ("video".equals(type)) {
-                    contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
-                } else if ("audio".equals(type)) {
-                    contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-                }
-
-                final String selection = "_id=?";
-                final String[] selectionArgs = new String[] {
-                        split[1]
-                };
-
-                return getDataColumn(context, contentUri, selection, selectionArgs);
+                return getMediaDocumentFromDocumentId(context, docId);
             }
         }
         // MediaStore (and general)
@@ -130,18 +144,66 @@ public class FileHelper {
             // Return the remote address
             if (isGooglePhotosUri(uri))
                 return uri.getLastPathSegment();
-
-            if (isFileProviderUri(context, uri))
+				
+            LOG.d(LOG_TAG, "Content Media Store: " + uri.getPath());
+			
+			if (isFileProviderUri(context, uri))
                 return getFileProviderPath(context, uri);
-
+				
             return getDataColumn(context, uri, null, null);
         }
         // File
         else if ("file".equalsIgnoreCase(uri.getScheme())) {
+            LOG.d(LOG_TAG, "Content File: " + uri.getPath());
             return uri.getPath();
         }
 
         return null;
+    }
+
+    public static String getMediaDocumentFromDocumentId(final Context context, String docId) {
+        final String[] split = docId.split(":");
+        final String type = split[0];
+        LOG.d(LOG_TAG, "Media Doc Type: " + type);
+        LOG.d(LOG_TAG, "Media Doc DocId: " + docId);
+        Uri contentUri = null;
+        if ("image".equals(type)) {
+            contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+        } else if ("video".equals(type)) {
+            contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+        } else if ("audio".equals(type)) {
+            contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        }
+
+        final String selection = "_id=?";
+        final String[] selectionArgs = new String[] {
+                split[1]
+        };
+
+        return getDataColumn(context, contentUri, selection, selectionArgs);
+    }
+		 
+								   
+															   
+
+    public static String getRealPathFromURI_BelowAPI11(Context context, Uri contentUri) {
+        String[] proj = { MediaStore.Images.Media.DATA };
+        String result = null;
+
+        try {
+            Cursor cursor = context.getContentResolver().query(contentUri, proj, null, null, null);
+            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            result = cursor.getString(column_index);
+
+        } catch (Exception e) {
+            result = null;
+			   
+															
+								 
+        }
+        return result;
+					
     }
 
     /**
@@ -221,7 +283,7 @@ public class FileHelper {
      * @return the mime type of the specified data
      */
     public static String getMimeType(String uriString, CordovaInterface cordova) {
-        String mimeType;
+       String mimeType = null;
 
         Uri uri = Uri.parse(uriString);
         if (uriString.startsWith("content://")) {
