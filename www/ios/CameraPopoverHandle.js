@@ -19,7 +19,7 @@
  *
 */
 
-var exec = require('cordova/exec');
+const exec = require('cordova/exec');
 
 /**
  * @namespace navigator
@@ -48,7 +48,7 @@ var exec = require('cordova/exec');
  * }
  * @module CameraPopoverHandle
  */
-var CameraPopoverHandle = function () {
+const CameraPopoverHandle = function () {
     /**
      * Can be used to reposition the image selection dialog,
      * for example, when the device orientation changes.
@@ -58,7 +58,7 @@ var CameraPopoverHandle = function () {
      * @param {module:CameraPopoverOptions} popoverOptions
      */
     this.setPosition = function (popoverOptions) {
-        var args = [popoverOptions];
+        const args = [popoverOptions];
         exec(null, null, 'Camera', 'repositionPopover', args);
     };
 };

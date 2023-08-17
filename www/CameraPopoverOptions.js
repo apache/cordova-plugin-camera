@@ -19,7 +19,7 @@
  *
 */
 
-var Camera = require('./Camera');
+const Camera = require('./Camera');
 
 /**
  * @namespace navigator
@@ -42,7 +42,7 @@ var Camera = require('./Camera');
  * @param {Number} [popoverWidth=0] - width of the popover (0 or not specified will use apple's default width).
  * @param {Number} [popoverHeight=0] - height of the popover (0 or not specified will use apple's default height).
  */
-var CameraPopoverOptions = function (x, y, width, height, arrowDir, popoverWidth, popoverHeight) {
+const CameraPopoverOptions = function (x, y, width, height, arrowDir, popoverWidth, popoverHeight) {
     // information of rectangle that popover should be anchored to
     this.x = x || 0;
     this.y = y || 32;
