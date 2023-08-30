@@ -19,7 +19,7 @@
  *
 */
 
-/* globals Camera, resolveLocalFileSystemURL, FileEntry, CameraPopoverOptions, LocalFileSystem, MSApp */
+/* globals Camera, resolveLocalFileSystemURL, FileEntry, CameraPopoverOptions, LocalFileSystem */
 /* eslint-env jasmine */
 
 exports.defineAutoTests = function () {
@@ -433,15 +433,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             '</p><div id="remove"></div>' +
             'Expected result: Remove image from library.<br>Status box will show "FileEntry.remove success:["OK"]';
 
-    // We need to wrap this code due to Windows security restrictions
-    // see http://msdn.microsoft.com/en-us/library/windows/apps/hh465380.aspx#differences for details
-    if (window.MSApp && window.MSApp.execUnsafeLocalFunction) {
-        MSApp.execUnsafeLocalFunction(function () {
-            contentEl.innerHTML = info_div + options_div + getpicture_div + test_procedure + inputs_div + actions_div;
-        });
-    } else {
-        contentEl.innerHTML = info_div + options_div + getpicture_div + test_procedure + inputs_div + actions_div;
-    }
+    contentEl.innerHTML = info_div + options_div + getpicture_div + test_procedure + inputs_div + actions_div;
 
     const elements = document.getElementsByClassName('testInputTag');
     const listener = function (e) {
