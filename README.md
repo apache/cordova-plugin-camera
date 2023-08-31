@@ -474,6 +474,7 @@ displays:
         // do your thing here!
     }, 0);
 
+## `CameraOptions` Errata <a name="CameraOptions-quirks"></a>
 
 #### Android Quirks
 
