@@ -145,36 +145,4 @@
         </js-module>
     </platform>
 
-    <!-- windows -->
-    <platform name="windows">
-        <config-file target="package.appxmanifest" parent="/Package/Capabilities">
-            <DeviceCapability Name="webcam" />
-        </config-file>
-        <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
-            <clobbers target="CameraPopoverHandle" />
-        </js-module>
-        <js-module src="src/windows/CameraProxy.js" name="CameraProxy">
-            <runs />
-        </js-module>
-    </platform>
-
-    <!-- osx -->
-    <platform name="osx">
-        <config-file target="config.xml" parent="/*">
-            <feature name="Camera">
-                <param name="osx-package" value="CDVCamera"/>
-            </feature>
-        </config-file>
-
-        <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
-            <clobbers target="CameraPopoverHandle" />
-        </js-module>
-
-        <header-file src="src/osx/CDVCamera.h" />
-        <source-file src="src/osx/CDVCamera.m" />
-
-        <framework src="Quartz.framework" />
-        <framework src="AppKit.framework" />
-    </platform>
-
 </plugin>
