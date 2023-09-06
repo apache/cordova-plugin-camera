@@ -20,6 +20,41 @@
 -->
 # Release Notes
 
+### 7.0.0 (Sep 06, 2023)
+
+**Breaking Changes:**
+
+* [GH-848](https://github.com/apache/cordova-plugin-camera/pull/848) fix!: remove deprecated platforms
+* [GH-844](https://github.com/apache/cordova-plugin-camera/pull/844) feat(android)!: Android 13 support
+
+**Fixes:**
+
+* [GH-827](https://github.com/apache/cordova-plugin-camera/pull/827) fix(android): set `applicationId`
+* [GH-810](https://github.com/apache/cordova-plugin-camera/pull/810) fix(browser): use `navigator.mediaDevices.getUserMedia`
+* [GH-712](https://github.com/apache/cordova-plugin-camera/pull/712) fix(ios): preserving `EXIF` data
+* [GH-780](https://github.com/apache/cordova-plugin-camera/pull/780) fix(android): update queries in `plugin.xml`
+
+**Chores, Dependencies, Docs:**
+
+* [GH-850](https://github.com/apache/cordova-plugin-camera/pull/850) chore: remove windows/osx from `plugin.xml`
+* [GH-849](https://github.com/apache/cordova-plugin-camera/pull/849) chore: Update `SUPPORT_QUESTION.md` template
+* [GH-831](https://github.com/apache/cordova-plugin-camera/pull/831) chore(android): Cleanup obsolete `BuildConfig` comments
+* [GH-846](https://github.com/apache/cordova-plugin-camera/pull/846) dep(dev)!: bump `@cordova/eslint-config@5.0`
+* [GH-800](https://github.com/apache/cordova-plugin-camera/pull/800) dep(npm): bump package-lock v2 w/ rebuild
+* [GH-808](https://github.com/apache/cordova-plugin-camera/pull/808) docs(README): Document `ANDROIDX_CORE_VERSION` variable
+
+**CI:**
+
+* [GH-851](https://github.com/apache/cordova-plugin-camera/pull/851) ci(gh-action): sync with `paramedic` configs
+* [GH-835](https://github.com/apache/cordova-plugin-camera/pull/835) ci(android): Drop API 22 & 31. Added API 24 & 33
+* [GH-804](https://github.com/apache/cordova-plugin-camera/pull/804) ci: sync workflow with `paramedic`
+* [GH-798](https://github.com/apache/cordova-plugin-camera/pull/798) ci(android): update java requirement for `cordova-android@11`
+* [GH-770](https://github.com/apache/cordova-plugin-camera/pull/770) ci(ios): update workflow w/ iOS 15
+* [GH-766](https://github.com/apache/cordova-plugin-camera/pull/766) ci: remove old ci workflow
+* [GH-765](https://github.com/apache/cordova-plugin-camera/pull/765) ci: add action-badge
+* [GH-764](https://github.com/apache/cordova-plugin-camera/pull/764) ci: remove `travis` & `appveyor`
+* [GH-762](https://github.com/apache/cordova-plugin-camera/pull/762) ci: add `gh-actions` workflows
+
 ### 6.0.0 (Aug 19, 2021)
 
 **Feature:**
