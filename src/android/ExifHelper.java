@@ -42,6 +42,7 @@ public class ExifHelper {
     private String model = null;
     private String orientation = null;
     private String whiteBalance = null;
+    private String dateTimeOriginal = null;
 
     private ExifInterface inFile = null;
     private ExifInterface outFile = null;
@@ -89,6 +90,7 @@ public class ExifHelper {
         this.model = inFile.getAttribute(ExifInterface.TAG_MODEL);
         this.orientation = inFile.getAttribute(ExifInterface.TAG_ORIENTATION);
         this.whiteBalance = inFile.getAttribute(ExifInterface.TAG_WHITE_BALANCE);
+        this.dateTimeOriginal = inFile.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL);
     }
 
     /**
@@ -158,6 +160,9 @@ public class ExifHelper {
         }
         if (this.whiteBalance != null) {
             this.outFile.setAttribute(ExifInterface.TAG_WHITE_BALANCE, this.whiteBalance);
+        }
+        if (this.dateTimeOriginal != null) {
+            this.outFile.setAttribute(ExifInterface.TAG_DATETIME_ORIGINAL, this.dateTimeOriginal);
         }
 
         this.outFile.saveAttributes();
