@@ -778,7 +778,22 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
                     // If sending base64 image back
                     if (destType == DATA_URL) {
-                        this.processPicture(bitmap, this.encodingType);
+                        // To allow keeping the Exif data, we need to save the image to allow ExifInterface add the data
+                        // After that, we load the image and send it as base64
+                        try {
+                            String modifiedPath = this.outputModifiedBitmap(bitmap, uri, mimeTypeOfGalleryFile);
+                            InputStream fileStream = FileHelper.getInputStreamFromUriString(modifiedPath, cordova);
+                            byte[] file = new byte[fileStream.available()];
+
+                            fileStream.read(file);
+
+                            byte[] output = Base64.encode(file, Base64.NO_WRAP);
+                            String js_out = new String(output);
+                            this.callbackContext.success(js_out);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            this.failPicture("Error retrieving image: "+e.getLocalizedMessage());
+                        }
                     }
 
                     // If sending filename back
