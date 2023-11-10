@@ -783,9 +783,17 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                         try {
                             String modifiedPath = this.outputModifiedBitmap(bitmap, uri, mimeTypeOfGalleryFile);
                             InputStream fileStream = FileHelper.getInputStreamFromUriString(modifiedPath, cordova);
-                            byte[] file = new byte[fileStream.available()];
+                            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
-                            fileStream.read(file);
+                            int nRead;
+                            byte[] data = new byte[512];
+
+                            while ((nRead = fileStream.read(data, 0, data.length)) != -1) {
+                                buffer.write(data, 0, nRead);
+                            }
+
+                            buffer.flush();
+                            byte[] file = buffer.toByteArray();
 
                             byte[] output = Base64.encode(file, Base64.NO_WRAP);
                             String js_out = new String(output);
