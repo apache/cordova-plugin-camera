@@ -786,7 +786,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
                             int nRead;
-                            byte[] data = new byte[512];
+                            final int MB = 1048576;
+
+                            byte[] data = new byte[MB * 4];
 
                             while ((nRead = fileStream.read(data, 0, data.length)) != -1) {
                                 buffer.write(data, 0, nRead);
