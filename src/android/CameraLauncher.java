@@ -214,6 +214,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             callbackContext.sendPluginResult(r);
 
             return true;
+        } if (action.equals("stop")) {
+            this.stopCamera();
+            return true;
         }
         return false;
     }
@@ -350,6 +353,16 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         }
 //        else
 //            LOG.d(LOG_TAG, "ERROR: You must use the CordovaInterface for this to work correctly. Please implement it in your activity");
+    }
+
+    public void stopCamera() {
+        LOG.d(LOG_TAG,"Stopping Camera");
+        try {
+            this.cordova.getActivity().finishActivity((CAMERA + 1) * 16 + returnType + 1);
+            this.cordova.getActivity().finishActivity((PHOTOLIBRARY + 1) * 16 + returnType + 1);
+        } catch(Exception e) {
+            LOG.e(LOG_TAG, "Error in closing Camera/Picker");
+        }
     }
 
     /**
