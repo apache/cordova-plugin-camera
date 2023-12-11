@@ -205,6 +205,16 @@ static NSString* toBase64(NSData* data) {
     }];
 }
 
+- (void)stop:(CDVInvokedUrlCommand*)command {
+    if (self.pickerController) {
+        NSLog(@"Closing Camera/Photo Library");
+        [self.pickerController dismissViewControllerAnimated:YES completion:^{
+            self.hasPendingOperation = NO;
+            self.pickerController = nil;
+        }];
+    }
+}
+
 - (void)showCameraPicker:(NSString*)callbackId withOptions:(CDVPictureOptions *) pictureOptions
 {
     // Perform UI operations on the main thread
