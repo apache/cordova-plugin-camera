@@ -215,7 +215,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
             return true;
         } if (action.equals("stop")) {
-            this.stopCamera();
+            this.stopCamera(destType);
             return true;
         }
         return false;
@@ -355,7 +355,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 //            LOG.d(LOG_TAG, "ERROR: You must use the CordovaInterface for this to work correctly. Please implement it in your activity");
     }
 
-    public void stopCamera() {
+    public void stopCamera(int returnType) {
         LOG.d(LOG_TAG,"Stopping Camera");
         try {
             this.cordova.getActivity().finishActivity((CAMERA + 1) * 16 + returnType + 1);

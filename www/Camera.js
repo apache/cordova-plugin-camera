@@ -155,7 +155,7 @@ cameraExport.getPicture = function (successCallback, errorCallback, options) {
 * Closes the Camera on calling this method
 */
 cameraExport.stop = function (successCallback, errorCallback) {
-	exec(successCallback, errorCallback, 'Camera', 'stop', []);
+    exec(successCallback, errorCallback, 'Camera', 'stop', []);
 };
 
 /**
