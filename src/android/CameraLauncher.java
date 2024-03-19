@@ -858,11 +858,12 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 } catch (IOException e) {
                     e.printStackTrace();
                     LOG.e(LOG_TAG, "Unable to write to file");
+                    this.failPicture("Unable to write to file for crop: "+e.getLocalizedMessage());
                 }
 
             }// If cancelled
             else if (resultCode == Activity.RESULT_CANCELED) {
-                this.failPicture("No Image Selected");
+                this.failPicture("No Image Selected for crop: " + resultCode);
             }
 
             // If something else
@@ -891,7 +892,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
             // If cancelled
             else if (resultCode == Activity.RESULT_CANCELED) {
-                this.failPicture("No Image Selected");
+                this.failPicture("No Image Selected for camera: " + resultCode);
             }
 
             // If something else
@@ -910,7 +911,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     }
                 });
             } else if (resultCode == Activity.RESULT_CANCELED) {
-                this.failPicture("No Image Selected");
+                this.failPicture("No Image Selected for gallery: " + resultCode);
             } else {
                 this.failPicture("Selection did not complete!");
             }
@@ -921,6 +922,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             contentResolver.delete(this.pendingDeleteMediaUri, null, null);
           } catch (Exception e) {
             LOG.e(LOG_TAG, "Unable to delete media store file after permission was granted");
+            this.failPicture("Unable to delete media store file after permission was granted: "+e.getLocalizedMessage());
           }
           this.pendingDeleteMediaUri = null;
         }
@@ -1006,9 +1008,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 fileStream = FileHelper.getInputStreamFromUriString(imageUrl, cordova);
                 image = BitmapFactory.decodeStream(fileStream);
             }  catch (OutOfMemoryError e) {
-                callbackContext.error(e.getLocalizedMessage());
+                callbackContext.error("OOM: "+e.getLocalizedMessage());
             } catch (Exception e){
-                callbackContext.error(e.getLocalizedMessage());
+                callbackContext.error("EXCEPTION: "+e.getLocalizedMessage());
             }
             finally {
                 if (fileStream != null) {
