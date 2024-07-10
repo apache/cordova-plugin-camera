@@ -225,26 +225,11 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private String[] getPermissions(boolean storageOnly, int mediaType) {
         ArrayList<String> permissions = new ArrayList<>();
 
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // Android API 33 and higher
-            switch (mediaType) {
-                case PICTURE:
-                    permissions.add(Manifest.permission.READ_MEDIA_IMAGES);
-                    break;
-                case VIDEO:
-                    permissions.add(Manifest.permission.READ_MEDIA_VIDEO);
-                    break;
-                default:
-                    permissions.add(Manifest.permission.READ_MEDIA_IMAGES);
-                    permissions.add(Manifest.permission.READ_MEDIA_VIDEO);
-                    break;
-            }
-        } else {
-            // Android API 32 or lower
+        if (android.os.Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
+            // Android API 30 or lower
             permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE);
             permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         }
-
         if (!storageOnly) {
             // Add camera permission when not storage.
             permissions.add(Manifest.permission.CAMERA);
