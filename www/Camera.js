@@ -19,9 +19,9 @@
  *
 */
 
-var argscheck = require('cordova/argscheck');
-var exec = require('cordova/exec');
-var Camera = require('./Camera');
+const argscheck = require('cordova/argscheck');
+const exec = require('cordova/exec');
+const Camera = require('./Camera');
 // XXX: commented out
 // CameraPopoverHandle = require('./CameraPopoverHandle');
 
@@ -32,10 +32,10 @@ var Camera = require('./Camera');
 /**
  * @exports camera
  */
-var cameraExport = {};
+const cameraExport = {};
 
 // Tack on the Camera Constants to the base camera plugin.
-for (var key in Camera) {
+for (const key in Camera) {
     cameraExport[key] = Camera[key];
 }
 
@@ -114,14 +114,8 @@ for (var key in Camera) {
  * __Supported Platforms__
  *
  * - Android
- * - BlackBerry
  * - Browser
- * - Firefox
- * - FireOS
  * - iOS
- * - Windows
- * - WP8
- * - Ubuntu
  *
  * More examples [here](#camera-getPicture-examples). Quirks [here](#camera-getPicture-quirks).
  *
@@ -134,22 +128,22 @@ for (var key in Camera) {
 cameraExport.getPicture = function (successCallback, errorCallback, options) {
     argscheck.checkArgs('fFO', 'Camera.getPicture', arguments);
     options = options || {};
-    var getValue = argscheck.getValue;
+    const getValue = argscheck.getValue;
 
-    var quality = getValue(options.quality, 50);
-    var destinationType = getValue(options.destinationType, Camera.DestinationType.FILE_URI);
-    var sourceType = getValue(options.sourceType, Camera.PictureSourceType.CAMERA);
-    var targetWidth = getValue(options.targetWidth, -1);
-    var targetHeight = getValue(options.targetHeight, -1);
-    var encodingType = getValue(options.encodingType, Camera.EncodingType.JPEG);
-    var mediaType = getValue(options.mediaType, Camera.MediaType.PICTURE);
-    var allowEdit = !!options.allowEdit;
-    var correctOrientation = !!options.correctOrientation;
-    var saveToPhotoAlbum = !!options.saveToPhotoAlbum;
-    var popoverOptions = getValue(options.popoverOptions, null);
-    var cameraDirection = getValue(options.cameraDirection, Camera.Direction.BACK);
+    const quality = getValue(options.quality, 50);
+    const destinationType = getValue(options.destinationType, Camera.DestinationType.FILE_URI);
+    const sourceType = getValue(options.sourceType, Camera.PictureSourceType.CAMERA);
+    const targetWidth = getValue(options.targetWidth, -1);
+    const targetHeight = getValue(options.targetHeight, -1);
+    const encodingType = getValue(options.encodingType, Camera.EncodingType.JPEG);
+    const mediaType = getValue(options.mediaType, Camera.MediaType.PICTURE);
+    const allowEdit = !!options.allowEdit;
+    const correctOrientation = !!options.correctOrientation;
+    const saveToPhotoAlbum = !!options.saveToPhotoAlbum;
+    const popoverOptions = getValue(options.popoverOptions, null);
+    const cameraDirection = getValue(options.cameraDirection, Camera.Direction.BACK);
 
-    var args = [quality, destinationType, sourceType, targetWidth, targetHeight, encodingType,
+    const args = [quality, destinationType, sourceType, targetWidth, targetHeight, encodingType,
         mediaType, allowEdit, correctOrientation, saveToPhotoAlbum, popoverOptions, cameraDirection];
 
     exec(successCallback, errorCallback, 'Camera', 'takePicture', args);

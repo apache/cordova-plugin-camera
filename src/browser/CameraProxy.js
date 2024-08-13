@@ -19,13 +19,13 @@
  *
  */
 
-var HIGHEST_POSSIBLE_Z_INDEX = 2147483647;
+const HIGHEST_POSSIBLE_Z_INDEX = 2147483647;
 
 function takePicture (success, error, opts) {
     if (opts && opts[2] === 1) {
         capture(success, error, opts);
     } else {
-        var input = document.createElement('input');
+        const input = document.createElement('input');
         input.style.position = 'relative';
         input.style.zIndex = HIGHEST_POSSIBLE_Z_INDEX;
         input.className = 'cordova-camera-select';
@@ -33,11 +33,11 @@ function takePicture (success, error, opts) {
         input.name = 'files[]';
 
         input.onchange = function (inputEvent) {
-            var reader = new FileReader(); /* eslint no-undef : 0 */
+            const reader = new FileReader(); /* eslint no-undef : 0 */
             reader.onload = function (readerEvent) {
                 input.parentNode.removeChild(input);
 
-                var imageData = readerEvent.target.result;
+                const imageData = readerEvent.target.result;
 
                 return success(imageData.substr(imageData.indexOf(',') + 1));
             };
@@ -50,16 +50,16 @@ function takePicture (success, error, opts) {
 }
 
 function capture (success, errorCallback, opts) {
-    var localMediaStream;
-    var targetWidth = opts[3];
-    var targetHeight = opts[4];
+    let localMediaStream;
+    let targetWidth = opts[3];
+    let targetHeight = opts[4];
 
     targetWidth = targetWidth === -1 ? 320 : targetWidth;
     targetHeight = targetHeight === -1 ? 240 : targetHeight;
 
-    var video = document.createElement('video');
-    var button = document.createElement('button');
-    var parent = document.createElement('div');
+    const video = document.createElement('video');
+    const button = document.createElement('button');
+    const parent = document.createElement('div');
     parent.style.position = 'relative';
     parent.style.zIndex = HIGHEST_POSSIBLE_Z_INDEX;
     parent.className = 'cordova-camera-capture';
@@ -72,13 +72,13 @@ function capture (success, errorCallback, opts) {
 
     button.onclick = function () {
         // create a canvas and capture a frame from video stream
-        var canvas = document.createElement('canvas');
+        const canvas = document.createElement('canvas');
         canvas.width = targetWidth;
         canvas.height = targetHeight;
         canvas.getContext('2d').drawImage(video, 0, 0, targetWidth, targetHeight);
 
         // convert image stored in canvas to base64 encoded image
-        var imageData = canvas.toDataURL('image/png');
+        let imageData = canvas.toDataURL('image/png');
         imageData = imageData.replace('data:image/png;base64,', '');
 
         // stop video stream, remove video and button.
@@ -100,7 +100,7 @@ function capture (success, errorCallback, opts) {
                              navigator.mozGetUserMedia ||
                              navigator.msGetUserMedia;
 
-    var successCallback = function (stream) {
+    const successCallback = function (stream) {
         localMediaStream = stream;
         if ('srcObject' in video) {
             video.srcObject = localMediaStream;
@@ -111,7 +111,11 @@ function capture (success, errorCallback, opts) {
         document.body.appendChild(parent);
     };
 
-    if (navigator.getUserMedia) {
+    if (navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            .then(successCallback)
+            .catch(errorCallback);
+    } else if (navigator.getUserMedia) {
         navigator.getUserMedia({ video: true, audio: false }, successCallback, errorCallback);
     } else {
         alert('Browser does not support camera :(');
@@ -119,7 +123,7 @@ function capture (success, errorCallback, opts) {
 }
 
 module.exports = {
-    takePicture: takePicture,
+    takePicture,
     cleanup: function () {}
 };
 

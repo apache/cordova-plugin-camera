@@ -19,7 +19,7 @@
  *
 */
 
-/* globals Camera, resolveLocalFileSystemURL, FileEntry, CameraPopoverOptions, LocalFileSystem, MSApp */
+/* globals Camera, resolveLocalFileSystemURL, FileEntry, CameraPopoverOptions, LocalFileSystem */
 /* eslint-env jasmine */
 
 exports.defineAutoTests = function () {
@@ -78,20 +78,20 @@ exports.defineAutoTests = function () {
 /******************************************************************************/
 
 exports.defineManualTests = function (contentEl, createActionButton) {
-    var pictureUrl = null;
-    var fileObj = null;
-    var fileEntry = null;
-    var pageStartTime = +new Date();
+    let pictureUrl = null;
+    let fileObj = null;
+    let fileEntry = null;
+    const pageStartTime = +new Date();
 
     // default camera options
-    var camQualityDefault = ['50', 50];
-    var camDestinationTypeDefault = ['FILE_URI', 1];
-    var camPictureSourceTypeDefault = ['CAMERA', 1];
-    var camAllowEditDefault = ['allowEdit', false];
-    var camEncodingTypeDefault = ['JPEG', 0];
-    var camMediaTypeDefault = ['mediaType', 0];
-    var camCorrectOrientationDefault = ['correctOrientation', false];
-    var camSaveToPhotoAlbumDefault = ['saveToPhotoAlbum', true];
+    const camQualityDefault = ['50', 50];
+    const camDestinationTypeDefault = ['FILE_URI', 1];
+    const camPictureSourceTypeDefault = ['CAMERA', 1];
+    const camAllowEditDefault = ['allowEdit', false];
+    const camEncodingTypeDefault = ['JPEG', 0];
+    const camMediaTypeDefault = ['mediaType', 0];
+    const camCorrectOrientationDefault = ['correctOrientation', false];
+    const camSaveToPhotoAlbumDefault = ['saveToPhotoAlbum', true];
 
     function log (value) {
         console.log(value);
@@ -101,7 +101,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     function clearStatus () {
         document.getElementById('camera_status').innerHTML = '';
         document.getElementById('camera_image').src = 'about:blank';
-        var canvas = document.getElementById('canvas');
+        const canvas = document.getElementById('canvas');
         canvas.width = canvas.height = 1;
         pictureUrl = null;
         fileObj = null;
@@ -119,8 +119,8 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         log('URL: "' + url.slice(0, 90) + '"');
 
         pictureUrl = url;
-        var img = document.getElementById('camera_image');
-        var startTime = new Date();
+        const img = document.getElementById('camera_image');
+        const startTime = new Date();
         img.src = url;
         img.onload = function () {
             log('Img size: ' + img.naturalWidth + 'x' + img.naturalHeight);
@@ -147,20 +147,20 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         } else if (pictureUrl.indexOf('data:image/jpeg;base64') === 0) {
             // do nothing
         } else {
-            var path = pictureUrl.replace(/^file:\/\/(localhost)?/, '').replace(/%20/g, ' ');
+            const path = pictureUrl.replace(/^file:\/\/(localhost)?/, '').replace(/%20/g, ' ');
             fileEntry = new FileEntry('image_name.png', path);
         }
     }
 
     function getPicture () {
         clearStatus();
-        var options = extractOptions();
+        const options = extractOptions();
         log('Getting picture with options: ' + JSON.stringify(options));
-        var popoverHandle = navigator.camera.getPicture(getPictureWin, onGetPictureError, options);
+        const popoverHandle = navigator.camera.getPicture(getPictureWin, onGetPictureError, options);
 
         // Reposition the popover if the orientation changes.
         window.onorientationchange = function () {
-            var newPopoverOptions = new CameraPopoverOptions(0, 0, 100, 100, 0, 300, 400);
+            const newPopoverOptions = new CameraPopoverOptions(0, 0, 100, 100, 0, 300, 400);
             popoverHandle.setPosition(newPopoverOptions);
         };
     }
@@ -177,7 +177,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
      */
     function readFile () {
         function onFileReadAsDataURL (evt) {
-            var img = document.getElementById('camera_image');
+            const img = document.getElementById('camera_image');
             img.style.visibility = 'visible';
             img.style.display = 'block';
             img.src = evt.target.result;
@@ -188,7 +188,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             log('Got file: ' + JSON.stringify(file));
             fileObj = file;
             /* eslint-disable no-undef */
-            var reader = new FileReader();
+            const reader = new FileReader();
             /* eslint-enable no-undef */
             reader.onload = function () {
                 log('FileReader.readAsDataURL() - length = ' + reader.result.length);
@@ -219,9 +219,9 @@ exports.defineManualTests = function (contentEl, createActionButton) {
      * This calls FileEntry.copyTo and FileEntry.moveTo.
      */
     function copyImage () {
-        var onFileSystemReceived = function (fileSystem) {
-            var destDirEntry = fileSystem.root;
-            var origName = fileEntry.name;
+        const onFileSystemReceived = function (fileSystem) {
+            const destDirEntry = fileSystem.root;
+            const origName = fileEntry.name;
 
             // Test FileEntry API here.
             fileEntry.copyTo(destDirEntry, 'copied_file.png', logCallback('FileEntry.copyTo', true), logCallback('FileEntry.copyTo', false));
@@ -253,13 +253,13 @@ exports.defineManualTests = function (contentEl, createActionButton) {
      * This calls FileEntry.createWriter, FileWriter.write, and FileWriter.truncate.
      */
     function writeImage () {
-        var onFileWriterReceived = function (fileWriter) {
+        const onFileWriterReceived = function (fileWriter) {
             fileWriter.onwrite = logCallback('FileWriter.write', true);
             fileWriter.onerror = logCallback('FileWriter.write', false);
             fileWriter.write('some text!');
         };
 
-        var onFileTruncateWriterReceived = function (fileWriter) {
+        const onFileTruncateWriterReceived = function (fileWriter) {
             fileWriter.onwrite = logCallback('FileWriter.truncate', true);
             fileWriter.onerror = logCallback('FileWriter.truncate', false);
             fileWriter.truncate(10);
@@ -270,15 +270,15 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     }
 
     function displayImageUsingCanvas () {
-        var canvas = document.getElementById('canvas');
-        var img = document.getElementById('camera_image');
-        var w = img.width;
-        var h = img.height;
+        const canvas = document.getElementById('canvas');
+        const img = document.getElementById('camera_image');
+        let w = img.width;
+        let h = img.height;
         h = 100 / w * h;
         w = 100;
         canvas.width = w;
         canvas.height = h;
-        var context = canvas.getContext('2d');
+        const context = canvas.getContext('2d');
         context.drawImage(img, 0, 0, w, h);
     }
 
@@ -311,9 +311,9 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             return;
         }
         /* eslint-enable no-undef */
-        var URLApi = window.URL || window.webkitURL;
+        const URLApi = window.URL || window.webkitURL;
         if (URLApi) {
-            var blobURL = URLApi.createObjectURL(fileObj);
+            const blobURL = URLApi.createObjectURL(fileObj);
             if (blobURL) {
                 setPicture(blobURL, function () {
                     URLApi.revokeObjectURL(blobURL);
@@ -327,11 +327,11 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     }
 
     function extractOptions () {
-        var els = document.querySelectorAll('#image-options select');
-        var ret = {};
+        const els = document.querySelectorAll('#image-options select');
+        const ret = {};
         /* eslint-disable no-cond-assign */
-        for (var i = 0, el; el = els[i]; ++i) {
-            var value = el.value;
+        for (let i = 0, el; el = els[i]; ++i) {
+            let value = el.value;
             if (value === '') continue;
             value = +value;
 
@@ -346,20 +346,20 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     }
 
     function createOptionsEl (name, values, selectionDefault) {
-        var openDiv = '<div style="display: inline-block">' + name + ': ';
-        var select = '<select name=' + name + ' id="' + name + '">';
+        const openDiv = '<div style="display: inline-block">' + name + ': ';
+        const select = '<select name=' + name + ' id="' + name + '">';
 
-        var defaultOption = '';
+        let defaultOption = '';
         if (selectionDefault === undefined) {
             defaultOption = '<option value="">default</option>';
         }
 
-        var options = '';
+        let options = '';
         if (typeof values === 'boolean') {
             values = { true: 1, false: 0 };
         }
-        for (var k in values) {
-            var isSelected = '';
+        for (const k in values) {
+            let isSelected = '';
             if (selectionDefault) {
                 if (selectionDefault[0] === k) {
                     isSelected = 'selected';
@@ -368,20 +368,20 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             options += '<option value="' + values[k] + '" ' + isSelected + '>' + k + '</option>';
         }
 
-        var closeDiv = '</select></div>';
+        const closeDiv = '</select></div>';
 
         return openDiv + select + defaultOption + options + closeDiv;
     }
 
     /******************************************************************************/
 
-    var info_div = '<h1>Camera</h1>' +
+    const info_div = '<h1>Camera</h1>' +
             '<div id="info">' +
             '<b>Status:</b> <div id="camera_status"></div>' +
             'img: <img width="100" id="camera_image">' +
             'canvas: <canvas id="canvas" width="1" height="1"></canvas>' +
             '</div>';
-    var options_div = '<h2>Cordova Camera API Options</h2>' +
+    const options_div = '<h2>Cordova Camera API Options</h2>' +
             '<div id="image-options">' +
             createOptionsEl('sourceType', Camera.PictureSourceType, camPictureSourceTypeDefault) +
             createOptionsEl('destinationType', Camera.DestinationType, camDestinationTypeDefault) +
@@ -395,8 +395,8 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             createOptionsEl('saveToPhotoAlbum', true, camSaveToPhotoAlbumDefault) +
             createOptionsEl('cameraDirection', Camera.Direction) +
             '</div>';
-    var getpicture_div = '<div id="getpicture"></div>';
-    var test_procedure = '<h4>Recommended Test Procedure</h4>' +
+    const getpicture_div = '<div id="getpicture"></div>';
+    const test_procedure = '<h4>Recommended Test Procedure</h4>' +
             'Options not specified should be the default value' +
             '<br>Status box should update with image and info whenever an image is taken or selected from library' +
             '</p><div style="background:#B0C4DE;border:1px solid #FFA07A;margin:15px 6px 0px;min-width:295px;max-width:97%;padding:4px 0px 2px 10px;min-height:160px;max-height:200px;overflow:auto">' +
@@ -410,13 +410,13 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             '</p><li>sourceType=CAMERA<br>targetWidth & targetHeight=50<br>allowEdit=false<br>Do Get File Metadata test below and take note of size<br>Repeat test but with width and height=800. Size should be significantly larger.</li>' +
             '</p><li>quality=0<br>targetWidth & targetHeight=default<br>allowEdit=false<br>Do Get File Metadata test below and take note of size<br>Repeat test but with quality=80. Size should be significantly larger.</li>' +
             '</ol></div>';
-    var inputs_div = '<h2>Native File Inputs</h2>' +
+    const inputs_div = '<h2>Native File Inputs</h2>' +
             'For the following tests, status box should update with file selected' +
             '</p><div>input type=file <input type="file" class="testInputTag"></div>' +
             '<div>capture=camera <input type="file" accept="image/*;capture=camera" class="testInputTag"></div>' +
             '<div>capture=camcorder <input type="file" accept="video/*;capture=camcorder" class="testInputTag"></div>' +
             '<div>capture=microphone <input type="file" accept="audio/*;capture=microphone" class="testInputTag"></div>';
-    var actions_div = '<h2>Actions</h2>' +
+    const actions_div = '<h2>Actions</h2>' +
             'For the following tests, ensure that an image is set in status box' +
             '</p><div id="metadata"></div>' +
             'Expected result: Get metadata about file selected.<br>Status box will show, along with the metadata, "Call to FileEntry.getMetadata success, Call to FileEntry.setMetadata success, Call to FileEntry.getParent success"' +
@@ -433,22 +433,14 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             '</p><div id="remove"></div>' +
             'Expected result: Remove image from library.<br>Status box will show "FileEntry.remove success:["OK"]';
 
-    // We need to wrap this code due to Windows security restrictions
-    // see http://msdn.microsoft.com/en-us/library/windows/apps/hh465380.aspx#differences for details
-    if (window.MSApp && window.MSApp.execUnsafeLocalFunction) {
-        MSApp.execUnsafeLocalFunction(function () {
-            contentEl.innerHTML = info_div + options_div + getpicture_div + test_procedure + inputs_div + actions_div;
-        });
-    } else {
-        contentEl.innerHTML = info_div + options_div + getpicture_div + test_procedure + inputs_div + actions_div;
-    }
+    contentEl.innerHTML = info_div + options_div + getpicture_div + test_procedure + inputs_div + actions_div;
 
-    var elements = document.getElementsByClassName('testInputTag');
-    var listener = function (e) {
+    const elements = document.getElementsByClassName('testInputTag');
+    const listener = function (e) {
         testInputTag(e.target);
     };
-    for (var i = 0; i < elements.length; ++i) {
-        var item = elements[i];
+    for (let i = 0; i < elements.length; ++i) {
+        const item = elements[i];
         item.addEventListener('change', listener, false);
     }
 
