@@ -148,7 +148,7 @@ cameraExport.getPicture = function (successCallback, errorCallback, options) {
     const args = [quality, destinationType, sourceType, targetWidth, targetHeight, encodingType,
         mediaType, allowEdit, correctOrientation, saveToPhotoAlbum, popoverOptions, cameraDirection, flashMode];
 
-    exec(successCallback, errorCallback, 'Camera', 'takePicture', args);
+    exec(successCallback, errorCallback, 'Camera', 'takePicture', args); 
     // XXX: commented out
     // return new CameraPopoverHandle();
 };
