@@ -82,6 +82,7 @@ static NSString* toBase64(NSData* data) {
     pictureOptions.saveToPhotoAlbum = [[command argumentAtIndex:9 withDefault:@(NO)] boolValue];
     pictureOptions.popoverOptions = [command argumentAtIndex:10 withDefault:nil];
     pictureOptions.cameraDirection = [[command argumentAtIndex:11 withDefault:@(UIImagePickerControllerCameraDeviceRear)] unsignedIntegerValue];
+    pictureOptions.flashMode = [[command argumentAtIndex:12 withDefault:@(UIImagePickerControllerCameraFlashModeAuto)] unsignedIntegerValue];
 
     pictureOptions.popoverSupported = NO;
     pictureOptions.usesGeolocation = NO;
@@ -210,6 +211,7 @@ static NSString* toBase64(NSData* data) {
     // Perform UI operations on the main thread
     dispatch_async(dispatch_get_main_queue(), ^{
         CDVCameraPicker* cameraPicker = [CDVCameraPicker createFromPictureOptions:pictureOptions];
+        cameraPicker.cameraFlashMode = pictureOptions.flashMode;
         self.pickerController = cameraPicker;
 
         cameraPicker.delegate = self;
