@@ -96,6 +96,7 @@
 
         <preference name="ANDROIDX_CORE_VERSION" default="1.6.+"/>
         <framework src="androidx.core:core:$ANDROIDX_CORE_VERSION" />
+        <framework src="androidx.multidex:multidex:2.0.1" />
 
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />
