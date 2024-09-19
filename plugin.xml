@@ -34,7 +34,6 @@
         <engine name="cordova-android" version=">=6.3.0" />
         <engine name="cordova-ios" version=">=5.1.0" />
     </engines>
-    </engines>
 
     <js-module src="www/CameraConstants.js" name="Camera">
         <clobbers target="Camera" />
