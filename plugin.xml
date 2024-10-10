@@ -29,7 +29,7 @@
     <repo>https://github.com/apache/cordova-plugin-camera</repo>
     <issue>https://github.com/apache/cordova-plugin-camera/issues</issue>
 
-    <engines>
+      <engines>
         <engine name="cordova" version=">=9.0.0"/>
         <engine name="cordova-android" version=">=12.0.0" />
         <engine name="cordova-ios" version=">=5.1.0" />
@@ -55,7 +55,7 @@
             </feature>
         </config-file>
         <config-file target="AndroidManifest.xml" parent="/*">
-            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
             <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
             <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
         </config-file>
@@ -96,6 +96,7 @@
 
         <preference name="ANDROIDX_CORE_VERSION" default="1.6.+"/>
         <framework src="androidx.core:core:$ANDROIDX_CORE_VERSION" />
+        <framework src="androidx.multidex:multidex:2.0.1" />
 
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />
