@@ -155,7 +155,7 @@ jobs:
           api-level: ${{ matrix.versions.android-api }}
           target: ${{ env.system-image-target }}
           arch: ${{ env.system-image-arch }}
-          force-avd-creation: false
+          force-avd-creation: true
           disable-animations: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           script: ${{ env.paramedic }} --config ./pr/local/${{ env.test_config }} --plugin ${{ env.test_plugin_path }}
