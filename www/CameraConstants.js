@@ -93,11 +93,11 @@ module.exports = {
      * @enum {number}
      */
     FlashMode: {
-        /**Let the camera control flash light automatically */
+        /** Let the camera control flash light automatically */
         AUTO: 0,
-        /**Enable flash light by default */
+        /** Enable flash light by default */
         ON: 1,
-        /**Disable flash light by default */
+        /** Disable flash light by default */
         OFF: -1
     }
 };
