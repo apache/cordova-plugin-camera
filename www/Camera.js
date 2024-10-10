@@ -75,6 +75,7 @@ for (const key in Camera) {
  * @property {Boolean} [saveToPhotoAlbum] - Save the image to the photo album on the device after capture.
  * @property {module:CameraPopoverOptions} [popoverOptions] - iOS-only options that specify popover location in iPad.
  * @property {module:Camera.Direction} [cameraDirection=BACK] - Choose the camera to use (front- or back-facing).
+ * @property {module:Camera.FlashMode} [flashMode=AUTO] -Choose default flash mode of camera
  */
 
 /**
@@ -142,9 +143,10 @@ cameraExport.getPicture = function (successCallback, errorCallback, options) {
     const saveToPhotoAlbum = !!options.saveToPhotoAlbum;
     const popoverOptions = getValue(options.popoverOptions, null);
     const cameraDirection = getValue(options.cameraDirection, Camera.Direction.BACK);
+    const flashMode = getValue(options.flashMode, Camera.FlashMode.AUTO);
 
     const args = [quality, destinationType, sourceType, targetWidth, targetHeight, encodingType,
-        mediaType, allowEdit, correctOrientation, saveToPhotoAlbum, popoverOptions, cameraDirection];
+        mediaType, allowEdit, correctOrientation, saveToPhotoAlbum, popoverOptions, cameraDirection, flashMode];
 
     exec(successCallback, errorCallback, 'Camera', 'takePicture', args);
     // XXX: commented out
