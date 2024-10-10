@@ -211,7 +211,11 @@ static NSString* toBase64(NSData* data) {
     // Perform UI operations on the main thread
     dispatch_async(dispatch_get_main_queue(), ^{
         CDVCameraPicker* cameraPicker = [CDVCameraPicker createFromPictureOptions:pictureOptions];
-        cameraPicker.cameraFlashMode = pictureOptions.flashMode;
+        
+        // Only set flashMode if the sourceType is Camera
+        if (pictureOptions.sourceType == UIImagePickerControllerSourceTypeCamera) {
+            cameraPicker.cameraFlashMode = pictureOptions.flashMode;
+        }
         self.pickerController = cameraPicker;
 
         cameraPicker.delegate = self;
