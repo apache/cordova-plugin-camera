@@ -143,12 +143,12 @@ cameraExport.getPicture = function (successCallback, errorCallback, options) {
     const saveToPhotoAlbum = !!options.saveToPhotoAlbum;
     const popoverOptions = getValue(options.popoverOptions, null);
     const cameraDirection = getValue(options.cameraDirection, Camera.Direction.BACK);
-    const flashMode = (sourceType === Camera.PictureSourceType.CAMERA) ? getValue(options.flashMode, Camera.FlashMode.AUTO):null; //only apply flash if on camera
+    const flashMode = (sourceType === Camera.PictureSourceType.CAMERA) ? getValue(options.flashMode, Camera.FlashMode.AUTO) : null; // only apply flash if on camera
 
     const args = [quality, destinationType, sourceType, targetWidth, targetHeight, encodingType,
         mediaType, allowEdit, correctOrientation, saveToPhotoAlbum, popoverOptions, cameraDirection];
     if (flashMode !== null) {
-        args.push(flashMode);  // Only push flashMode if it's relevant
+        args.push(flashMode); // Only push flashMode if it's relevant
     }
 
     exec(successCallback, errorCallback, 'Camera', 'takePicture', args);
