@@ -78,34 +78,37 @@ jobs:
         with:
           node-version: ${{ env.node-version }}
       - uses: actions/setup-java@v4
-        env:
-          java-version: ${{ matrix.versions.java-version == '' && env.default_java-version || matrix.versions.java-version }}
-          java-distro: ${{ matrix.versions.java-distro == '' && env.default_java-distro || matrix.versions.java-distro }}
         with:
-          distribution: ${{ env.java-distro }}
-          java-version: ${{ env.java-version }}
+          distribution: ${{ env.default_java-distro }}
+          java-version: ${{ env.default_java-version }}
 
-      - name: Enable KVM group perms
+      - name: Install Android SDK
         run: |
-            echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-            sudo udevadm control --reload-rules
-            sudo udevadm trigger --name-match=kvm
+          sudo apt-get update
+          sudo apt-get install -y openjdk-11-jdk
+          sudo mkdir -p /usr/local/lib/android/sdk
+          sudo chown $USER:$USER /usr/local/lib/android/sdk -R
+          curl -o sdk-tools-linux.zip https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
+          unzip sdk-tools-linux.zip -d /usr/local/lib/android/sdk/cmdline-tools
+          mv /usr/local/lib/android/sdk/cmdline-tools/cmdline-tools /usr/local/lib/android/sdk/cmdline-tools/latest
+        env:
+          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
 
-      - name: Run Environment Information
+      - name: Set up Android SDK environment
         run: |
-          node --version
-          npm --version
-          java -version
-
-      - name: Run npm install
-        run: |
-          export PATH="/usr/local/lib/android/sdk/platform-tools":$PATH
-          export JAVA_HOME=$JAVA_HOME_11_X64
-          npm i -g cordova@latest
-          npm ci
+          echo "export ANDROID_SDK_ROOT=/usr/local/lib/android/sdk" >> $GITHUB_ENV
+          echo "export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH" >> $GITHUB_ENV
+        shell: bash
 
       - name: Accept SDK Licenses
         run: yes | sdkmanager --licenses
+
+      - name: Install Android Build Tools and System Image
+        run: |
+          sdkmanager --install 'platform-tools' 'platforms;android-${{ matrix.versions.android-api }}' 'system-images;android-${{ matrix.versions.android-api }};google_apis;x86_64'
+          sdkmanager --install 'emulator'
+        env:
+          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
 
       - name: Create AVD directory
         run: mkdir -p /home/runner/.android/avd
