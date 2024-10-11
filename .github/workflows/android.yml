@@ -23,7 +23,6 @@ on:
       - '**.md'
       - 'LICENSE'
       - '.eslint*'
-
   pull_request:
     paths-ignore:
       - '**.md'
@@ -36,58 +35,38 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
 
-    # hoist configurations to top that are expected to be updated
     env:
-      # Storing a copy of the repo
       repo: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
-
       node-version: 20
-
-      # These are the default Java configurations used by most tests.
-      # To customize these options, add "java-distro" or "java-version" to the strategy matrix with its overriding value.
       default_java-distro: temurin
       default_java-version: 17
-
-      # These are the default Android System Image configurations used by most tests.
-      # To customize these options, add "system-image-arch" or "system-image-target" to the strategy matrix with its overriding value.
       default_system-image-arch: x86_64
-      default_system-image-target: google_apis # Most system images have a google_api option. Set this as default.
+      default_system-image-target: google_apis
 
-    # configurations for each testing strategy (test matrix)
     strategy:
       matrix:
         versions:
           - android: 7
             android-api: 24
-
           - android: 7.1
             android-api: 25
-
           - android: 8
             android-api: 26
-
           - android: 8.1
             android-api: 27
             system-image-arch: x86
-
           - android: 9
             android-api: 28
-
           - android: 10
             android-api: 29
-
           - android: 11
             android-api: 30
-
           - android: 12
             android-api: 31
-
           - android: 12L
             android-api: 32
-
           - android: 13
             android-api: 33
-
           - android: 14
             android-api: 34
 
@@ -125,37 +104,32 @@ jobs:
           npm i -g cordova@latest
           npm ci
 
-      - name: Run paramedic install
-        if: ${{ endswith(env.repo, '/cordova-paramedic') != true }}
-        run: npm i -g github:apache/cordova-paramedic
+      - name: Accept SDK Licenses
+        run: yes | sdkmanager --licenses
+
+      - name: Create AVD directory
+        run: mkdir -p /home/runner/.android/avd
 
       - uses: reactivecircus/android-emulator-runner@v2
-        env:
-          system-image-arch: ${{ matrix.versions.system-image-arch == '' && env.default_system-image-arch || matrix.versions.system-image-arch }}
-          system-image-target: ${{ matrix.versions.system-image-target == '' && env.default_system-image-target || matrix.versions.system-image-target }}
         with:
           api-level: ${{ matrix.versions.android-api }}
           target: ${{ env.system-image-target }}
           arch: ${{ env.system-image-arch }}
-          force-avd-creation: false
+          force-avd-creation: true
           disable-animations: false
+          emulator-boot-timeout: 1200
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
-          script: echo "Pregenerate the AVD before running Paramedic"
 
       - name: Run paramedic tests
         uses: reactivecircus/android-emulator-runner@v2
-        env:
-          system-image-arch: ${{ matrix.versions.system-image-arch == '' && env.default_system-image-arch || matrix.versions.system-image-arch }}
-          system-image-target: ${{ matrix.versions.system-image-target == '' && env.default_system-image-target || matrix.versions.system-image-target }}
-          test_config: 'android-${{ matrix.versions.android }}.config.json'
-          # Generally, this should automatically work for cordova-paramedic & plugins. If the path is unique, this can be manually changed.
-          test_plugin_path: ${{ endswith(env.repo, '/cordova-paramedic') && './spec/testable-plugin/' || './' }}
-          paramedic: ${{ endswith(env.repo, '/cordova-paramedic') && 'node main.js' || 'cordova-paramedic' }}
         with:
           api-level: ${{ matrix.versions.android-api }}
           target: ${{ env.system-image-target }}
           arch: ${{ env.system-image-arch }}
-          force-avd-creation: false
+          force-avd-creation: true
           disable-animations: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           script: ${{ env.paramedic }} --config ./pr/local/${{ env.test_config }} --plugin ${{ env.test_plugin_path }}
+
+      - name: Terminate Emulator
+        run: adb -s emulator-5554 emu kill
