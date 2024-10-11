@@ -74,20 +74,23 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.node-version }}
+
       - uses: actions/setup-java@v4
         with:
           distribution: ${{ env.default_java-distro }}
           java-version: ${{ env.default_java-version }}
 
-      - name: Install Android SDK
+      - name: Install Android SDK Command-Line Tools
         run: |
-          sudo apt-get update
-          sudo apt-get install -y openjdk-11-jdk
+          # Create directory for Android SDK
           sudo mkdir -p /usr/local/lib/android/sdk
           sudo chown $USER:$USER /usr/local/lib/android/sdk -R
+
+          # Download and install SDK tools
           curl -o sdk-tools-linux.zip https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip
           unzip sdk-tools-linux.zip -d /usr/local/lib/android/sdk/cmdline-tools
           mv /usr/local/lib/android/sdk/cmdline-tools/cmdline-tools /usr/local/lib/android/sdk/cmdline-tools/latest
@@ -102,6 +105,7 @@ jobs:
 
       - name: Accept SDK Licenses
         run: yes | sdkmanager --licenses
+        shell: bash
 
       - name: Install Android Build Tools and System Image
         run: |
