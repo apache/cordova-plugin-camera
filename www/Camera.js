@@ -152,6 +152,13 @@ cameraExport.getPicture = function (successCallback, errorCallback, options) {
 };
 
 /**
+* Closes the Camera on calling this method
+*/
+cameraExport.stop = function (successCallback, errorCallback) {
+    exec(successCallback, errorCallback, 'Camera', 'stop', []);
+};
+
+/**
  * Removes intermediate image files that are kept in temporary storage
  * after calling [`camera.getPicture`]{@link module:camera.getPicture}. Applies only when the value of
  * `Camera.sourceType` equals `Camera.PictureSourceType.CAMERA` and the
