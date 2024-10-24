@@ -367,7 +367,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             throw new IllegalArgumentException("Invalid Encoding Type: " + encodingType);
         }
 
-        return new File(getTempDirectoryPath(), fileName);
+        File cacheDir = new File(getTempDirectoryPath(), "org.apache.cordova.camera");
+        cacheDir.mkdir();
+
+        return new File(cacheDir, fileName);
     }
 
 
