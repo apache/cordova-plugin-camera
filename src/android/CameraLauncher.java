@@ -193,13 +193,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     this.callTakePicture(destType, encodingType);
                 }
                 else if ((this.srcType == PHOTOLIBRARY) || (this.srcType == SAVEDPHOTOALBUM)) {
-                    // FIXME: Stop always requesting the permission
-                    String[] permissions = getPermissions(true, mediaType);
-                    if(!hasPermissions(permissions)) {
-                        PermissionHelper.requestPermissions(this, SAVE_TO_ALBUM_SEC, permissions);
-                    } else {
-                        this.getImage(this.srcType, destType);
-                    }
+                    this.getImage(this.srcType, destType);
                 }
             }
             catch (IllegalArgumentException e)
@@ -261,46 +255,57 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @param encodingType           Compression quality hint (0-100: 0=low quality & high compression, 100=compress of max quality)
      */
     public void callTakePicture(int returnType, int encodingType) {
-        String[] storagePermissions = getPermissions(true, mediaType);
-        boolean saveAlbumPermission;
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            saveAlbumPermission = this.saveToPhotoAlbum ? hasPermissions(storagePermissions) : true;
-        } else {
-            saveAlbumPermission = hasPermissions(storagePermissions);
-        }
-        boolean takePicturePermission = PermissionHelper.hasPermission(this, Manifest.permission.CAMERA);
 
         // CB-10120: The CAMERA permission does not need to be requested unless it is declared
         // in AndroidManifest.xml. This plugin does not declare it, but others may and so we must
         // check the package info to determine if the permission is present.
+        boolean manifestContainsCameraPermission = false;
 
-        if (!takePicturePermission) {
-            takePicturePermission = true;
-            try {
-                PackageManager packageManager = this.cordova.getActivity().getPackageManager();
-                String[] permissionsInPackage = packageManager.getPackageInfo(this.cordova.getActivity().getPackageName(), PackageManager.GET_PERMISSIONS).requestedPermissions;
-                if (permissionsInPackage != null) {
-                    for (String permission : permissionsInPackage) {
-                        if (permission.equals(Manifest.permission.CAMERA)) {
-                            takePicturePermission = false;
-                            break;
-                        }
-                    }
-                }
-            } catch (NameNotFoundException e) {
-                // We are requesting the info for our package, so this should
-                // never be caught
-            }
+        // write permission is not necessary, unless if we are saving to photo album
+        // On API 29+ devices, write permission is completely obsolete and not required.
+        boolean manifestContainsWriteExternalPermission = false;
+
+        boolean cameraPermissionGranted = PermissionHelper.hasPermission(this, Manifest.permission.CAMERA);
+        boolean writeExternalPermissionGranted = false;
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+            writeExternalPermissionGranted = PermissionHelper.hasPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+        else {
+            writeExternalPermissionGranted = true;
         }
 
-        if (takePicturePermission && saveAlbumPermission) {
+        try {
+            PackageManager packageManager = this.cordova.getActivity().getPackageManager();
+            String[] permissionsInPackage = packageManager.getPackageInfo(this.cordova.getActivity().getPackageName(), PackageManager.GET_PERMISSIONS).requestedPermissions;
+            if (permissionsInPackage != null) {
+                for (String permission : permissionsInPackage) {
+                    if (permission.equals(Manifest.permission.CAMERA)) {
+                        manifestContainsCameraPermission = true;
+                    }
+                    else if (permission.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                        manifestContainsWriteExternalPermission = true;
+                    }
+                }
+            }
+        } catch (NameNotFoundException e) {
+            // We are requesting the info for our package, so this should
+            // never be caught
+        }
+
+        ArrayList<String> requiredPermissions = new ArrayList<>();
+        if (manifestContainsCameraPermission && !cameraPermissionGranted) {
+            requiredPermissions.add(Manifest.permission.CAMERA);
+        }
+
+        if (saveToPhotoAlbum && !writeExternalPermissionGranted) {
+            requiredPermissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+
+        if (!requiredPermissions.isEmpty()) {
+            PermissionHelper.requestPermissions(this, TAKE_PIC_SEC, requiredPermissions.toArray(new String[0]));
+        }
+        else {
             takePicture(returnType, encodingType);
-        } else if (saveAlbumPermission) {
-            PermissionHelper.requestPermission(this, TAKE_PIC_SEC, Manifest.permission.CAMERA);
-        } else if (takePicturePermission) {
-            PermissionHelper.requestPermissions(this, TAKE_PIC_SEC, storagePermissions);
-        } else {
-            PermissionHelper.requestPermissions(this, TAKE_PIC_SEC, getPermissions(false, mediaType));
         }
     }
 

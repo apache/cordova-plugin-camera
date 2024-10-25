@@ -184,6 +184,18 @@ quality, even if a `quality` parameter is specified.  To avoid common
 memory problems, set `Camera.destinationType` to `FILE_URI` rather
 than `DATA_URL`.
 
+__NOTE__: To use `saveToPhotoAlbum` option on Android 9 (API 28) and lower, the `WRITE_EXTERNAL_STORAGE` permission must be declared.
+
+To do this, add the following in your `config.xml`:
+
+```xml
+<config-file target="AndroidManifest.xml" parent="/*" xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+</config-file>
+```
+
+Android 10 (API 29) and later devices does not require `WRITE_EXTERNAL_STORAGE` permission. If your application only supports Android 10 or later, then this step is not necessary.
+
 #### FILE_URI Usage
 
 When `FILE_URI` is used, the returned path is not directly usable. The file path needs to be resolved into
@@ -301,7 +313,7 @@ Optional parameters to customize the camera settings.
 | targetHeight | <code>number</code> |  | Height in pixels to scale image. Must be used with `targetWidth`. Aspect ratio remains constant. |
 | mediaType | <code>[MediaType](#module_Camera.MediaType)</code> | <code>PICTURE</code> | Set the type of media to select from.  Only works when `PictureSourceType` is `PHOTOLIBRARY` or `SAVEDPHOTOALBUM`. |
 | correctOrientation | <code>Boolean</code> |  | Rotate the image to correct for the orientation of the device during capture. |
-| saveToPhotoAlbum | <code>Boolean</code> |  | Save the image to the photo album on the device after capture. |
+| saveToPhotoAlbum | <code>Boolean</code> |  | Save the image to the photo album on the device after capture.<br />See [Android Quirks](#cameragetpicturesuccesscallback-errorcallback-options). |
 | popoverOptions | <code>[CameraPopoverOptions](#module_CameraPopoverOptions)</code> |  | iOS-only options that specify popover location in iPad. |
 | cameraDirection | <code>[Direction](#module_Camera.Direction)</code> | <code>BACK</code> | Choose the camera to use (front- or back-facing). |
 
