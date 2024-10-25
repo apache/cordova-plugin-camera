@@ -294,6 +294,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         // Save the number of images currently on disk for later
         this.numPics = queryImgDB(whichContentStore()).getCount();
 
+        LOG.d(LOG_TAG, "Taking a picture");
         // Let's use the intent and see what happens
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
