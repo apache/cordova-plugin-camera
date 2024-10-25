@@ -515,7 +515,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             if (this.allowEdit && this.croppedUri != null) {
                 writeUncompressedImage(croppedUri, galleryUri);
             } else {
-                if (Build.VERSION.SDK_INT <= 28) { // Between LOLLIPOP_MR1 and P, can be changed later to the constant Build.VERSION_CODES.P
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
                     writeTakenPictureToGalleryLowerThanAndroidQ(galleryUri);
                 } else { // Android Q or higher
                     writeTakenPictureToGalleryStartingFromAndroidQ(galleryPathVO);
