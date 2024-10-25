@@ -214,6 +214,11 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 callbackContext.sendPluginResult(r);
                 return true;
             }
+            catch (Exception ex)
+            {
+                LOG.e(LOG_TAG, "Error occured while calling camera", ex);
+                throw ex;
+            }
 
             PluginResult r = new PluginResult(PluginResult.Status.NO_RESULT);
             r.setKeepCallback(true);
@@ -351,6 +356,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         } else if (encodingType == PNG) {
             fileName = fileName + PNG_EXTENSION;
         } else {
+            LOG.e(LOG_TAG, "Invalid Encoding Type: " + encodingType);
             throw new IllegalArgumentException("Invalid Encoding Type: " + encodingType);
         }
 
@@ -592,6 +598,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
             }
         } else {
+            LOG.e(LOG_TAG, "I either have a null image path or bitmap");
             throw new IllegalStateException();
         }
 
@@ -880,10 +887,12 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 this.failPicture("Selection did not complete!");
             }
         } else if(requestCode == RECOVERABLE_DELETE_REQUEST) {
+            LOG.d(LOG_TAG, "Retrying media store deletion");
             // retry media store deletion ...
             ContentResolver contentResolver = this.cordova.getActivity().getContentResolver();
             try {
                 contentResolver.delete(this.pendingDeleteMediaUri, null, null);
+                LOG.d(LOG_TAG, "Retrying media store deletion - success");
             } catch (Exception e) {
                 LOG.e(LOG_TAG, "Unable to delete media store file after permission was granted");
             }
@@ -1257,17 +1266,20 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             try {
                 this.cordova.getActivity().getContentResolver().delete(uri, null, null);
             } catch (SecurityException securityException) {
+                LOG.d(LOG_TAG, "SecurityException was thrown attempting to delete media store image.");
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     RecoverableSecurityException recoverableSecurityException;
                     if (securityException instanceof RecoverableSecurityException) {
                         recoverableSecurityException = (RecoverableSecurityException) securityException;
                     } else {
+                        LOG.e(LOG_TAG, securityException.getMessage(), securityException);
                         throw new RuntimeException(securityException.getMessage(), securityException);
                     }
                     PendingIntent pendingIntent = recoverableSecurityException.getUserAction().getActionIntent();
                     this.cordova.setActivityResultCallback(this);
                     this.pendingDeleteMediaUri = uri;
                     try {
+                        LOG.d(LOG_TAG, "Attempting to recover from exception");
                         this.cordova.getActivity().startIntentSenderForResult(pendingIntent.getIntentSender(),
                                 RECOVERABLE_DELETE_REQUEST, null, 0, 0,
                                 0, null);
@@ -1275,6 +1287,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                         e.printStackTrace();
                     }
                 } else {
+                    LOG.e(LOG_TAG, securityException.getMessage(), securityException);
                     throw new RuntimeException(securityException.getMessage(), securityException);
                 }
             }
