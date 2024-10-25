@@ -1375,7 +1375,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         }
 
         if (this.imageUri != null) {
-            state.putString(IMAGE_URI_KEY, this.imageFilePath);
+            state.putString(IMAGE_URI_KEY, this.imageUri.toString());
         }
 
         if (this.imageFilePath != null) {
