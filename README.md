@@ -135,8 +135,31 @@ To add these entries into the `info.plist`, you can use the `edit-config` tag in
 
 ### camera.getPicture(successCallback, errorCallback, options)
 Takes a photo using the camera, or retrieves a photo from the device's
-image gallery.  The image is passed to the success callback as a
-Base64-encoded `String`, or as the URI for the image file.
+image gallery. The result is provided in the first parameter of the `successCallback` as a string.
+
+As of v8.0.0, the result is formatted as URIs. The scheme will vary depending on settings and platform.
+
+|Platform|Destination Type|Format|
+|---|---|---|
+|Android|FILE_URI|An URI scheme such as `file://...` or `content://...`|
+||DATA_URL|Base 64 encoded with the proper data URI header|
+|iOS|FILE_URI|`file://` schemed paths|
+||DATA_URL|Base 64 encoded with the proper data URI header|
+|Browser|FILE_URI|Not supported|
+||DATA_URL|Base 64 encoded with the proper data URI header|
+
+v7 and earlier versions, the return format is as follows:
+
+|Platform|Destination Type|Format|
+|---|---|---|
+|Android|FILE_URI|Raw file path (unprefixed)|
+||DATA_URL|Base 64 encoded, without the `data:` prefix
+|iOS|FILE_URI|`file://` schemed paths|
+||DATA_URL|Base 64 encoded, without the `data:` prefix
+|Browser|FILE_URI|Not supported|
+||DATA_URL|Base 64 encoded, without the `data:` prefix|
+
+For this reason, upgrading to v8 is strongly recommended as it greatly streamlines the return data.
 
 The `camera.getPicture` function opens the device's default camera
 application that allows users to snap pictures by default - this behavior occurs,
@@ -149,16 +172,10 @@ that allows users to select an existing image.
 
 The return value is sent to the [`cameraSuccess`](#module_camera.onSuccess) callback function, in
 one of the following formats, depending on the specified
-`cameraOptions`:
+`cameraOptions`. You can do whatever you want with content:
 
-- A `String` containing the Base64-encoded photo image.
-- A `String` representing the image file location on local storage (default).
-
-You can do whatever you want with the encoded image or URI, for
-example:
-
-- Render the image in an `<img>` tag, as in the example below
-- Save the data locally (`LocalStorage`, [Lawnchair](http://brianleroux.github.com/lawnchair/), etc.)
+- Render the content in an `<img>` or `<video>` tag
+- Copy the data to a persistent location
 - Post the data to a remote server
 
 __NOTE__: Photo resolution on newer devices is quite good. Photos
@@ -166,6 +183,20 @@ selected from the device's gallery are not downscaled to a lower
 quality, even if a `quality` parameter is specified.  To avoid common
 memory problems, set `Camera.destinationType` to `FILE_URI` rather
 than `DATA_URL`.
+
+#### FILE_URI Usage
+
+When `FILE_URI` is used, the returned path is not directly usable. The file path needs to be resolved into
+a DOM-usable URL using the [Cordova File Plugin](https://github.com/apache/cordova-plugin-file).
+
+Additionally, the file URIs returned is a temporary read access grant. The OS reserves the right to revoke permission to access the resource, which typically occurs after the app has been closed. For images captured using the camera, the image is stored in a temporary location which can be cleared at any time, usually after the app exits. It's the application's decision to decide how the content should be used depending on their use cases.
+
+For persistent access to the content, the resource should be copied to your app's storage container. An example use case is an app allowing an user to select a profile picture from their gallery or camera. The application will need
+consistent access to that resource, so it's not suitable to retain the temporary access path. So the appplication should copy the resource to a persistent location.
+
+For use cases that involve temporary use, it is valid and safe to use the temporary file path to display the content. An example of this could be an image editing application, rendering the data into a canvas.
+
+__NOTE__: The returned schemes is an implementation detail. Do not assume that it will always be a `file://` URI.
 
 __Supported Platforms__
 
@@ -232,15 +263,22 @@ Callback function that provides the image data.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| imageData | <code>string</code> | Base64 encoding of the image data, _or_ the image file URI, depending on [`cameraOptions`](#module_camera.CameraOptions) in effect. |
+| imageData | <code>string</code> | Data URI, _or_ the image file URI, depending on [`cameraOptions`](#module_camera.CameraOptions) in effect. |
 
 **Example**  
 ```js
-// Show image
-//
+// Show image captured with FILE_URI
+function cameraCallback(imageData) {
+    window.resolveLocalFileSystemURL(uri, (entry) => {
+        let image = document.getElementById('myImage');
+        image.src = entry.toURL();
+    }, onError);
+}
+
+// Show image captured with DATA_URL
 function cameraCallback(imageData) {
    var image = document.getElementById('myImage');
-   image.src = "data:image/jpeg;base64," + imageData;
+   image.src = imageData;
 }
 ```
 <a name="module_camera.CameraOptions"></a>
@@ -282,7 +320,7 @@ Defines the output format of `Camera.getPicture` call.
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| DATA_URL | <code>number</code> | <code>0</code> | Return base64 encoded string. DATA_URL can be very memory intensive and cause app crashes or out of memory errors. Use FILE_URI if possible |
+| DATA_URL | <code>number</code> | <code>0</code> | Return data uri. DATA_URL can be very memory intensive and cause app crashes or out of memory errors. Use FILE_URI if possible |
 | FILE_URI | <code>number</code> | <code>1</code> | Return file uri (content://media/external/images/media/2 for Android) |
 
 <a name="module_Camera.EncodingType"></a>
@@ -409,38 +447,46 @@ window.onorientationchange = function() {
 
 Take a photo and retrieve the image's file location:
 
-    navigator.camera.getPicture(onSuccess, onFail, { quality: 50,
-        destinationType: Camera.DestinationType.FILE_URI });
+```javascript
+// Don't forget to install cordova-plugin-file for resolveLocalFileSystemURL!
 
-    function onSuccess(imageURI) {
-        var image = document.getElementById('myImage');
-        image.src = imageURI;
-    }
+navigator.camera.getPicture(onSuccess, onFail, { quality: 50,
+    destinationType: Camera.DestinationType.FILE_URI });
 
-    function onFail(message) {
-        alert('Failed because: ' + message);
-    }
+function onSuccess(imageURI) {
+    window.resolveLocalFileSystemURL(uri, (entry) => {
+        let img = document.getElementById('image');
+        img.src = entry.toURL();
+    }, onFail);
+}
+
+function onFail(message) {
+    alert('Failed because: ' + message);
+}
+```
 
 Take a photo and retrieve it as a Base64-encoded image:
 
-    /**
-     * Warning: Using DATA_URL is not recommended! The DATA_URL destination
-     * type is very memory intensive, even with a low quality setting. Using it
-     * can result in out of memory errors and application crashes. Use FILE_URI
-     * instead.
-     */
-    navigator.camera.getPicture(onSuccess, onFail, { quality: 25,
-        destinationType: Camera.DestinationType.DATA_URL
-    });
+```javascript
+/**
+ * Warning: Using DATA_URL is not recommended! The DATA_URL destination
+ * type is very memory intensive, even with a low quality setting. Using it
+ * can result in out of memory errors and application crashes. Use FILE_URI
+ * instead.
+ */
+navigator.camera.getPicture(onSuccess, onFail, { quality: 25,
+    destinationType: Camera.DestinationType.DATA_URL
+});
 
-    function onSuccess(imageData) {
-        var image = document.getElementById('myImage');
-        image.src = "data:image/jpeg;base64," + imageData;
-    }
+function onSuccess(imageData) {
+    var image = document.getElementById('myImage');
+    image.src = imageData;
+}
 
-    function onFail(message) {
-        alert('Failed because: ' + message);
-    }
+function onFail(message) {
+    alert('Failed because: ' + message);
+}
+```
 
 #### Preferences (iOS)
 
@@ -461,7 +507,7 @@ successful.
 
 #### Browser Quirks
 
-Can only return photos as Base64-encoded image.
+Can only return photos as data URI image.
 
 #### iOS Quirks
 
@@ -470,9 +516,11 @@ can cause problems.  Wrap the alert within a `setTimeout()` to allow
 the iOS image picker or popover to fully close before the alert
 displays:
 
-    setTimeout(function() {
-        // do your thing here!
-    }, 0);
+```javascript
+setTimeout(function() {
+    // do your thing here!
+}, 0);
+```
 
 ## `CameraOptions` Errata <a name="CameraOptions-quirks"></a>
 
@@ -485,11 +533,6 @@ displays:
 - `Camera.PictureSourceType.PHOTOLIBRARY` and `Camera.PictureSourceType.SAVEDPHOTOALBUM` both display the same photo album.
 
 - Ignores the `encodingType` parameter if the image is unedited (i.e. `quality` is 100, `correctOrientation` is false, and no `targetHeight` or `targetWidth` are specified). The `CAMERA` source will always return the JPEG file given by the native camera and the `PHOTOLIBRARY` and `SAVEDPHOTOALBUM` sources will return the selected file in its existing encoding.
-
-#### iOS Quirks
-
-- When using `destinationType.FILE_URI`, photos are saved in the application's temporary directory. The contents of the application's temporary directory is deleted when the application ends.
-
 
 [android_lifecycle]: http://cordova.apache.org/docs/en/dev/guide/platforms/android/lifecycle.html
 
@@ -639,9 +682,9 @@ function openFilePicker(selection) {
 
 ## Take a picture and get a FileEntry Object <a name="convert"></a>
 
-If you want to do something like copy the image to another location, or upload it somewhere using the FileTransfer plugin, you need to get a FileEntry object for the returned picture. To do that, call `window.resolveLocalFileSystemURL` on the file URI returned by the Camera app. If you need to use a FileEntry object, set the `destinationType` to `Camera.DestinationType.FILE_URI` in your CameraOptions object (this is also the default value).
+If you want to do something like copy the image to another location, or upload it somewhere, an `FileEntry` is needed for the returned picture. To do this, call `window.resolveLocalFileSystemURL` on the file URI returned by the Camera app. If you need to use a FileEntry object, set the `destinationType` to `Camera.DestinationType.FILE_URI` in your CameraOptions object (this is also the default value).
 
->*Note* You need the [File plugin](https://www.npmjs.com/package/cordova-plugin-file) to call `window.resolveLocalFileSystemURL`.
+__NOTE:__ You need the [File plugin](https://www.npmjs.com/package/cordova-plugin-file) to call `window.resolveLocalFileSystemURL`.
 
 Here is the call to `window.resolveLocalFileSystemURL`. The image URI is passed to this function from the success callback of `getPicture`. The success handler of `resolveLocalFileSystemURL` receives the FileEntry object.
 
@@ -649,39 +692,26 @@ Here is the call to `window.resolveLocalFileSystemURL`. The image URI is passed 
 function getFileEntry(imgUri) {
     window.resolveLocalFileSystemURL(imgUri, function success(fileEntry) {
 
-        // Do something with the FileEntry object, like write to it, upload it, etc.
-        // writeFile(fileEntry, imgUri);
-        console.log("got file: " + fileEntry.fullPath);
-        // displayFileData(fileEntry.nativeURL, "Native URL");
+        // Example 1: Copy to app data directory
+        window.resolveLocalFileSystemURL(cordova.file.dataDirectory, function (dataDirectoryEntry) {
+            fileEntry.copyTo(dataDirectoryEntry, "profilePic", onSuccess, onError);
+        }, onError);
+        
+        // Example 2: Upload it!
+        fileEntry.file(function (file) {
+            var reader = new FileReader();
+            
+            reader.onloadend = function() {
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', 'https://myserver.com/upload');
+                xhr.onload = function () {
+                    // All done!
+                };
+                xhr.send(this.result);
+            };
 
-    }, function () {
-      // If don't get the FileEntry (which may happen when testing
-      // on some emulators), copy to a new FileEntry.
-        createNewFileEntry(imgUri);
-    });
-}
-```
-
-In the example shown in the preceding code, you call the app's `createNewFileEntry` function if you don't get a valid FileEntry object. The image URI returned from the Camera app should result in a valid FileEntry, but platform behavior on some emulators may be different for files returned from the file picker.
-
->*Note* To see an example of writing to a FileEntry, see the [File plugin README](https://www.npmjs.com/package/cordova-plugin-file).
-
-The code shown here creates a file in your app's cache (in sandboxed storage) named `tempFile.jpeg`. With the new FileEntry object, you can copy the image to the file or do something else like upload it.
-
-```js
-function createNewFileEntry(imgUri) {
-    window.resolveLocalFileSystemURL(cordova.file.cacheDirectory, function success(dirEntry) {
-
-        // JPEG file
-        dirEntry.getFile("tempFile.jpeg", { create: true, exclusive: false }, function (fileEntry) {
-
-            // Do something with it, like write to it, upload it, etc.
-            // writeFile(fileEntry, imgUri);
-            console.log("got file: " + fileEntry.fullPath);
-            // displayFileData(fileEntry.fullPath, "File copied to");
-
-        }, onErrorCreateFile);
-
-    }, onErrorResolveUrl);
+            reader.readAsArrayBuffer(file);
+        }, onError);
+    }, onError);
 }
 ```
