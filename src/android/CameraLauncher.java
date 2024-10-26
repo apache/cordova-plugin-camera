@@ -1286,23 +1286,25 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @param bitmap
      */
     public void processPicture(Bitmap bitmap, int encodingType) {
-        ByteArrayOutputStream jpeg_data = new ByteArrayOutputStream();
+        ByteArrayOutputStream dataStream = new ByteArrayOutputStream();
         CompressFormat compressFormat = getCompressFormatForEncodingType(encodingType);
 
         try {
-            if (bitmap.compress(compressFormat, mQuality, jpeg_data)) {
-                byte[] code = jpeg_data.toByteArray();
+            if (bitmap.compress(compressFormat, mQuality, dataStream)) {
+                StringBuilder sb = new StringBuilder()
+                    .append("data:")
+                    .append(encodingType == PNG ? PNG_MIME_TYPE : JPEG_MIME_TYPE)
+                    .append(";base64,");
+                byte[] code = dataStream.toByteArray();
                 byte[] output = Base64.encode(code, Base64.NO_WRAP);
-                String js_out = new String(output);
-                this.callbackContext.success(js_out);
-                js_out = null;
+                sb.append(new String(output));
+                this.callbackContext.success(sb.toString());
                 output = null;
                 code = null;
             }
         } catch (Exception e) {
             this.failPicture("Error compressing image: "+e.getLocalizedMessage());
         }
-        jpeg_data = null;
     }
 
     /**
