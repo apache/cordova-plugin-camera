@@ -58,6 +58,9 @@ static NSString* toBase64(NSData* data) {
     }
 }
 
+static NSString* MIME_PNG     = @"image/png";
+static NSString* MIME_JPEG    = @"image/jpeg";
+
 @implementation CDVPictureOptions
 
 + (instancetype) createFromTakePictureArguments:(CDVInvokedUrlCommand*)command
@@ -372,16 +375,50 @@ static NSString* toBase64(NSData* data) {
     self.hasPendingOperation = NO;
 }
 
-- (NSData*)processImage:(UIImage*)image info:(NSDictionary*)info options:(CDVPictureOptions*)options
+- (NSString*) getMimeForEncoding:(CDVEncodingType) encoding {
+    switch (encoding) {
+        case EncodingTypePNG: return MIME_PNG;
+        case EncodingTypeJPEG:
+        default:
+            return MIME_JPEG;
+    }
+}
+
+- (NSString*) formatAsDataURI:(NSData*) data withMIME:(NSString*) mime {
+    NSString* base64 = toBase64(data);
+    
+    if (base64 == nil) {
+        return nil;
+    }
+    
+    return [NSString stringWithFormat:@"data:%@;base64,%@", mime, base64];
+}
+
+- (NSString*) processImageAsDataUri:(UIImage*) image info:(NSDictionary*) info options:(CDVPictureOptions*) options
+{
+    NSString* mime = nil;
+    NSData* data = [self processImage: image info: info options: options outMime: &mime];
+    
+    return [self formatAsDataURI: data withMIME: mime];
+}
+
+- (NSData*) processImage:(UIImage*) image info:(NSDictionary*) info options:(CDVPictureOptions*) options
+{
+    return [self processImage:image  info: info options: options outMime: nil];
+}
+
+- (NSData*) processImage:(UIImage*)image info:(NSDictionary*)info options:(CDVPictureOptions*)options outMime:(NSString**) outMime
 {
     NSData* data = nil;
 
     switch (options.encodingType) {
         case EncodingTypePNG:
             data = UIImagePNGRepresentation(image);
+            if (outMime != nil) *outMime = MIME_PNG;
             break;
         case EncodingTypeJPEG:
         {
+            if (outMime != nil) *outMime = MIME_JPEG;
             if ((options.allowsEditing == NO) && (options.targetSize.width <= 0) && (options.targetSize.height <= 0) && (options.correctOrientation == NO) && (([options.quality integerValue] == 100) || (options.sourceType != UIImagePickerControllerSourceTypeCamera))){
                 // use image unedited as requested , don't resize
                 data = UIImageJPEGRepresentation(image, 1.0);
@@ -439,7 +476,8 @@ static NSString* toBase64(NSData* data) {
         default:
             break;
     };
-
+    
+    
     return data;
 }
 
@@ -564,9 +602,9 @@ static NSString* toBase64(NSData* data) {
         case DestinationTypeDataUrl:
         {
             image = [self retrieveImage:info options:options];
-            NSData* data = [self processImage:image info:info options:options];
+            NSString* data = [self processImageAsDataUri:image info:info options:options];
             if (data)  {
-                result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:toBase64(data)];
+                result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString: data];
             }
         }
             break;
@@ -574,6 +612,7 @@ static NSString* toBase64(NSData* data) {
         {
             image = [self retrieveImage:info options:options];
             NSData* data = [self processImage:image info:info options:options];
+            
             if (data) {
                 if (pickerController.sourceType == UIImagePickerControllerSourceTypePhotoLibrary) {
                     NSMutableData *imageDataWithExif = [NSMutableData data];
@@ -823,7 +862,9 @@ static NSString* toBase64(NSData* data) {
     switch (options.destinationType) {
         case DestinationTypeDataUrl:
         {
-            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:toBase64(self.data)];
+            NSString* mime = [self getMimeForEncoding: self.pickerController.pictureOptions.encodingType];
+            NSString* uri = [self formatAsDataURI: self.data withMIME: mime];
+            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString: uri];
         }
             break;
         default: // DestinationTypeFileUri
