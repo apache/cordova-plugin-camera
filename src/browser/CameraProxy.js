@@ -39,7 +39,7 @@ function takePicture (success, error, opts) {
 
                 const imageData = readerEvent.target.result;
 
-                return success(imageData.substr(imageData.indexOf(',') + 1));
+                return success(imageData);
             };
 
             reader.readAsDataURL(inputEvent.target.files[0]);
@@ -78,8 +78,7 @@ function capture (success, errorCallback, opts) {
         canvas.getContext('2d').drawImage(video, 0, 0, targetWidth, targetHeight);
 
         // convert image stored in canvas to base64 encoded image
-        let imageData = canvas.toDataURL('image/png');
-        imageData = imageData.replace('data:image/png;base64,', '');
+        const imageData = canvas.toDataURL('image/png');
 
         // stop video stream, remove video and button.
         // Note that MediaStream.stop() is deprecated as of Chrome 47.
