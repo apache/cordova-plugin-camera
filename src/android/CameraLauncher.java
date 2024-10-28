@@ -217,22 +217,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     // LOCAL METHODS
     //--------------------------------------------------------------------------
 
-    private String[] getPermissions(boolean storageOnly, int mediaType) {
-        ArrayList<String> permissions = new ArrayList<>();
-
-        if (android.os.Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
-            // Android API 30 or lower
-            permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE);
-            permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        }
-        if (!storageOnly) {
-            // Add camera permission when not storage.
-            permissions.add(Manifest.permission.CAMERA);
-        }
-
-        return permissions.toArray(new String[0]);
-    }
-
     private String getTempDirectoryPath() {
         File cache = cordova.getActivity().getCacheDir();
         // Create the cache directory if it doesn't exist
