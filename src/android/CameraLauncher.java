@@ -1360,15 +1360,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         this.callbackContext = callbackContext;
     }
 
-    private boolean hasPermissions(String[] permissions) {
-        for (String permission: permissions) {
-            if (!PermissionHelper.hasPermission(this, permission)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     /**
      * Gets the ideal buffer size for processing streams of data.
      *
