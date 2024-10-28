@@ -196,6 +196,13 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     this.getImage(this.srcType, destType);
                 }
             }
+            catch (IllegalStateException e)
+            {
+                callbackContext.error(e.getLocalizedMessage());
+                PluginResult r = new PluginResult(PluginResult.Status.ERROR);
+                callbackContext.sendPluginResult(r);
+                return true;
+            }
             catch (IllegalArgumentException e)
             {
                 callbackContext.error("Illegal Argument Exception");
@@ -238,7 +245,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @param returnType        Set the type of image to return.
      * @param encodingType           Compression quality hint (0-100: 0=low quality & high compression, 100=compress of max quality)
      */
-    public void callTakePicture(int returnType, int encodingType) {
+    public void callTakePicture(int returnType, int encodingType) throws IllegalStateException {
 
         // CB-10120: The CAMERA permission does not need to be requested unless it is declared
         // in AndroidManifest.xml. This plugin does not declare it, but others may and so we must
@@ -282,6 +289,12 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         }
 
         if (saveToPhotoAlbum && !writeExternalPermissionGranted) {
+            // This block only applies for API 24-28
+            // because writeExternalPermissionGranted is always true on API 29+
+            if (!manifestContainsWriteExternalPermission) {
+                throw new IllegalStateException("WRITE_EXTERNAL_STORAGE permission not declared in AndroidManifest");
+            }
+
             requiredPermissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
         }
 
