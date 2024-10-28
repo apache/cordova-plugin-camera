@@ -615,7 +615,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 throw new IllegalStateException();
             }
 
-            this.cleanup(FILE_URI, this.imageUri, galleryUri, bitmap);
+            this.cleanup(this.imageUri, galleryUri, bitmap);
             bitmap = null;
             input.close();
         }
@@ -1199,9 +1199,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     /**
      * Cleans up after picture taking. Checking for duplicates and that kind of stuff.
      *
-     * @param newImage - No longer used
+     * @param newImage
      */
-    private void cleanup(int imageType, Uri oldImage, Uri newImage, Bitmap bitmap) {
+    private void cleanup(Uri oldImage, Uri newImage, Bitmap bitmap) {
         if (bitmap != null) {
             bitmap.recycle();
         }
