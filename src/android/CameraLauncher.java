@@ -554,7 +554,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
                 // Double-check the bitmap.
                 if (bitmap == null) {
-                    LOG.d(LOG_TAG, "I either have a null image path or bitmap");
+                    LOG.d(LOG_TAG, "I either have an unreadable imageUri or null bitmap");
                     this.failPicture("Unable to create bitmap!");
                     return;
                 }
@@ -596,7 +596,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
                     // Double-check the bitmap.
                     if (bitmap == null) {
-                        LOG.d(LOG_TAG, "I either have a null image path or bitmap");
+                        LOG.d(LOG_TAG, "I either have an unreadable imageUri or null bitmap");
                         this.failPicture("Unable to create bitmap!");
                         return;
                     }
@@ -786,7 +786,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                         e.printStackTrace();
                     }
                     if (bitmap == null) {
-                        LOG.d(LOG_TAG, "I either have a null image path or bitmap");
+                        LOG.d(LOG_TAG, "I either have an unreadable uri or null bitmap");
                         this.failPicture("Unable to create bitmap!");
                         return;
                     }
@@ -823,7 +823,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     System.gc();
                 }
                 if (bitmap == null) {
-                    LOG.d(LOG_TAG, "I either have a null image path or bitmap");
+                    LOG.d(LOG_TAG, "I either have an unreadable uri or null bitmap");
                     this.failPicture("Unable to create bitmap!");
                     return;
                 }
