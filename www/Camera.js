@@ -144,7 +144,7 @@ cameraExport.getPicture = function (successCallback, errorCallback, options) {
     const cameraDirection = getValue(options.cameraDirection, Camera.Direction.BACK);
 
     if (allowEdit) {
-        console.warn('allowEdit is deprecated. It does not work reliably on all platforms. Utilise a dedicated image editing library instead. allowEdit functionality is scheduled to be removed in the next major release.');
+        console.warn('allowEdit is deprecated. It does not work reliably on all platforms. Utilise a dedicated image editing library instead. allowEdit functionality is scheduled to be removed in a future release.');
     }
 
     const args = [quality, destinationType, sourceType, targetWidth, targetHeight, encodingType,
