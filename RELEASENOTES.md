@@ -20,6 +20,41 @@
 -->
 # Release Notes
 
+### 8.0.0 (Oct 30, 2024)
+
+**Breaking Changes:**
+
+* [GH-889](https://github.com/apache/cordova-plugin-camera/pull/889) fix(android): Remove media permissions to make complaint with **Android** 14 requirements (#889)
+* [GH-902](https://github.com/apache/cordova-plugin-camera/pull/902) fix(android): return content uris when possible when selecting from gallery (#902)
+* [GH-909](https://github.com/apache/cordova-plugin-camera/pull/909) refactor(android): Make WRITE_EXTERNAL_STORAGE optional (#909)
+* [GH-910](https://github.com/apache/cordova-plugin-camera/pull/910) fix(android): Return data uris as an URI (#910)
+* [GH-911](https://github.com/apache/cordova-plugin-camera/pull/911) fix(ios): Sync camera API return to match **Android** changes (#911)
+* [GH-912](https://github.com/apache/cordova-plugin-camera/pull/912) fix(browser): Make data uri be returned as actual URI strings (#912)
+
+**Fixes**:
+
+* [GH-901](https://github.com/apache/cordova-plugin-camera/pull/901) fix(android): Isolate provider access to a subdirectory (#901)
+* [GH-915](https://github.com/apache/cordova-plugin-camera/pull/903) fix(android): Improper serialization of image uri in save instance state (#903)
+* [GH-904](https://github.com/apache/cordova-plugin-camera/pull/904) fix(android): Use VERSION_CODES instead of hard-coded API literals (#904)
+* [GH-915](https://github.com/apache/cordova-plugin-camera/pull/905) fix(android): improper cache path construction during image manipulation (#905)
+* [GH-906](https://github.com/apache/cordova-plugin-camera/pull/906) refactor(android): replace image path usage with image uris (#906)
+* [GH-915](https://github.com/apache/cordova-plugin-camera/pull/907) refactor(android): remove query img usage (#907)
+* [GH-915](https://github.com/apache/cordova-plugin-camera/pull/915) fix!: Remove WRITE_EXTERNAL_PERMISSION (#915)
+
+**CI**:
+
+* [GH-890](https://github.com/apache/cordova-plugin-camera/pull/890) ci(android): Update **Android** CI to be compatible with `cordova-android`@13 (#890)
+* [GH-895](https://github.com/apache/cordova-plugin-camera/pull/895) ci: sync workflow with paramedic (#895)
+
+**Documentation**:
+
+* [GH-913](https://github.com/apache/cordova-plugin-camera/pull/913) docs: Revisions for v8 public API changes with the return string formats of getPicture (#913)
+
+**Other**:
+
+* [GH-898](https://github.com/apache/cordova-plugin-camera/pull/898) chore: Update eslint config to 5.1.0 (#898)
+* [GH-914](https://github.com/apache/cordova-plugin-camera/pull/914) deprecation: allowEdit (#914)
+
 ### 7.0.0 (Sep 06, 2023)
 
 **Breaking Changes:**
