@@ -27,7 +27,7 @@
     <license>Apache 2.0</license>
     <keywords>cordova,camera</keywords>
     <repo>https://github.com/apache/cordova-plugin-camera</repo>
-    <dependency id="cordova-plugin-file" version="^6.0.2-OS7" />
+    <dependency id="cordova-plugin-file" version="6.0.2-OS6 || 6.0.2-OS7" />
     <issue>https://github.com/apache/cordova-plugin-camera/issues</issue>
 
     <engines>
