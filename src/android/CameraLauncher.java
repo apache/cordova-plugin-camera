@@ -359,7 +359,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         }
         
         // Some devices use these legacy parameters
-        intent.putExtra(Camera.Parameters.FLASH_MODE, flashMode);
         intent.putExtra("flashMode", flashMode);
     }
         // Specify file so that large image is captured and returned
