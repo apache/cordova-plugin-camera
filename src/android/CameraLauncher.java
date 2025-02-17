@@ -28,6 +28,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.database.Cursor;
+import android.hardware.Camera;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
@@ -96,6 +97,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private static final String CROPPED_URI_KEY = "croppedUri";
     private static final String IMAGE_URI_KEY = "imageUri";
     private static final String IMAGE_FILE_PATH_KEY = "imageFilePath";
+    private static final int FLASH_AUTO = 0;
+    private static final int FLASH_ON = 1;
+    private static final int FLASH_OFF = -1;
 
     private static final String TAKE_PICTURE_ACTION = "takePicture";
 
@@ -123,6 +127,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private boolean correctOrientation;     // Should the pictures orientation be corrected
     private boolean orientationCorrected;   // Has the picture's orientation been corrected
     private boolean allowEdit;              // Should we allow the user to crop the image.
+    private int flashMode;                  // What is the default flash setting when camera opened
 
     public CallbackContext callbackContext;
     private int numPics;
@@ -170,6 +175,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             this.allowEdit = args.getBoolean(7);
             this.correctOrientation = args.getBoolean(8);
             this.saveToPhotoAlbum = args.getBoolean(9);
+            this.flashMode = (this.srcType == CAMERA) ? args.getInt(12) : FLASH_AUTO;
 
             // If the user specifies a 0 or smaller width/height
             // make it -1 so later comparisons succeed
@@ -326,6 +332,36 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         // Let's use the intent and see what happens
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
+           if (this.srcType == CAMERA) {
+        // Convert our flash mode to Android's camera flash modes
+        String flashMode;
+        switch (this.flashMode) {
+            case FLASH_ON:
+                // Parameters.FLASH_MODE_ON constant is "torch"
+                flashMode = Camera.Parameters.FLASH_MODE_ON;
+                intent.putExtra("android.intent.extras.FLASH_MODE", flashMode);
+                // Some devices use this parameter instead
+                intent.putExtra("android.intent.extra.USE_FLASH", true);
+                break;
+            case FLASH_OFF:
+                // Parameters.FLASH_MODE_OFF constant is "off"
+                flashMode = Camera.Parameters.FLASH_MODE_OFF;
+                intent.putExtra("android.intent.extras.FLASH_MODE", flashMode);
+                intent.putExtra("android.intent.extra.USE_FLASH", false);
+                break;
+            case FLASH_AUTO:
+            default:
+                // Parameters.FLASH_MODE_AUTO constant is "auto"
+                flashMode = Camera.Parameters.FLASH_MODE_AUTO;
+                intent.putExtra("android.intent.extras.FLASH_MODE", flashMode);
+                // Don't set USE_FLASH for auto mode
+                break;
+        }
+        
+        // Some devices use these legacy parameters
+        intent.putExtra(Camera.Parameters.FLASH_MODE, flashMode);
+        intent.putExtra("flashMode", flashMode);
+    }
         // Specify file so that large image is captured and returned
         File photo = createCaptureFile(encodingType);
         this.imageFilePath = photo.getAbsolutePath();
