@@ -338,21 +338,21 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         switch (this.flashMode) {
             case FLASH_ON:
                 // Parameters.FLASH_MODE_ON constant is "torch"
-                flashMode = Camera.Parameters.FLASH_MODE_ON;
+                flashMode = "torch";
                 intent.putExtra("android.intent.extras.FLASH_MODE", flashMode);
                 // Some devices use this parameter instead
                 intent.putExtra("android.intent.extra.USE_FLASH", true);
                 break;
             case FLASH_OFF:
                 // Parameters.FLASH_MODE_OFF constant is "off"
-                flashMode = Camera.Parameters.FLASH_MODE_OFF;
+                flashMode = "off";
                 intent.putExtra("android.intent.extras.FLASH_MODE", flashMode);
                 intent.putExtra("android.intent.extra.USE_FLASH", false);
                 break;
             case FLASH_AUTO:
             default:
                 // Parameters.FLASH_MODE_AUTO constant is "auto"
-                flashMode = Camera.Parameters.FLASH_MODE_AUTO;
+                flashMode = "auto";
                 intent.putExtra("android.intent.extras.FLASH_MODE", flashMode);
                 // Don't set USE_FLASH for auto mode
                 break;
