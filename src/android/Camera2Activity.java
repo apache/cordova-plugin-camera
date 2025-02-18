@@ -1,229 +1,106 @@
 package org.apache.cordova.camera;
 
 import android.Manifest;
-import android.app.Activity;
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.graphics.ImageFormat;
-import android.graphics.SurfaceTexture;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCaptureSession;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraDevice;
-import android.hardware.camera2.CameraManager;
-import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.TotalCaptureResult;
-import android.media.Image;
-import android.media.ImageReader;
+import android.content.ContentValues;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.HandlerThread;
-import android.util.Size;
-import android.view.Surface;
-import android.view.TextureView;
+import android.provider.MediaStore;
+import androidx.camera.core.Camera;
+import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ImageCapture;
+import androidx.camera.core.ImageCaptureException;
+import androidx.camera.core.Preview;
+import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.camera.view.PreviewView;
+import androidx.core.content.ContextCompat;
+import androidx.lifecycle.LifecycleOwner;
 import android.widget.Button;
-import android.widget.FrameLayout;
+import com.google.common.util.concurrent.ListenableFuture;
 
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-
-public class Camera2Activity extends Activity {
-    private String cameraId;
-    private CameraDevice cameraDevice;
-    private CameraCaptureSession cameraCaptureSession;
-    private CaptureRequest.Builder captureRequestBuilder;
-    private ImageReader imageReader;
-    private Handler backgroundHandler;
-    private HandlerThread backgroundThread;
-    private TextureView textureView;
-    private int flashMode;
-    private Size imageDimension;
+public class CameraActivity extends androidx.appcompat.app.AppCompatActivity {
+    private PreviewView previewView;
+    private ImageCapture imageCapture;
+    private Camera camera;
+    private int flashMode = ImageCapture.FLASH_MODE_AUTO; // Default flash mode
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
         // Get flash mode from intent
-        flashMode = getIntent().getIntExtra("flashMode", CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
-
-        // Create a basic layout
-        FrameLayout layout = new FrameLayout(this);
-        textureView = new TextureView(this);
-        Button captureButton = new Button(this);
-        captureButton.setText("Take Picture");
+        flashMode = getIntent().getIntExtra("flashMode", ImageCapture.FLASH_MODE_AUTO);
         
-        layout.addView(textureView);
-        layout.addView(captureButton);
-        setContentView(layout);
-
-        captureButton.setOnClickListener(v -> takePicture());
+        // Set up the camera and preview
+        startCamera();
     }
 
-    private final CameraDevice.StateCallback stateCallback = new CameraDevice.StateCallback() {
-        @Override
-        public void onOpened(@NonNull CameraDevice camera) {
-            cameraDevice = camera;
-            createCameraPreview();
-        }
+    private void startCamera() {
+        ListenableFuture<ProcessCameraProvider> cameraProviderFuture = 
+            ProcessCameraProvider.getInstance(this);
 
-        @Override
-        public void onDisconnected(@NonNull CameraDevice camera) {
-            cameraDevice.close();
-        }
-
-        @Override
-        public void onError(@NonNull CameraDevice camera, int error) {
-            cameraDevice.close();
-            cameraDevice = null;
-        }
-    };
-
-    private void openCamera() {
-        CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-        try {
-            cameraId = manager.getCameraIdList()[0];
-            CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
-            
-            // Configure image reader
-            imageDimension = new Size(1920, 1080); // Default size, you might want to adjust
-            imageReader = ImageReader.newInstance(imageDimension.getWidth(), 
-                                                imageDimension.getHeight(), 
-                                                ImageFormat.JPEG, 1);
-
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) 
-                != PackageManager.PERMISSION_GRANTED) {
-                return;
+        cameraProviderFuture.addListener(() -> {
+            try {
+                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+                bindPreview(cameraProvider);
+            } catch (Exception e) {
+                // Handle any errors
             }
-            manager.openCamera(cameraId, stateCallback, null);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
+        }, ContextCompat.getMainExecutor(this));
     }
 
-    private void createCameraPreview() {
-        try {
-            SurfaceTexture texture = textureView.getSurfaceTexture();
-            texture.setDefaultBufferSize(imageDimension.getWidth(), imageDimension.getHeight());
-            Surface surface = new Surface(texture);
+    private void bindPreview(ProcessCameraProvider cameraProvider) {
+        Preview preview = new Preview.Builder().build();
 
-            captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-            captureRequestBuilder.addTarget(surface);
+        imageCapture = new ImageCapture.Builder()
+            .setFlashMode(flashMode)
+            .build();
 
-            cameraDevice.createCaptureSession(Arrays.asList(surface, imageReader.getSurface()),
-                new CameraCaptureSession.StateCallback() {
-                    @Override
-                    public void onConfigured(@NonNull CameraCaptureSession session) {
-                        cameraCaptureSession = session;
-                        updatePreview();
-                    }
+        CameraSelector cameraSelector = new CameraSelector.Builder()
+            .requireLensFacing(CameraSelector.LENS_FACING_BACK)
+            .build();
 
-                    @Override
-                    public void onConfigureFailed(@NonNull CameraCaptureSession session) {
-                    }
-                }, null);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-    }
+        camera = cameraProvider.bindToLifecycle(
+            ((LifecycleOwner) this),
+            cameraSelector,
+            preview,
+            imageCapture);
 
-    private void updatePreview() {
-        if (cameraDevice == null) return;
-
-        try {
-            // Set flash mode for preview
-            captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, flashMode);
-            cameraCaptureSession.setRepeatingRequest(captureRequestBuilder.build(), null, 
-                backgroundHandler);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
+        preview.setSurfaceProvider(previewView.getSurfaceProvider());
     }
 
     private void takePicture() {
-        try {
-            final CaptureRequest.Builder captureBuilder = 
-                cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
-            captureBuilder.addTarget(imageReader.getSurface());
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, timestamp);
+        contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
 
-            // Set flash mode for capture
-            captureBuilder.set(CaptureRequest.CONTROL_AE_MODE, flashMode);
+        ImageCapture.OutputFileOptions outputFileOptions = 
+            new ImageCapture.OutputFileOptions.Builder(
+                getContentResolver(),
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                contentValues)
+            .build();
 
-            cameraCaptureSession.stopRepeating();
-            cameraCaptureSession.capture(captureBuilder.build(), new CameraCaptureSession.CaptureCallback() {
+        imageCapture.takePicture(outputFileOptions, 
+            ContextCompat.getMainExecutor(this),
+            new ImageCapture.OnImageSavedCallback() {
                 @Override
-                public void onCaptureCompleted(@NonNull CameraCaptureSession session,
-                                             @NonNull CaptureRequest request,
-                                             @NonNull TotalCaptureResult result) {
-                    super.onCaptureCompleted(session, request, result);
-                    createCameraPreview();
+                public void onImageSaved(ImageCapture.OutputFileResults outputFileResults) {
+                    Uri savedUri = outputFileResults.getSavedUri();
+                    // Return the image URI to Cordova
+                    Intent intent = new Intent();
+                    intent.setData(savedUri);
+                    setResult(RESULT_OK, intent);
+                    finish();
                 }
-            }, null);
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-        }
-    }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        startBackgroundThread();
-        if (textureView.isAvailable()) {
-            openCamera();
-        } else {
-            textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
                 @Override
-                public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-                    openCamera();
-                }
-                @Override
-                public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-                }
-                @Override
-                public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-                    return false;
-                }
-                @Override
-                public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+                public void onError(ImageCaptureException error) {
+                    // Handle error
+                    setResult(RESULT_CANCELED);
+                    finish();
                 }
             });
-        }
-    }
-
-    private void startBackgroundThread() {
-        backgroundThread = new HandlerThread("Camera Background");
-        backgroundThread.start();
-        backgroundHandler = new Handler(backgroundThread.getLooper());
-    }
-
-    @Override
-    protected void onPause() {
-        stopBackgroundThread();
-        super.onPause();
-    }
-
-    private void stopBackgroundThread() {
-        backgroundThread.quitSafely();
-        try {
-            backgroundThread.join();
-            backgroundThread = null;
-            backgroundHandler = null;
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    protected void onDestroy() {
-        if (cameraDevice != null) {
-            cameraDevice.close();
-            cameraDevice = null;
-        }
-        super.onDestroy();
     }
 }
