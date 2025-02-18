@@ -333,33 +333,24 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
 if (this.srcType == CAMERA) {
-    String flashMode;
     switch (this.flashMode) {
         case FLASH_ON:
-            flashMode = "on";
-            intent.putExtra("android.intent.extras.CAMERA_FLASH_MODE", "on");
-            intent.putExtra("android.intent.extras.FLASH_MODE", "on");
-            intent.putExtra("android.intent.extra.USE_FLASH", true);
+            intent.putExtra("android.intent.extras.FLASH_MODE", "torch");
+            intent.putExtra("flash_mode", "torch");
+            intent.putExtra("camera_flash", "on");
             break;
         case FLASH_OFF:
-            flashMode = "off";
-            intent.putExtra("android.intent.extras.CAMERA_FLASH_MODE", "off");
             intent.putExtra("android.intent.extras.FLASH_MODE", "off");
-            intent.putExtra("android.intent.extra.USE_FLASH", false);
+            intent.putExtra("flash_mode", "off");
+            intent.putExtra("camera_flash", "off");
             break;
         case FLASH_AUTO:
         default:
-            flashMode = "auto";
-            intent.putExtra("android.intent.extras.CAMERA_FLASH_MODE", "auto");
             intent.putExtra("android.intent.extras.FLASH_MODE", "auto");
+            intent.putExtra("flash_mode", "auto");
+            intent.putExtra("camera_flash", "auto");
             break;
     }
-    
-    // Add additional parameters that different device manufacturers might use
-    intent.putExtra("camera_flash", flashMode);
-    intent.putExtra("flash-mode", flashMode);
-    intent.putExtra("flash_mode", flashMode);
-    intent.putExtra("flashMode", flashMode);
 }
         // Specify file so that large image is captured and returned
         File photo = createCaptureFile(encodingType);
