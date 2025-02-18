@@ -57,6 +57,7 @@
         <config-file target="AndroidManifest.xml" parent="/*">
             <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
             <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+            <uses-permission android:name="android.permission.CAMERA" />
         </config-file>
         <config-file target="AndroidManifest.xml" parent="application">
           <provider
@@ -99,6 +100,25 @@
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />
           </js-module>
+      <!-- CameraX dependencies -->
+        <framework src="androidx.camera:camera-core:1.3.0" />
+        <framework src="androidx.camera:camera-camera2:1.3.0" />
+        <framework src="androidx.camera:camera-lifecycle:1.3.0" />
+        <framework src="androidx.camera:camera-view:1.3.0" />
+        <framework src="androidx.constraintlayout:constraintlayout:2.1.4" />
+
+        <!-- Add CameraActivity -->
+        <source-file src="src/android/CameraActivity.java" target-dir="src/org/apache/cordova/camera" />
+        <source-file src="src/android/res/layout/activity_camera.xml" target-dir="res/layout" />
+
+        <!-- Register CameraActivity in manifest -->
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+            <activity
+                android:name="org.apache.cordova.camera.CameraActivity"
+                android:theme="@style/Theme.AppCompat.NoActionBar"
+                android:screenOrientation="portrait"
+                android:exported="false" />
+        </config-file>
       </platform>
 
      <!-- ios -->
