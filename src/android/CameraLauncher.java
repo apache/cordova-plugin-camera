@@ -324,15 +324,16 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         }
     }
 
-    public void takePicture(int returnType, int encodingType)
-    {
-        // Save the number of images currently on disk for later
-        this.numPics = queryImgDB(whichContentStore()).getCount();
+public void takePicture(int returnType, int encodingType) {
+    // Save the number of images currently on disk for later
+    this.numPics = queryImgDB(whichContentStore()).getCount();
 
-        // Let's use the intent and see what happens
+    // If using CameraX custom implementation
+    if (this.srcType == CAMERA) {
+        // Create intent for custom camera activity
         Intent intent = new Intent(cordova.getActivity(), CameraActivity.class);
-
-       if (this.srcType == CAMERA) {int cameraxFlashMode;
+        
+        int cameraxFlashMode;
         switch (this.flashMode) {
             case FLASH_ON:
                 cameraxFlashMode = ImageCapture.FLASH_MODE_ON;
@@ -348,13 +349,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         
         intent.putExtra("flashMode", cameraxFlashMode);
         
-        if (this.cordova != null) {
-            this.cordova.startActivityForResult((CordovaPlugin) this, intent, 
-                (CAMERA + 1) * 16 + returnType + 1);
-        }
-    }
-}
-}
         // Specify file so that large image is captured and returned
         File photo = createCaptureFile(encodingType);
         this.imageFilePath = photo.getAbsolutePath();
@@ -362,23 +356,30 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 applicationId + ".cordova.plugin.camera.provider",
                 photo);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
-        //We can write to this URI, this will hopefully allow us to write files to get to the next step
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        
         if (this.cordova != null) {
-            // Let's check to make sure the camera is actually installed. (Legacy Nexus 7 code)
-            PackageManager mPm = this.cordova.getActivity().getPackageManager();
-            if(intent.resolveActivity(mPm) != null)
-            {
-                this.cordova.startActivityForResult((CordovaPlugin) this, intent, (CAMERA + 1) * 16 + returnType + 1);
+            // Check if device has a camera
+            PackageManager pm = this.cordova.getActivity().getPackageManager();
+            if (!pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
+                LOG.d(LOG_TAG, "Error: This device does not have a camera.");
+                failPicture("This device does not have a camera.");
+                return;
             }
-            else
-            {
-                LOG.d(LOG_TAG, "Error: You don't have a default camera.  Your device may not be CTS complaint.");
+            
+            try {
+                this.cordova.startActivityForResult((CordovaPlugin) this, intent, 
+                    (CAMERA + 1) * 16 + returnType + 1);
+            } catch (ActivityNotFoundException e) {
+                LOG.d(LOG_TAG, "Error: Camera activity not found. Device may not be CTS compliant.");
+                failPicture("Failed to launch camera activity.");
             }
+        } else {
+            LOG.d(LOG_TAG, "ERROR: You must use the CordovaInterface for this to work correctly. Please implement it in your activity");
+            failPicture("CordovaInterface required.");
         }
-//        else
-//            LOG.d(LOG_TAG, "ERROR: You must use the CordovaInterface for this to work correctly. Please implement it in your activity");
     }
+}
 
     /**
      * Create a file in the applications temporary directory based upon the supplied encoding.
