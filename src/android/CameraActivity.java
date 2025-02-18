@@ -1,5 +1,6 @@
 package org.apache.cordova.camera;
 
+import org.apache.cordova.camera.R;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.net.Uri;
@@ -93,50 +94,49 @@ public class CameraActivity extends AppCompatActivity {
         }
     }
 
-    private void takePicture() {
-        if (imageCapture == null) return;
+private void takePicture() {
+    if (imageCapture == null) return;
 
-        ImageCapture.OutputFileOptions outputFileOptions;
+    ImageCapture.OutputFileOptions outputFileOptions;
 
-        if (destinationUri != null) {
-            // Use the URI provided by CameraLauncher
-            outputFileOptions = new ImageCapture.OutputFileOptions.Builder(
-                getContentResolver(),
-                destinationUri)
-                .build();
-        } else {
-            // Create a new file if no destination was provided
-            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
-            ContentValues contentValues = new ContentValues();
-            contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, timestamp);
-            contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
+    if (destinationUri != null) {
+        outputFileOptions = new ImageCapture.OutputFileOptions.Builder(
+            getContentResolver(),
+            destinationUri,
+            new ContentValues())  // Add ContentValues as required
+            .build();
+    } else {
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, timestamp);
+        contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
 
-            outputFileOptions = new ImageCapture.OutputFileOptions.Builder(
-                getContentResolver(),
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                contentValues)
-                .build();
-        }
-
-        imageCapture.takePicture(
-            outputFileOptions,
-            ContextCompat.getMainExecutor(this),
-            new ImageCapture.OnImageSavedCallback() {
-                @Override
-                public void onImageSaved(ImageCapture.OutputFileResults outputFileResults) {
-                    Uri resultUri = destinationUri != null ? destinationUri : outputFileResults.getSavedUri();
-                    Intent resultIntent = new Intent();
-                    resultIntent.setData(resultUri);
-                    setResult(RESULT_OK, resultIntent);
-                    finish();
-                }
-
-                @Override
-                public void onError(ImageCaptureException error) {
-                    error.printStackTrace();
-                    setResult(RESULT_CANCELED);
-                    finish();
-                }
-            });
+        outputFileOptions = new ImageCapture.OutputFileOptions.Builder(
+            getContentResolver(),
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            contentValues)
+            .build();
     }
+
+    imageCapture.takePicture(
+        outputFileOptions, 
+        ContextCompat.getMainExecutor(this),
+        new ImageCapture.OnImageSavedCallback() {
+            @Override
+            public void onImageSaved(ImageCapture.OutputFileResults outputFileResults) {
+                Uri resultUri = destinationUri != null ? destinationUri : outputFileResults.getSavedUri();
+                Intent resultIntent = new Intent();
+                resultIntent.setData(resultUri);
+                setResult(RESULT_OK, resultIntent);
+                finish();
+            }
+
+            @Override
+            public void onError(ImageCaptureException error) {
+                error.printStackTrace();
+                setResult(RESULT_CANCELED);
+                finish();
+            }
+        });
+}
 }
