@@ -332,7 +332,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         // Let's use the intent and see what happens
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-          if (this.srcType == CAMERA) {
+                if (this.srcType == CAMERA) {
     // Convert our flash mode to Android's camera flash modes
     String flashMode;
     switch (this.flashMode) {
@@ -364,6 +364,27 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     intent.putExtra("flashMode", flashMode);
     intent.putExtra("android.intent.extras.FLASH", flashMode);
 }
+        // Specify file so that large image is captured and returned
+        File photo = createCaptureFile(encodingType);
+        this.imageFilePath = photo.getAbsolutePath();
+        this.imageUri = FileProvider.getUriForFile(cordova.getActivity(),
+                applicationId + ".cordova.plugin.camera.provider",
+                photo);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+        //We can write to this URI, this will hopefully allow us to write files to get to the next step
+        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        if (this.cordova != null) {
+            // Let's check to make sure the camera is actually installed. (Legacy Nexus 7 code)
+            PackageManager mPm = this.cordova.getActivity().getPackageManager();
+            if(intent.resolveActivity(mPm) != null)
+            {
+                this.cordova.startActivityForResult((CordovaPlugin) this, intent, (CAMERA + 1) * 16 + returnType + 1);
+            }
+            else
+            {
+                LOG.d(LOG_TAG, "Error: You don't have a default camera.  Your device may not be CTS complaint.");
+            }
+        }
 //        else
 //            LOG.d(LOG_TAG, "ERROR: You must use the CordovaInterface for this to work correctly. Please implement it in your activity");
     }
