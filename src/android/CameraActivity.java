@@ -1,11 +1,13 @@
 package org.apache.cordova.camera;
 
-import android.Manifest;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.view.View;
+import android.widget.Button;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.Camera;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageCapture;
@@ -15,23 +17,38 @@ import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleOwner;
-import android.widget.Button;
 import com.google.common.util.concurrent.ListenableFuture;
 
-public class CameraActivity extends androidx.appcompat.app.AppCompatActivity {
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.concurrent.ExecutionException;
+
+public class CameraActivity extends AppCompatActivity {
     private PreviewView previewView;
     private ImageCapture imageCapture;
     private Camera camera;
-    private int flashMode = ImageCapture.FLASH_MODE_AUTO; // Default flash mode
+    private int flashMode = ImageCapture.FLASH_MODE_AUTO;
+    private Button captureButton;
+    private Uri savedUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_camera);
+
+        // Initialize views
+        previewView = findViewById(R.id.preview_view);
+        captureButton = findViewById(R.id.capture_button);
         
         // Get flash mode from intent
         flashMode = getIntent().getIntExtra("flashMode", ImageCapture.FLASH_MODE_AUTO);
+        savedUri = getIntent().getParcelableExtra(MediaStore.EXTRA_OUTPUT);
         
-        // Set up the camera and preview
+        // Set up capture button click listener
+        captureButton.setOnClickListener(v -> takePicture());
+        
+        // Start camera
         startCamera();
     }
 
@@ -43,13 +60,17 @@ public class CameraActivity extends androidx.appcompat.app.AppCompatActivity {
             try {
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
                 bindPreview(cameraProvider);
-            } catch (Exception e) {
+            } catch (ExecutionException | InterruptedException e) {
                 // Handle any errors
+                e.printStackTrace();
             }
         }, ContextCompat.getMainExecutor(this));
     }
 
     private void bindPreview(ProcessCameraProvider cameraProvider) {
+        // Unbind use cases before rebinding
+        cameraProvider.unbindAll();
+
         Preview preview = new Preview.Builder().build();
 
         imageCapture = new ImageCapture.Builder()
@@ -60,44 +81,57 @@ public class CameraActivity extends androidx.appcompat.app.AppCompatActivity {
             .requireLensFacing(CameraSelector.LENS_FACING_BACK)
             .build();
 
-        camera = cameraProvider.bindToLifecycle(
-            ((LifecycleOwner) this),
-            cameraSelector,
-            preview,
-            imageCapture);
+        try {
+            camera = cameraProvider.bindToLifecycle(
+                this,
+                cameraSelector,
+                preview,
+                imageCapture);
 
-        preview.setSurfaceProvider(previewView.getSurfaceProvider());
+            preview.setSurfaceProvider(previewView.getSurfaceProvider());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void takePicture() {
-        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, timestamp);
-        contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
+        if (imageCapture == null || savedUri == null) return;
 
-        ImageCapture.OutputFileOptions outputFileOptions = 
-            new ImageCapture.OutputFileOptions.Builder(
+        ImageCapture.OutputFileOptions outputFileOptions;
+        
+        if (savedUri != null) {
+            outputFileOptions = new ImageCapture.OutputFileOptions.Builder(
+                getContentResolver(),
+                savedUri)
+                .build();
+        } else {
+            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, timestamp);
+            contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
+            
+            outputFileOptions = new ImageCapture.OutputFileOptions.Builder(
                 getContentResolver(),
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 contentValues)
-            .build();
+                .build();
+        }
 
         imageCapture.takePicture(outputFileOptions, 
             ContextCompat.getMainExecutor(this),
             new ImageCapture.OnImageSavedCallback() {
                 @Override
                 public void onImageSaved(ImageCapture.OutputFileResults outputFileResults) {
-                    Uri savedUri = outputFileResults.getSavedUri();
-                    // Return the image URI to Cordova
+                    Uri resultUri = savedUri != null ? savedUri : outputFileResults.getSavedUri();
                     Intent intent = new Intent();
-                    intent.setData(savedUri);
+                    intent.setData(resultUri);
                     setResult(RESULT_OK, intent);
                     finish();
                 }
 
                 @Override
                 public void onError(ImageCaptureException error) {
-                    // Handle error
+                    error.printStackTrace();
                     setResult(RESULT_CANCELED);
                     finish();
                 }
