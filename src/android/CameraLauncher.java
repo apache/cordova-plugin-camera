@@ -42,6 +42,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import androidx.core.content.FileProvider;
+import androidx.camera.core.ImageCapture;
 import android.util.Base64;
 
 import org.apache.cordova.BuildHelper;
@@ -328,11 +329,10 @@ public void takePicture(int returnType, int encodingType) {
     // Save the number of images currently on disk for later
     this.numPics = queryImgDB(whichContentStore()).getCount();
 
-    // If using CameraX custom implementation
+    // Let's use the intent and see what happens
+    Intent intent = new Intent(cordova.getActivity(), CameraActivity.class);
+
     if (this.srcType == CAMERA) {
-        // Create intent for custom camera activity
-        Intent intent = new Intent(cordova.getActivity(), CameraActivity.class);
-        
         int cameraxFlashMode;
         switch (this.flashMode) {
             case FLASH_ON:
@@ -356,6 +356,8 @@ public void takePicture(int returnType, int encodingType) {
                 applicationId + ".cordova.plugin.camera.provider",
                 photo);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+        
+        //We can write to this URI, this will hopefully allow us to write files to get to the next step
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         
         if (this.cordova != null) {
@@ -380,7 +382,6 @@ public void takePicture(int returnType, int encodingType) {
         }
     }
 }
-
     /**
      * Create a file in the applications temporary directory based upon the supplied encoding.
      *
