@@ -28,9 +28,9 @@ public class CameraActivity extends AppCompatActivity {
     private PreviewView previewView;
     private ImageCapture imageCapture;
     private Camera camera;
-    private int flashMode = ImageCapture.FLASH_MODE_AUTO;
     private Button captureButton;
-    private Uri savedUri;
+    private int flashMode = ImageCapture.FLASH_MODE_AUTO;
+    private Uri destinationUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,14 +40,14 @@ public class CameraActivity extends AppCompatActivity {
         // Initialize views
         previewView = findViewById(R.id.preview_view);
         captureButton = findViewById(R.id.capture_button);
-        
-        // Get flash mode from intent
+
+        // Get flash mode and destination URI from intent
         flashMode = getIntent().getIntExtra("flashMode", ImageCapture.FLASH_MODE_AUTO);
-        savedUri = getIntent().getParcelableExtra(MediaStore.EXTRA_OUTPUT);
-        
-        // Set up capture button click listener
-        captureButton.setOnClickListener(v -> takePicture());
-        
+        destinationUri = getIntent().getParcelableExtra(MediaStore.EXTRA_OUTPUT);
+
+        // Set up capture button
+        captureButton.setOnClickListener(view -> takePicture());
+
         // Start camera
         startCamera();
     }
@@ -61,14 +61,13 @@ public class CameraActivity extends AppCompatActivity {
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
                 bindPreview(cameraProvider);
             } catch (ExecutionException | InterruptedException e) {
-                // Handle any errors
                 e.printStackTrace();
             }
         }, ContextCompat.getMainExecutor(this));
     }
 
     private void bindPreview(ProcessCameraProvider cameraProvider) {
-        // Unbind use cases before rebinding
+        // Unbind previous use cases
         cameraProvider.unbindAll();
 
         Preview preview = new Preview.Builder().build();
@@ -95,21 +94,23 @@ public class CameraActivity extends AppCompatActivity {
     }
 
     private void takePicture() {
-        if (imageCapture == null || savedUri == null) return;
+        if (imageCapture == null) return;
 
         ImageCapture.OutputFileOptions outputFileOptions;
-        
-        if (savedUri != null) {
+
+        if (destinationUri != null) {
+            // Use the URI provided by CameraLauncher
             outputFileOptions = new ImageCapture.OutputFileOptions.Builder(
                 getContentResolver(),
-                savedUri)
+                destinationUri)
                 .build();
         } else {
+            // Create a new file if no destination was provided
             String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
             ContentValues contentValues = new ContentValues();
             contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, timestamp);
             contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
-            
+
             outputFileOptions = new ImageCapture.OutputFileOptions.Builder(
                 getContentResolver(),
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
@@ -117,15 +118,16 @@ public class CameraActivity extends AppCompatActivity {
                 .build();
         }
 
-        imageCapture.takePicture(outputFileOptions, 
+        imageCapture.takePicture(
+            outputFileOptions,
             ContextCompat.getMainExecutor(this),
             new ImageCapture.OnImageSavedCallback() {
                 @Override
                 public void onImageSaved(ImageCapture.OutputFileResults outputFileResults) {
-                    Uri resultUri = savedUri != null ? savedUri : outputFileResults.getSavedUri();
-                    Intent intent = new Intent();
-                    intent.setData(resultUri);
-                    setResult(RESULT_OK, intent);
+                    Uri resultUri = destinationUri != null ? destinationUri : outputFileResults.getSavedUri();
+                    Intent resultIntent = new Intent();
+                    resultIntent.setData(resultUri);
+                    setResult(RESULT_OK, resultIntent);
                     finish();
                 }
 
