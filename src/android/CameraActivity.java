@@ -1,6 +1,5 @@
 package org.apache.cordova.camera;
 
-import org.apache.cordova.camera.R;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.net.Uri;
