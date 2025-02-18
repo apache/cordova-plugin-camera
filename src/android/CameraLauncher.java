@@ -332,57 +332,38 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         // Let's use the intent and see what happens
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-           if (this.srcType == CAMERA) {
-        // Convert our flash mode to Android's camera flash modes
-        String flashMode;
-        switch (this.flashMode) {
-            case FLASH_ON:
-                // Parameters.FLASH_MODE_ON constant is "torch"
-                flashMode = "torch";
-                intent.putExtra("android.intent.extras.FLASH_MODE", flashMode);
-                // Some devices use this parameter instead
-                intent.putExtra("android.intent.extra.USE_FLASH", true);
-                break;
-            case FLASH_OFF:
-                // Parameters.FLASH_MODE_OFF constant is "off"
-                flashMode = "off";
-                intent.putExtra("android.intent.extras.FLASH_MODE", flashMode);
-                intent.putExtra("android.intent.extra.USE_FLASH", false);
-                break;
-            case FLASH_AUTO:
-            default:
-                // Parameters.FLASH_MODE_AUTO constant is "auto"
-                flashMode = "auto";
-                intent.putExtra("android.intent.extras.FLASH_MODE", flashMode);
-                // Don't set USE_FLASH for auto mode
-                break;
-        }
-        
-        // Some devices use these legacy parameters
-        intent.putExtra("flashMode", flashMode);
+          if (this.srcType == CAMERA) {
+    // Convert our flash mode to Android's camera flash modes
+    String flashMode;
+    switch (this.flashMode) {
+        case FLASH_ON:
+            flashMode = "on";  // Changed from "torch" to "on"
+            intent.putExtra("android.intent.extras.CAMERA_FLASH_MODE", "on");  // Add this
+            intent.putExtra("android.intent.extras.FLASH_MODE", "on");
+            intent.putExtra("android.intent.extra.USE_FLASH", true);
+            break;
+        case FLASH_OFF:
+            flashMode = "off";
+            intent.putExtra("android.intent.extras.CAMERA_FLASH_MODE", "off");  // Add this
+            intent.putExtra("android.intent.extras.FLASH_MODE", "off");
+            intent.putExtra("android.intent.extra.USE_FLASH", false);
+            break;
+        case FLASH_AUTO:
+        default:
+            flashMode = "auto";
+            intent.putExtra("android.intent.extras.CAMERA_FLASH_MODE", "auto");  // Add this
+            intent.putExtra("android.intent.extras.FLASH_MODE", "auto");
+            // Don't set USE_FLASH for auto mode
+            break;
     }
-        // Specify file so that large image is captured and returned
-        File photo = createCaptureFile(encodingType);
-        this.imageFilePath = photo.getAbsolutePath();
-        this.imageUri = FileProvider.getUriForFile(cordova.getActivity(),
-                applicationId + ".cordova.plugin.camera.provider",
-                photo);
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
-        //We can write to this URI, this will hopefully allow us to write files to get to the next step
-        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-
-        if (this.cordova != null) {
-            // Let's check to make sure the camera is actually installed. (Legacy Nexus 7 code)
-            PackageManager mPm = this.cordova.getActivity().getPackageManager();
-            if(intent.resolveActivity(mPm) != null)
-            {
-                this.cordova.startActivityForResult((CordovaPlugin) this, intent, (CAMERA + 1) * 16 + returnType + 1);
-            }
-            else
-            {
-                LOG.d(LOG_TAG, "Error: You don't have a default camera.  Your device may not be CTS complaint.");
-            }
-        }
+    
+    // Add these additional parameters that modern Android devices might use
+    intent.putExtra("camera_flash", flashMode);
+    intent.putExtra("flash-mode", flashMode);
+    intent.putExtra("flash_mode", flashMode);
+    intent.putExtra("flashMode", flashMode);
+    intent.putExtra("android.intent.extras.FLASH", flashMode);
+}
 //        else
 //            LOG.d(LOG_TAG, "ERROR: You must use the CordovaInterface for this to work correctly. Please implement it in your activity");
     }
