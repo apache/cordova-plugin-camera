@@ -35,7 +35,7 @@ public class CameraActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_camera);
+        setContentView(R.xml.activity_camera);
 
         // Initialize views
         previewView = findViewById(R.id.preview_view);
