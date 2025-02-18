@@ -330,27 +330,30 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         this.numPics = queryImgDB(whichContentStore()).getCount();
 
         // Let's use the intent and see what happens
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        Intent intent = new Intent(cordova.getActivity(), CameraActivity.class);
 
-if (this.srcType == CAMERA) {
-    switch (this.flashMode) {
-        case FLASH_ON:
-            intent.putExtra("android.intent.extras.FLASH_MODE", "torch");
-            intent.putExtra("flash_mode", "torch");
-            intent.putExtra("camera_flash", "on");
-            break;
-        case FLASH_OFF:
-            intent.putExtra("android.intent.extras.FLASH_MODE", "off");
-            intent.putExtra("flash_mode", "off");
-            intent.putExtra("camera_flash", "off");
-            break;
-        case FLASH_AUTO:
-        default:
-            intent.putExtra("android.intent.extras.FLASH_MODE", "auto");
-            intent.putExtra("flash_mode", "auto");
-            intent.putExtra("camera_flash", "auto");
-            break;
+       if (this.srcType == CAMERA) {int cameraxFlashMode;
+        switch (this.flashMode) {
+            case FLASH_ON:
+                cameraxFlashMode = ImageCapture.FLASH_MODE_ON;
+                break;
+            case FLASH_OFF:
+                cameraxFlashMode = ImageCapture.FLASH_MODE_OFF;
+                break;
+            case FLASH_AUTO:
+            default:
+                cameraxFlashMode = ImageCapture.FLASH_MODE_AUTO;
+                break;
+        }
+        
+        intent.putExtra("flashMode", cameraxFlashMode);
+        
+        if (this.cordova != null) {
+            this.cordova.startActivityForResult((CordovaPlugin) this, intent, 
+                (CAMERA + 1) * 16 + returnType + 1);
+        }
     }
+}
 }
         // Specify file so that large image is captured and returned
         File photo = createCaptureFile(encodingType);
