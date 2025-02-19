@@ -42,7 +42,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import androidx.core.content.FileProvider;
-import androidx.camera.core.ImageCapture;
 import android.util.Base64;
 
 import org.apache.cordova.BuildHelper;
@@ -325,30 +324,34 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         }
     }
 
-public void takePicture(int returnType, int encodingType) {
-    // Save the number of images currently on disk for later
-    this.numPics = queryImgDB(whichContentStore()).getCount();
+ public void takePicture(int returnType, int encodingType)
+    {
+        // Save the number of images currently on disk for later
+        this.numPics = queryImgDB(whichContentStore()).getCount();
 
-    // Let's use the intent and see what happens
-    Intent intent = new Intent(cordova.getActivity(), CameraActivity.class);
+        // Let's use the intent and see what happens
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-    if (this.srcType == CAMERA) {
-        int cameraxFlashMode;
-        switch (this.flashMode) {
-            case FLASH_ON:
-                cameraxFlashMode = ImageCapture.FLASH_MODE_ON;
-                break;
-            case FLASH_OFF:
-                cameraxFlashMode = ImageCapture.FLASH_MODE_OFF;
-                break;
-            case FLASH_AUTO:
-            default:
-                cameraxFlashMode = ImageCapture.FLASH_MODE_AUTO;
-                break;
-        }
-        
-        intent.putExtra("flashMode", cameraxFlashMode);
-        
+if (this.srcType == CAMERA) {
+    switch (this.flashMode) {
+        case FLASH_ON:
+            intent.putExtra("android.intent.extras.FLASH_MODE", "torch");
+            intent.putExtra("flash_mode", "torch");
+            intent.putExtra("camera_flash", "on");
+            break;
+        case FLASH_OFF:
+            intent.putExtra("android.intent.extras.FLASH_MODE", "off");
+            intent.putExtra("flash_mode", "off");
+            intent.putExtra("camera_flash", "off");
+            break;
+        case FLASH_AUTO:
+        default:
+            intent.putExtra("android.intent.extras.FLASH_MODE", "auto");
+            intent.putExtra("flash_mode", "auto");
+            intent.putExtra("camera_flash", "auto");
+            break;
+    }
+}
         // Specify file so that large image is captured and returned
         File photo = createCaptureFile(encodingType);
         this.imageFilePath = photo.getAbsolutePath();
@@ -356,32 +359,20 @@ public void takePicture(int returnType, int encodingType) {
                 applicationId + ".cordova.plugin.camera.provider",
                 photo);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
-        
         //We can write to this URI, this will hopefully allow us to write files to get to the next step
         intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        
         if (this.cordova != null) {
-            // Check if device has a camera
-            PackageManager pm = this.cordova.getActivity().getPackageManager();
-            if (!pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
-                LOG.d(LOG_TAG, "Error: This device does not have a camera.");
-                failPicture("This device does not have a camera.");
-                return;
+            // Let's check to make sure the camera is actually installed. (Legacy Nexus 7 code)
+            PackageManager mPm = this.cordova.getActivity().getPackageManager();
+            if(intent.resolveActivity(mPm) != null)
+            {
+                this.cordova.startActivityForResult((CordovaPlugin) this, intent, (CAMERA + 1) * 16 + returnType + 1);
             }
-            
-            try {
-                this.cordova.startActivityForResult((CordovaPlugin) this, intent, 
-                    (CAMERA + 1) * 16 + returnType + 1);
-            } catch (ActivityNotFoundException e) {
-                LOG.d(LOG_TAG, "Error: Camera activity not found. Device may not be CTS compliant.");
-                failPicture("Failed to launch camera activity.");
+            else
+            {
+                LOG.d(LOG_TAG, "Error: You don't have a default camera.  Your device may not be CTS complaint.");
             }
-        } else {
-            LOG.d(LOG_TAG, "ERROR: You must use the CordovaInterface for this to work correctly. Please implement it in your activity");
-            failPicture("CordovaInterface required.");
         }
-    }
-}
     /**
      * Create a file in the applications temporary directory based upon the supplied encoding.
      *
