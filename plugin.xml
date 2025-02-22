@@ -109,6 +109,15 @@
              </feature>
              <preference name="CameraUsesGeolocation" value="false" />
          </config-file>
+        <config-file target="*-Info.plist" parent="NSCameraUsageDescription">
+             <string>This app needs camera access to take photos</string>
+         </config-file>
+         <config-file target="*-Info.plist" parent="NSPhotoLibraryUsageDescription">
+             <string>This app needs photo library access to get photos</string>
+         </config-file>
+         <config-file target="*-Info.plist" parent="NSPhotoLibraryAddUsageDescription">
+             <string>This app needs photo library access to save photos</string>
+         </config-file>
 
          <js-module src="www/ios/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />
