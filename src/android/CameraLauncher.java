@@ -275,48 +275,32 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @param encodingType           Compression quality hint (0-100: 0=low quality & high compression, 100=compress of max quality)
      */
     public void callTakePicture(int returnType, int encodingType) {
-        String[] storagePermissions = getPermissions(true, mediaType);
-        boolean saveAlbumPermission;
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            saveAlbumPermission = this.saveToPhotoAlbum ? hasPermissions(storagePermissions) : true;
-        } else {
-            saveAlbumPermission = hasPermissions(storagePermissions);
-        }
-        boolean takePicturePermission = PermissionHelper.hasPermission(this, Manifest.permission.CAMERA);
+       String[] storagePermissions = getPermissions(true, mediaType);
+       boolean saveAlbumPermission;
+       if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+           saveAlbumPermission = this.saveToPhotoAlbum ? hasPermissions(storagePermissions) : true;
+       } else {
+           saveAlbumPermission = hasPermissions(storagePermissions);
+       }
+    
+       // Check for camera permission
+       boolean takePicturePermission = PermissionHelper.hasPermission(this, Manifest.permission.CAMERA);
 
-        // CB-10120: The CAMERA permission does not need to be requested unless it is declared
-        // in AndroidManifest.xml. This plugin does not declare it, but others may and so we must
-        // check the package info to determine if the permission is present.
-
-        if (!takePicturePermission) {
-            takePicturePermission = true;
-            try {
-                PackageManager packageManager = this.cordova.getActivity().getPackageManager();
-                String[] permissionsInPackage = packageManager.getPackageInfo(this.cordova.getActivity().getPackageName(), PackageManager.GET_PERMISSIONS).requestedPermissions;
-                if (permissionsInPackage != null) {
-                    for (String permission : permissionsInPackage) {
-                        if (permission.equals(Manifest.permission.CAMERA)) {
-                            takePicturePermission = false;
-                            break;
-                        }
-                    }
-                }
-            } catch (NameNotFoundException e) {
-                // We are requesting the info for our package, so this should
-                // never be caught
-            }
-        }
-
-        if (takePicturePermission && saveAlbumPermission) {
-            takePicture(returnType, encodingType);
-        } else if (saveAlbumPermission) {
-            PermissionHelper.requestPermission(this, TAKE_PIC_SEC, Manifest.permission.CAMERA);
-        } else if (takePicturePermission) {
-            PermissionHelper.requestPermissions(this, TAKE_PIC_SEC, storagePermissions);
-        } else {
-            PermissionHelper.requestPermissions(this, TAKE_PIC_SEC, getPermissions(false, mediaType));
-        }
+       // If we have all necessary permissions, proceed with taking the picture
+       if (takePicturePermission && saveAlbumPermission) {
+           takePicture(returnType, encodingType);
+       } 
+       else if (saveAlbumPermission) {
+        // Only camera permission is missing
+           PermissionHelper.requestPermission(this, TAKE_PIC_SEC, Manifest.permission.CAMERA);
+       } else if (takePicturePermission) {
+        // Only storage permissions are missing
+           PermissionHelper.requestPermissions(this, TAKE_PIC_SEC, storagePermissions);
+       } else {
+        // Both permissions are missing
+           PermissionHelper.requestPermissions(this, TAKE_PIC_SEC, getPermissions(false, mediaType));
     }
+}
 
     public void takePicture(int returnType, int encodingType)
     {
