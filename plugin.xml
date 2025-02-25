@@ -88,6 +88,12 @@
             </intent>
         </config-file>
 
+        <preference name="ANDROIDX_CAMERAX_VERSION" default="1.2.+"/>
+        <framework src="androidx.camera:camera-core:$ANDROIDX_CAMERAX_VERSION" />
+        <framework src="androidx.camera:camera-camera2:$ANDROIDX_CAMERAX_VERSION" />
+        <framework src="androidx.camera:camera-lifecycle:$ANDROIDX_CAMERAX_VERSION" />
+        <framework src="androidx.camera:camera-view:$ANDROIDX_CAMERAX_VERSION" />
+      
         <source-file src="src/android/CameraLauncher.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/FileHelper.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/ExifHelper.java" target-dir="src/org/apache/cordova/camera" />
