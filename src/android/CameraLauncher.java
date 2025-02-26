@@ -83,7 +83,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 // For hardware camera parameters (used in legacy camera)
-import android.hardware.Camera;
+//import android.hardware.Camera;
 
 // For threading support
 import java.util.concurrent.ExecutionException;
