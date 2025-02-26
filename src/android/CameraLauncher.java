@@ -72,6 +72,7 @@ import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.lifecycle.LifecycleOwner;
+import androidx.core.content.ContextCompat;
 
 // Google libraries for futures
 import com.google.common.util.concurrent.ListenableFuture;
@@ -159,7 +160,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
     private ImageCapture imageCapture;
     private ProcessCameraProvider cameraProvider;
-    private Camera camera;
+    private androidx.camera.core.Camera cameraX;
     private PreviewView previewView;
     private FrameLayout cameraLayout;
     private int lensFacing = CameraSelector.LENS_FACING_BACK;
@@ -348,6 +349,59 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     }
 }
 
+/**
+ * Legacy fallback method that uses the default camera intent.
+ * Used as a backup when CameraX implementation fails.
+ */
+public void takePicture(int returnType, int encodingType)
+{
+    // Save the number of images currently on disk for later
+    this.numPics = queryImgDB(whichContentStore()).getCount();
+
+    // Let's use the intent and see what happens
+    Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+    // Specify file so that large image is captured and returned
+    File photo = createCaptureFile(encodingType);
+    this.imageFilePath = photo.getAbsolutePath();
+    this.imageUri = FileProvider.getUriForFile(cordova.getActivity(),
+            applicationId + ".cordova.plugin.camera.provider",
+            photo);
+    intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+    //We can write to this URI, this will hopefully allow us to write files to get to the next step
+    intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+    
+    // Handle flash mode for the default camera intent
+    // Note: This may not work on all devices as some camera apps may ignore this extra
+    if (this.flashMode == 1) { // ON
+        intent.putExtra("android.intent.extras.CAMERA_FLASH", 1);
+        intent.putExtra("android.intent.extras.FLASH_MODE", "on");
+        intent.putExtra("android.hardware.Camera.Parameters.FLASH_MODE", "on");
+    } else if (this.flashMode == -1) { // OFF
+        intent.putExtra("android.intent.extras.CAMERA_FLASH", -1);
+        intent.putExtra("android.intent.extras.FLASH_MODE", "off");
+        intent.putExtra("android.hardware.Camera.Parameters.FLASH_MODE", "off");
+    } else { // AUTO (0)
+        intent.putExtra("android.intent.extras.CAMERA_FLASH", 0);
+        intent.putExtra("android.intent.extras.FLASH_MODE", "auto");
+        intent.putExtra("android.hardware.Camera.Parameters.FLASH_MODE", "auto");
+    }
+
+    if (this.cordova != null) {
+        // Let's check to make sure the camera is actually installed. (Legacy Nexus 7 code)
+        PackageManager mPm = this.cordova.getActivity().getPackageManager();
+        if(intent.resolveActivity(mPm) != null)
+        {
+            this.cordova.startActivityForResult((CordovaPlugin) this, intent, (CAMERA + 1) * 16 + returnType + 1);
+        }
+        else
+        {
+            LOG.d(LOG_TAG, "Error: You don't have a default camera. Your device may not be CTS complaint.");
+            this.failPicture("No camera available");
+        }
+    }
+}
+
     private void takePictureWithCameraX(int returnType, int encodingType) {
         // Save the number of images currently on disk for later
         this.numPics = queryImgDB(whichContentStore()).getCount();
@@ -429,7 +483,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 
                 // Bind all use cases to camera
                 cameraProvider.unbindAll();
-                camera = cameraProvider.bindToLifecycle((LifecycleOwner) cordova.getActivity(), 
+                cameraX = cameraProvider.bindToLifecycle((LifecycleOwner) cordova.getActivity(), 
                     cameraSelector, preview, imageCapture);
                 
                 // Add capture button
