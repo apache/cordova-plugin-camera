@@ -125,6 +125,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
     private static final String TAKE_PICTURE_ACTION = "takePicture";
 
+    private static final int FLASH_AUTO = 0;
+    private static final int FLASH_ON = 1;
+    private static final int FLASH_OFF = -1;
+
     public static final int PERMISSION_DENIED_ERROR = 20;
     public static final int TAKE_PIC_SEC = 0;
     public static final int SAVE_TO_ALBUM_SEC = 1;
@@ -409,13 +413,13 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 
                 // Apply flash mode based on user preference
                 switch (flashMode) {
-                    case FLASH_ON:
+                    case 1:
                         imageCaptureBuilder.setFlashMode(ImageCapture.FLASH_MODE_ON);
                         break;
-                    case FLASH_OFF:
+                    case -1:
                         imageCaptureBuilder.setFlashMode(ImageCapture.FLASH_MODE_OFF);
                         break;
-                    case FLASH_AUTO:
+                    case 0:
                     default:
                         imageCaptureBuilder.setFlashMode(ImageCapture.FLASH_MODE_AUTO);
                         break;
