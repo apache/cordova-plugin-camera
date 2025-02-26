@@ -245,7 +245,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @param returnType        Set the type of image to return.
      * @param encodingType           Compression quality hint (0-100: 0=low quality & high compression, 100=compress of max quality)
      */
-    public void callTakePicture(int returnType, int encodingType) throws IllegalStateException {
     public void callTakePicture(int returnType, int encodingType) {
        String[] storagePermissions = getPermissions(true, mediaType);
        boolean saveAlbumPermission;
