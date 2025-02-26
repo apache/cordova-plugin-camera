@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-camera",
-  "version": "7.0.1-dev",
+  "version": "8.0.1-dev",
   "description": "Cordova Camera Plugin",
   "types": "./types/index.d.ts",
   "cordova": {
@@ -57,11 +57,16 @@
         "cordova": ">=9.0.0"
       },
       "8.0.0": {
+        "cordova-android": ">=12.0.0",
+        "cordova-ios": ">=5.1.0",
+        "cordova": ">=9.0.0"
+      },
+      "9.0.0": {
         "cordova": ">100"
       }
     }
   },
   "devDependencies": {
-    "@cordova/eslint-config": "^5.0.0"
+    "@cordova/eslint-config": "^5.1.0"
   }
 }

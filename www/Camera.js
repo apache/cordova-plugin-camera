@@ -145,6 +145,10 @@ cameraExport.getPicture = function (successCallback, errorCallback, options) {
     const cameraDirection = getValue(options.cameraDirection, Camera.Direction.BACK);
     const flashMode = (sourceType === Camera.PictureSourceType.CAMERA) ? getValue(options.flashMode, Camera.FlashMode.AUTO) : null; // only apply flash if on camera
 
+    if (allowEdit) {
+        console.warn('allowEdit is deprecated. It does not work reliably on all platforms. Utilise a dedicated image editing library instead. allowEdit functionality is scheduled to be removed in a future release.');
+    }
+
     const args = [quality, destinationType, sourceType, targetWidth, targetHeight, encodingType,
         mediaType, allowEdit, correctOrientation, saveToPhotoAlbum, popoverOptions, cameraDirection];
     if (flashMode !== null) {
