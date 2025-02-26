@@ -18,16 +18,6 @@
 */
 package org.apache.cordova.camera;
 
-
-import android.content.Context;
-import android.graphics.Color;
-import android.graphics.drawable.GradientDrawable;
-import android.view.KeyEvent;
-import android.view.MotionEvent;
-import android.view.ScaleGestureDetector;
-import android.widget.Button;
-import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -73,33 +63,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-// CameraX imports
-import androidx.camera.core.Camera;
-import androidx.camera.core.CameraSelector;
-import androidx.camera.core.ImageCapture;
-import androidx.camera.core.ImageCaptureException;
-import androidx.camera.core.Preview;
-import androidx.camera.lifecycle.ProcessCameraProvider;
-import androidx.camera.view.PreviewView;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.core.content.ContextCompat;
-
-// Google libraries for futures
-import com.google.common.util.concurrent.ListenableFuture;
-
-// View and UI related imports
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
-
-// For hardware camera parameters (used in legacy camera)
-//import android.hardware.Camera;
-
-// For threading support
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
 /**
  * This class launches the camera view, allows the user to take a picture, closes the camera view,
  * and returns the captured image.  When the camera view is closed, the screen displayed before
@@ -136,10 +99,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
     private static final String TAKE_PICTURE_ACTION = "takePicture";
 
-    private static final int FLASH_AUTO = 0;
-    private static final int FLASH_ON = 1;
-    private static final int FLASH_OFF = -1;
-
     public static final int PERMISSION_DENIED_ERROR = 20;
     public static final int TAKE_PIC_SEC = 0;
     public static final int SAVE_TO_ALBUM_SEC = 1;
@@ -164,17 +123,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private boolean correctOrientation;     // Should the pictures orientation be corrected
     private boolean orientationCorrected;   // Has the picture's orientation been corrected
     private boolean allowEdit;              // Should we allow the user to crop the image.
-    private int flashMode;                  // Flash mode (-1: off, 0: auto, 1: on)
-
-    // CameraX components
-    private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
-    private ImageCapture imageCapture;
-    private ProcessCameraProvider cameraProvider;
-    private androidx.camera.core.Camera cameraX;
-    private PreviewView previewView;
-    private FrameLayout cameraLayout;
-    private int lensFacing = CameraSelector.LENS_FACING_BACK;
-    private final Executor executor = Executors.newSingleThreadExecutor();
 
     public CallbackContext callbackContext;
     private int numPics;
@@ -210,7 +158,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             this.encodingType = JPEG;
             this.mediaType = PICTURE;
             this.mQuality = 50;
-            this.flashMode = FLASH_AUTO;
 
             //Take the values from the arguments if they're not already defined (this is tricky)
             this.destType = args.getInt(1);
@@ -223,10 +170,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             this.allowEdit = args.getBoolean(7);
             this.correctOrientation = args.getBoolean(8);
             this.saveToPhotoAlbum = args.getBoolean(9);
-
-            if (args.length() > 12) {
-                   this.flashMode = args.getInt(12);
-            }
 
             // If the user specifies a 0 or smaller width/height
             // make it -1 so later comparisons succeed
@@ -345,7 +288,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
        // If we have all necessary permissions, proceed with taking the picture
        if (takePicturePermission && saveAlbumPermission) {
-           takePictureWithCameraX(returnType, encodingType);
+           takePicture(returnType, encodingType);
        } 
        else if (saveAlbumPermission) {
         // Only camera permission is missing
@@ -359,582 +302,38 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     }
 }
 
-/**
- * Legacy fallback method that uses the default camera intent.
- * Used as a backup when CameraX implementation fails.
- */
-public void takePicture(int returnType, int encodingType)
-{
-    // Save the number of images currently on disk for later
-    this.numPics = queryImgDB(whichContentStore()).getCount();
+    public void takePicture(int returnType, int encodingType)
+    {
+        // Save the number of images currently on disk for later
+        this.numPics = queryImgDB(whichContentStore()).getCount();
 
-    // Let's use the intent and see what happens
-    Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        // Let's use the intent and see what happens
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-    // Specify file so that large image is captured and returned
-    File photo = createCaptureFile(encodingType);
-    this.imageFilePath = photo.getAbsolutePath();
-    this.imageUri = FileProvider.getUriForFile(cordova.getActivity(),
-            applicationId + ".cordova.plugin.camera.provider",
-            photo);
-    intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
-    //We can write to this URI, this will hopefully allow us to write files to get to the next step
-    intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-    
-    // Handle flash mode for the default camera intent
-    // Note: This may not work on all devices as some camera apps may ignore this extra
-    if (this.flashMode == 1) { // ON
-        intent.putExtra("android.intent.extras.CAMERA_FLASH", 1);
-        intent.putExtra("android.intent.extras.FLASH_MODE", "on");
-        intent.putExtra("android.hardware.Camera.Parameters.FLASH_MODE", "on");
-    } else if (this.flashMode == -1) { // OFF
-        intent.putExtra("android.intent.extras.CAMERA_FLASH", -1);
-        intent.putExtra("android.intent.extras.FLASH_MODE", "off");
-        intent.putExtra("android.hardware.Camera.Parameters.FLASH_MODE", "off");
-    } else { // AUTO (0)
-        intent.putExtra("android.intent.extras.CAMERA_FLASH", 0);
-        intent.putExtra("android.intent.extras.FLASH_MODE", "auto");
-        intent.putExtra("android.hardware.Camera.Parameters.FLASH_MODE", "auto");
-    }
+        // Specify file so that large image is captured and returned
+        File photo = createCaptureFile(encodingType);
+        this.imageFilePath = photo.getAbsolutePath();
+        this.imageUri = FileProvider.getUriForFile(cordova.getActivity(),
+                applicationId + ".cordova.plugin.camera.provider",
+                photo);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+        //We can write to this URI, this will hopefully allow us to write files to get to the next step
+        intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 
-    if (this.cordova != null) {
-        // Let's check to make sure the camera is actually installed. (Legacy Nexus 7 code)
-        PackageManager mPm = this.cordova.getActivity().getPackageManager();
-        if(intent.resolveActivity(mPm) != null)
-        {
-            this.cordova.startActivityForResult((CordovaPlugin) this, intent, (CAMERA + 1) * 16 + returnType + 1);
-        }
-        else
-        {
-            LOG.d(LOG_TAG, "Error: You don't have a default camera. Your device may not be CTS complaint.");
-            this.failPicture("No camera available");
-        }
-    }
-}
-
-   private void takePictureWithCameraX(int returnType, int encodingType) {
-    // Save the number of images currently on disk for later
-    this.numPics = queryImgDB(whichContentStore()).getCount();
-
-    // Create a file for the captured image
-    File photoFile = createCaptureFile(encodingType);
-    this.imageFilePath = photoFile.getAbsolutePath();
-    this.imageUri = FileProvider.getUriForFile(cordova.getActivity(),
-            applicationId + ".cordova.plugin.camera.provider",
-            photoFile);
-
-    // Create camera layout and add it to the WebView
-    cordova.getActivity().runOnUiThread(new Runnable() {
-        @Override
-        public void run() {
-            // Create layout for camera
-            FrameLayout containerView = new FrameLayout(cordova.getActivity());
-            containerView.setLayoutParams(new FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    FrameLayout.LayoutParams.MATCH_PARENT));
-
-            // Create PreviewView for CameraX
-            previewView = new PreviewView(cordova.getActivity());
-            previewView.setLayoutParams(new FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    FrameLayout.LayoutParams.MATCH_PARENT));
-            
-            containerView.addView(previewView);
-            
-            // Create the UI controls overlay
-            addCameraControls(containerView);
-
-            // Get the Cordova content view
-            View webView = cordova.getActivity().findViewById(android.R.id.content);
-            if (webView instanceof FrameLayout) {
-                ((FrameLayout) webView).addView(containerView);
-                cameraLayout = containerView;
-                
-                // Override back button behavior
-                setupBackButtonOverride();
-                
-                // Start camera after UI is ready
-                startCameraX();
+        if (this.cordova != null) {
+            // Let's check to make sure the camera is actually installed. (Legacy Nexus 7 code)
+            PackageManager mPm = this.cordova.getActivity().getPackageManager();
+            if(intent.resolveActivity(mPm) != null)
+            {
+                this.cordova.startActivityForResult((CordovaPlugin) this, intent, (CAMERA + 1) * 16 + returnType + 1);
+            }
+            else
+            {
+                LOG.d(LOG_TAG, "Error: You don't have a default camera.  Your device may not be CTS complaint.");
             }
         }
-    });
-}
-
-private void addCameraControls(FrameLayout containerView) {
-    Context context = cordova.getActivity();
-    
-    // Create controls container
-    LinearLayout controlsContainer = new LinearLayout(context);
-    controlsContainer.setOrientation(LinearLayout.VERTICAL);
-    controlsContainer.setGravity(android.view.Gravity.BOTTOM | android.view.Gravity.CENTER_HORIZONTAL);
-    controlsContainer.setLayoutParams(new FrameLayout.LayoutParams(
-        FrameLayout.LayoutParams.MATCH_PARENT,
-        FrameLayout.LayoutParams.WRAP_CONTENT,
-        android.view.Gravity.BOTTOM));
-    
-    // Top controls row (flash and flip)
-    LinearLayout topControls = new LinearLayout(context);
-    topControls.setOrientation(LinearLayout.HORIZONTAL);
-    topControls.setLayoutParams(new LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.MATCH_PARENT,
-        LinearLayout.LayoutParams.WRAP_CONTENT));
-    topControls.setGravity(android.view.Gravity.CENTER);
-    topControls.setPadding(20, 20, 20, 20);
-    
-    // Flash mode button
-    ImageButton flashButton = new ImageButton(context);
-    flashButton.setBackgroundColor(Color.TRANSPARENT);
-    // Use appropriate icon based on current flash mode
-    updateFlashButtonIcon(flashButton);
-    flashButton.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            toggleFlashMode();
-            updateFlashButtonIcon(flashButton);
-        }
-    });
-    
-    // Flip camera button
-    ImageButton flipButton = new ImageButton(context);
-    flipButton.setBackgroundColor(Color.TRANSPARENT);
-    flipButton.setImageResource(android.R.drawable.ic_menu_camera);
-    flipButton.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            flipCamera();
-        }
-    });
-    
-    // Add buttons to top controls
-    LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.WRAP_CONTENT,
-        LinearLayout.LayoutParams.WRAP_CONTENT);
-    buttonParams.setMargins(20, 0, 20, 0);
-    
-    topControls.addView(flashButton, buttonParams);
-    topControls.addView(flipButton, buttonParams);
-    
-    // Create circular capture button
-    FrameLayout captureButtonContainer = new FrameLayout(context);
-    captureButtonContainer.setLayoutParams(new LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.MATCH_PARENT,
-        LinearLayout.LayoutParams.WRAP_CONTENT));
-    captureButtonContainer.setPadding(0, 0, 0, 50);
-    
-    // Outer circle
-    GradientDrawable outerCircle = new GradientDrawable();
-    outerCircle.setShape(GradientDrawable.OVAL);
-    outerCircle.setColor(Color.WHITE);
-    
-    // Inner circle
-    GradientDrawable innerCircle = new GradientDrawable();
-    innerCircle.setShape(GradientDrawable.OVAL);
-    innerCircle.setColor(Color.WHITE);
-    
-    // Create the capture button
-    Button captureButton = new Button(context);
-    captureButton.setBackground(outerCircle);
-    int buttonSize = 80;
-    FrameLayout.LayoutParams captureParams = new FrameLayout.LayoutParams(buttonSize, buttonSize);
-    captureParams.gravity = android.view.Gravity.CENTER;
-    captureButton.setLayoutParams(captureParams);
-    
-    // Add click listener
-    captureButton.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            takePictureWithCameraX();
-        }
-    });
-    
-    captureButtonContainer.addView(captureButton);
-    
-    // Add all controls to container
-    controlsContainer.addView(topControls);
-    controlsContainer.addView(captureButtonContainer);
-    
-    containerView.addView(controlsContainer);
-    
-    // Setup pinch to zoom gesture
-    setupPinchToZoom();
-}
-
-private void updateFlashButtonIcon(ImageButton flashButton) {
-    int icon;
-    switch (flashMode) {
-        case 1: // ON
-            icon = android.R.drawable.ic_menu_compass; // Use appropriate flash on icon
-            break;
-        case -1: // OFF
-            icon = android.R.drawable.ic_menu_close_clear_cancel; // Use appropriate flash off icon
-            break;
-        case 0: // AUTO
-        default:
-            icon = android.R.drawable.ic_menu_rotate; // Use appropriate flash auto icon
-            break;
-    }
-    flashButton.setImageResource(icon);
-}
-
-private void toggleFlashMode() {
-    // Cycle through flash modes: Auto (0) -> On (1) -> Off (-1) -> Auto (0)...
-    if (flashMode == 0) {
-        flashMode = 1;
-    } else if (flashMode == 1) {
-        flashMode = -1;
-    } else {
-        flashMode = 0;
-    }
-    
-    // Update the camera with new flash mode
-    if (imageCapture != null) {
-        int flashMode = ImageCapture.FLASH_MODE_AUTO;
-        switch (this.flashMode) {
-            case 1: // ON
-                flashMode = ImageCapture.FLASH_MODE_ON;
-                break;
-            case -1: // OFF
-                flashMode = ImageCapture.FLASH_MODE_OFF;
-                break;
-            case 0: // AUTO
-            default:
-                flashMode = ImageCapture.FLASH_MODE_AUTO;
-                break;
-        }
-        imageCapture.setFlashMode(flashMode);
-    }
-}
-
-private void flipCamera() {
-    // Toggle between front and back camera
-    lensFacing = (lensFacing == CameraSelector.LENS_FACING_BACK) ? 
-        CameraSelector.LENS_FACING_FRONT : CameraSelector.LENS_FACING_BACK;
-    
-    // Restart camera with new lens facing
-    if (cameraProvider != null) {
-        startCameraX();
-    }
-}
-
-private void setupPinchToZoom() {
-    ScaleGestureDetector.SimpleOnScaleGestureListener listener = 
-        new ScaleGestureDetector.SimpleOnScaleGestureListener() {
-            @Override
-            public boolean onScale(ScaleGestureDetector detector) {
-                if (cameraX == null) return false;
-                
-                float currentZoomRatio = cameraX.getCameraInfo().getZoomState().getValue().getZoomRatio();
-                float delta = detector.getScaleFactor();
-                
-                cameraX.getCameraControl().setZoomRatio(currentZoomRatio * delta);
-                return true;
-            }
-        };
-    
-    final ScaleGestureDetector scaleGestureDetector = new ScaleGestureDetector(cordova.getActivity(), listener);
-    
-    previewView.setOnTouchListener(new View.OnTouchListener() {
-        @Override
-        public boolean onTouch(View v, MotionEvent event) {
-            return scaleGestureDetector.onTouchEvent(event);
-        }
-    });
-}
-
-private void setupBackButtonOverride() {
-    cordova.getActivity().runOnUiThread(new Runnable() {
-        @Override
-        public void run() {
-            cordova.getActivity().getWindow().getDecorView().setOnKeyListener(new View.OnKeyListener() {
-                @Override
-                public boolean onKey(View v, int keyCode, KeyEvent event) {
-                    if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP) {
-                        // Close camera view and return to app
-                        if (cameraLayout != null) {
-                            closeCamera();
-                            return true;
-                        }
-                    }
-                    return false;
-                }
-            });
-        }
-    });
-}
-    
-    private void startCameraX() {
-    // Release any previous camera instances
-    if (cameraProvider != null) {
-        cameraProvider.unbindAll();
-    }
-
-    cameraProviderFuture = ProcessCameraProvider.getInstance(cordova.getActivity());
-    cameraProviderFuture.addListener(() -> {
-        try {
-            // Get camera provider
-            cameraProvider = cameraProviderFuture.get();
-            
-            // Build the camera selector based on the requested camera direction
-            CameraSelector cameraSelector = new CameraSelector.Builder()
-                .requireLensFacing(lensFacing)
-                .build();
-            
-            // Set up the preview
-            Preview preview = new Preview.Builder().build();
-            preview.setSurfaceProvider(previewView.getSurfaceProvider());
-            
-            // Set up the image capture with appropriate flash mode
-            ImageCapture.Builder imageCaptureBuilder = new ImageCapture.Builder()
-                .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
-                .setTargetRotation(cordova.getActivity().getWindowManager().getDefaultDisplay().getRotation());
-            
-            // Apply flash mode based on user preference
-            switch (flashMode) {
-                case 1: // ON
-                    imageCaptureBuilder.setFlashMode(ImageCapture.FLASH_MODE_ON);
-                    break;
-                case -1: // OFF
-                    imageCaptureBuilder.setFlashMode(ImageCapture.FLASH_MODE_OFF);
-                    break;
-                case 0: // AUTO
-                default:
-                    imageCaptureBuilder.setFlashMode(ImageCapture.FLASH_MODE_AUTO);
-                    break;
-            }
-            
-            imageCapture = imageCaptureBuilder.build();
-            
-            // Bind all use cases to camera
-            cameraProvider.unbindAll();
-            cameraX = cameraProvider.bindToLifecycle((LifecycleOwner) cordova.getActivity(), 
-                cameraSelector, preview, imageCapture);
-            
-        } catch (ExecutionException | InterruptedException e) {
-            // Handle any errors
-            LOG.e(LOG_TAG, "Error initializing camera: " + e.getMessage());
-            closeCameraAndReturnError("Failed to initialize camera");
-        }
-    }, ContextCompat.getMainExecutor(cordova.getActivity()));
-}
-    
-    private void addCaptureButton() {
-        cordova.getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                // Create a capture button
-                android.widget.Button captureButton = new android.widget.Button(cordova.getActivity());
-                captureButton.setText("Take Photo");
-                
-                // Position at bottom center
-                FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.WRAP_CONTENT,
-                    FrameLayout.LayoutParams.WRAP_CONTENT
-                );
-                params.gravity = android.view.Gravity.BOTTOM | android.view.Gravity.CENTER_HORIZONTAL;
-                params.bottomMargin = 50;
-                captureButton.setLayoutParams(params);
-                
-                // Add click listener
-                captureButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        takePictureWithCameraX();
-                    }
-                });
-                
-                // Add the button to our camera layout
-                if (cameraLayout != null) {
-                    cameraLayout.addView(captureButton);
-                }
-            }
-        });
-    }
-    
-    private void takePictureWithCameraX() {
-        if (imageCapture == null) {
-            LOG.e(LOG_TAG, "Cannot capture image, ImageCapture is null");
-            closeCameraAndReturnError("Failed to capture image");
-            return;
-        }
-        
-        ImageCapture.OutputFileOptions outputOptions = new ImageCapture.OutputFileOptions.Builder(
-            new File(imageFilePath)).build();
-            
-        imageCapture.takePicture(outputOptions, executor, 
-            new ImageCapture.OnImageSavedCallback() {
-                @Override
-                public void onImageSaved(ImageCapture.OutputFileResults results) {
-                    // Image was saved successfully
-                    LOG.d(LOG_TAG, "Image saved successfully: " + imageFilePath);
-                    
-                    // Process captured image and return result
-                    try {
-                        processResultFromCameraX();
-                    } catch (IOException e) {
-                        LOG.e(LOG_TAG, "Error processing camera result: " + e.getMessage());
-                        closeCameraAndReturnError("Failed to process captured image");
-                    }
-                }
-                
-                @Override
-                public void onError(ImageCaptureException exception) {
-                    LOG.e(LOG_TAG, "Error capturing image: " + exception.getMessage());
-                    closeCameraAndReturnError("Failed to capture image: " + exception.getMessage());
-                }
-            });
-    }
-    
-    private void processResultFromCameraX() throws IOException {
-        // Process the image in a similar way to processResultFromCamera method
-        int rotate = 0;
-        
-        // Create an ExifHelper to save the exif data that is lost during compression
-        ExifHelper exif = new ExifHelper();
-        
-        if (this.encodingType == JPEG) {
-            try {
-                exif.createInFile(this.imageFilePath);
-                exif.readExifData();
-                rotate = exif.getOrientation();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        
-        Bitmap bitmap = null;
-        Uri galleryUri = null;
-        
-        // Handle save to photo album if needed
-        if (this.saveToPhotoAlbum) {
-            GalleryPathVO galleryPathVO = getPicturesPath();
-            galleryUri = Uri.fromFile(new File(galleryPathVO.getGalleryPath()));
-            
-            if (Build.VERSION.SDK_INT <= 28) {
-                writeTakenPictureToGalleryLowerThanAndroidQ(galleryUri);
-            } else {
-                writeTakenPictureToGalleryStartingFromAndroidQ(galleryPathVO);
-            }
-        }
-        
-        // Process based on destination type
-        if (destType == DATA_URL) {
-            bitmap = getScaledAndRotatedBitmap(this.imageFilePath);
-            
-            if (bitmap == null) {
-                closeCameraAndReturnError("Unable to create bitmap!");
-                return;
-            }
-            final Bitmap finalBitmap = bitmap;
-            final int finalEncodingType = encodingType;
-            cordova.getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    // Close the camera UI first
-                    closeCamera();
-                    
-                    // Process the bitmap
-                    processPicture(finalBitmap, finalEncodingType);
-                }
-            });
-            
-            if (!this.saveToPhotoAlbum) {
-                checkForDuplicateImage(DATA_URL);
-            }
-        }
-        // If sending filename back
-        else if (destType == FILE_URI) {
-            // If all this is true we shouldn't compress the image
-            if (this.targetHeight == -1 && this.targetWidth == -1 && this.mQuality == 100 &&
-                    !this.correctOrientation) {
-                
-                final Uri finalGalleryUri = galleryUri;
-                
-                cordova.getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        // Close the camera UI first
-                        closeCamera();
-                        
-                        // Return the appropriate URI
-                        if (saveToPhotoAlbum) {
-                            callbackContext.success(finalGalleryUri.toString());
-                        } else {
-                            callbackContext.success(imageUri.toString());
-                        }
-                    }
-                });
-            } else {
-                // Need to process the image
-                Uri uri = Uri.fromFile(createCaptureFile(this.encodingType, System.currentTimeMillis() + ""));
-                bitmap = getScaledAndRotatedBitmap(this.imageFilePath);
-                
-                if (bitmap == null) {
-                    closeCameraAndReturnError("Unable to create bitmap!");
-                    return;
-                }
-                
-                // Add compressed version of captured image to returned media store Uri
-                OutputStream os = this.cordova.getActivity().getContentResolver().openOutputStream(uri);
-                CompressFormat compressFormat = getCompressFormatForEncodingType(encodingType);
-                bitmap.compress(compressFormat, this.mQuality, os);
-                os.close();
-                
-                // Restore exif data to file
-                if (this.encodingType == JPEG) {
-                    String exifPath = uri.getPath();
-                    //We just finished rotating it by an arbitrary orientation, just make sure it's normal
-                    if(rotate != ExifInterface.ORIENTATION_NORMAL)
-                        exif.resetOrientation();
-                    exif.createOutFile(exifPath);
-                    exif.writeExifData();
-                }
-                
-                final Uri finalUri = uri;
-                
-                cordova.getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        // Close the camera UI first
-                        closeCamera();
-                        
-                        // Return the URI
-                        callbackContext.success(finalUri.toString());
-                    }
-                });
-            }
-        }
-        
-        this.cleanup(destType, this.imageUri, galleryUri, bitmap);
-        if (bitmap != null) {
-            bitmap.recycle();
-        }
-    }
-    
-    private void closeCamera() {
-        // Remove our camera view from the parent
-        if (cameraLayout != null) {
-            ViewGroup parent = (ViewGroup) cameraLayout.getParent();
-            if (parent != null) {
-                parent.removeView(cameraLayout);
-            }
-            cameraLayout = null;
-        }
-        
-        // Release camera resources
-        if (cameraProvider != null) {
-            cameraProvider.unbindAll();
-            cameraProvider = null;
-        }
-    }
-    
-    private void closeCameraAndReturnError(String errorMessage) {
-        cordova.getActivity().runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                closeCamera();
-                callbackContext.error(errorMessage);
-            }
-        });
+//        else
+//            LOG.d(LOG_TAG, "ERROR: You must use the CordovaInterface for this to work correctly. Please implement it in your activity");
     }
 
     /**
