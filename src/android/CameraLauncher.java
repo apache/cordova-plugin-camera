@@ -245,33 +245,66 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @param returnType        Set the type of image to return.
      * @param encodingType           Compression quality hint (0-100: 0=low quality & high compression, 100=compress of max quality)
      */
-    public void callTakePicture(int returnType, int encodingType) {
-       String[] storagePermissions = getPermissions(true, mediaType);
-       boolean saveAlbumPermission;
-       if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-           saveAlbumPermission = this.saveToPhotoAlbum ? hasPermissions(storagePermissions) : true;
-       } else {
-           saveAlbumPermission = hasPermissions(storagePermissions);
-       }
-    
-       // Check for camera permission
-       boolean takePicturePermission = PermissionHelper.hasPermission(this, Manifest.permission.CAMERA);
+    public void callTakePicture(int returnType, int encodingType) throws IllegalStateException {
 
-       // If we have all necessary permissions, proceed with taking the picture
-       if (takePicturePermission && saveAlbumPermission) {
-           takePicture(returnType, encodingType);
-       } 
-       else if (saveAlbumPermission) {
-        // Only camera permission is missing
-           PermissionHelper.requestPermission(this, TAKE_PIC_SEC, Manifest.permission.CAMERA);
-       } else if (takePicturePermission) {
-        // Only storage permissions are missing
-           PermissionHelper.requestPermissions(this, TAKE_PIC_SEC, storagePermissions);
-       } else {
-        // Both permissions are missing
-           PermissionHelper.requestPermissions(this, TAKE_PIC_SEC, getPermissions(false, mediaType));
+        // CB-10120: The CAMERA permission does not need to be requested unless it is declared
+        // in AndroidManifest.xml. This plugin does not declare it, but others may and so we must
+        // check the package info to determine if the permission is present.
+        boolean manifestContainsCameraPermission = false;
+
+        // write permission is not necessary, unless if we are saving to photo album
+        // On API 29+ devices, write permission is completely obsolete and not required.
+        boolean manifestContainsWriteExternalPermission = false;
+
+        boolean cameraPermissionGranted = PermissionHelper.hasPermission(this, Manifest.permission.CAMERA);
+        boolean writeExternalPermissionGranted = false;
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+            writeExternalPermissionGranted = PermissionHelper.hasPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+        else {
+            writeExternalPermissionGranted = true;
+        }
+
+        try {
+            PackageManager packageManager = this.cordova.getActivity().getPackageManager();
+            String[] permissionsInPackage = packageManager.getPackageInfo(this.cordova.getActivity().getPackageName(), PackageManager.GET_PERMISSIONS).requestedPermissions;
+            if (permissionsInPackage != null) {
+                for (String permission : permissionsInPackage) {
+                    if (permission.equals(Manifest.permission.CAMERA)) {
+                        manifestContainsCameraPermission = true;
+                    }
+                    else if (permission.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                        manifestContainsWriteExternalPermission = true;
+                    }
+                }
+            }
+        } catch (NameNotFoundException e) {
+            // We are requesting the info for our package, so this should
+            // never be caught
+        }
+
+        ArrayList<String> requiredPermissions = new ArrayList<>();
+        if (manifestContainsCameraPermission && !cameraPermissionGranted) {
+            requiredPermissions.add(Manifest.permission.CAMERA);
+        }
+
+        if (saveToPhotoAlbum && !writeExternalPermissionGranted) {
+            // This block only applies for API 24-28
+            // because writeExternalPermissionGranted is always true on API 29+
+            if (!manifestContainsWriteExternalPermission) {
+                throw new IllegalStateException("WRITE_EXTERNAL_STORAGE permission not declared in AndroidManifest");
+            }
+
+            requiredPermissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+
+        if (!requiredPermissions.isEmpty()) {
+            PermissionHelper.requestPermissions(this, TAKE_PIC_SEC, requiredPermissions.toArray(new String[0]));
+        }
+        else {
+            takePicture(returnType, encodingType);
+        }
     }
-}
 
     public void takePicture(int returnType, int encodingType)
     {
