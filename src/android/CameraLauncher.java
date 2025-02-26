@@ -604,7 +604,8 @@ public void takePicture(int returnType, int encodingType)
                 closeCameraAndReturnError("Unable to create bitmap!");
                 return;
             }
-            
+            final Bitmap finalBitmap = bitmap;
+            final int finalEncodingType = encodingType;
             cordova.getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -612,7 +613,7 @@ public void takePicture(int returnType, int encodingType)
                     closeCamera();
                     
                     // Process the bitmap
-                    processPicture(bitmap, encodingType);
+                    processPicture(finalBitmap, finalEncodingType);
                 }
             });
             
