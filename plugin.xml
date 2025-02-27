@@ -107,8 +107,17 @@
         <source-file src="src/android/drawable/ic_flash_auto.xml" target-dir="res/drawable" />
         <source-file src="src/android/drawable/ic_flash_on.xml" target-dir="res/drawable" />
         <source-file src="src/android/drawable/ic_flash_off.xml" target-dir="res/drawable" />
-        <source-file src="src/android/drawable/ic_camera_flip_circle.xml" target-dir="res/drawable" />
+        <source-file src="src/android/drawable/ic_camera_flip.xml" target-dir="res/drawable" />
         <source-file src="src/android/drawable/circle_background.xml" target-dir="res/drawable" />
+        <source-file src="src/android/values/camerax_styles.xml" target-dir="res/values" />
+
+        <config-file target="AndroidManifest.xml" parent="application">
+          <activity 
+            android:name="org.apache.cordova.camera.CameraXActivity"
+            android:exported="false"
+            android:theme="@style/CameraTheme"
+            android:configChanges="orientation|keyboardHidden|screenSize" />
+        </config-file>
 
         <preference name="ANDROIDX_CORE_VERSION" default="1.6.+"/>
         <framework src="androidx.core:core:$ANDROIDX_CORE_VERSION" />
