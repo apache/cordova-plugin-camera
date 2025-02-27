@@ -113,6 +113,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
     private static final String TIME_FORMAT = "yyyyMMdd_HHmmss";
 
+    private static final int FLASH_AUTO = 0;
+    private static final int FLASH_ON = 1;
+    private static final int FLASH_OFF = -1;
+
     private int mQuality;                   // Compression quality hint (0-100: 0=low quality & high compression, 100=compress of max quality)
     private int targetWidth;                // desired width of the image
     private int targetHeight;               // desired height of the image
@@ -125,6 +129,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private boolean correctOrientation;     // Should the pictures orientation be corrected
     private boolean orientationCorrected;   // Has the picture's orientation been corrected
     private boolean allowEdit;              // Should we allow the user to crop the image.
+    private int flashMode;                  // Flash auto: 0, on: 1, off: -1
 
     public CallbackContext callbackContext;
 
@@ -159,6 +164,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             this.encodingType = JPEG;
             this.mediaType = PICTURE;
             this.mQuality = 50;
+            this.flashMode = FLASH_AUTO;
 
             //Take the values from the arguments if they're not already defined (this is tricky)
             this.destType = args.getInt(1);
@@ -171,6 +177,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             this.allowEdit = args.getBoolean(7);
             this.correctOrientation = args.getBoolean(8);
             this.saveToPhotoAlbum = args.getBoolean(9);
+
+            if (args.length() > 12) {
+                   this.flashMode = args.getInt(12);
+            }
 
             // If the user specifies a 0 or smaller width/height
             // make it -1 so later comparisons succeed
@@ -308,6 +318,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
     public void takePicture(int returnType, int encodingType)
     {
+
+       if (Build.Version.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && sourceType == CAMERA){
+              this.takePictureWithCameraX(returnType, encodingType);
+       } else {
         // Let's use the intent and see what happens
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
@@ -335,6 +349,36 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             }
         }
     }
+    }
+
+       /**
+        * Takes a picture using the CameraX API.
+        */
+       private void takePictureWithCameraX(int returnType, int encodingType) {
+           // Create intent for CameraXActivity
+           Intent intent = new Intent(cordova.getActivity(), CameraXActivity.class);
+           
+           // Pass the required parameters
+           intent.putExtra("returnType", returnType);
+           intent.putExtra("encodingType", encodingType);
+           
+           // Pass all the other parameters from CameraLauncher's instance variables
+           intent.putExtra("quality", this.quality);
+           intent.putExtra("targetWidth", this.targetWidth);
+           intent.putExtra("targetHeight", this.targetHeight);
+           intent.putExtra("saveToPhotoAlbum", this.saveToPhotoAlbum);
+           intent.putExtra("correctOrientation", this.correctOrientation);
+           intent.putExtra("allowEdit", this.allowEdit);
+           intent.putExtra("flashMode", this.
+           
+           // Launch the activity
+           this.cordova.startActivityForResult((CordovaPlugin) this, intent, (CAMERA + 1) * 16 + returnType + 1);
+           
+           // Don't return any result yet, will be called in onActivityResult
+           PluginResult r = new PluginResult(PluginResult.Status.NO_RESULT);
+           r.setKeepCallback(true);
+           this.callbackContext.sendPluginResult(r);
+       }
 
     /**
      * Create a file in the applications temporary directory based upon the supplied encoding.
