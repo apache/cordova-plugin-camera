@@ -974,15 +974,14 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             // If image available
             if (resultCode == Activity.RESULT_OK) {
                 try {
-
                     String uriFromCameraX = intent.getStringExtra("imageUri");
-        if (uriFromCameraX != null) {
-            // Set the imageUri instance variable to use this URI
-            this.imageUri = Uri.parse(uriFromCameraX);
+                      if (uriFromCameraX != null) {
+                     // Set the imageUri instance variable to use this URI
+                        this.imageUri = Uri.parse(uriFromCameraX);
             
-            // Log for debugging
-            LOG.d("CameraLauncher", "Got URI from CameraX: " + this.imageUri);
-        }
+                     // Log for debugging
+                        LOG.d(LOG_TAG, "Got URI from CameraX: " + this.imageUri);
+                     }
                     if (this.allowEdit) {
                         Uri tmpFile = FileProvider.getUriForFile(cordova.getActivity(),
                         applicationId + ".cordova.plugin.camera.provider",
