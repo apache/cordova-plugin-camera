@@ -319,7 +319,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     public void takePicture(int returnType, int encodingType)
     {
 
-       if (Build.Version.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && sourceType == CAMERA){
+       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && srcType == CAMERA){
               this.takePictureWithCameraX(returnType, encodingType);
        } else {
         // Let's use the intent and see what happens
@@ -369,7 +369,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
            intent.putExtra("saveToPhotoAlbum", this.saveToPhotoAlbum);
            intent.putExtra("correctOrientation", this.correctOrientation);
            intent.putExtra("allowEdit", this.allowEdit);
-           intent.putExtra("flashMode", this.
+           intent.putExtra("flashMode", this.flashMode);
            
            // Launch the activity
            this.cordova.startActivityForResult((CordovaPlugin) this, intent, (CAMERA + 1) * 16 + returnType + 1);
