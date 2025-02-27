@@ -929,7 +929,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @param intent      An Intent, which can return result data to the caller (various data can be attached to Intent "extras").
      */
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
-           Log.d("CameraLauncher", "onActivityResult: requestCode=" + requestCode + ", resultCode=" + resultCode);
+           LOG.d("CameraLauncher", "onActivityResult: requestCode=" + requestCode + ", resultCode=" + resultCode);
         // Get src and dest types from request code for a Camera Activity
         int srcType = (requestCode / 16) - 1;
         int destType = (requestCode % 16) - 1;
@@ -970,7 +970,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             this.imageUri = Uri.parse(uriFromCameraX);
             
             // Log for debugging
-            Log.d("CameraLauncher", "Got URI from CameraX: " + this.imageUri);
+            LOG.d("CameraLauncher", "Got URI from CameraX: " + this.imageUri);
         }
                     if (this.allowEdit) {
                         Uri tmpFile = FileProvider.getUriForFile(cordova.getActivity(),
