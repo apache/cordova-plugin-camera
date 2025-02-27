@@ -11,6 +11,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -18,10 +20,14 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.core.Camera;
+import androidx.camera.core.CameraControl;
+import androidx.camera.core.CameraInfo;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageCaptureException;
 import androidx.camera.core.Preview;
+import androidx.camera.core.ZoomState;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
@@ -52,6 +58,9 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     private ImageButton flashAutoButton;
     private ImageButton flashOnButton;
     private ImageButton flashOffButton;
+    private ScaleGestureDetector scaleGestureDetector;
+    private Camera camera;
+    private float currentZoomRatio = 1.0f
     
     private ImageCapture imageCapture;
     private final Executor executor = Executors.newSingleThreadExecutor();
@@ -104,6 +113,34 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         // Set initial flash mode based on intent or default to AUTO
         flashMode = intent.getIntExtra("flashMode", ImageCapture.FLASH_MODE_AUTO);
         setFlashButtonIcon(flashMode);
+
+        //set up pinch for zoom
+        scaleGestureDetector = new ScaleGestureDetector(this, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            @Override
+            public boolean onScale(ScaleGestureDetector detector) {
+                if (camera == null){
+                    return false;
+                }
+
+                CameraControl cameraControl = camera.getCameraControl();
+                CameraInfo cameraInfo = camera.getCameraInfo();
+
+                float currentZoomRatio = cameraInfo.getZoomState().getValue().getZoomRatio();
+
+                float scaleFactor = detector.getScaleFactor();
+                float newZoomRatio = currentZoomRatio * scaleFactor;
+
+                cameraControl.setZoomRatio(newZoomRatio);
+                return true;
+            }
+        });
+
+        //add pinch to preview view
+
+        previewView.setOnTouchListener((view,event) -> {
+            scaleGestureDetector.onTouchEvent(event);
+            return true;
+        });
         
         // Check and request permissions
         if (allPermissionsGranted()) {
