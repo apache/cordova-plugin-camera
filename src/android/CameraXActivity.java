@@ -266,11 +266,6 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
                         }
                         
                         imagePath = savedUri.toString();
-
-                        Log.d(TAG, "Image saved successfully");
-                        Log.d(TAG, "Image URI: " + imagePath);
-                        Log.d(TAG, "URI type: " + savedUri.getScheme());
-                        Log.d(TAG, "File exists: " + new File(savedUri.getPath()).exists());
                         
                         if (allowEdit) {
                             // If you have an edit activity, start it here
