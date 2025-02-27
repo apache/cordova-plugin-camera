@@ -357,6 +357,21 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
        private void takePictureWithCameraX(int returnType, int encodingType) {
            // Create intent for CameraXActivity
            Intent intent = new Intent(cordova.getActivity(), CameraXActivity.class);
+
+           // Map Cordova flash mode to CameraX flash mode
+           int cameraXFlashMode;
+           switch (this.flashMode) {
+               case FLASH_ON:
+                   cameraXFlashMode = ImageCapture.FLASH_MODE_ON;
+                   break;
+               case FLASH_OFF:
+                   cameraXFlashMode = ImageCapture.FLASH_MODE_OFF;  // This maps -1 to 2
+                   break;
+               case FLASH_AUTO:
+               default:
+                   cameraXFlashMode = ImageCapture.FLASH_MODE_AUTO;
+                   break;
+    }
            
            // Pass the required parameters
            intent.putExtra("returnType", returnType);
@@ -369,7 +384,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
            intent.putExtra("saveToPhotoAlbum", this.saveToPhotoAlbum);
            intent.putExtra("correctOrientation", this.correctOrientation);
            intent.putExtra("allowEdit", this.allowEdit);
-           intent.putExtra("flashMode", this.flashMode);
+           intent.putExtra("flashMode", cameraXFlashMode);
            
            // Launch the activity
            this.cordova.startActivityForResult((CordovaPlugin) this, intent, (CAMERA + 1) * 16 + returnType + 1);
