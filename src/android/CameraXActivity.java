@@ -266,20 +266,9 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
             contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES);
         }
         
-        // Create output options object
-        ImageCapture.OutputFileOptions outputOptions;
+        File photoFile = new File(getCacheDir(), imageFileName + ".jpg");
+        ImageCapture.OutputFileOptions outputOptions = new ImageCapture.OutputFileOptions.Builder(photoFile).build();
         
-        if (saveToPhotoAlbum) {
-            // Save to media store
-            outputOptions = new ImageCapture.OutputFileOptions.Builder(
-                    getContentResolver(),
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    contentValues).build();
-        } else {
-            // Save to a temp file
-            File photoFile = new File(getCacheDir(), imageFileName + ".jpg");
-            outputOptions = new ImageCapture.OutputFileOptions.Builder(photoFile).build();
-        }
         
         // Set JPEG quality (0-100)
         //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
