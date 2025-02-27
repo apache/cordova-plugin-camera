@@ -73,17 +73,17 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.camerax_activity);
+        setContentView(getResources().getIdentifier("camerax_activity", "layout", getPackageName()));
         
         // Initialize UI components
-        previewView = findViewById(R.id.preview_view);
-        captureButton = findViewById(R.id.capture_button);
-        cameraFlipButton = findViewById(R.id.camera_flip_button);
-        flashButton = findViewById(R.id.flash_button);
-        flashModesBar = findViewById(R.id.flash_modes_bar);
-        flashAutoButton = findViewById(R.id.flash_auto_button);
-        flashOnButton = findViewById(R.id.flash_on_button);
-        flashOffButton = findViewById(R.id.flash_off_button);
+        previewView = findViewById(getResources().getIdentifier("preview_view", "id", getPackageName()));
+        captureButton = findViewById(getResources().getIdentifier("capture_button", "id", getPackageName()));
+        cameraFlipButton = findViewById(getResources().getIdentifier("camera_flip_button", "id", getPackageName()));
+        flashButton = findViewById(getResources().getIdentifier("flash_button", "id", getPackageName()));
+        flashModesBar = findViewById(getResources().getIdentifier("flash_modes_bar", "id", getPackageName()));
+        flashAutoButton = findViewById(getResources().getIdentifier("flash_auto_button", "id", getPackageName()));
+        flashOnButton = findViewById(getResources().getIdentifier("flash_on_button", "id", getPackageName()));
+        flashOffButton = findViewById(getResources().getIdentifier("flash_off_button", "id", getPackageName()));
         
         // Set click listeners
         captureButton.setOnClickListener(this);
@@ -117,19 +117,19 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     @Override
     public void onClick(View view) {
         int id = view.getId();
-        if (id == R.id.capture_button) {
+        if (id == getResources().getIdentifier("capture_button", "id", getPackageName())) {
             takePhoto();
-        } else if (id == R.id.camera_flip_button) {
+        } else if (id == getResources().getIdentifier("camera_flip_button", "id", getPackageName()))  {
             flipCamera();
-        } else if (id == R.id.flash_button) {
+        } else if (id == getResources().getIdentifier("flash_button", "id", getPackageName())) {
             toggleFlashModeBar();
-        } else if (id == R.id.flash_auto_button) {
+        } else if (id getResources().getIdentifier("flash_auto_button", "id", getPackageName()))  {
             setFlashMode(ImageCapture.FLASH_MODE_AUTO);
             toggleFlashModeBar();
-        } else if (id == R.id.flash_on_button) {
+        } else if (id == getResources().getIdentifier("flash_on_button", "id", getPackageName()))  {
             setFlashMode(ImageCapture.FLASH_MODE_ON);
             toggleFlashModeBar();
-        } else if (id == R.id.flash_off_button) {
+        } else if (id == getResources().getIdentifier("flash_off_button", "id", getPackageName()))  {
             setFlashMode(ImageCapture.FLASH_MODE_OFF);
             toggleFlashModeBar();
         }
@@ -160,13 +160,13 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         // Update the button icon
         switch (mode) {
             case ImageCapture.FLASH_MODE_AUTO:
-                flashButton.setBackground(getDrawable(R.drawable.ic_flash_auto));
+                flashButton.setBackground(getDrawable(getResources().getIdentifier("ic_flash_auto", "drawable", getPackageName())));
                 break;
             case ImageCapture.FLASH_MODE_ON:
-                flashButton.setBackground(getDrawable(R.drawable.ic_flash_on));
+                flashButton.setBackground(getDrawable(getResources().getIdentifier("ic_flash_on", "drawable", getPackageName())));
                 break;
             case ImageCapture.FLASH_MODE_OFF:
-                flashButton.setBackground(getDrawable(R.drawable.ic_flash_off));
+                flashButton.setBackground(getDrawable(getResources().getIdentifier("ic_flash_off", "drawable", getPackageName())));
                 break;
         }
     }
@@ -246,9 +246,9 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         }
         
         // Set JPEG quality (0-100)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            contentValues.put(MediaStore.Images.Media.QUALITY, quality);
-        }
+        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+         //   contentValues.put(MediaStore.Images.Media.QUALITY, quality);
+        //}
         
         // Take the picture
         imageCapture.takePicture(
