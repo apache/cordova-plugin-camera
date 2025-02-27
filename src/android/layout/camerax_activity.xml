@@ -42,24 +42,24 @@
 
         <ImageButton
             android:id="@+id/flash_auto_button"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_flash_auto"
             android:contentDescription="Auto flash" />
 
         <ImageButton
             android:id="@+id/flash_on_button"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_flash_on"
             android:contentDescription="Flash on" />
 
         <ImageButton
             android:id="@+id/flash_off_button"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_flash_off"
             android:contentDescription="Flash off" />
@@ -76,7 +76,7 @@
         android:id="@+id/capture_button"
         android:layout_width="72dp"
         android:layout_height="72dp"
-        android:layout_marginBottom="70dp"
+        android:layout_marginBottom="60dp"
         android:background="@drawable/circle_background"
         android:contentDescription="Take picture"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -88,7 +88,7 @@
         android:id="@+id/camera_flip_button"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:layout_marginBottom="82dp"
+        android:layout_marginBottom="72dp"
         android:layout_marginStart="40dp"
         android:background="@drawable/ic_camera_flip"
         android:contentDescription="Switch camera"
