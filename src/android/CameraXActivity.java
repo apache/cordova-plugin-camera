@@ -347,3 +347,4 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     }
     return true;
 }
+}
