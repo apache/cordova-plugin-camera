@@ -363,7 +363,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
            intent.putExtra("encodingType", encodingType);
            
            // Pass all the other parameters from CameraLauncher's instance variables
-           intent.putExtra("quality", this.quality);
+           intent.putExtra("quality", this.mQuality);
            intent.putExtra("targetWidth", this.targetWidth);
            intent.putExtra("targetHeight", this.targetHeight);
            intent.putExtra("saveToPhotoAlbum", this.saveToPhotoAlbum);
@@ -375,9 +375,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
            this.cordova.startActivityForResult((CordovaPlugin) this, intent, (CAMERA + 1) * 16 + returnType + 1);
            
            // Don't return any result yet, will be called in onActivityResult
-           PluginResult r = new PluginResult(PluginResult.Status.NO_RESULT);
-           r.setKeepCallback(true);
-           this.callbackContext.sendPluginResult(r);
+          // PluginResult r = new PluginResult(PluginResult.Status.NO_RESULT);
+          // r.setKeepCallback(true);
+          // this.callbackContext.sendPluginResult(r);
        }
 
     /**
