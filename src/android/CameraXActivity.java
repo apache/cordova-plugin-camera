@@ -102,9 +102,6 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         correctOrientation = intent.getBooleanExtra("correctOrientation", true);
         allowEdit = intent.getBooleanExtra("allowEdit", false);
         
-        // Set initial camera facing based on intent
-        cameraFacing = intent.getIntExtra("cameraDirection", CameraSelector.LENS_FACING_BACK);
-        
         // Set initial flash mode based on intent or default to AUTO
         flashMode = intent.getIntExtra("flashMode", ImageCapture.FLASH_MODE_AUTO);
         setFlashButtonIcon(flashMode);
