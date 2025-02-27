@@ -42,7 +42,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     private static final int REQUEST_CODE_PERMISSIONS = 10;
     private static final String[] REQUIRED_PERMISSIONS = {
             Manifest.permission.CAMERA,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
+            // Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
 
     private PreviewView previewView;
@@ -338,11 +338,12 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     
     private boolean allPermissionsGranted() {
         for (String permission : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, permission) 
-                    != PackageManager.PERMISSION_GRANTED) {
-                return false;
-            }
+            boolean granted = ContextCompat.checkSelfPermission(this, permission) 
+                == PackageManager.PERMISSION_GRANTED;
+        Log.d(TAG, "Permission " + permission + " granted: " + granted);
+        if (!granted) {
+            return false;
         }
-        return true;
     }
+    return true;
 }
