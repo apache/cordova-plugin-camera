@@ -269,12 +269,6 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         File photoFile = new File(getCacheDir(), imageFileName + ".jpg");
         ImageCapture.OutputFileOptions outputOptions = new ImageCapture.OutputFileOptions.Builder(photoFile).build();
         
-        
-        // Set JPEG quality (0-100)
-        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-         //   contentValues.put(MediaStore.Images.Media.QUALITY, quality);
-        //}
-        
         // Take the picture
         imageCapture.takePicture(
                 outputOptions,
