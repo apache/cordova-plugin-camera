@@ -91,8 +91,8 @@
         <framework src="androidx.camera:camera-camera2:$ANDROIDX_CAMERAX_VERSION" />
         <framework src="androidx.camera:camera-lifecycle:$ANDROIDX_CAMERAX_VERSION" />
         <framework src="androidx.camera:camera-view:$ANDROIDX_CAMERAX_VERSION" />
-        <framework src="androidx.camear:camera-extensions:$ANDROIDX_CAMERAX_VERSION" />
-        <framework src ="androidx.appcompat:1.6.1" />
+        <framework src="androidx.camera:camera-extensions:$ANDROIDX_CAMERAX_VERSION" />
+        <framework src ="androidx.appcompat:appcompat:1.6.1" />
         <framework src ="androidx.constraintlayout:constraintlayout:2.1.4"/>
         <framework src="com.google.android.material:material:1.9.0"/>
       
@@ -101,7 +101,7 @@
         <source-file src="src/android/ExifHelper.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/FileProvider.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/GalleryPathVO.java" target-dir="src/org/apache/cordova/camera" />
-        <source-file src="src/android/CamerXActivity.java" target-dir="src/org/apache/cordova/camera" />
+        <source-file src="src/android/CameraXActivity.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/xml/camera_provider_paths.xml" target-dir="res/xml" />
         <source-file src="src/android/layout/camerax_activity.xml" target-dir="res/layout" />
         <source-file src="src/android/drawable/ic_flash_auto.xml" target-dir="res/drawable" />
