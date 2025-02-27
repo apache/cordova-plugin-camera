@@ -123,7 +123,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
             flipCamera();
         } else if (id == getResources().getIdentifier("flash_button", "id", getPackageName())) {
             toggleFlashModeBar();
-        } else if (id getResources().getIdentifier("flash_auto_button", "id", getPackageName()))  {
+        } else if (id == getResources().getIdentifier("flash_auto_button", "id", getPackageName()))  {
             setFlashMode(ImageCapture.FLASH_MODE_AUTO);
             toggleFlashModeBar();
         } else if (id == getResources().getIdentifier("flash_on_button", "id", getPackageName()))  {
