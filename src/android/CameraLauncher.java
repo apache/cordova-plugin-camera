@@ -41,6 +41,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import androidx.core.content.FileProvider;
+import androidx.camera.core.ImageCapture;
 import android.util.Base64;
 import android.system.Os;
 import android.system.OsConstants;
