@@ -91,13 +91,24 @@
         <framework src="androidx.camera:camera-camera2:$ANDROIDX_CAMERAX_VERSION" />
         <framework src="androidx.camera:camera-lifecycle:$ANDROIDX_CAMERAX_VERSION" />
         <framework src="androidx.camera:camera-view:$ANDROIDX_CAMERAX_VERSION" />
+        <framework src="androidx.camear:camera-extensions:$ANDROIDX_CAMERAX_VERSION" />
+        <framework src ="androidx.appcompat:1.6.1" />
+        <framework src ="androidx.constraintlayout:constraintlayout:2.1.4"/>
+        <framework src="com.google.android.material:material:1.9.0"/>
       
         <source-file src="src/android/CameraLauncher.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/FileHelper.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/ExifHelper.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/FileProvider.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/GalleryPathVO.java" target-dir="src/org/apache/cordova/camera" />
+        <source-file src="src/android/CamerXActivity.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/xml/camera_provider_paths.xml" target-dir="res/xml" />
+        <source-file src="src/android/layout/camerax_activity.xml" target-dir="res/layout" />
+        <source-file src="src/android/drawable/ic_flash_auto.xml" target-dir="res/drawable" />
+        <source-file src="src/android/drawable/ic_flash_on.xml" target-dir="res/drawable" />
+        <source-file src="src/android/drawable/ic_flash_off.xml" target-dir="res/drawable" />
+        <source-file src="src/android/drawable/ic_camera_flip_circle.xml" target-dir="res/drawable" />
+        <source-file src="src/android/drawable/circle_background.xml" target-dir="res/drawable" />
 
         <preference name="ANDROIDX_CORE_VERSION" default="1.6.+"/>
         <framework src="androidx.core:core:$ANDROIDX_CORE_VERSION" />
