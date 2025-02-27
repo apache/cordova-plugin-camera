@@ -60,7 +60,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     private ImageButton flashOffButton;
     private ScaleGestureDetector scaleGestureDetector;
     private Camera camera;
-    private float currentZoomRatio = 1.0f
+    private float currentZoomRatio = 1.0f;
     
     private ImageCapture imageCapture;
     private final Executor executor = Executors.newSingleThreadExecutor();
@@ -236,7 +236,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
                 cameraProvider.unbindAll();
                 
                 // Bind use cases to camera
-                cameraProvider.bindToLifecycle(
+                camera = cameraProvider.bindToLifecycle(
                         ((LifecycleOwner) this),
                         cameraSelector,
                         preview,
@@ -376,10 +376,10 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         for (String permission : REQUIRED_PERMISSIONS) {
             boolean granted = ContextCompat.checkSelfPermission(this, permission) 
                 == PackageManager.PERMISSION_GRANTED;
-        Log.d(TAG, "Permission " + permission + " granted: " + granted);
-        if (!granted) {
-            return false;
-        }
+            Log.d(TAG, "Permission " + permission + " granted: " + granted);
+            if (!granted) {
+                return false;
+            }
     }
     return true;
 }
