@@ -254,20 +254,20 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
             return;
         }
         
-        // Create output file
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(System.currentTimeMillis());
-        String imageFileName = "JPEG_" + timeStamp + "_";
-        
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, imageFileName);
-        contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
-        
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES);
+        // Get the output URI passed from CameraLauncher
+        Uri outputUri = getIntent().getParcelableExtra(MediaStore.EXTRA_OUTPUT);
+        if (outputUri == null) {
+            Log.e(TAG, "No output URI provided");
+            setResult(Activity.RESULT_CANCELED);
+            finish();
+            return;
         }
-        
-        File photoFile = new File(getCacheDir(), imageFileName + ".jpg");
-        ImageCapture.OutputFileOptions outputOptions = new ImageCapture.OutputFileOptions.Builder(photoFile).build();
+        // Create output options using the provided URI
+        ImageCapture.OutputFileOptions outputOptions = 
+        new ImageCapture.OutputFileOptions.Builder(
+            getContentResolver(),
+            outputUri
+            ).build();
         
         // Take the picture
         imageCapture.takePicture(
@@ -276,29 +276,6 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
                 new ImageCapture.OnImageSavedCallback() {
                     @Override
                     public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
-                        Uri savedUri = outputFileResults.getSavedUri();
-                        String imagePath;
-                        
-                        if (savedUri == null) {
-                            // When saved to cache, we need to create a content URI
-                            File photoFile = new File(getCacheDir(), imageFileName + ".jpg");
-                            savedUri = Uri.fromFile(photoFile);
-                        }
-                        
-                        imagePath = savedUri.toString();
-                        
-                        if (allowEdit) {
-                            // If you have an edit activity, start it here
-                            /*
-                            Intent editIntent = new Intent(CameraXActivity.this, 
-                                    ImageEditActivity.class);
-                            editIntent.putExtra("imageUri", imagePath);
-                            startActivityForResult(editIntent, 1);
-                            */
-                            
-                            // Since editing is not implemented yet, just return the result
-                            Intent resultIntent = new Intent();
-                            resultIntent.putExtra("imageUri", imagePath);
                             setResult(Activity.RESULT_OK, resultIntent);
                             finish();
                         } else {
