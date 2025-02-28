@@ -272,12 +272,18 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     ImageCapture.OutputFileOptions outputOptions;
     
     try {
-        // Use ContentResolver to get an output stream for the URI
-        outputOptions = new ImageCapture.OutputFileOptions.Builder(
-            getContentResolver(),
-            outputUri
-        ).build();
+        OutputStream outputStream = getContentResolver().openOutputStream(outputUri);
         
+        if (outputStream == null) {
+            Log.e(TAG, "Failed to open output stream for URI: " + outputUri);
+            setResult(Activity.RESULT_CANCELED);
+            finish();
+            return;
+        }
+        
+        // Create output options with the output stream
+        ImageCapture.OutputFileOptions outputOptions = new ImageCapture.OutputFileOptions.Builder(outputStream).build();
+    
         // Take the picture
         imageCapture.takePicture(
                 outputOptions,
@@ -289,7 +295,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
                         setResult(Activity.RESULT_OK);
                         finish();
                     }
-                    
+                
                     @Override
                     public void onError(@NonNull ImageCaptureException exception) {
                         Log.e(TAG, "Photo capture failed: " + exception.getMessage());
