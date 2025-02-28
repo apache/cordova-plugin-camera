@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -17,6 +18,7 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -37,6 +39,8 @@ import androidx.lifecycle.LifecycleOwner;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
+import java.io.FileDescriptor;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
@@ -249,90 +253,57 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     }
     
     private void takePhoto() {
-    Log.d(TAG, "==== takePhoto() START ====");
     if (imageCapture == null) {
-        Log.e(TAG, "imageCapture is null, aborting");
+        Log.e(TAG, "imageCapture is null");
         return;
     }
     
-    // Get the output URI passed from CameraLauncher
-    Uri outputUri = getIntent().getParcelableExtra(MediaStore.EXTRA_OUTPUT);
-    if (outputUri == null) {
-        Log.e(TAG, "No output URI provided, finishing with RESULT_CANCELED");
-        setResult(Activity.RESULT_CANCELED);
-        finish();
+    // Retrieve the destination URI passed from CameraLauncher
+    String imageUriString = getIntent().getStringExtra(MediaStore.EXTRA_OUTPUT);
+    if (imageUriString == null) {
+        Log.e(TAG, "No valid imageUri received from intent");
         return;
     }
-    Log.d(TAG, "Using output URI: " + outputUri.toString());
+    Uri imageUri = Uri.parse(imageUriString);
     
     try {
-        // Create ContentValues with required metadata
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
-        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, "CameraX_" + System.currentTimeMillis());
-        Log.d(TAG, "Created ContentValues");
+        ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(imageUri, "rw");
+        if (pfd == null) {
+            Log.e(TAG, "Failed to get FileDescriptor for imageUri");
+            return;
+        }
+        FileDescriptor fileDescriptor = pfd.getFileDescriptor();
         
-        // Create output options using the provided URI
-        ImageCapture.OutputFileOptions outputOptions = 
-            new ImageCapture.OutputFileOptions.Builder(
-                getContentResolver(),
-                outputUri,
-                contentValues
-            ).build();
-        Log.d(TAG, "Created OutputFileOptions");
+        ImageCapture.OutputFileOptions outputOptions = new ImageCapture.OutputFileOptions.Builder(fileDescriptor).build();
         
-        // Take the picture
-        Log.d(TAG, "About to call imageCapture.takePicture()");
         imageCapture.takePicture(
-                outputOptions,
-                ContextCompat.getMainExecutor(this),
-                new ImageCapture.OnImageSavedCallback() {
-                    @Override
-                    public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
-                        Log.d(TAG, "==== onImageSaved callback RECEIVED ====");
-                        Uri savedUri = outputFileResults.getSavedUri();
-                        if (savedUri != null) {
-                            Log.d(TAG, "Saved URI from results: " + savedUri);
-                        } else {
-                            Log.d(TAG, "No saved URI in results, using original output URI");
-                        }
-                        
-                        try {
-                            Log.d(TAG, "Setting result to RESULT_OK");
-                            setResult(Activity.RESULT_OK);
-                            Log.d(TAG, "About to call finish()");
-                            finish();
-                            Log.d(TAG, "finish() called");
-                        } catch (Exception e) {
-                            Log.e(TAG, "Exception during activity result/finish: " + e.getMessage(), e);
-                        }
-                    }
-                    
-                    @Override
-                    public void onError(@NonNull ImageCaptureException exception) {
-                        Log.e(TAG, "==== onError callback RECEIVED ====");
-                        Log.e(TAG, "Photo capture failed: " + exception.getMessage(), exception);
-                        try {
-                            Intent resultIntent = new Intent();
-                            resultIntent.putExtra("error", exception.getMessage());
-                            setResult(Activity.RESULT_CANCELED, resultIntent);
-                            Log.d(TAG, "About to call finish() after error");
-                            finish();
-                            Log.d(TAG, "finish() called after error");
-                        } catch (Exception e) {
-                            Log.e(TAG, "Exception during error handling: " + e.getMessage(), e);
-                        }
-                    }
+            outputOptions,
+            executor,
+            new ImageCapture.OnImageSavedCallback() {
+                @Override
+                public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
+                    // Return imageUri as the result
+                    Intent resultIntent = new Intent();
+                    resultIntent.setData(imageUri);
+                    setResult(Activity.RESULT_OK, resultIntent);
+                    finish();
                 }
+
+                @Override
+                public void onError(@NonNull ImageCaptureException exception) {
+                    Log.e(TAG, "Photo capture failed: " + exception.getMessage());
+                    Intent resultIntent = new Intent();
+                    resultIntent.putExtra("error", exception.getMessage());
+                    setResult(Activity.RESULT_CANCELED, resultIntent);
+                    finish();
+                }
+            }
         );
-        Log.d(TAG, "imageCapture.takePicture() call completed");
-    } catch (Exception e) {
-        Log.e(TAG, "Exception setting up photo capture: " + e.getMessage(), e);
-        setResult(Activity.RESULT_CANCELED);
-        finish();
+    } catch (IOException e) {
+        Log.e(TAG, "Failed to open FileDescriptor for writing", e);
     }
-    Log.d(TAG, "==== takePhoto() END ====");
 }
+
     
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
