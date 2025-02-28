@@ -249,6 +249,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     }
     
     private void takePhoto() {
+        Log.d(TAG, "takePhoto() called");
         if (imageCapture == null) {
             Log.e(TAG, "imageCapture is null");
             return;
@@ -262,11 +263,13 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
             finish();
             return;
         }
+        Log.d(TAG, "Output URI: " + outputUri.toString());
 
         // Create ContentValues with required metadata
         ContentValues contentValues = new ContentValues();
         contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
         contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, "CameraX_" + System.currentTimeMillis());
+        Log.d(TAG, "ContentValues created");
         
         // Create output options using the provided URI
         ImageCapture.OutputFileOptions outputOptions = 
@@ -275,16 +278,21 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
             outputUri,
             contentValues
             ).build();
+        Log.d(TAG, "OutputFileOptions created");
         
         // Take the picture
+        Log.d(TAG, "Taking picture...");
         imageCapture.takePicture(
                 outputOptions,
                 executor,
                 new ImageCapture.OnImageSavedCallback() {
                     @Override
                     public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
+                        Log.d(TAG, "onImageSaved callback received");
                             Intent resultIntent = new Intent();
+                        Log.d(TAG, "setResult called with RESULT_OK");
                             setResult(Activity.RESULT_OK, resultIntent);
+                        Log.d(TAG, "finish() called");
                             finish();
                         }
                     
@@ -298,6 +306,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
                         }
                     }
             );
+        Log.d(TAG, "takePicture() method completed");
     }
     
     @Override
