@@ -285,7 +285,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         Log.d(TAG, "About to call imageCapture.takePicture()");
         imageCapture.takePicture(
                 outputOptions,
-                executor,
+                ContextCompat.getMainExecutor(this),
                 new ImageCapture.OnImageSavedCallback() {
                     @Override
                     public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
