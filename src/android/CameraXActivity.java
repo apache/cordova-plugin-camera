@@ -39,7 +39,7 @@ import androidx.lifecycle.LifecycleOwner;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
-import java.io.FileDescriptor;
+import java.io.OutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -267,9 +267,6 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         finish();
         return;
     }
-    
-    // Create output options with the provided URI
-    ImageCapture.OutputFileOptions outputOptions;
     
     try {
         OutputStream outputStream = getContentResolver().openOutputStream(outputUri);
