@@ -359,6 +359,16 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
            // Create intent for CameraXActivity
            Intent intent = new Intent(cordova.getActivity(), CameraXActivity.class);
 
+           // Specify file so that large image is captured and returned
+           File photo = createCaptureFile(encodingType);
+           this.imageUri = FileProvider.getUriForFile(
+               cordova.getActivity(),
+               applicationId + ".cordova.plugin.camera.provider",
+               photo
+           );
+           intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+           intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
            // Map Cordova flash mode to CameraX flash mode
            int cameraXFlashMode;
            switch (this.flashMode) {
@@ -973,15 +983,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         else if (srcType == CAMERA) {
             // If image available
             if (resultCode == Activity.RESULT_OK) {
-                try {
-                    String uriFromCameraX = intent.getStringExtra("imageUri");
-                      if (uriFromCameraX != null) {
-                     // Set the imageUri instance variable to use this URI
-                        this.imageUri = Uri.parse(uriFromCameraX);
-            
-                     // Log for debugging
-                        LOG.d(LOG_TAG, "Got URI from CameraX: " + this.imageUri);
-                     }
                     if (this.allowEdit) {
                         Uri tmpFile = FileProvider.getUriForFile(cordova.getActivity(),
                         applicationId + ".cordova.plugin.camera.provider",
