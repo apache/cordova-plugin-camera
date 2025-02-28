@@ -276,21 +276,21 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
                 new ImageCapture.OnImageSavedCallback() {
                     @Override
                     public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
+                            Intent resultIntent = new Intent();
                             setResult(Activity.RESULT_OK, resultIntent);
                             finish();
                         }
-                    }
                     
                     @Override
                     public void onError(@NonNull ImageCaptureException exception) {
-                        Log.e(TAG, "Photo capture failed: " + exception.getMessage());
-                        Intent resultIntent = new Intent();
-                        resultIntent.putExtra("error", exception.getMessage());
-                        setResult(Activity.RESULT_CANCELED, resultIntent);
-                        finish();
+                            Log.e(TAG, "Photo capture failed: " + exception.getMessage());
+                            Intent resultIntent = new Intent();
+                            resultIntent.putExtra("error", exception.getMessage());
+                            setResult(Activity.RESULT_CANCELED, resultIntent);
+                            finish();
+                        }
                     }
-                }
-        );
+            );
     }
     
     @Override
