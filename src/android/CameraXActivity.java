@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.core.AspectRatio;
 import androidx.camera.core.Camera;
 import androidx.camera.core.CameraControl;
 import androidx.camera.core.CameraInfo;
@@ -116,6 +117,8 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         // Set initial flash mode based on intent or default to AUTO
         flashMode = intent.getIntExtra("flashMode", ImageCapture.FLASH_MODE_AUTO);
         setFlashButtonIcon(flashMode);
+
+        previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
 
         //set up pinch for zoom
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
@@ -218,14 +221,18 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
             try {
                 // Camera provider is now guaranteed to be available
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
-                
+
+                int aspectRatio = AspectRatio.Ratio_4_3
                 // Set up the preview use case
-                Preview preview = new Preview.Builder().build();
+                Preview preview = new Preview.Builder()
+                    .setTargetAspectRatio(aspectRatio)
+                    .build();
                 preview.setSurfaceProvider(previewView.getSurfaceProvider());
                 
                 // Set up the capture use case
                 imageCapture = new ImageCapture.Builder()
                         .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                        .setTargetAspectRatio(aspectRatio)
                         .setTargetRotation(previewView.getDisplay().getRotation())
                         .setFlashMode(flashMode)
                         .build();
