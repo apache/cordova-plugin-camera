@@ -249,65 +249,56 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     }
     
     private void takePhoto() {
-        Log.d(TAG, "takePhoto() called");
-        if (imageCapture == null) {
-            Log.e(TAG, "imageCapture is null");
-            return;
-        }
-        
-        // Get the output URI passed from CameraLauncher
-        Uri outputUri = getIntent().getParcelableExtra(MediaStore.EXTRA_OUTPUT);
-        if (outputUri == null) {
-            Log.e(TAG, "No output URI provided");
-            setResult(Activity.RESULT_CANCELED);
-            finish();
-            return;
-        }
-        Log.d(TAG, "Output URI: " + outputUri.toString());
-
-        // Create ContentValues with required metadata
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
-        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, "CameraX_" + System.currentTimeMillis());
-        Log.d(TAG, "ContentValues created");
-        
-        // Create output options using the provided URI
-        ImageCapture.OutputFileOptions outputOptions = 
+    if (imageCapture == null) {
+        Log.e(TAG, "imageCapture is null");
+        return;
+    }
+    
+    // Get the output URI passed from CameraLauncher
+    Uri outputUri = getIntent().getParcelableExtra(MediaStore.EXTRA_OUTPUT);
+    if (outputUri == null) {
+        Log.e(TAG, "No output URI provided");
+        setResult(Activity.RESULT_CANCELED);
+        finish();
+        return;
+    }
+    
+    // Create ContentValues with required metadata
+    ContentValues contentValues = new ContentValues();
+    contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
+    contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, "CameraX_" + System.currentTimeMillis());
+    
+    // Create output options using the provided URI with ContentValues
+    ImageCapture.OutputFileOptions outputOptions = 
         new ImageCapture.OutputFileOptions.Builder(
             getContentResolver(),
             outputUri,
             contentValues
-            ).build();
-        Log.d(TAG, "OutputFileOptions created");
-        
-        // Take the picture
-        Log.d(TAG, "Taking picture...");
-        imageCapture.takePicture(
-                outputOptions,
-                executor,
-                new ImageCapture.OnImageSavedCallback() {
-                    @Override
-                    public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
-                        Log.d(TAG, "onImageSaved callback received");
-                            Intent resultIntent = new Intent();
-                        Log.d(TAG, "setResult called with RESULT_OK");
-                            setResult(Activity.RESULT_OK, resultIntent);
-                        Log.d(TAG, "finish() called");
-                            finish();
-                        }
-                    
-                    @Override
-                    public void onError(@NonNull ImageCaptureException exception) {
-                            Log.e(TAG, "Photo capture failed: " + exception.getMessage());
-                            Intent resultIntent = new Intent();
-                            resultIntent.putExtra("error", exception.getMessage());
-                            setResult(Activity.RESULT_CANCELED, resultIntent);
-                            finish();
-                        }
-                    }
-            );
-        Log.d(TAG, "takePicture() method completed");
-    }
+        ).build();
+    
+    // Take the picture
+    imageCapture.takePicture(
+            outputOptions,
+            executor,
+            new ImageCapture.OnImageSavedCallback() {
+                @Override
+                public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
+                    //CameraLauncher knows the uri already.
+                    setResult(Activity.RESULT_OK);
+                    finish();
+                }
+                
+                @Override
+                public void onError(@NonNull ImageCaptureException exception) {
+                    Log.e(TAG, "Photo capture failed: " + exception.getMessage());
+                    Intent resultIntent = new Intent();
+                    resultIntent.putExtra("error", exception.getMessage());
+                    setResult(Activity.RESULT_CANCELED, resultIntent);
+                    finish();
+                }
+            }
+    );
+}
     
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
