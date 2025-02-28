@@ -262,11 +262,18 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
             finish();
             return;
         }
+
+        // Create ContentValues with required metadata
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
+        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, "CameraX_" + System.currentTimeMillis());
+        
         // Create output options using the provided URI
         ImageCapture.OutputFileOptions outputOptions = 
         new ImageCapture.OutputFileOptions.Builder(
             getContentResolver(),
-            outputUri
+            outputUri,
+            contentValues
             ).build();
         
         // Take the picture
