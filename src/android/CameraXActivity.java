@@ -278,12 +278,6 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
                     public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
                             setResult(Activity.RESULT_OK, resultIntent);
                             finish();
-                        } else {
-                            // Return the result directly
-                            Intent resultIntent = new Intent();
-                            resultIntent.putExtra("imageUri", imagePath);
-                            setResult(Activity.RESULT_OK, resultIntent);
-                            finish();
                         }
                     }
                     
