@@ -9,7 +9,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -40,11 +39,11 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
 import java.io.OutputStream;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class CameraXActivity extends AppCompatActivity implements View.OnClickListener {
@@ -67,7 +66,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     private float currentZoomRatio = 1.0f;
     
     private ImageCapture imageCapture;
-    private final Executor executor = Executors.newSingleThreadExecutor();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
     
     // Camera state
     private int cameraFacing = CameraSelector.LENS_FACING_BACK;
@@ -270,7 +269,6 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     
     try {
         OutputStream outputStream = getContentResolver().openOutputStream(outputUri);
-        
         if (outputStream == null) {
             Log.e(TAG, "Failed to open output stream for URI: " + outputUri);
             setResult(Activity.RESULT_CANCELED);
@@ -281,8 +279,8 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         // Create output options with the output stream
         ImageCapture.OutputFileOptions outputOptions = new ImageCapture.OutputFileOptions.Builder(outputStream).build();
     
-        // Take the picture
-        imageCapture.takePicture(
+            // Take the picture
+            imageCapture.takePicture(
                 outputOptions,
                 executor,
                 new ImageCapture.OnImageSavedCallback() {
@@ -355,4 +353,25 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     }
     return true;
 }
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+    
+    @Override
+    public void onBackPressed() {
+        setResult(Activity.RESULT_CANCELED);
+        super.onBackPressed();
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        
+        if (!executor.isShutdown()) {
+            executor.shutdown();
+        }
+        
+        System.gc();
+    }
 }
