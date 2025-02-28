@@ -983,6 +983,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         else if (srcType == CAMERA) {
             // If image available
             if (resultCode == Activity.RESULT_OK) {
+              try {
                     if (this.allowEdit) {
                         Uri tmpFile = FileProvider.getUriForFile(cordova.getActivity(),
                         applicationId + ".cordova.plugin.camera.provider",
