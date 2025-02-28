@@ -258,49 +258,52 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         return;
     }
     
-    // Retrieve the destination URI passed from CameraLauncher
-    String imageUriString = getIntent().getStringExtra(MediaStore.EXTRA_OUTPUT);
-    if (imageUriString == null) {
-        Log.e(TAG, "No valid imageUri received from intent");
+    // Get the URI passed from CameraLauncher
+    Uri outputUri = getIntent().getParcelableExtra(MediaStore.EXTRA_OUTPUT);
+    
+    if (outputUri == null) {
+        Log.e(TAG, "No output URI provided");
+        setResult(Activity.RESULT_CANCELED);
+        finish();
         return;
     }
-    Uri imageUri = Uri.parse(imageUriString);
+    
+    // Create output options with the provided URI
+    ImageCapture.OutputFileOptions outputOptions;
     
     try {
-        ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(imageUri, "rw");
-        if (pfd == null) {
-            Log.e(TAG, "Failed to get FileDescriptor for imageUri");
-            return;
-        }
-        FileDescriptor fileDescriptor = pfd.getFileDescriptor();
+        // Use ContentResolver to get an output stream for the URI
+        outputOptions = new ImageCapture.OutputFileOptions.Builder(
+            getContentResolver(),
+            outputUri
+        ).build();
         
-        ImageCapture.OutputFileOptions outputOptions = new ImageCapture.OutputFileOptions.Builder(fileDescriptor).build();
-        
+        // Take the picture
         imageCapture.takePicture(
-            outputOptions,
-            executor,
-            new ImageCapture.OnImageSavedCallback() {
-                @Override
-                public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
-                    // Return imageUri as the result
-                    Intent resultIntent = new Intent();
-                    resultIntent.setData(imageUri);
-                    setResult(Activity.RESULT_OK, resultIntent);
-                    finish();
+                outputOptions,
+                executor,
+                new ImageCapture.OnImageSavedCallback() {
+                    @Override
+                    public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
+                        // Just return success - the image has been saved to the URI that Cordova expects
+                        setResult(Activity.RESULT_OK);
+                        finish();
+                    }
+                    
+                    @Override
+                    public void onError(@NonNull ImageCaptureException exception) {
+                        Log.e(TAG, "Photo capture failed: " + exception.getMessage());
+                        Intent resultIntent = new Intent();
+                        resultIntent.putExtra("error", exception.getMessage());
+                        setResult(Activity.RESULT_CANCELED, resultIntent);
+                        finish();
+                    }
                 }
-
-                @Override
-                public void onError(@NonNull ImageCaptureException exception) {
-                    Log.e(TAG, "Photo capture failed: " + exception.getMessage());
-                    Intent resultIntent = new Intent();
-                    resultIntent.putExtra("error", exception.getMessage());
-                    setResult(Activity.RESULT_CANCELED, resultIntent);
-                    finish();
-                }
-            }
         );
-    } catch (IOException e) {
-        Log.e(TAG, "Failed to open FileDescriptor for writing", e);
+    } catch (Exception e) {
+        Log.e(TAG, "Error setting up image capture: " + e.getMessage());
+        setResult(Activity.RESULT_CANCELED);
+        finish();
     }
 }
 
