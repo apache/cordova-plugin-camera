@@ -222,7 +222,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
                 // Camera provider is now guaranteed to be available
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
 
-                int aspectRatio = AspectRatio.Ratio_4_3
+                int aspectRatio = AspectRatio.RATIO_4_3;
                 // Set up the preview use case
                 Preview preview = new Preview.Builder()
                     .setTargetAspectRatio(aspectRatio)
