@@ -443,7 +443,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                         }
                         [[self locationManager] startUpdatingLocation];
                     }
-                data = nil;
+                    // data = nil; // this causes Issue #778
                 }
             } else if (pickerController.sourceType == UIImagePickerControllerSourceTypePhotoLibrary) {
                 PHAsset* asset = [info objectForKey:@"UIImagePickerControllerPHAsset"];
@@ -698,7 +698,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         NSString* mediaType = [info objectForKey:UIImagePickerControllerMediaType];
         if ([mediaType isEqualToString:(NSString*)kUTTypeImage]) {
             [weakSelf resultForImage:cameraPicker.pictureOptions info:info completion:^(CDVPluginResult* res) {
-                if (![self usesGeolocation] || picker.sourceType != UIImagePickerControllerSourceTypeCamera) {
+                if (![weakSelf usesGeolocation] || picker.sourceType != UIImagePickerControllerSourceTypeCamera) {
                     [weakSelf.commandDelegate sendPluginResult:res callbackId:cameraPicker.callbackId];
                     weakSelf.hasPendingOperation = NO;
                     weakSelf.pickerController = nil;
