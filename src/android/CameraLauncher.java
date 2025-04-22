@@ -559,7 +559,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             // If all this is true we shouldn't compress the image.
             if (this.targetHeight == -1 && this.targetWidth == -1 && this.mQuality == 100 &&
                     !this.correctOrientation) {
-                LOG.d(LOG_TAG, "Write to FILE_URI: file is uncompressed");
+                LOG.d(LOG_TAG, "Write to FILE_URI: file is uncompressed " + galleryUri.toString());
 
                 // If we saved the uncompressed photo to the album, we can just
                 // return the URI we already created
@@ -608,10 +608,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     exif.writeExifData();
                 }
 
-                LOG.d(LOG_TAG, "Image processed into bitmap and ready to pass back to js.");
+                LOG.d(LOG_TAG, "Image processed into bitmap and ready to pass back to js. " + uri.toString());
                 // Send Uri back to JavaScript for viewing image
                 this.callbackContext.success(uri.toString());
-
             }
         } else {
             LOG.e(LOG_TAG, "I either have a null image path or bitmap");
