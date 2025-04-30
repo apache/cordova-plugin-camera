@@ -510,6 +510,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         }
 
         handler.removeCallbacks(hideZoomLevelRunnable);
+        handler.removeCallbacks(hideZoomControlsRunnable);
         System.gc();
     }
 }
