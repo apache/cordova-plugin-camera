@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -203,7 +204,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
 
         handler.removeCallbacks(hideZoomLevelRunnable);
         handler.postDelayed(hideZoomLevelRunnable, 1000);
-    
+    }
     @Override
     public void onClick(View view) {
         int id = view.getId();
