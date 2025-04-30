@@ -107,9 +107,44 @@
         android:padding="8dp"
         android:layout_margin="16dp"
         android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/zoom_seekbar"
+        app:layout_constraintBottom_toTopOf="@id/zoom_buttons_container"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
+    
+        <LinearLayout
+        android:id="@+id/zoom_buttons_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toTopOf="@id/zoom_seekbar"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent">
+    
+        <!-- 0.5x Zoom Button -->
+        <TextView
+            android:id="@+id/wide_angle_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/circular_button"
+            android:gravity="center"
+            android:text="0.5x"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp" />
+    
+        <!-- 1x Zoom Button -->
+        <TextView
+            android:id="@+id/normal_zoom_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/circular_button_selected"
+            android:gravity="center"
+            android:text="1x"
+            android:textColor="#000000"
+            android:textSize="14sp" />
+    </LinearLayout>
+
 
     <SeekBar
         android:id="@+id/zoom_seekbar"
