@@ -107,7 +107,7 @@
         android:padding="8dp"
         android:layout_margin="16dp"
         android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/zoom_seekbar"
+        app:layout_constraintTop_toTopOf="@id/zoom_seekbar"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
 
