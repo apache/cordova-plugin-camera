@@ -347,6 +347,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             else
             {
                 LOG.d(LOG_TAG, "Error: You don't have a default camera.  Your device may not be CTS complaint.");
+                throw new IllegalStateException("No camera application available.");
             }
         }
     }
