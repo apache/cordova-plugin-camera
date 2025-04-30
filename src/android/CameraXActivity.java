@@ -16,6 +16,7 @@ import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 
@@ -62,6 +63,10 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     private ImageButton flashAutoButton;
     private ImageButton flashOnButton;
     private ImageButton flashOffButton;
+    private TextView zoomLevelText;
+    private Handler handler = new Handler();
+    private Runnable hideZoomLevelRunnable;
+    
     private ScaleGestureDetector scaleGestureDetector;
     private Camera camera;
     private float currentZoomRatio = 1.0f;
@@ -96,6 +101,10 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         flashAutoButton = findViewById(getResources().getIdentifier("flash_auto_button", "id", getPackageName()));
         flashOnButton = findViewById(getResources().getIdentifier("flash_on_button", "id", getPackageName()));
         flashOffButton = findViewById(getResources().getIdentifier("flash_off_button", "id", getPackageName()));
+        zoomLevelText = findViewById(getResources().getIdentifier("zoom_level_text", "id", getPackageName()));
+
+        hideZoomLevelRunnable = () -> zoomLevelText.setVisibility(View.GONE);
+
         
         // Set click listeners
         captureButton.setOnClickListener(this);
@@ -131,13 +140,44 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
                 CameraControl cameraControl = camera.getCameraControl();
                 CameraInfo cameraInfo = camera.getCameraInfo();
 
+                ZoomState zoomState = cameraInfo.getZoomState().getValue();
                 float currentZoomRatio = cameraInfo.getZoomState().getValue().getZoomRatio();
+                float minZoomRatio = zoomState.getMinZoomRatio();
+                float maxZoomRatio = zoomState.getMaxZoomRatio();
 
                 float scaleFactor = detector.getScaleFactor();
                 float newZoomRatio = currentZoomRatio * scaleFactor;
 
+                // Limit minimum zoom to 0.5x or device minimum (whichever is higher)
+                float effectiveMinZoom = Math.max(0.5f, minZoomRatio);
+                if (newZoomRatio < effectiveMinZoom) {
+                    newZoomRatio = effectiveMinZoom;
+                }
+                
+                // Limit maximum zoom
+                if (newZoomRatio > maxZoomRatio) {
+                    newZoomRatio = maxZoomRatio;
+                }
+
+                updateZoomLevelDisplay(newZoomRatio);
+                
                 cameraControl.setZoomRatio(newZoomRatio);
                 return true;
+            }
+
+             @Override
+            public void onScaleBegin(ScaleGestureDetector detector) {
+                zoomLevelText.setVisibility(View.VISIBLE);
+                // Remove any pending hide callbacks
+                handler.removeCallbacks(hideZoomLevelRunnable);
+                super.onScaleBegin(detector);
+            }
+            
+            @Override
+            public void onScaleEnd(ScaleGestureDetector detector) {
+                // Hide zoom level after a delay
+                handler.postDelayed(hideZoomLevelRunnable, 2000); // 2 seconds
+                super.onScaleEnd(detector);
             }
         });
 
@@ -155,6 +195,14 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
             ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
         }
     }
+
+    private void updateZoomLevelDisplay(float zoomRatio) {
+        String formattedZoom = String.format(Locale.US, "%.1fx", zoomRatio);
+        zoomLevelText.setText(formattedZoom);
+        zoomLevelText.setVisibility(View.VISIBLE);
+
+        handler.removeCallbacks(hideZoomLevelRunnable);
+        handler.postDelayed(hideZoomLevelRunnable, 1000);
     
     @Override
     public void onClick(View view) {
@@ -251,6 +299,16 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
                         cameraSelector,
                         preview,
                         imageCapture);
+                
+                 // Reset zoom level indicator after camera switch
+                if (camera != null) {
+                    camera.getCameraInfo().getZoomState().observe(this, zoomState -> {
+                        // Initialize zoom display with current zoom ratio
+                        if (zoomState != null && zoomState.getZoomRatio() != 1.0f) {
+                            updateZoomLevelDisplay(zoomState.getZoomRatio());
+                        }
+                    });
+                }
                 
             } catch (ExecutionException | InterruptedException e) {
                 Log.e(TAG, "Error starting camera: " + e.getMessage());
@@ -378,7 +436,8 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         if (!executor.isShutdown()) {
             executor.shutdown();
         }
-        
+
+        handler.removeCallbacks(hideZoomLevelRunnable);
         System.gc();
     }
 }
