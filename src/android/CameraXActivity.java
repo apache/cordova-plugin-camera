@@ -172,6 +172,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
                 // Remove any pending hide callbacks
                 handler.removeCallbacks(hideZoomLevelRunnable);
                 super.onScaleBegin(detector);
+                return true;
             }
             
             @Override
