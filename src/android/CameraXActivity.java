@@ -76,7 +76,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     private Camera camera;
     private float currentZoomRatio = 1.0f;
     private float maxZoomRatio = 8.0f;
-    private float minZoomRatio = 1.0f;
+    private float minZoomRatio = 0.5f;
     
     private ImageCapture imageCapture;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -263,32 +263,6 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     }
 });
 
-// Update camera zoom state observer in startCamera method
-if (camera != null) {
-    camera.getCameraInfo().getZoomState().observe(this, zoomState -> {
-        if (zoomState != null) {
-            // Log camera zoom capabilities
-            Log.d(TAG, "Camera zoom - Min: " + zoomState.getMinZoomRatio() + 
-                  ", Max: " + zoomState.getMaxZoomRatio() + 
-                  ", Current: " + zoomState.getZoomRatio());
-                  
-            // Update zoom display if changed externally
-            if (!isUserControllingZoom && zoomState.getZoomRatio() != 1.0f) {
-                float minZoom = Math.max(0.5f, zoomState.getMinZoomRatio());
-                float maxZoom = zoomState.getMaxZoomRatio();
-                float zoomRatio = zoomState.getZoomRatio();
-                
-                // Calculate and set slider position
-                float zoomProgress = ((zoomRatio - minZoom) / (maxZoom - minZoom)) * 100;
-                zoomSeekBar.setProgress((int)zoomProgress);
-                
-                // Update text display
-                updateZoomLevelDisplay(zoomRatio);
-            }
-        }
-    });
-}
-
         //add pinch to preview view
         previewView.setOnTouchListener((view,event) -> {
             scaleGestureDetector.onTouchEvent(event);
@@ -418,12 +392,28 @@ if (camera != null) {
                         preview,
                         imageCapture);
                 
-                 // Reset zoom level indicator after camera switch
+                // Update camera zoom state when switching cameras
                 if (camera != null) {
                     camera.getCameraInfo().getZoomState().observe(this, zoomState -> {
-                        // Initialize zoom display with current zoom ratio
-                        if (zoomState != null && zoomState.getZoomRatio() != 1.0f) {
-                            updateZoomLevelDisplay(zoomState.getZoomRatio());
+                        if (zoomState != null) {
+                            // Log camera zoom capabilities
+                            Log.d(TAG, "Camera zoom - Min: " + zoomState.getMinZoomRatio() + 
+                                  ", Max: " + zoomState.getMaxZoomRatio() + 
+                                  ", Current: " + zoomState.getZoomRatio());
+                                  
+                            // Update zoom display if changed externally
+                            if (!isUserControllingZoom && zoomState.getZoomRatio() != 1.0f) {
+                                float minZoom = Math.max(0.5f, zoomState.getMinZoomRatio());
+                                float maxZoom = zoomState.getMaxZoomRatio();
+                                float zoomRatio = zoomState.getZoomRatio();
+                                
+                                // Calculate and set slider position
+                                float zoomProgress = ((zoomRatio - minZoom) / (maxZoom - minZoom)) * 100;
+                                zoomSeekBar.setProgress((int)zoomProgress);
+                                
+                                // Update text display
+                                updateZoomLevelDisplay(zoomRatio);
+                            }
                         }
                     });
                 }
