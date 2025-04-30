@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.hardware.camera2.CameraCharacteristics;
 import android.net.Uri;
 import android.os.Build;
@@ -13,8 +14,10 @@ import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.OrientationEventListener;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+import android.view.Surface;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -72,8 +75,9 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     private ImageButton flashAutoButton;
     private ImageButton flashOnButton;
     private ImageButton flashOffButton;
-    private TextView zoomLevelText;
+    private OrientationEventListener orientationListener;
     private SeekBar zoomSeekBar;
+    private TextView zoomLevelText;
     private TextView wideAngleButton;
     private TextView normalZoomButton;
     
@@ -90,6 +94,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     private float currentZoomRatio = 1.0f;
     private float maxZoomRatio = 8.0f;
     private float minZoomRatio = 0.5f;
+    private int currentOrientation = 0;
     
     private ImageCapture imageCapture;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -128,7 +133,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
 
         zoomSeekBar.setMax(100);
         zoomSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
+        @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser && camera != null) {
                     isUserControllingZoom = true;
@@ -157,7 +162,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
                 handler.removeCallbacks(hideZoomLevelRunnable);
             }
 
-            @Override
+        @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 // Schedule auto-hide after user stops interacting
                 handler.postDelayed(hideZoomControlsRunnable, 2000);
@@ -284,6 +289,9 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
             scaleGestureDetector.onTouchEvent(event);
             return true;
         });
+
+        //set up orientation listener
+        setupOrientationListener();
         
         // Check and request permissions
         if (allPermissionsGranted()) {
@@ -336,7 +344,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
             switchToNormalCamera();
         } 
     }
-    
+    // Flash Methods
     private void toggleFlashModeBar() {
         // Don't toggle flash mode bar in ultra-wide mode
         if (usingUltraWideCamera) {
@@ -385,6 +393,87 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         }
     }
 
+    // Orientation Methods
+    private void setupOrientationListener() {
+    orientationListener = new OrientationEventListener(this) {
+        @Override
+        public void onOrientationChanged(int orientation) {
+            if (orientation == ORIENTATION_UNKNOWN) return;
+
+            // Convert orientation to nearest 90 degrees
+            int rotation;
+            if (orientation > 315 || orientation <= 45) {
+                rotation = 0; // Portrait
+            } else if (orientation > 45 && orientation <= 135) {
+                rotation = 90; // Landscape right
+            } else if (orientation > 135 && orientation <= 225) {
+                rotation = 180; // Upside down portrait
+            } else {
+                rotation = 270; // Landscape left
+            }
+
+            // Only update when rotation changes significantly
+            if (Math.abs(rotation - currentOrientation) >= 90) {
+                currentOrientation = rotation;
+                
+                // Update camera rotation
+                if (imageCapture != null) {
+                    imageCapture.setTargetRotation(getCameraRotation());
+                }
+            }
+        }
+    };
+
+    // Start the orientation listener if it can be enabled
+    if (orientationListener.canDetectOrientation()) {
+        orientationListener.enable();
+    }
+}
+
+    private int getCameraRotation() {
+    // Convert device orientation to camera rotation value
+    int displayRotation = getWindowManager().getDefaultDisplay().getRotation();
+    
+    switch (displayRotation) {
+        case Surface.ROTATION_0: // Portrait
+            return 0;
+        case Surface.ROTATION_90: // Landscape right
+            return 90;
+        case Surface.ROTATION_180: // Upside down portrait
+            return 180;
+        case Surface.ROTATION_270: // Landscape left
+            return 270;
+        default:
+            return 0;
+    }
+}
+
+    @Override
+public void onConfigurationChanged(Configuration newConfig) {
+    super.onConfigurationChanged(newConfig);
+    
+    // Update UI for orientation
+    updateUIForOrientation(newConfig.orientation);
+    
+    // Update camera setup if needed
+    if (camera != null) {
+        // Update image capture rotation
+        imageCapture.setTargetRotation(getCameraRotation());
+    }
+}
+
+// Add method to update UI for different orientations
+private void updateUIForOrientation(int orientation) {
+    if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+        // Update UI for landscape
+        previewView.setScaleType(PreviewView.ScaleType.FILL_START);
+    } else {
+        // Update UI for portrait
+        previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
+    }
+}
+    
+    // Wide Lens Camera Methods
      @ExperimentalCamera2Interop
     private void switchToWideAngleCamera() {
         if (!hasUltraWideCamera || cameraFacing != CameraSelector.LENS_FACING_BACK) {
@@ -543,7 +632,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
                 imageCapture = new ImageCapture.Builder()
                         .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
                         .setTargetAspectRatio(aspectRatio)
-                        .setTargetRotation(previewView.getDisplay().getRotation())
+                        .setTargetRotation(getCameraRotation())
                         .setFlashMode(flashMode)
                         .build();
                 
@@ -715,6 +804,9 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     
     @Override
     protected void onDestroy() {
+        if (orientationListener != null) {
+        orientationListener.disable();
+    }
         super.onDestroy();
         
         if (!executor.isShutdown()) {
