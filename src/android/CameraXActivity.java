@@ -17,6 +17,7 @@ import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -65,12 +66,17 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     private ImageButton flashOnButton;
     private ImageButton flashOffButton;
     private TextView zoomLevelText;
+    private SeekBar zoomSeekBar;
     private Handler handler = new Handler();
     private Runnable hideZoomLevelRunnable;
+    private Runnable hideZoomControlsRunnable;
+    private boolean isUserControllingZoom = false;
     
     private ScaleGestureDetector scaleGestureDetector;
     private Camera camera;
     private float currentZoomRatio = 1.0f;
+    private float maxZoomRatio = 8.0f;
+    private float minZoomRatio = 0.5f;
     
     private ImageCapture imageCapture;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -103,8 +109,55 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         flashOnButton = findViewById(getResources().getIdentifier("flash_on_button", "id", getPackageName()));
         flashOffButton = findViewById(getResources().getIdentifier("flash_off_button", "id", getPackageName()));
         zoomLevelText = findViewById(getResources().getIdentifier("zoom_level_text", "id", getPackageName()));
+        zoomSeekBar = findViewById(getResources().getIdentifier("zoom_seekbar", "id", getPackageName()));
 
-        hideZoomLevelRunnable = () -> zoomLevelText.setVisibility(View.GONE);
+        zoomSeekBar.setMax(100);
+        zoomSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser && camera != null) {
+                    isUserControllingZoom = true;
+                    
+                    // Convert progress (0-100) to linear zoom (0.0-1.0)
+                    float linearZoom = progress / 100f;
+                    
+                    // Set the zoom ratio
+                    CameraControl cameraControl = camera.getCameraControl();
+                    cameraControl.setLinearZoom(linearZoom);
+                    
+                    // Convert linear zoom to ratio for display
+                    float zoomRatio = calculateZoomRatioFromLinear(linearZoom);
+                    updateZoomLevelDisplay(zoomRatio);
+                }
+            }
+
+        @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                isUserControllingZoom = true;
+                // Cancel auto-hide when user starts interacting
+                handler.removeCallbacks(hideZoomControlsRunnable);
+                handler.removeCallbacks(hideZoomLevelRunnable);
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // Schedule auto-hide after user stops interacting
+                handler.postDelayed(hideZoomControlsRunnable, 2000);
+            }
+        });
+
+        hideZoomLevelRunnable = () -> {
+            zoomLevelText.setVisibility(View.GONE);
+            if (!isUserControllingZoom) {
+                zoomSeekBar.setVisibility(View.GONE);
+            }
+        };
+        
+        hideZoomControlsRunnable = () -> {
+            zoomLevelText.setVisibility(View.GONE);
+            zoomSeekBar.setVisibility(View.GONE);
+            isUserControllingZoom = false;
+        };
 
         
         // Set click listeners
@@ -142,49 +195,55 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
                 CameraInfo cameraInfo = camera.getCameraInfo();
 
                 ZoomState zoomState = cameraInfo.getZoomState().getValue();
-                float currentZoomRatio = cameraInfo.getZoomState().getValue().getZoomRatio();
-                float minZoomRatio = zoomState.getMinZoomRatio();
-                float maxZoomRatio = zoomState.getMaxZoomRatio();
-
+                float currentZoomRatio = zoomState.getZoomRatio();
+                maxZoomRatio = zoomState.getMaxZoomRatio();
+                
+                // Convert current zoom ratio to linear value (0.0-1.0)
+                float currentLinearZoom = calculateLinearFromZoomRatio(currentZoomRatio);
+                
+                // Apply scale factor to linear zoom
                 float scaleFactor = detector.getScaleFactor();
-                float newZoomRatio = currentZoomRatio * scaleFactor;
-
-                // Limit minimum zoom to 0.5x or device minimum (whichever is higher)
-                float effectiveMinZoom = Math.max(0.5f, minZoomRatio);
-                if (newZoomRatio < effectiveMinZoom) {
-                    newZoomRatio = effectiveMinZoom;
-                }
+                float newLinearZoom = currentLinearZoom * scaleFactor;
                 
-                // Limit maximum zoom
-                if (newZoomRatio > maxZoomRatio) {
-                    newZoomRatio = maxZoomRatio;
-                }
-
+                // Clamp to 0.0-1.0 range
+                newLinearZoom = Math.max(0.0f, Math.min(1.0f, newLinearZoom));
+                
+                // Update the seekbar position without triggering listener
+                int seekBarProgress = (int)(newLinearZoom * 100);
+                zoomSeekBar.setProgress(seekBarProgress);
+                
+                // Convert back to ratio for display
+                float newZoomRatio = calculateZoomRatioFromLinear(newLinearZoom);
+                
+                // Show zoom controls
                 updateZoomLevelDisplay(newZoomRatio);
+                zoomSeekBar.setVisibility(View.VISIBLE);
                 
-                cameraControl.setZoomRatio(newZoomRatio);
+                // Set linear zoom
+                cameraControl.setLinearZoom(newLinearZoom);
                 return true;
             }
-
-             @Override
+            
+            @Override
             public boolean onScaleBegin(ScaleGestureDetector detector) {
+                // Show zoom controls
                 zoomLevelText.setVisibility(View.VISIBLE);
+                zoomSeekBar.setVisibility(View.VISIBLE);
+                
                 // Remove any pending hide callbacks
                 handler.removeCallbacks(hideZoomLevelRunnable);
-                super.onScaleBegin(detector);
+                handler.removeCallbacks(hideZoomControlsRunnable);
                 return true;
             }
             
             @Override
             public void onScaleEnd(ScaleGestureDetector detector) {
-                // Hide zoom level after a delay
-                handler.postDelayed(hideZoomLevelRunnable, 2000); // 2 seconds
-                super.onScaleEnd(detector);
+                // Hide zoom controls after a delay
+                handler.postDelayed(hideZoomControlsRunnable, 2000);
             }
         });
 
         //add pinch to preview view
-
         previewView.setOnTouchListener((view,event) -> {
             scaleGestureDetector.onTouchEvent(event);
             return true;
@@ -198,13 +257,24 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         }
     }
 
+    // Convert linear zoom (0.0-1.0) to zoom ratio (minZoom to maxZoom)
+    private float calculateZoomRatioFromLinear(float linearZoom) {
+        return minZoomRatio + (linearZoom * (maxZoomRatio - minZoomRatio));
+    }
+
+    // Convert zoom ratio to linear zoom
+    private float calculateLinearFromZoomRatio(float zoomRatio) {
+        return (zoomRatio - minZoomRatio) / (maxZoomRatio - minZoomRatio);
+    }
+
     private void updateZoomLevelDisplay(float zoomRatio) {
         String formattedZoom = String.format(Locale.US, "%.1fx", zoomRatio);
         zoomLevelText.setText(formattedZoom);
         zoomLevelText.setVisibility(View.VISIBLE);
 
         handler.removeCallbacks(hideZoomLevelRunnable);
-        handler.postDelayed(hideZoomLevelRunnable, 1000);
+        handler.removeCallbacks(hideZoomControlsRunnable);
+        handler.postDelayed(hideZoomControlsRunnable, 2000);
     }
     @Override
     public void onClick(View view) {
