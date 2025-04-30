@@ -112,6 +112,8 @@
         <source-file src="src/android/drawable/circle_background.xml" target-dir="res/drawable" />
         <source-file src="src/android/drawable/zoom_progress_drawable.xml" target-dir="res/drawable" />
         <source-file src="src/android/drawable/zoom_thumb.xml" target-dir="res/drawable" />
+        <source-file src="src/android/drawable/circular_button.xml" target-dir="res/drawable" />
+        <source-file src="src/android/drawable/circular_button_selected.xml" target-dir="res/drawable" />
         <source-file src="src/android/values/camerax_styles.xml" target-dir="res/values" />
 
         <config-file target="AndroidManifest.xml" parent="application">
