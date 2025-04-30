@@ -167,7 +167,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
             }
 
              @Override
-            public void onScaleBegin(ScaleGestureDetector detector) {
+            public boolean onScaleBegin(ScaleGestureDetector detector) {
                 zoomLevelText.setVisibility(View.VISIBLE);
                 // Remove any pending hide callbacks
                 handler.removeCallbacks(hideZoomLevelRunnable);
