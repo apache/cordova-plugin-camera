@@ -95,6 +95,22 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/capture_button" />
 
+    <!-- Zoom level indicator -->
+    <TextView
+        android:id="@+id/zoom_level_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1.0x"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:background="#80000000"
+        android:padding="8dp"
+        android:layout_margin="16dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/zoom_seekbar"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
+
     <SeekBar
         android:id="@+id/zoom_seekbar"
         android:layout_width="match_parent"
