@@ -75,7 +75,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     private TextView zoomLevelText;
     private SeekBar zoomSeekBar;
     private TextView wideAngleButton;
-    private TextView normalZoomButton
+    private TextView normalZoomButton;
     
     private Handler handler = new Handler();
     private Runnable hideZoomLevelRunnable;
