@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.hardware.camera2.CameraCharacteristics;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -24,6 +25,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.camera2.interop.Camera2CameraInfo;
+import androidx.camera.camera2.interop.ExperimentalCamera2Interop;
 import androidx.camera.core.AspectRatio;
 import androidx.camera.core.Camera;
 import androidx.camera.core.CameraControl;
@@ -44,12 +47,16 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+@ExperimentalCamera2Interop
 public class CameraXActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = "CameraXActivity";
     private static final int REQUEST_CODE_PERMISSIONS = 10;
@@ -67,10 +74,16 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     private ImageButton flashOffButton;
     private TextView zoomLevelText;
     private SeekBar zoomSeekBar;
+    private TextView wideAngleButton;
+    private TextView normalZoomButton
+    
     private Handler handler = new Handler();
     private Runnable hideZoomLevelRunnable;
     private Runnable hideZoomControlsRunnable;
+    
     private boolean isUserControllingZoom = false;
+    private boolean hasUltraWideCamera = false;
+    private boolean usingUltraWideCamera = false;
     
     private ScaleGestureDetector scaleGestureDetector;
     private Camera camera;
@@ -110,6 +123,8 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         flashOffButton = findViewById(getResources().getIdentifier("flash_off_button", "id", getPackageName()));
         zoomLevelText = findViewById(getResources().getIdentifier("zoom_level_text", "id", getPackageName()));
         zoomSeekBar = findViewById(getResources().getIdentifier("zoom_seekbar", "id", getPackageName()));
+        wideAngleButton = findViewById(getResources().getIdentifier("wide_angle_button", "id", getPackageName()));
+        normalZoomButton = findViewById(getResources().getIdentifier("normal_zoom_button", "id", getPackageName()));
 
         zoomSeekBar.setMax(100);
         zoomSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -130,7 +145,6 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
                     
                     // Convert linear zoom to ratio for display
                     camera.getCameraControl().setZoomRatio(zoomRatio);
-                    
                     updateZoomLevelDisplay(zoomRatio);
                 }
             }
@@ -171,6 +185,8 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         flashAutoButton.setOnClickListener(this);
         flashOnButton.setOnClickListener(this);
         flashOffButton.setOnClickListener(this);
+        wideAngleButton.setOnClickListener(this);
+        normalZoomButton.setOnClickListener(this);
         
         // Extract parameters from intent
         Intent intent = getIntent();
@@ -189,79 +205,79 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
 
         //set up pinch for zoom
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
-    private float lastZoomRatio = 1.0f;
-    
-    @Override
-    public boolean onScale(ScaleGestureDetector detector) {
-        if (camera == null) {
-            return false;
-        }
-
-        CameraControl cameraControl = camera.getCameraControl();
-        CameraInfo cameraInfo = camera.getCameraInfo();
-        ZoomState zoomState = cameraInfo.getZoomState().getValue();
-        if (zoomState == null) return false;
+            private float lastZoomRatio = 1.0f;
+            
+            @Override
+            public boolean onScale(ScaleGestureDetector detector) {
+                if (camera == null) {
+                    return false;
+                }
         
-        // Get current actual zoom ratio and limits from camera
-        float currentZoomRatio = zoomState.getZoomRatio();
-        float minZoom = Math.max(0.5f, zoomState.getMinZoomRatio());
-        float maxZoom = zoomState.getMaxZoomRatio();
-        
-        // Calculate new zoom based on pinch scale factor
-        float scaleFactor = detector.getScaleFactor();
-        float newZoomRatio = lastZoomRatio * scaleFactor;
-        
-        // Constrain to actual camera limits
-        newZoomRatio = Math.max(minZoom, Math.min(newZoomRatio, maxZoom));
-        
-        // Save for next frame
-        lastZoomRatio = newZoomRatio;
-        
-        // Update UI
-        updateZoomLevelDisplay(newZoomRatio);
-        
-        // Make slider visible
-        zoomSeekBar.setVisibility(View.VISIBLE);
-        
-        // Calculate and set slider position based on the zoom ratio
-        float zoomProgress = ((newZoomRatio - minZoom) / (maxZoom - minZoom)) * 100;
-        zoomSeekBar.setProgress((int)zoomProgress);
-        
-        // Log for debugging
-        Log.d(TAG, "Pinch scale: " + scaleFactor + ", new zoom: " + newZoomRatio 
-              + ", progress: " + (int)zoomProgress);
-        
-        // Apply zoom to camera
-        cameraControl.setZoomRatio(newZoomRatio);
-        return true;
-    }
-    
-    @Override
-    public boolean onScaleBegin(ScaleGestureDetector detector) {
-        if (camera != null) {
-            ZoomState zoomState = camera.getCameraInfo().getZoomState().getValue();
-            if (zoomState != null) {
-                // Initialize with current zoom
-                lastZoomRatio = zoomState.getZoomRatio();
+                CameraControl cameraControl = camera.getCameraControl();
+                CameraInfo cameraInfo = camera.getCameraInfo();
+                ZoomState zoomState = cameraInfo.getZoomState().getValue();
+                if (zoomState == null) return false;
+                
+                // Get current actual zoom ratio and limits from camera
+                float currentZoomRatio = zoomState.getZoomRatio();
+                float minZoom = Math.max(0.5f, zoomState.getMinZoomRatio());
+                float maxZoom = zoomState.getMaxZoomRatio();
+                
+                // Calculate new zoom based on pinch scale factor
+                float scaleFactor = detector.getScaleFactor();
+                float newZoomRatio = lastZoomRatio * scaleFactor;
+                
+                // Constrain to actual camera limits
+                newZoomRatio = Math.max(minZoom, Math.min(newZoomRatio, maxZoom));
+                
+                // Save for next frame
+                lastZoomRatio = newZoomRatio;
+                
+                // Update UI
+                updateZoomLevelDisplay(newZoomRatio);
+                
+                // Make slider visible
+                zoomSeekBar.setVisibility(View.VISIBLE);
+                
+                // Calculate and set slider position based on the zoom ratio
+                float zoomProgress = ((newZoomRatio - minZoom) / (maxZoom - minZoom)) * 100;
+                zoomSeekBar.setProgress((int)zoomProgress);
+                
+                // Log for debugging
+                Log.d(TAG, "Pinch scale: " + scaleFactor + ", new zoom: " + newZoomRatio 
+                      + ", progress: " + (int)zoomProgress);
+                
+                // Apply zoom to camera
+                cameraControl.setZoomRatio(newZoomRatio);
+                return true;
             }
-        }
-        
-        // Show zoom controls
-        zoomLevelText.setVisibility(View.VISIBLE);
-        zoomSeekBar.setVisibility(View.VISIBLE);
-        
-        // Remove any pending hide callbacks
-        handler.removeCallbacks(hideZoomLevelRunnable);
-        handler.removeCallbacks(hideZoomControlsRunnable);
-        return true;
-    }
-    
-    @Override
-    public void onScaleEnd(ScaleGestureDetector detector) {
-        // Hide zoom controls after a delay
-        handler.postDelayed(hideZoomControlsRunnable, 2000);
-    }
-});
+            
+            @Override
+            public boolean onScaleBegin(ScaleGestureDetector detector) {
+                if (camera != null) {
+                    ZoomState zoomState = camera.getCameraInfo().getZoomState().getValue();
+                    if (zoomState != null) {
+                        // Initialize with current zoom
+                        lastZoomRatio = zoomState.getZoomRatio();
+                    }
+                }
+                
+                // Show zoom controls
+                zoomLevelText.setVisibility(View.VISIBLE);
+                zoomSeekBar.setVisibility(View.VISIBLE);
+                
+                // Remove any pending hide callbacks
+                handler.removeCallbacks(hideZoomLevelRunnable);
+                handler.removeCallbacks(hideZoomControlsRunnable);
+                return true;
+            }
+            
+            @Override
+            public void onScaleEnd(ScaleGestureDetector detector) {
+                // Hide zoom controls after a delay
+                handler.postDelayed(hideZoomControlsRunnable, 2000);
+            }
+        });
 
         //add pinch to preview view
         previewView.setOnTouchListener((view,event) -> {
@@ -314,17 +330,33 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         } else if (id == getResources().getIdentifier("flash_off_button", "id", getPackageName()))  {
             setFlashMode(ImageCapture.FLASH_MODE_OFF);
             toggleFlashModeBar();
-        }
+        } else if (id == getResources().getIdentifier("wide_angle_button", "id", getPackageName())) {
+        switchToWideAngleCamera();
+        } else if (id == getResources().getIdentifier("normal_zoom_button", "id", getPackageName())) {
+            switchToNormalCamera();
+        } 
     }
     
     private void toggleFlashModeBar() {
+        // Don't toggle flash mode bar in ultra-wide mode
+        if (usingUltraWideCamera) {
+            Toast.makeText(this, "Flash not available in wide-angle mode", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
         flashModeBarVisible = !flashModeBarVisible;
         flashModesBar.setVisibility(flashModeBarVisible ? View.VISIBLE : View.GONE);
     }
     
-    private void flipCamera() {
+   private void flipCamera() {
         cameraFacing = (cameraFacing == CameraSelector.LENS_FACING_BACK) ? 
                 CameraSelector.LENS_FACING_FRONT : CameraSelector.LENS_FACING_BACK;
+        
+        // Reset ultra-wide mode when switching to front camera
+        if (cameraFacing == CameraSelector.LENS_FACING_FRONT) {
+            usingUltraWideCamera = false;
+        }
+        
         startCamera(); // Restart camera with new facing
     }
     
@@ -352,7 +384,133 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
                 break;
         }
     }
+
+     @ExperimentalCamera2Interop
+    private void switchToWideAngleCamera() {
+        if (!hasUltraWideCamera || cameraFacing != CameraSelector.LENS_FACING_BACK) {
+            // Wide angle not available or front camera is active
+            Toast.makeText(this, "Wide angle camera not available", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        if (!usingUltraWideCamera) {
+            usingUltraWideCamera = true;
+            
+            // Disable flash for ultra-wide camera
+            setFlashMode(ImageCapture.FLASH_MODE_OFF);
+            
+            updateZoomButtonsState();
+            startCamera(); // Restart camera with wide angle
+        }
+    }
     
+    private void switchToNormalCamera() {
+        if (usingUltraWideCamera) {
+            usingUltraWideCamera = false;
+            updateZoomButtonsState();
+            startCamera(); // Restart camera with normal lens
+        }
+    }
+    
+    private void updateZoomButtonsState() {
+        if (usingUltraWideCamera) {
+            wideAngleButton.setBackground(getDrawable(getResources().getIdentifier("circular_button_selected", "drawable", getPackageName())));
+            wideAngleButton.setTextColor(getResources().getColor(android.R.color.black));
+            normalZoomButton.setBackground(getDrawable(getResources().getIdentifier("circular_button", "drawable", getPackageName())));
+            normalZoomButton.setTextColor(getResources().getColor(android.R.color.white));
+            
+            // Disable flash controls for ultra-wide camera
+            flashButton.setAlpha(0.5f);
+            flashButton.setEnabled(false);
+        } else {
+            normalZoomButton.setBackground(getDrawable(getResources().getIdentifier("circular_button_selected", "drawable", getPackageName())));
+            normalZoomButton.setTextColor(getResources().getColor(android.R.color.black));
+            wideAngleButton.setBackground(getDrawable(getResources().getIdentifier("circular_button", "drawable", getPackageName())));
+            wideAngleButton.setTextColor(getResources().getColor(android.R.color.white));
+            
+            // Re-enable flash controls for normal camera
+            flashButton.setAlpha(1.0f);
+            flashButton.setEnabled(true);
+        }
+    }
+    
+    @ExperimentalCamera2Interop
+    private void detectUltraWideCamera(ProcessCameraProvider cameraProvider) {
+        try {
+            hasUltraWideCamera = false;
+            for (CameraInfo cameraInfo : cameraProvider.getAvailableCameraInfos()) {
+                Camera2CameraInfo camera2CameraInfo = Camera2CameraInfo.from(cameraInfo);
+                int lensFacing = camera2CameraInfo.getCameraCharacteristic(
+                        CameraCharacteristics.LENS_FACING);
+                
+                if (lensFacing == CameraSelector.LENS_FACING_BACK) {
+                    float[] focalLengths = camera2CameraInfo.getCameraCharacteristic(
+                            CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
+                    
+                    if (focalLengths != null && focalLengths.length > 0) {
+                        // Ultra-wide lenses typically have shorter focal lengths
+                        Log.d(TAG, "Camera focal length: " + focalLengths[0] + "mm");
+                        if (focalLengths[0] < 2.0f) { // Approximate threshold
+                            hasUltraWideCamera = true;
+                            Log.d(TAG, "Ultra-wide camera detected");
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // Update wide angle button visibility
+            wideAngleButton.setVisibility(hasUltraWideCamera ? View.VISIBLE : View.GONE);
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error detecting camera types: " + e.getMessage());
+        }
+    }
+    
+    @ExperimentalCamera2Interop
+    private CameraSelector createUltraWideCameraSelector() {
+        return new CameraSelector.Builder()
+            .requireLensFacing(CameraSelector.LENS_FACING_BACK)
+            .addCameraFilter(cameraInfos -> {
+                // Filter to find cameras with shortest focal length (ultra-wide)
+                List<CameraInfo> backCameras = new ArrayList<>();
+                CameraInfo selectedCamera = null;
+                float shortestFocalLength = Float.MAX_VALUE;
+                
+                for (CameraInfo info : cameraInfos) {
+                    try {
+                        Camera2CameraInfo camera2Info = Camera2CameraInfo.from(info);
+                        int lensFacing = camera2Info.getCameraCharacteristic(
+                                CameraCharacteristics.LENS_FACING);
+                        
+                        if (lensFacing == CameraSelector.LENS_FACING_BACK) {
+                            backCameras.add(info);
+                            
+                            float[] focalLengths = camera2Info.getCameraCharacteristic(
+                                    CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
+                            
+                            if (focalLengths != null && focalLengths.length > 0 && 
+                                    focalLengths[0] < shortestFocalLength) {
+                                shortestFocalLength = focalLengths[0];
+                                selectedCamera = info;
+                            }
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error examining camera: " + e.getMessage());
+                    }
+                }
+                
+                if (selectedCamera != null) {
+                    Log.d(TAG, "Selected ultra-wide camera with focal length: " + shortestFocalLength);
+                    return Collections.singletonList(selectedCamera);
+                }
+                
+                return backCameras;
+            })
+            .build();
+    }
+
+    @ExperimentalCamera2Interop
     private void startCamera() {
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = 
                 ProcessCameraProvider.getInstance(this);
@@ -361,6 +519,18 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
             try {
                 // Camera provider is now guaranteed to be available
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+
+                // Check if device has ultra-wide camera
+                if (cameraFacing == CameraSelector.LENS_FACING_BACK) {
+                    detectUltraWideCamera(cameraProvider);
+                } else {
+                    // No wide angle for front camera
+                    hasUltraWideCamera = false;
+                    usingUltraWideCamera = false;
+                }
+                
+                // Update button states
+                updateZoomButtonsState();
 
                 int aspectRatio = AspectRatio.RATIO_4_3;
                 // Set up the preview use case
@@ -377,10 +547,16 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
                         .setFlashMode(flashMode)
                         .build();
                 
-                // Select front or back camera based on current facing mode
-                CameraSelector cameraSelector = new CameraSelector.Builder()
-                        .requireLensFacing(cameraFacing)
-                        .build();
+                // Select appropriate camera
+                CameraSelector cameraSelector;
+                if (usingUltraWideCamera && hasUltraWideCamera && cameraFacing == CameraSelector.LENS_FACING_BACK) {
+                    cameraSelector = createUltraWideCameraSelector();
+                } else {
+                    // Use standard camera selector
+                    cameraSelector = new CameraSelector.Builder()
+                            .requireLensFacing(cameraFacing)
+                            .build();
+                }
                 
                 // Unbind any bound use cases before rebinding
                 cameraProvider.unbindAll();
