@@ -76,7 +76,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     private Camera camera;
     private float currentZoomRatio = 1.0f;
     private float maxZoomRatio = 8.0f;
-    private float minZoomRatio = 0.5f;
+    private float minZoomRatio = 1.0f;
     
     private ImageCapture imageCapture;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -118,15 +118,19 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
                 if (fromUser && camera != null) {
                     isUserControllingZoom = true;
                     
-                    // Convert progress (0-100) to linear zoom (0.0-1.0)
-                    float linearZoom = progress / 100f;
+                    CameraInfo cameraInfo = camera.getCameraInfo();
+                    ZoomState zoomState = cameraInfo.getZoomState().getValue();
                     
-                    // Set the zoom ratio
-                    CameraControl cameraControl = camera.getCameraControl();
-                    cameraControl.setLinearZoom(linearZoom);
+                    if (zoomState == null) return;
+                    
+                    float minZoom = Math.max(0.5f, zoomState.getMinZoomRatio());
+                    float maxZoom = zoomState.getMaxZoomRatio();
+                    float zoomRange = maxZoom - minZoom;
+                    float zoomRatio = minZoom + (progress / 100f) * zoomRange;
                     
                     // Convert linear zoom to ratio for display
-                    float zoomRatio = calculateZoomRatioFromLinear(linearZoom);
+                    camera.getCameraControl().setZoomRatio(zoomRatio);
+                    
                     updateZoomLevelDisplay(zoomRatio);
                 }
             }
@@ -185,63 +189,105 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
 
         //set up pinch for zoom
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
-            @Override
-            public boolean onScale(ScaleGestureDetector detector) {
-                if (camera == null){
-                    return false;
-                }
+    private float lastZoomRatio = 1.0f;
+    
+    @Override
+    public boolean onScale(ScaleGestureDetector detector) {
+        if (camera == null) {
+            return false;
+        }
 
-                CameraControl cameraControl = camera.getCameraControl();
-                CameraInfo cameraInfo = camera.getCameraInfo();
+        CameraControl cameraControl = camera.getCameraControl();
+        CameraInfo cameraInfo = camera.getCameraInfo();
+        ZoomState zoomState = cameraInfo.getZoomState().getValue();
+        if (zoomState == null) return false;
+        
+        // Get current actual zoom ratio and limits from camera
+        float currentZoomRatio = zoomState.getZoomRatio();
+        float minZoom = Math.max(0.5f, zoomState.getMinZoomRatio());
+        float maxZoom = zoomState.getMaxZoomRatio();
+        
+        // Calculate new zoom based on pinch scale factor
+        float scaleFactor = detector.getScaleFactor();
+        float newZoomRatio = lastZoomRatio * scaleFactor;
+        
+        // Constrain to actual camera limits
+        newZoomRatio = Math.max(minZoom, Math.min(newZoomRatio, maxZoom));
+        
+        // Save for next frame
+        lastZoomRatio = newZoomRatio;
+        
+        // Update UI
+        updateZoomLevelDisplay(newZoomRatio);
+        
+        // Make slider visible
+        zoomSeekBar.setVisibility(View.VISIBLE);
+        
+        // Calculate and set slider position based on the zoom ratio
+        float zoomProgress = ((newZoomRatio - minZoom) / (maxZoom - minZoom)) * 100;
+        zoomSeekBar.setProgress((int)zoomProgress);
+        
+        // Log for debugging
+        Log.d(TAG, "Pinch scale: " + scaleFactor + ", new zoom: " + newZoomRatio 
+              + ", progress: " + (int)zoomProgress);
+        
+        // Apply zoom to camera
+        cameraControl.setZoomRatio(newZoomRatio);
+        return true;
+    }
+    
+    @Override
+    public boolean onScaleBegin(ScaleGestureDetector detector) {
+        if (camera != null) {
+            ZoomState zoomState = camera.getCameraInfo().getZoomState().getValue();
+            if (zoomState != null) {
+                // Initialize with current zoom
+                lastZoomRatio = zoomState.getZoomRatio();
+            }
+        }
+        
+        // Show zoom controls
+        zoomLevelText.setVisibility(View.VISIBLE);
+        zoomSeekBar.setVisibility(View.VISIBLE);
+        
+        // Remove any pending hide callbacks
+        handler.removeCallbacks(hideZoomLevelRunnable);
+        handler.removeCallbacks(hideZoomControlsRunnable);
+        return true;
+    }
+    
+    @Override
+    public void onScaleEnd(ScaleGestureDetector detector) {
+        // Hide zoom controls after a delay
+        handler.postDelayed(hideZoomControlsRunnable, 2000);
+    }
+});
 
-                ZoomState zoomState = cameraInfo.getZoomState().getValue();
-                float currentZoomRatio = zoomState.getZoomRatio();
-                maxZoomRatio = zoomState.getMaxZoomRatio();
+// Update camera zoom state observer in startCamera method
+if (camera != null) {
+    camera.getCameraInfo().getZoomState().observe(this, zoomState -> {
+        if (zoomState != null) {
+            // Log camera zoom capabilities
+            Log.d(TAG, "Camera zoom - Min: " + zoomState.getMinZoomRatio() + 
+                  ", Max: " + zoomState.getMaxZoomRatio() + 
+                  ", Current: " + zoomState.getZoomRatio());
+                  
+            // Update zoom display if changed externally
+            if (!isUserControllingZoom && zoomState.getZoomRatio() != 1.0f) {
+                float minZoom = Math.max(0.5f, zoomState.getMinZoomRatio());
+                float maxZoom = zoomState.getMaxZoomRatio();
+                float zoomRatio = zoomState.getZoomRatio();
                 
-                // Convert current zoom ratio to linear value (0.0-1.0)
-                float currentLinearZoom = calculateLinearFromZoomRatio(currentZoomRatio);
+                // Calculate and set slider position
+                float zoomProgress = ((zoomRatio - minZoom) / (maxZoom - minZoom)) * 100;
+                zoomSeekBar.setProgress((int)zoomProgress);
                 
-                // Apply scale factor to linear zoom
-                float scaleFactor = detector.getScaleFactor();
-                float newLinearZoom = currentLinearZoom * scaleFactor;
-                
-                // Clamp to 0.0-1.0 range
-                newLinearZoom = Math.max(0.0f, Math.min(1.0f, newLinearZoom));
-                
-                // Update the seekbar position without triggering listener
-                int seekBarProgress = (int)(newLinearZoom * 100);
-                zoomSeekBar.setProgress(seekBarProgress);
-                
-                // Convert back to ratio for display
-                float newZoomRatio = calculateZoomRatioFromLinear(newLinearZoom);
-                
-                // Show zoom controls
-                updateZoomLevelDisplay(newZoomRatio);
-                zoomSeekBar.setVisibility(View.VISIBLE);
-                
-                // Set linear zoom
-                cameraControl.setLinearZoom(newLinearZoom);
-                return true;
+                // Update text display
+                updateZoomLevelDisplay(zoomRatio);
             }
-            
-            @Override
-            public boolean onScaleBegin(ScaleGestureDetector detector) {
-                // Show zoom controls
-                zoomLevelText.setVisibility(View.VISIBLE);
-                zoomSeekBar.setVisibility(View.VISIBLE);
-                
-                // Remove any pending hide callbacks
-                handler.removeCallbacks(hideZoomLevelRunnable);
-                handler.removeCallbacks(hideZoomControlsRunnable);
-                return true;
-            }
-            
-            @Override
-            public void onScaleEnd(ScaleGestureDetector detector) {
-                // Hide zoom controls after a delay
-                handler.postDelayed(hideZoomControlsRunnable, 2000);
-            }
-        });
+        }
+    });
+}
 
         //add pinch to preview view
         previewView.setOnTouchListener((view,event) -> {
