@@ -31,7 +31,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.camera2.interop.Camera2CameraInfo;
 import androidx.camera.camera2.interop.ExperimentalCamera2Interop;
-import androidx.camera.core.AspectRatio;
 import androidx.camera.core.Camera;
 import androidx.camera.core.CameraControl;
 import androidx.camera.core.CameraInfo;
@@ -41,6 +40,9 @@ import androidx.camera.core.ImageCaptureException;
 import androidx.camera.core.Preview;
 import androidx.camera.core.ZoomState;
 import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.camera.core.resolutionselector.AspectRatioStrategy;
+import androidx.camera.core.resolutionselector.ResolutionSelector;
+import androidx.camera.core.resolutionselector.ResolutionStrategy;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -629,6 +631,13 @@ private void updateUIForOrientation(int orientation) {
                 // Camera provider is now guaranteed to be available
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
 
+                ResolutionSelector resolutionSelector = newResolutionSelector.Builder()
+                    .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
+                    .setResolutionStrategy(new ResolutionStrategy(
+                        new Size(1940,1080),
+                        ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER))
+                        .build();
+
                 // Check if device has ultra-wide camera
                 if (cameraFacing == CameraSelector.LENS_FACING_BACK) {
                     detectUltraWideCamera(cameraProvider);
@@ -648,14 +657,15 @@ private void updateUIForOrientation(int orientation) {
                 }
                 // Set up the preview use case
                 Preview preview = new Preview.Builder()
-                    .setTargetResolution(new android.util.Size(1920,1080))
+                    .setResolutionSelector(resolutionSelector)
                     .build();
+                
                 preview.setSurfaceProvider(previewView.getSurfaceProvider());
                 
                 // Set up the capture use case
                 imageCapture = new ImageCapture.Builder()
                         .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-                        .setTargetResolution( new android.util.Size(1920,1080))
+                        .setResolutionSelector(resolutionSelector)
                         .setTargetRotation(getCameraRotation())
                         .setFlashMode(flashMode)
                         .build();
