@@ -489,7 +489,7 @@ public void onConfigurationChanged(Configuration newConfig) {
 private void updateUIForOrientation(int orientation) {
     if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
         // Update UI for landscape
-        previewView.setScaleType(PreviewView.ScaleType.FILL_CENTER);
+        previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
     } else {
         // Update UI for portrait
         previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
@@ -648,14 +648,14 @@ private void updateUIForOrientation(int orientation) {
                 }
                 // Set up the preview use case
                 Preview preview = new Preview.Builder()
-                    .setTargetResolution(new android.util.Size(1280,720))
+                    .setTargetResolution(new android.util.Size(1920,1080))
                     .build();
                 preview.setSurfaceProvider(previewView.getSurfaceProvider());
                 
                 // Set up the capture use case
                 imageCapture = new ImageCapture.Builder()
                         .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-                        .setTargetResolution( new android.util.Size(1280,720))
+                        .setTargetResolution( new android.util.Size(1920,1080))
                         .setTargetRotation(getCameraRotation())
                         .setFlashMode(flashMode)
                         .build();
