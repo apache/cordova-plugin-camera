@@ -409,13 +409,13 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
             // Convert orientation to nearest 90 degrees
             int rotation;
             if (orientation > 315 || orientation <= 45) {
-                rotation = 0; // Portrait
+                rotation = Surface.ROTATION_0;
             } else if (orientation > 45 && orientation <= 135) {
-                rotation = 90; // Landscape right
+                rotation = Surface.ROTATION_90; 
             } else if (orientation > 135 && orientation <= 225) {
-                rotation = 180; // Upside down portrait
+                rotation = Surface.ROTATION_180; 
             } else {
-                rotation = 270; // Landscape left
+                rotation = Surface.ROTATION_270;
             }
 
             // Only update when rotation changes significantly
