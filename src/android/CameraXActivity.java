@@ -631,7 +631,7 @@ private void updateUIForOrientation(int orientation) {
                 // Camera provider is now guaranteed to be available
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
 
-                ResolutionSelector resolutionSelector = newResolutionSelector.Builder()
+                ResolutionSelector resolutionSelector = new ResolutionSelector.Builder()
                     .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
                     .setResolutionStrategy(new ResolutionStrategy(
                         new Size(1940,1080),
