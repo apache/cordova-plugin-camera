@@ -238,21 +238,14 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
                 // Save for next frame
                 lastZoomRatio = newZoomRatio;
                 
-                // Update UI
                 updateZoomLevelDisplay(newZoomRatio);
                 
-                // Make slider visible
                 zoomSeekBar.setVisibility(View.VISIBLE);
                 
                 // Calculate and set slider position based on the zoom ratio
                 float zoomProgress = ((newZoomRatio - minZoom) / (maxZoom - minZoom)) * 100;
                 zoomSeekBar.setProgress((int)zoomProgress);
                 
-                // Log for debugging
-                Log.d(TAG, "Pinch scale: " + scaleFactor + ", new zoom: " + newZoomRatio 
-                      + ", progress: " + (int)zoomProgress);
-                
-                // Apply zoom to camera
                 cameraControl.setZoomRatio(newZoomRatio);
                 return true;
             }
@@ -396,52 +389,47 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     // Orientation Methods
     private void setupOrientationListener() {
     try {
-        Log.d(TAG, "Setting up orientation listener");
-    orientationListener = new OrientationEventListener(this) {
-        @Override
-        public void onOrientationChanged(int orientation) {
-        try {
-            if (orientation == ORIENTATION_UNKNOWN) {
-                Log.d(TAG, "Orientation unknown, skipping update");
-                return;
-            }
-
-            // Convert orientation to nearest 90 degrees
-            int rotation;
-            if (orientation > 315 || orientation <= 45) {
-                rotation = Surface.ROTATION_0;
-            } else if (orientation > 45 && orientation <= 135) {
-                rotation = Surface.ROTATION_90; 
-            } else if (orientation > 135 && orientation <= 225) {
-                rotation = Surface.ROTATION_180; 
-            } else {
-                rotation = Surface.ROTATION_270;
-            }
-
-            // Only update when rotation changes significantly
-            if (Math.abs(rotation - currentOrientation) >= 90) {
-                Log.d(TAG, "Orientation changing from " + currentOrientation + " to " + rotation);
-                currentOrientation = rotation;
+        orientationListener = new OrientationEventListener(this) {
+            @Override
+            public void onOrientationChanged(int orientation) {
                 
-                // Update camera rotation
-                if (imageCapture != null) {
-                    int cameraRotation = getCameraRotation();
-                    Log.d(TAG, "Setting camera rotation to: " + cameraRotation);
-                    imageCapture.setTargetRotation(getCameraRotation());
+            try {
+                if (orientation == ORIENTATION_UNKNOWN) {
+                    return;
+                }
+    
+                // Convert orientation to nearest 90 degrees
+                int rotation;
+                if (orientation > 315 || orientation <= 45) {
+                    rotation = Surface.ROTATION_0;
+                } else if (orientation > 45 && orientation <= 135) {
+                    rotation = Surface.ROTATION_90; 
+                } else if (orientation > 135 && orientation <= 225) {
+                    rotation = Surface.ROTATION_180; 
                 } else {
-                    Log.w(TAG, "Cannot update rotation - imageCapture is null");
+                    rotation = Surface.ROTATION_270;
+                }
+    
+                // Only update when rotation changes significantly
+                if (Math.abs(rotation - currentOrientation) >= 90) {
+                    currentOrientation = rotation;
+                    
+                    // Update camera rotation
+                    if (imageCapture != null) {
+                        imageCapture.setTargetRotation(getCameraRotation());
+                    } else {
+                        Log.w(TAG, "Cannot update rotation - imageCapture is null");
+                }
+                }
+            } catch (Exception e) {
+                    Log.e(TAG, "Error in orientation listener: " + e.getMessage());
+                    e.printStackTrace();
+                }
             }
-            }
-        } catch (Exception e) {
-                Log.e(TAG, "Error in orientation listener: " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
-    };
+        };
 
     // Start the orientation listener if it can be enabled
     if (orientationListener.canDetectOrientation()) {
-        Log.d(TAG, "Enabling orientation listener");
         orientationListener.enable();
     } else {
         Log.w(TAG, "Orientation detection not supported on this device");
@@ -483,27 +471,21 @@ public void onConfigurationChanged(Configuration newConfig) {
 
     try {
        
-    // Update UI for orientation
-    updateUIForOrientation(newConfig.orientation);
+        // Update UI for orientation
+        updateUIForOrientation(newConfig.orientation);
     
-    // Update camera setup if needed
-    if (camera != null && imageCapture != null) {
-        int rotation = getCameraRotation();
-        Log.d(TAG, "Configuration changed, updating rotation to: " + rotation);
-        // Update image capture rotation
-        imageCapture.setTargetRotation(getCameraRotation());
-    }   
-    }catch (Exception e){
-        Log.e(TAG, "Error in onConfigurationChanged: " + e.getMessage());
-        e.printStackTrace();
+        startCamera();   
+        } catch (Exception e){
+            Log.e(TAG, "Error in onConfigurationChanged: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
-}
 
 // Add method to update UI for different orientations
 private void updateUIForOrientation(int orientation) {
     if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
         // Update UI for landscape
-        previewView.setScaleType(PreviewView.ScaleType.FILL_START);
+        previewView.setScaleType(PreviewView.ScaleType.FILL_CENTER);
     } else {
         // Update UI for portrait
         previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
@@ -575,10 +557,8 @@ private void updateUIForOrientation(int orientation) {
                     
                     if (focalLengths != null && focalLengths.length > 0) {
                         // Ultra-wide lenses typically have shorter focal lengths
-                        Log.d(TAG, "Camera focal length: " + focalLengths[0] + "mm");
                         if (focalLengths[0] < 2.0f) { // Approximate threshold
                             hasUltraWideCamera = true;
-                            Log.d(TAG, "Ultra-wide camera detected");
                             break;
                         }
                     }
@@ -627,7 +607,6 @@ private void updateUIForOrientation(int orientation) {
                 }
                 
                 if (selectedCamera != null) {
-                    Log.d(TAG, "Selected ultra-wide camera with focal length: " + shortestFocalLength);
                     return Collections.singletonList(selectedCamera);
                 }
                 
@@ -658,7 +637,12 @@ private void updateUIForOrientation(int orientation) {
                 // Update button states
                 updateZoomButtonsState();
 
-                int aspectRatio = AspectRatio.RATIO_4_3;
+                int aspectRatio;
+                if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    aspectRatio = AspectRatio.RATIO_16_9;
+                } else {
+                    aspectRatio = AspectRatio.RATIO_4_3;
+                }
                 // Set up the preview use case
                 Preview preview = new Preview.Builder()
                     .setTargetAspectRatio(aspectRatio)
