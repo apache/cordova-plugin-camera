@@ -395,10 +395,16 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
 
     // Orientation Methods
     private void setupOrientationListener() {
+    try {
+        Log.d(TAG, "Setting up orientation listener");
     orientationListener = new OrientationEventListener(this) {
         @Override
         public void onOrientationChanged(int orientation) {
-            if (orientation == ORIENTATION_UNKNOWN) return;
+        try {
+            if (orientation == ORIENTATION_UNKNOWN) {
+                Log.d(TAG, "Orientation unknown, skipping update");
+                return;
+            }
 
             // Convert orientation to nearest 90 degrees
             int rotation;
@@ -414,21 +420,37 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
 
             // Only update when rotation changes significantly
             if (Math.abs(rotation - currentOrientation) >= 90) {
+                Log.d(TAG, "Orientation changing from " + currentOrientation + " to " + rotation);
                 currentOrientation = rotation;
                 
                 // Update camera rotation
                 if (imageCapture != null) {
+                    int cameraRotation = getCameraRotation();
+                    Log.d(TAG, "Setting camera rotation to: " + cameraRotation);
                     imageCapture.setTargetRotation(getCameraRotation());
-                }
+                } else {
+                    Log.w(TAG, "Cannot update rotation - imageCapture is null");
+            }
+            }
+        } catch (Exception e) {
+                Log.e(TAG, "Error in orientation listener: " + e.getMessage());
+                e.printStackTrace();
             }
         }
     };
 
     // Start the orientation listener if it can be enabled
     if (orientationListener.canDetectOrientation()) {
+        Log.d(TAG, "Enabling orientation listener");
         orientationListener.enable();
+    } else {
+        Log.w(TAG, "Orientation detection not supported on this device");
     }
-}
+} catch (Exception e) {
+        Log.e(TAG, "Failed to setup orientation listener: " + e.getMessage());
+        e.printStackTrace();
+    }
+    }
 
     private int getCameraRotation() {
     // Convert device orientation to camera rotation value
@@ -451,14 +473,22 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     @Override
 public void onConfigurationChanged(Configuration newConfig) {
     super.onConfigurationChanged(newConfig);
-    
+
+    try {
+       
     // Update UI for orientation
     updateUIForOrientation(newConfig.orientation);
     
     // Update camera setup if needed
-    if (camera != null) {
+    if (camera != null && imageCapture != null) {
+        int rotation = getCameraRotation();
+        Log.d(TAG, "Configuration changed, updating rotation to: " + rotation);
         // Update image capture rotation
         imageCapture.setTargetRotation(getCameraRotation());
+    }   
+    }catch (Exception e){
+        Log.e(TAG, "Error in onConfigurationChanged: " + e.getMessage());
+        e.printStackTrace();
     }
 }
 
