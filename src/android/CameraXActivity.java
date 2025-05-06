@@ -19,6 +19,7 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.Surface;
 import android.view.View;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
@@ -473,8 +474,14 @@ public void onConfigurationChanged(Configuration newConfig) {
        
         // Update UI for orientation
         updateUIForOrientation(newConfig.orientation);
-    
-        startCamera();   
+
+        if (camera != null && imageCapture != null) {
+            imageCapture.setTargetRotation(getCameraRotation());
+        }
+        android.view.ViewGroup.LayoutParams params = previewView.getLayoutParams();
+
+        previewView.setLayoutParams(params);
+        
         } catch (Exception e){
             Log.e(TAG, "Error in onConfigurationChanged: " + e.getMessage());
             e.printStackTrace();
@@ -637,22 +644,19 @@ private void updateUIForOrientation(int orientation) {
                 // Update button states
                 updateZoomButtonsState();
 
-                int aspectRatio;
                 if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                    aspectRatio = AspectRatio.RATIO_16_9;
+                    previewView.setScaleType(PreviewView.ScaleType.FILL_CENTER);
                 } else {
-                    aspectRatio = AspectRatio.RATIO_4_3;
+                    previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
                 }
                 // Set up the preview use case
                 Preview preview = new Preview.Builder()
-                    .setTargetAspectRatio(aspectRatio)
                     .build();
                 preview.setSurfaceProvider(previewView.getSurfaceProvider());
                 
                 // Set up the capture use case
                 imageCapture = new ImageCapture.Builder()
                         .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-                        .setTargetAspectRatio(aspectRatio)
                         .setTargetRotation(getCameraRotation())
                         .setFlashMode(flashMode)
                         .build();
