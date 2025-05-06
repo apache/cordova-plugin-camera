@@ -478,9 +478,6 @@ public void onConfigurationChanged(Configuration newConfig) {
         if (camera != null && imageCapture != null) {
             imageCapture.setTargetRotation(getCameraRotation());
         }
-        android.view.ViewGroup.LayoutParams params = previewView.getLayoutParams();
-
-        previewView.setLayoutParams(params);
         
         } catch (Exception e){
             Log.e(TAG, "Error in onConfigurationChanged: " + e.getMessage());
@@ -493,6 +490,7 @@ private void updateUIForOrientation(int orientation) {
     if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
         // Update UI for landscape
         previewView.setScaleType(PreviewView.ScaleType.FILL_CENTER);
+        previewView.setTargetAspectRatio(
     } else {
         // Update UI for portrait
         previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
@@ -651,12 +649,14 @@ private void updateUIForOrientation(int orientation) {
                 }
                 // Set up the preview use case
                 Preview preview = new Preview.Builder()
+                    .setTargetResolution(new android.util.Size(1280,720))
                     .build();
                 preview.setSurfaceProvider(previewView.getSurfaceProvider());
                 
                 // Set up the capture use case
                 imageCapture = new ImageCapture.Builder()
                         .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                        .setTargetResolution( new android.util.Size(1280,720))
                         .setTargetRotation(getCameraRotation())
                         .setFlashMode(flashMode)
                         .build();
@@ -686,10 +686,6 @@ private void updateUIForOrientation(int orientation) {
                 if (camera != null) {
                     camera.getCameraInfo().getZoomState().observe(this, zoomState -> {
                         if (zoomState != null) {
-                            // Log camera zoom capabilities
-                            Log.d(TAG, "Camera zoom - Min: " + zoomState.getMinZoomRatio() + 
-                                  ", Max: " + zoomState.getMaxZoomRatio() + 
-                                  ", Current: " + zoomState.getZoomRatio());
                                   
                             // Update zoom display if changed externally
                             if (!isUserControllingZoom && zoomState.getZoomRatio() != 1.0f) {
