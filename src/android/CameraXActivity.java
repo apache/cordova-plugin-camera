@@ -453,20 +453,27 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     }
 
     private int getCameraRotation() {
-    // Convert device orientation to camera rotation value
-    int displayRotation = getWindowManager().getDefaultDisplay().getRotation();
-    
-    switch (displayRotation) {
-        case Surface.ROTATION_0: // Portrait
-            return 0;
-        case Surface.ROTATION_90: // Landscape right
-            return 90;
-        case Surface.ROTATION_180: // Upside down portrait
-            return 180;
-        case Surface.ROTATION_270: // Landscape left
-            return 270;
-        default:
-            return 0;
+    try {
+        // Convert device orientation to camera rotation value
+        int displayRotation = getWindowManager().getDefaultDisplay().getRotation();
+        
+        switch (displayRotation) {
+            case Surface.ROTATION_0: // Portrait
+                return Surface.ROTATION_0;
+            case Surface.ROTATION_90: // Landscape right
+                return Surface.ROTATION_90;
+            case Surface.ROTATION_180: // Upside down portrait
+                return Surface.ROTATION_180;
+            case Surface.ROTATION_270: // Landscape left
+                return Surface.ROTATION_270;
+            default:
+                Log.w(TAG, "Unknown display rotation: " + displayRotation + ", defaulting to 0");
+                return Surface.ROTATION_0;
+        }
+} catch (Exception e) {
+        Log.e(TAG, "Error getting camera rotation: " + e.getMessage());
+        e.printStackTrace();
+        return Surface.ROTATION_0;
     }
 }
 
