@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Normal dimensions -->
+    <dimen name="action_bar_height">48dp</dimen>
+    <dimen name="bottom_bar_height">180dp</dimen>
+    <dimen name="flash_button_margin">8dp</dimen>
+    <dimen name="capture_button_size">72dp</dimen>
+    
+    <!-- Landscape specific dimensions -->
+    <dimen name="action_bar_width_landscape">48dp</dimen>
+    <dimen name="bottom_bar_width_landscape">120dp</dimen>
+    <dimen name="zoom_seekbar_landscape_width">200dp</dimen>
+</resources>
