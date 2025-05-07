@@ -673,7 +673,7 @@ private void updateUIForOrientation(int orientation) {
 
                 UseCaseGroup useCaseGroup = new UseCaseGroup.Builder()
                     .setViewPort(viewPort)
-                    .addUseCase(Preview)
+                    .addUseCase(preview)
                     .build();
                 
                 previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
