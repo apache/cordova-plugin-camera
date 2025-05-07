@@ -52,6 +52,7 @@ import androidx.camera.core.resolutionselector.AspectRatioStrategy;
 import androidx.camera.core.resolutionselector.ResolutionSelector;
 import androidx.camera.core.resolutionselector.ResolutionStrategy;
 import androidx.camera.view.PreviewView;
+import androix.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleOwner;
@@ -92,6 +93,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     private ImageButton cameraFlipButton;
     private ImageButton flashButton;
     private LinearLayout flashModesBar;
+    private LinearLayout zoomButtonsContainer;
     private ImageButton flashAutoButton;
     private ImageButton flashOnButton;
     private ImageButton flashOffButton;
