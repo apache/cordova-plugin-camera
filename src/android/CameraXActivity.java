@@ -640,7 +640,6 @@ private void updateUIForOrientation(int orientation) {
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
 
                 ResolutionSelector resolutionSelector = new ResolutionSelector.Builder()
-                    .setAspectRatioStrategy(AspectRatioStrategy.RATIO_AUTO)
                     .build();
 
                 // Check if device has ultra-wide camera
