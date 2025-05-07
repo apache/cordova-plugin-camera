@@ -10,10 +10,11 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <!-- Reduced the height of the top bar from 64dp to 48dp -->
     <View
         android:id="@+id/action_bar_background"
         android:layout_width="match_parent"
-        android:layout_height="64dp"
+        android:layout_height="48dp"
         android:background="#80000000"
         app:layout_constraintTop_toTopOf="parent"/>
 
@@ -65,10 +66,11 @@
             android:contentDescription="Flash off" />
     </LinearLayout>
 
+    <!-- Increased the height of the bottom bar from 140dp to 180dp -->
     <View
         android:id="@+id/bottom_action_bar"
         android:layout_width="match_parent"
-        android:layout_height="140dp"
+        android:layout_height="180dp"
         android:background="#80000000"
         app:layout_constraintBottom_toBottomOf="parent" />
 
@@ -107,17 +109,18 @@
         android:padding="8dp"
         android:layout_margin="16dp"
         android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/zoom_buttons_container"
+        app:layout_constraintBottom_toTopOf="@id/bottom_action_bar"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
     
-        <LinearLayout
+    <!-- Moved the zoom buttons container to the bottom action bar area -->
+    <LinearLayout
         android:id="@+id/zoom_buttons_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginBottom="16dp"
-        app:layout_constraintBottom_toTopOf="@id/zoom_seekbar"
+        android:layout_marginBottom="140dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent">
     
@@ -145,17 +148,16 @@
             android:textSize="14sp" />
     </LinearLayout>
 
-
     <SeekBar
         android:id="@+id/zoom_seekbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="40dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="110dp"
         android:progressDrawable="@drawable/zoom_progress_drawable"
         android:thumb="@drawable/zoom_thumb"
         android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/capture_button"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
 
