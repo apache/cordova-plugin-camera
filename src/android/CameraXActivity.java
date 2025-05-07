@@ -60,6 +60,8 @@ import java.io.OutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -125,6 +127,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     private int targetHeight = 0;
     private boolean saveToPhotoAlbum = false;
     private boolean correctOrientation = true;
+    private int encodingType = 0;
     private boolean allowEdit = false;
     
     @Override
