@@ -489,13 +489,7 @@ public void onConfigurationChanged(Configuration newConfig) {
 
 // Add method to update UI for different orientations
 private void updateUIForOrientation(int orientation) {
-    if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-        // Update UI for landscape
-        previewView.setScaleType(PreviewView.ScaleType.FILL_CENTER);
-    } else {
-        // Update UI for portrait
-        previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
-    }
+   
 }
     
     // Wide Lens Camera Methods
@@ -650,11 +644,6 @@ private void updateUIForOrientation(int orientation) {
                 // Update button states
                 updateZoomButtonsState();
 
-                if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                    previewView.setScaleType(PreviewView.ScaleType.FILL_CENTER);
-                } else {
-                    previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
-                }
                 // Set up the preview use case
                 Preview preview = new Preview.Builder()
                     .setResolutionSelector(resolutionSelector)
