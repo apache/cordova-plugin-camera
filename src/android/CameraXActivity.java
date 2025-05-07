@@ -6,6 +6,11 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.hardware.camera2.CameraCharacteristics;
 import android.net.Uri;
 import android.os.Build;
@@ -52,6 +57,9 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
 import java.io.OutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -61,6 +69,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import org.apache.cordova.camera.ExifHelper;
 
 @ExperimentalCamera2Interop
 public class CameraXActivity extends AppCompatActivity implements View.OnClickListener {
@@ -724,44 +734,350 @@ private void updateUIForOrientation(int orientation) {
     }
     
     try {
-        OutputStream outputStream = getContentResolver().openOutputStream(outputUri);
-        if (outputStream == null) {
-            Log.e(TAG, "Failed to open output stream for URI: " + outputUri);
-            setResult(Activity.RESULT_CANCELED);
-            finish();
-            return;
-        }
+        // Create a temporary file for initial capture
+        File tempDir = new File(getApplicationContext().getCacheDir(), "camera_temp");
+        tempDir.mkdirs();
+        File tempFile = File.createTempFile("capture_", encodingType == 0 ? ".jpg" : ".png", tempDir);
+        Uri tempUri = Uri.fromFile(tempFile);
         
-        // Create output options with the output stream
-        ImageCapture.OutputFileOptions outputOptions = new ImageCapture.OutputFileOptions.Builder(outputStream).build();
+        // Set up output options with the temp file
+        ImageCapture.OutputFileOptions outputOptions = 
+            new ImageCapture.OutputFileOptions.Builder(tempFile).build();
     
-            // Take the picture
-            imageCapture.takePicture(
-                outputOptions,
-                executor,
-                new ImageCapture.OnImageSavedCallback() {
-                    @Override
-                    public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
-                        // Just return success - the image has been saved to the URI that Cordova expects
+        // Take the picture to the temp file
+        imageCapture.takePicture(
+            outputOptions,
+            executor,
+            new ImageCapture.OnImageSavedCallback() {
+                @Override
+                public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
+                    try {
+                        // Process the image with our quality settings and save to final URI
+                        processAndSaveImage(tempFile, outputUri);
+                        
+                        // Clean up temp file
+                        tempFile.delete();
+                        
+                        // Return success to CameraLauncher
                         setResult(Activity.RESULT_OK);
-                        finish();
-                    }
-                
-                    @Override
-                    public void onError(@NonNull ImageCaptureException exception) {
-                        Log.e(TAG, "Photo capture failed: " + exception.getMessage());
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error processing captured image: " + e.getMessage());
+                        e.printStackTrace();
                         Intent resultIntent = new Intent();
-                        resultIntent.putExtra("error", exception.getMessage());
+                        resultIntent.putExtra("error", e.getMessage());
                         setResult(Activity.RESULT_CANCELED, resultIntent);
+                    } finally {
                         finish();
                     }
                 }
+                
+                @Override
+                public void onError(@NonNull ImageCaptureException exception) {
+                    Log.e(TAG, "Photo capture failed: " + exception.getMessage());
+                    Intent resultIntent = new Intent();
+                    resultIntent.putExtra("error", exception.getMessage());
+                    setResult(Activity.RESULT_CANCELED, resultIntent);
+                    finish();
+                }
+            }
         );
     } catch (Exception e) {
         Log.e(TAG, "Error setting up image capture: " + e.getMessage());
+        e.printStackTrace();
         setResult(Activity.RESULT_CANCELED);
         finish();
     }
+}
+
+private void processAndSaveImage(File sourceFile, Uri destUri) throws IOException {
+    // Create an ExifHelper to preserve EXIF data
+    ExifHelper exif = new ExifHelper();
+    int rotate = 0;
+    
+    // Read the image data
+    InputStream input = new FileInputStream(sourceFile);
+    byte[] sourceData = readData(input);
+    input.close();
+    
+    // Extract EXIF data if it's a JPEG
+    if (encodingType == 0) { // JPEG
+        try {
+            exif.createInFile(new ByteArrayInputStream(sourceData));
+            exif.readExifData();
+            rotate = exif.getOrientation();
+        } catch (IOException e) {
+            Log.e(TAG, "Error reading EXIF data: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    // Check if we should skip processing
+    if (targetHeight == -1 && targetWidth == -1 && quality == 100 && !correctOrientation) {
+        // Just write the uncompressed image
+        writeUncompressedImage(sourceFile, destUri);
+        return;
+    }
+    
+    // Process the image
+    Bitmap bitmap = getScaledAndRotatedBitmap(sourceData);
+    
+    if (bitmap == null) {
+        throw new IOException("Failed to create bitmap from captured image");
+    }
+    
+    // Save the processed image with quality applied
+    OutputStream os = null;
+    try {
+        os = getContentResolver().openOutputStream(destUri);
+        if (os == null) {
+            throw new IOException("Failed to open output stream");
+        }
+        
+        // Apply quality
+        Bitmap.CompressFormat format = (encodingType == 0) ? 
+                                       Bitmap.CompressFormat.JPEG : 
+                                       Bitmap.CompressFormat.PNG;
+        bitmap.compress(format, quality, os);
+        os.flush();
+        
+        // Restore EXIF data (for JPEG only)
+        if (encodingType == 0) {
+            try {
+                String destPath = getFilePathFromUri(destUri);
+                if (destPath != null) {
+                    if (rotate != ExifInterface.ORIENTATION_NORMAL && correctOrientation) {
+                        exif.resetOrientation();
+                    }
+                    exif.createOutFile(destPath);
+                    exif.writeExifData();
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error writing EXIF data: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    } finally {
+        if (os != null) {
+            os.close();
+        }
+        if (bitmap != null) {
+            bitmap.recycle();
+        }
+    }
+}
+
+private void writeUncompressedImage(File sourceFile, Uri destUri) throws IOException {
+    InputStream is = null;
+    OutputStream os = null;
+    
+    try {
+        is = new FileInputStream(sourceFile);
+        os = getContentResolver().openOutputStream(destUri);
+        
+        if (os == null) {
+            throw new IOException("Failed to open output stream");
+        }
+        
+        byte[] buffer = new byte[8192];
+        int bytesRead;
+        while ((bytesRead = is.read(buffer)) != -1) {
+            os.write(buffer, 0, bytesRead);
+        }
+        os.flush();
+    } finally {
+        if (is != null) {
+            is.close();
+        }
+        if (os != null) {
+            os.close();
+        }
+    }
+}
+
+private Bitmap getScaledAndRotatedBitmap(byte[] data) throws IOException {
+    // If no scaling/rotation needed, just decode the bitmap
+    if (targetWidth <= 0 && targetHeight <= 0 && !correctOrientation) {
+        return BitmapFactory.decodeByteArray(data, 0, data.length);
+    }
+    
+    // Otherwise, we need to process it
+    int rotate = 0;
+    if (correctOrientation && encodingType == 0) { // JPEG
+        try {
+            ExifInterface exif = new ExifInterface(new ByteArrayInputStream(data));
+            int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 
+                                                  ExifInterface.ORIENTATION_UNDEFINED);
+            rotate = exifToDegrees(orientation);
+        } catch (Exception e) {
+            Log.w(TAG, "Error getting orientation: " + e.getMessage());
+        }
+    }
+    
+    // Decode bounds
+    BitmapFactory.Options options = new BitmapFactory.Options();
+    options.inJustDecodeBounds = true;
+    BitmapFactory.decodeByteArray(data, 0, data.length, options);
+    
+    if (options.outWidth == 0 || options.outHeight == 0) {
+        return null;
+    }
+    
+    // Calculate target dimensions
+    int width = options.outWidth;
+    int height = options.outHeight;
+    
+    // Swap dimensions if we're rotating by 90 or 270 degrees
+    if (rotate == 90 || rotate == 270) {
+        int temp = width;
+        width = height;
+        height = temp;
+    }
+    
+    // Calculate target dimensions while maintaining aspect ratio
+    int[] dimensions = calculateAspectRatio(width, height, targetWidth, targetHeight);
+    int targetWidth = dimensions[0];
+    int targetHeight = dimensions[1];
+    
+    // Calculate sample size for memory-efficient loading
+    options.inJustDecodeBounds = false;
+    options.inSampleSize = calculateSampleSize(width, height, targetWidth, targetHeight);
+    
+    // Decode the bitmap with sample size
+    Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+    
+    if (bitmap == null) {
+        return null;
+    }
+    
+    // Scale if necessary
+    if (options.outWidth != targetWidth || options.outHeight != targetHeight) {
+        Bitmap scaledBitmap = Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true);
+        if (scaledBitmap != bitmap) {
+            bitmap.recycle();
+            bitmap = scaledBitmap;
+        }
+    }
+    
+    // Rotate if necessary
+    if (correctOrientation && rotate != 0) {
+        Matrix matrix = new Matrix();
+        matrix.setRotate(rotate);
+        
+        Bitmap rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, 
+                                                  bitmap.getWidth(), bitmap.getHeight(),
+                                                  matrix, true);
+        if (rotatedBitmap != bitmap) {
+            bitmap.recycle();
+            bitmap = rotatedBitmap;
+        }
+    }
+    
+    return bitmap;
+}
+
+private int exifToDegrees(int exifOrientation) {
+    switch (exifOrientation) {
+        case ExifInterface.ORIENTATION_ROTATE_90:
+            return 90;
+        case ExifInterface.ORIENTATION_ROTATE_180:
+            return 180;
+        case ExifInterface.ORIENTATION_ROTATE_270:
+            return 270;
+        default:
+            return 0;
+    }
+}
+
+private int calculateSampleSize(int srcWidth, int srcHeight, int reqWidth, int reqHeight) {
+    int inSampleSize = 1;
+    
+    if (reqWidth > 0 && reqHeight > 0) {
+        // Calculate ratios of requested dimensions to actual dimensions
+        final float widthRatio = (float) reqWidth / srcWidth;
+        final float heightRatio = (float) reqHeight / srcHeight;
+        
+        // Choose the smallest ratio to ensure we cover the requested size
+        final float ratio = Math.min(widthRatio, heightRatio);
+        
+        // Calculate sample size
+        inSampleSize = ratio < 1 ? (int) Math.ceil(1 / ratio) : 1;
+    }
+    
+    return inSampleSize;
+}
+
+private int[] calculateAspectRatio(int origWidth, int origHeight, int targetWidth, int targetHeight) {
+    int[] dimensions = new int[2];
+    
+    // If no target dimensions specified, use original
+    if (targetWidth <= 0 && targetHeight <= 0) {
+        dimensions[0] = origWidth;
+        dimensions[1] = origHeight;
+        return dimensions;
+    }
+    
+    float aspectRatio = (float) origWidth / (float) origHeight;
+    
+    // Only width specified
+    if (targetWidth > 0 && targetHeight <= 0) {
+        dimensions[0] = targetWidth;
+        dimensions[1] = Math.round(targetWidth / aspectRatio);
+    }
+    // Only height specified
+    else if (targetHeight > 0 && targetWidth <= 0) {
+        dimensions[1] = targetHeight;
+        dimensions[0] = Math.round(targetHeight * aspectRatio);
+    }
+    // Both dimensions specified
+    else {
+        float targetRatio = (float) targetWidth / (float) targetHeight;
+        
+        if (aspectRatio > targetRatio) {
+            dimensions[0] = targetWidth;
+            dimensions[1] = Math.round(targetWidth / aspectRatio);
+        } else {
+            dimensions[1] = targetHeight;
+            dimensions[0] = Math.round(targetHeight * aspectRatio);
+        }
+    }
+    
+    return dimensions;
+}
+
+private byte[] readData(InputStream input) throws IOException {
+    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+    int nRead;
+    byte[] data = new byte[16384];
+    
+    while ((nRead = input.read(data, 0, data.length)) != -1) {
+        buffer.write(data, 0, nRead);
+    }
+    
+    return buffer.toByteArray();
+}
+
+private String getFilePathFromUri(Uri uri) {
+    try {
+        if ("file".equals(uri.getScheme())) {
+            return uri.getPath();
+        } else {
+            // For content URIs, we need to use the ContentResolver
+            Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+            if (cursor != null) {
+                try {
+                    if (cursor.moveToFirst()) {
+                        int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+                        return cursor.getString(columnIndex);
+                    }
+                } finally {
+                    cursor.close();
+                }
+            }
+        }
+    } catch (Exception e) {
+        Log.e(TAG, "Error getting file path from URI: " + e.getMessage());
+    }
+    return null;
 }
 
     
