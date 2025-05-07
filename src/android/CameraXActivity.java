@@ -642,7 +642,8 @@ private void updateUIForOrientation(int orientation) {
                 ResolutionSelector resolutionSelector = new ResolutionSelector.Builder()
                     .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
                     .setResolutionStrategy(new ResolutionStrategy(
-                        ResolutionStrategy.HIGHEST_AVAILABLE_STRATEGY))
+                        new Size(1940, 1080)
+                        ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER))
                         .build();
 
                 // Check if device has ultra-wide camera
