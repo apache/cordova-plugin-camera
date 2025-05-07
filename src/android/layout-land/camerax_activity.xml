@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.camera.view.PreviewView
+        android:id="@+id/preview_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Left action bar (was top bar in portrait) -->
+    <View
+        android:id="@+id/action_bar_background"
+        android:layout_width="48dp"
+        android:layout_height="match_parent"
+        android:background="#80000000"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <ImageButton
+        android:id="@+id/flash_button"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_margin="8dp"
+        android:background="@drawable/ic_flash_on"
+        android:contentDescription="Toggle flash"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/flash_modes_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#80000000"
+        android:visibility="gone"
+        android:padding="8dp"
+        app:layout_constraintTop_toBottomOf="@id/flash_button"
+        app:layout_constraintLeft_toLeftOf="parent">
+
+        <ImageButton
+            android:id="@+id/flash_auto_button"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginBottom="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_flash_auto"
+            android:contentDescription="Auto flash" />
+
+        <ImageButton
+            android:id="@+id/flash_on_button"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginBottom="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_flash_on"
+            android:contentDescription="Flash on" />
+
+        <ImageButton
+            android:id="@+id/flash_off_button"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_flash_off"
+            android:contentDescription="Flash off" />
+    </LinearLayout>
+
+    <!-- Right action bar (was bottom bar in portrait) -->
+    <View
+        android:id="@+id/bottom_action_bar"
+        android:layout_width="120dp"
+        android:layout_height="match_parent"
+        android:background="#80000000"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageButton
+        android:id="@+id/capture_button"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:background="@drawable/circle_background"
+        android:contentDescription="Take picture"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginEnd="24dp" />
+
+    <!-- Added camera flip button -->
+    <ImageButton
+        android:id="@+id/camera_flip_button"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="@drawable/ic_camera_flip"
+        android:contentDescription="Switch camera"
+        app:layout_constraintTop_toBottomOf="@id/capture_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="36dp" />
+
+    <!-- Zoom level indicator -->
+    <TextView
+        android:id="@+id/zoom_level_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1.0x"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:background="#80000000"
+        android:padding="8dp"
+        android:layout_margin="16dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toStartOf="@id/bottom_action_bar"
+        app:layout_constraintBottom_toBottomOf="parent" />
+    
+    <!-- Zoom buttons in vertical layout -->
+    <LinearLayout
+        android:id="@+id/zoom_buttons_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="36dp">
+    
+        <!-- 0.5x Zoom Button -->
+        <TextView
+            android:id="@+id/wide_angle_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/circular_button"
+            android:gravity="center"
+            android:text="0.5x"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp" />
+    
+        <!-- 1x Zoom Button -->
+        <TextView
+            android:id="@+id/normal_zoom_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/circular_button_selected"
+            android:gravity="center"
+            android:text="1x"
+            android:textColor="#000000"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <SeekBar
+        android:id="@+id/zoom_seekbar"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:progressDrawable="@drawable/zoom_progress_drawable"
+        android:thumb="@drawable/zoom_thumb"
+        android:visibility="gone"
+        android:rotation="270"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/bottom_action_bar"
+        android:layout_marginEnd="40dp" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
