@@ -645,15 +645,7 @@ private void updateUIForOrientation(int orientation) {
                 ResolutionSelector resolutionSelector = new ResolutionSelector.Builder()
                     .build();
 
-                ViewPort viewPort = new ViewPort.Builder(
-                    new Rational(previewView.getWidth(), previewView.getHeight()),
-                    previewView.getDisplay().getRotation())
-                    .build();
-
-                UseCaseGroup useCaseGroup = new UseCaseGroup.Builder()
-                    .setViewPort(viewPort)
-                    .addUseCase(Preview)
-                    .build();
+               
 
                 // Check if device has ultra-wide camera
                 if (cameraFacing == CameraSelector.LENS_FACING_BACK) {
@@ -673,6 +665,17 @@ private void updateUIForOrientation(int orientation) {
                     .setResolutionSelector(resolutionSelector)
                     .build();
 
+
+                ViewPort viewPort = new ViewPort.Builder(
+                    new Rational(previewView.getWidth(), previewView.getHeight()),
+                    previewView.getDisplay().getRotation())
+                    .build();
+
+                UseCaseGroup useCaseGroup = new UseCaseGroup.Builder()
+                    .setViewPort(viewPort)
+                    .addUseCase(Preview)
+                    .build();
+                
                 previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
                 preview.setSurfaceProvider(previewView.getSurfaceProvider());
                 
