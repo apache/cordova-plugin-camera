@@ -79,6 +79,8 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     private static final String[] REQUIRED_PERMISSIONS = {
             Manifest.permission.CAMERA,
     };
+    private static final int JPEG = 0;
+    private static final int PNG = 1;
 
     private PreviewView previewView;
     private ImageButton captureButton;
@@ -737,7 +739,7 @@ private void updateUIForOrientation(int orientation) {
         // Create a temporary file for initial capture
         File tempDir = new File(getApplicationContext().getCacheDir(), "camera_temp");
         tempDir.mkdirs();
-        File tempFile = File.createTempFile("capture_", encodingType == 0 ? ".jpg" : ".png", tempDir);
+        File tempFile = File.createTempFile("capture_", encodingType == JPEG ? ".jpg" : ".png", tempDir);
         Uri tempUri = Uri.fromFile(tempFile);
         
         // Set up output options with the temp file
@@ -800,7 +802,7 @@ private void processAndSaveImage(File sourceFile, Uri destUri) throws IOExceptio
     input.close();
     
     // Extract EXIF data if it's a JPEG
-    if (encodingType == 0) { // JPEG
+    if (encodingType == JPEG) {
         try {
             exif.createInFile(new ByteArrayInputStream(sourceData));
             exif.readExifData();
@@ -834,14 +836,14 @@ private void processAndSaveImage(File sourceFile, Uri destUri) throws IOExceptio
         }
         
         // Apply quality
-        Bitmap.CompressFormat format = (encodingType == 0) ? 
+        Bitmap.CompressFormat format = (encodingType == JPEG) ? 
                                        Bitmap.CompressFormat.JPEG : 
                                        Bitmap.CompressFormat.PNG;
         bitmap.compress(format, quality, os);
         os.flush();
         
         // Restore EXIF data (for JPEG only)
-        if (encodingType == 0) {
+        if (encodingType == JPEG) {
             try {
                 String destPath = getFilePathFromUri(destUri);
                 if (destPath != null) {
@@ -902,7 +904,7 @@ private Bitmap getScaledAndRotatedBitmap(byte[] data) throws IOException {
     
     // Otherwise, we need to process it
     int rotate = 0;
-    if (correctOrientation && encodingType == 0) { // JPEG
+    if (correctOrientation && encodingType == JPEG) {
         try {
             ExifInterface exif = new ExifInterface(new ByteArrayInputStream(data));
             int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 
