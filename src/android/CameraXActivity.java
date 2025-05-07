@@ -652,7 +652,7 @@ private void updateUIForOrientation(int orientation) {
 
                 UseCaseGroup useCaseGroup = new UseCaseGroup.Builder()
                     .setViewPort(viewPort)
-                    .addUseCase(preview)
+                    .addUseCase(Preview)
                     .build();
 
                 // Check if device has ultra-wide camera
