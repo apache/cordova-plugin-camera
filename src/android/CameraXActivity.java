@@ -151,6 +151,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         zoomSeekBar = findViewById(getResources().getIdentifier("zoom_seekbar", "id", getPackageName()));
         wideAngleButton = findViewById(getResources().getIdentifier("wide_angle_button", "id", getPackageName()));
         normalZoomButton = findViewById(getResources().getIdentifier("normal_zoom_button", "id", getPackageName()));
+        zoomButtonsContainer = findViewById(getResources().getIdentifier("zoom_buttons_container", "id", getPackageName()));
 
         zoomSeekBar.setMax(100);
         zoomSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -506,7 +507,99 @@ public void onConfigurationChanged(Configuration newConfig) {
 
 // Add method to update UI for different orientations
 private void updateUIForOrientation(int orientation) {
-   
+    try {
+        // Get the reference to the main layout container
+        View rootView = findViewById(android.R.id.content).getRootView();
+        
+        if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            // Handle landscape orientation UI adjustments
+            
+            // Adjust flash button position for landscape
+            if (flashButton != null) {
+                ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) flashButton.getLayoutParams();
+                params.topMargin = 16;
+                params.leftMargin = 12;
+                flashButton.setLayoutParams(params);
+            }
+            
+            // Adjust flash modes bar layout and orientation
+            if (flashModesBar != null) {
+                flashModesBar.setOrientation(LinearLayout.VERTICAL);
+                ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) flashModesBar.getLayoutParams();
+                params.topToBottom = getResources().getIdentifier("flash_button", "id", getPackageName());
+                params.leftToLeft = getResources().getIdentifier("action_bar_background", "id", getPackageName());
+                params.topMargin = 8;
+                params.leftMargin = 8;
+                params.rightMargin = 0;
+                flashModesBar.setLayoutParams(params);
+            }
+            
+            // Adjust zoom buttons container orientation and position
+            if (zoomSeekBar != null) {
+                zoomSeekBar.setRotation(270);
+                // Adjust seekbar width/height for landscape
+                ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) zoomSeekBar.getLayoutParams();
+                params.width = getResources().getDimensionPixelSize(
+                    getResources().getIdentifier("zoom_seekbar_landscape_width", "dimen", getPackageName()));
+                zoomSeekBar.setLayoutParams(params);
+            }
+            
+            // Set the zoom buttons in vertical orientation
+            if (zoomButtonsContainer != null) {
+                zoomButtonsContainer.setOrientation(LinearLayout.VERTICAL);
+                if (wideAngleButton != null) {
+                    LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) wideAngleButton.getLayoutParams();
+                    params.bottomMargin = 8;
+                    params.rightMargin = 0;
+                    wideAngleButton.setLayoutParams(params);
+                }
+            }
+            
+        } else {
+            // Handle portrait orientation UI adjustments
+            
+            // Reset flash button position for portrait
+            if (flashButton != null) {
+                ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) flashButton.getLayoutParams();
+                params.topMargin = 8;
+                params.leftMargin = 8;
+                flashButton.setLayoutParams(params);
+            }
+            
+            // Adjust flash modes bar layout and orientation
+            if (flashModesBar != null) {
+                flashModesBar.setOrientation(LinearLayout.HORIZONTAL);
+                ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) flashModesBar.getLayoutParams();
+                params.topToTop = getResources().getIdentifier("action_bar_background", "id", getPackageName());
+                params.leftToRight = getResources().getIdentifier("flash_button", "id", getPackageName());
+                params.topMargin = 8;
+                params.leftMargin = 0;
+                flashModesBar.setLayoutParams(params);
+            }
+            
+            // Reset zoom seekbar rotation and dimensions
+            if (zoomSeekBar != null) {
+                zoomSeekBar.setRotation(0);
+                ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) zoomSeekBar.getLayoutParams();
+                params.width = ConstraintLayout.LayoutParams.MATCH_PARENT;
+                zoomSeekBar.setLayoutParams(params);
+            }
+            
+            // Set the zoom buttons in horizontal orientation
+            if (zoomButtonsContainer != null) {
+                zoomButtonsContainer.setOrientation(LinearLayout.HORIZONTAL);
+                if (wideAngleButton != null) {
+                    LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) wideAngleButton.getLayoutParams();
+                    params.bottomMargin = 0;
+                    params.rightMargin = 8;
+                    wideAngleButton.setLayoutParams(params);
+                }
+            }
+        }
+    } catch (Exception e) {
+        Log.e(TAG, "Error updating UI for orientation: " + e.getMessage());
+        e.printStackTrace();
+    }
 }
     
     // Wide Lens Camera Methods
@@ -645,8 +738,6 @@ private void updateUIForOrientation(int orientation) {
                 ResolutionSelector resolutionSelector = new ResolutionSelector.Builder()
                     .build();
 
-               
-
                 // Check if device has ultra-wide camera
                 if (cameraFacing == CameraSelector.LENS_FACING_BACK) {
                     detectUltraWideCamera(cameraProvider);
@@ -665,17 +756,6 @@ private void updateUIForOrientation(int orientation) {
                     .setResolutionSelector(resolutionSelector)
                     .build();
 
-
-                ViewPort viewPort = new ViewPort.Builder(
-                    new Rational(previewView.getWidth(), previewView.getHeight()),
-                    previewView.getDisplay().getRotation())
-                    .build();
-
-                UseCaseGroup useCaseGroup = new UseCaseGroup.Builder()
-                    .setViewPort(viewPort)
-                    .addUseCase(preview)
-                    .build();
-                
                 previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
                 preview.setSurfaceProvider(previewView.getSurfaceProvider());
                 
@@ -705,7 +785,7 @@ private void updateUIForOrientation(int orientation) {
                 camera = cameraProvider.bindToLifecycle(
                         ((LifecycleOwner) this),
                         cameraSelector,
-                        useCaseGroup,
+                        preview,
                         imageCapture);
                 
                 // Update camera zoom state when switching cameras
