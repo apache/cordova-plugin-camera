@@ -661,7 +661,7 @@ private void updateUIForOrientation(int orientation) {
                     .setResolutionSelector(resolutionSelector)
                     .build();
 
-                preview.setScaleType(PreviewView.ScaleType.FIT_CENTER);
+                previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
                 preview.setSurfaceProvider(previewView.getSurfaceProvider());
                 
                 // Set up the capture use case
