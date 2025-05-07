@@ -219,6 +219,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         saveToPhotoAlbum = intent.getBooleanExtra("saveToPhotoAlbum", false);
         correctOrientation = intent.getBooleanExtra("correctOrientation", true);
         allowEdit = intent.getBooleanExtra("allowEdit", false);
+        encodingType = intent.getIntExtra("encodingType",0);
         
         // Set initial flash mode based on intent or default to AUTO
         flashMode = intent.getIntExtra("flashMode", ImageCapture.FLASH_MODE_AUTO);
