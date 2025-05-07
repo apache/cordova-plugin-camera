@@ -668,7 +668,7 @@ private void updateUIForOrientation(int orientation) {
                 
                 // Set up the capture use case
                 imageCapture = new ImageCapture.Builder()
-                        .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+                        .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
                         .setResolutionSelector(resolutionSelector)
                         .setTargetRotation(getCameraRotation())
                         .setFlashMode(flashMode)
