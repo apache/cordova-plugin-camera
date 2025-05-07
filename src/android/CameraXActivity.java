@@ -491,7 +491,7 @@ public void onConfigurationChanged(Configuration newConfig) {
 private void updateUIForOrientation(int orientation) {
     if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
         // Update UI for landscape
-        previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
+        previewView.setScaleType(PreviewView.ScaleType.FILL_CENTER);
     } else {
         // Update UI for portrait
         previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
