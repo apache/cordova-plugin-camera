@@ -43,6 +43,8 @@ import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.core.resolutionselector.AspectRatioStrategy;
 import androidx.camera.core.resolutionselector.ResolutionSelector;
 import androidx.camera.core.resolutionselector.ResolutionStrategy;
+import androidx.camera.core.viewports.Viewport;
+import androidx.camera.core.viewports.rational.Rational;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -208,8 +210,6 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         // Set initial flash mode based on intent or default to AUTO
         flashMode = intent.getIntExtra("flashMode", ImageCapture.FLASH_MODE_AUTO);
         setFlashButtonIcon(flashMode);
-
-        previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
 
         //set up pinch for zoom
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
@@ -643,6 +643,7 @@ private void updateUIForOrientation(int orientation) {
                 
                 // Update button states
                 updateZoomButtonsState();
+
 
                 // Set up the preview use case
                 Preview preview = new Preview.Builder()
