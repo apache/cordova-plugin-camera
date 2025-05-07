@@ -19,6 +19,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.util.Rational;
 import android.util.Size;
 import android.view.OrientationEventListener;
 import android.view.MotionEvent;
@@ -43,6 +44,8 @@ import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageCaptureException;
 import androidx.camera.core.Preview;
+import androidx.camera.core.ViewPort;
+import androidx.camera.core.UseCaseGroup;
 import androidx.camera.core.ZoomState;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.core.resolutionselector.AspectRatioStrategy;
@@ -642,6 +645,16 @@ private void updateUIForOrientation(int orientation) {
                 ResolutionSelector resolutionSelector = new ResolutionSelector.Builder()
                     .build();
 
+                ViewPort viewPort = new ViewPort.Builder(
+                    new Rational(previewView.getWidth(), previewView.getHeight()),
+                    previewView.getDisplay().getRotation())
+                    .build();
+
+                UseCaseGroup useCaseGroup = new UseCaseGroup.Builder()
+                    .setViewPort(viewPort)
+                    .addUseCase(preview)
+                    .build();
+
                 // Check if device has ultra-wide camera
                 if (cameraFacing == CameraSelector.LENS_FACING_BACK) {
                     detectUltraWideCamera(cameraProvider);
@@ -689,7 +702,7 @@ private void updateUIForOrientation(int orientation) {
                 camera = cameraProvider.bindToLifecycle(
                         ((LifecycleOwner) this),
                         cameraSelector,
-                        preview,
+                        useCaseGroup,
                         imageCapture);
                 
                 // Update camera zoom state when switching cameras
