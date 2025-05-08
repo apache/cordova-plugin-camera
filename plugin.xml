@@ -123,7 +123,8 @@
             android:name="org.apache.cordova.camera.CameraXActivity"
             android:exported="false"
             android:theme="@style/CameraTheme"
-            android:configChanges="orientation|keyboardHidden|screenSize" />
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:screenOrientation="fullSensor"/>
         </config-file>
 
         <preference name="ANDROIDX_CORE_VERSION" default="1.10.+"/>
