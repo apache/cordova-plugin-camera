@@ -91,6 +91,11 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     };
     private static final int JPEG = 0;
     private static final int PNG = 1;
+    private int originalLeftPadding = 0;
+    private int originalTopPadding = 0;
+    private int originalRightPadding = 0; 
+    private int originalBottomPadding = 0;
+    private boolean originalPaddingSaved = false;
 
     private PreviewView previewView;
     private ImageButton captureButton;
@@ -514,48 +519,22 @@ public void onConfigurationChanged(Configuration newConfig) {
     super.onConfigurationChanged(newConfig);
 
     try {
-        // Save current visibility state of zoom controls
+        // Save current zoom visibility state
         boolean wasZoomSeekBarVisible = false;
         if (zoomSeekBar != null) {
             wasZoomSeekBarVisible = zoomSeekBar.getVisibility() == View.VISIBLE;
         }
         
-        // Update UI for orientation
-        updateUIForOrientation(newConfig.orientation);
-        ConstraintLayout rootLayout = findViewById(getResources().getIdentifier("camera_container", "id", getPackageName()));
-        TransitionManager.beginDelayedTransition(rootLayout);
-
+        // Update rotation for image capture
         if (camera != null && imageCapture != null) {
             imageCapture.setTargetRotation(getCameraRotation());
         }
 
-        // Reposition the zoom seekbar based on orientation
-        if (zoomSeekBar != null) {
-            ConstraintLayout controlsLayout = findViewById(getResources().getIdentifier("bottom_controls", "id", getPackageName()));
-            if (controlsLayout != null) {
-                ConstraintSet constraintSet = new ConstraintSet();
-                constraintSet.clone(controlsLayout);
-                constraintSet.clear(zoomSeekBar.getId());
-                
-                if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                    // Landscape layout for seekbar
-                    constraintSet.connect(zoomSeekBar.getId(), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
-                    constraintSet.connect(zoomSeekBar.getId(), ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
-                    constraintSet.connect(zoomSeekBar.getId(), ConstraintSet.BOTTOM, captureButton.getId(), ConstraintSet.TOP);
-                } else {
-                    // Portrait layout for seekbar
-                    constraintSet.connect(zoomSeekBar.getId(), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
-                    constraintSet.connect(zoomSeekBar.getId(), ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
-                    constraintSet.connect(zoomSeekBar.getId(), ConstraintSet.BOTTOM, zoomButtonsContainer.getId(), ConstraintSet.TOP);
-                }
-                
-                constraintSet.applyTo(controlsLayout);
-                
-                // Restore previous visibility
-                if (wasZoomSeekBarVisible) {
-                    zoomSeekBar.setVisibility(View.VISIBLE);
-                }
-            }
+        updateNavigationBarPadding(newConfig.orientation);
+        
+        // Restore zoom visibility if needed
+        if (wasZoomSeekBarVisible && zoomSeekBar != null) {
+            zoomSeekBar.setVisibility(View.VISIBLE);
         }
         
     } catch (Exception e){
@@ -564,212 +543,48 @@ public void onConfigurationChanged(Configuration newConfig) {
     }
 }
 
-// Add method to update UI for different orientations
-private void updateUIForOrientation(int orientation) {
-    try {
-        ConstraintLayout controlsLayout = findViewById(getResources().getIdentifier("bottom_controls", "id", getPackageName()));
-        ConstraintLayout actionBarLayout = findViewById(getResources().getIdentifier("action_bar_background", "id", getPackageName()));
-        ConstraintLayout rootLayout = findViewById(getResources().getIdentifier("camera_container", "id", getPackageName()));
-        
-        // Get constraints to update
-        ConstraintSet constraintSet = new ConstraintSet();
-        constraintSet.clone(rootLayout);
-        
-        if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            // In landscape, move bottom controls to the right side
-            constraintSet.clear(controlsLayout.getId(), ConstraintSet.BOTTOM);
-            constraintSet.clear(controlsLayout.getId(), ConstraintSet.START);
-            constraintSet.clear(controlsLayout.getId(), ConstraintSet.END);
-            constraintSet.connect(controlsLayout.getId(), ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
-            constraintSet.connect(controlsLayout.getId(), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
-            constraintSet.connect(controlsLayout.getId(), ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
-            
-            // Set the width and height for landscape
-            constraintSet.constrainWidth(controlsLayout.getId(), ConstraintLayout.LayoutParams.WRAP_CONTENT);
-            constraintSet.constrainHeight(controlsLayout.getId(), ConstraintLayout.LayoutParams.MATCH_PARENT);
-            
-            // Update zoom buttons to vertical with proper spacing
-            if (zoomButtonsContainer != null) {
-                zoomButtonsContainer.setOrientation(LinearLayout.VERTICAL);
-                // Add spacing between buttons in vertical layout
-                for (int i = 0; i < zoomButtonsContainer.getChildCount(); i++) {
-                    View child = zoomButtonsContainer.getChildAt(i);
-                    if (child != null) {
-                        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) child.getLayoutParams();
-                        params.bottomMargin = 16;  // 16dp spacing
-                        params.rightMargin = 0;    // Reset horizontal margin
-                        child.setLayoutParams(params);
-                    }
-                }
-            }
-            
-            // Update flash modes bar layout for landscape
-            if (flashModesBar != null) {
-                flashModesBar.setOrientation(LinearLayout.VERTICAL);
-                ConstraintSet actionBarConstraints = new ConstraintSet();
-                actionBarConstraints.clone((ConstraintLayout) flashModesBar.getParent());
-                actionBarConstraints.clear(flashModesBar.getId(), ConstraintSet.START);
-                actionBarConstraints.clear(flashModesBar.getId(), ConstraintSet.TOP);
-                actionBarConstraints.connect(flashModesBar.getId(), ConstraintSet.TOP, flashButton.getId(), ConstraintSet.BOTTOM);
-                actionBarConstraints.connect(flashModesBar.getId(), ConstraintSet.START, flashButton.getId(), ConstraintSet.START);
-                actionBarConstraints.applyTo((ConstraintLayout) flashModesBar.getParent());
-            }
-            
-            // Move action bar to the left side in landscape
-            constraintSet.clear(actionBarLayout.getId(), ConstraintSet.TOP);
-            constraintSet.clear(actionBarLayout.getId(), ConstraintSet.START);
-            constraintSet.clear(actionBarLayout.getId(), ConstraintSet.END);
-            constraintSet.connect(actionBarLayout.getId(), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
-            constraintSet.connect(actionBarLayout.getId(), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
-            constraintSet.connect(actionBarLayout.getId(), ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
-            
-            // Set width and height for action bar in landscape
-            constraintSet.constrainWidth(actionBarLayout.getId(), ConstraintLayout.LayoutParams.WRAP_CONTENT);
-            constraintSet.constrainHeight(actionBarLayout.getId(), ConstraintLayout.LayoutParams.MATCH_PARENT);
-            
-            // Reorient action bar contents for landscape - fixed positions
-            ConstraintSet actionBarConstraints = new ConstraintSet();
-            actionBarConstraints.clone(actionBarLayout);
-            
-            // Position flash button at the top
-            actionBarConstraints.clear(flashButton.getId(), ConstraintSet.START);
-            actionBarConstraints.clear(flashButton.getId(), ConstraintSet.TOP);
-            actionBarConstraints.clear(flashButton.getId(), ConstraintSet.BOTTOM);
-            actionBarConstraints.connect(flashButton.getId(), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
-            actionBarConstraints.connect(flashButton.getId(), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
-            actionBarConstraints.connect(flashButton.getId(), ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
-            
-            // Position camera flip button at the bottom
-            actionBarConstraints.clear(cameraFlipButton.getId(), ConstraintSet.START);
-            actionBarConstraints.clear(cameraFlipButton.getId(), ConstraintSet.TOP);
-            actionBarConstraints.clear(cameraFlipButton.getId(), ConstraintSet.END);
-            actionBarConstraints.connect(cameraFlipButton.getId(), ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
-            actionBarConstraints.connect(cameraFlipButton.getId(), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
-            actionBarConstraints.connect(cameraFlipButton.getId(), ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
-            
-            actionBarConstraints.applyTo(actionBarLayout);
-            
-            // Make sure zoom seekbar is correctly placed
-            if (zoomSeekBar != null) {
-                zoomSeekBar.setRotation(0); // Reset any rotation
-                
-                // Make sure it has the right width in landscape
-                ConstraintLayout.LayoutParams seekBarParams = 
-                    (ConstraintLayout.LayoutParams) zoomSeekBar.getLayoutParams();
-                seekBarParams.width = ConstraintLayout.LayoutParams.MATCH_PARENT;
-                seekBarParams.height = ConstraintLayout.LayoutParams.WRAP_CONTENT;
-                zoomSeekBar.setLayoutParams(seekBarParams);
-            }
-            
-        } else {
-            // Portrait orientation - restore default layouts
-            constraintSet.clear(controlsLayout.getId(), ConstraintSet.END);
-            constraintSet.clear(controlsLayout.getId(), ConstraintSet.TOP);
-            constraintSet.clear(controlsLayout.getId(), ConstraintSet.BOTTOM);
-            constraintSet.connect(controlsLayout.getId(), ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
-            constraintSet.connect(controlsLayout.getId(), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
-            constraintSet.connect(controlsLayout.getId(), ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
-            
-            // Set width and height for portrait
-            constraintSet.constrainWidth(controlsLayout.getId(), ConstraintLayout.LayoutParams.MATCH_PARENT);
-            constraintSet.constrainHeight(controlsLayout.getId(), ConstraintLayout.LayoutParams.WRAP_CONTENT);
-            
-            // Update zoom buttons to horizontal with proper spacing
-            if (zoomButtonsContainer != null) {
-                zoomButtonsContainer.setOrientation(LinearLayout.HORIZONTAL);
-                // Reset spacing for horizontal layout
-                for (int i = 0; i < zoomButtonsContainer.getChildCount(); i++) {
-                    View child = zoomButtonsContainer.getChildAt(i);
-                    if (child != null) {
-                        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) child.getLayoutParams();
-                        params.bottomMargin = 0;   // Reset vertical margin
-                        params.rightMargin = 16;   // 16dp horizontal spacing
-                        child.setLayoutParams(params);
-                    }
-                }
-            }
-            
-            // Update flash modes bar layout for portrait
-            if (flashModesBar != null) {
-                flashModesBar.setOrientation(LinearLayout.HORIZONTAL);
-                ConstraintSet actionBarConstraints = new ConstraintSet();
-                actionBarConstraints.clone((ConstraintLayout) flashModesBar.getParent());
-                actionBarConstraints.clear(flashModesBar.getId(), ConstraintSet.START);
-                actionBarConstraints.clear(flashModesBar.getId(), ConstraintSet.TOP);
-                actionBarConstraints.connect(flashModesBar.getId(), ConstraintSet.START, flashButton.getId(), ConstraintSet.END);
-                actionBarConstraints.connect(flashModesBar.getId(), ConstraintSet.TOP, flashButton.getId(), ConstraintSet.TOP);
-                actionBarConstraints.applyTo((ConstraintLayout) flashModesBar.getParent());
-            }
-            
-            // Restore action bar to top in portrait
-            constraintSet.clear(actionBarLayout.getId(), ConstraintSet.START);
-            constraintSet.clear(actionBarLayout.getId(), ConstraintSet.BOTTOM);
-            constraintSet.connect(actionBarLayout.getId(), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
-            constraintSet.connect(actionBarLayout.getId(), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
-            constraintSet.connect(actionBarLayout.getId(), ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
-            
-            // Set width and height for action bar in portrait
-            constraintSet.constrainWidth(actionBarLayout.getId(), ConstraintLayout.LayoutParams.MATCH_PARENT);
-            constraintSet.constrainHeight(actionBarLayout.getId(), ConstraintLayout.LayoutParams.WRAP_CONTENT);
-            
-            // Reorient action bar contents for portrait
-            ConstraintSet actionBarConstraints = new ConstraintSet();
-            actionBarConstraints.clone(actionBarLayout);
-            actionBarConstraints.clear(flashButton.getId(), ConstraintSet.TOP);
-            actionBarConstraints.clear(flashButton.getId(), ConstraintSet.START);
-            actionBarConstraints.connect(flashButton.getId(), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
-            actionBarConstraints.connect(flashButton.getId(), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
-            actionBarConstraints.clear(cameraFlipButton.getId(), ConstraintSet.START);
-            actionBarConstraints.clear(cameraFlipButton.getId(), ConstraintSet.BOTTOM);
-            actionBarConstraints.connect(cameraFlipButton.getId(), ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
-            actionBarConstraints.connect(cameraFlipButton.getId(), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
-            actionBarConstraints.applyTo(actionBarLayout);
-            
-            // Make sure zoom seekbar is correctly placed for portrait
-            if (zoomSeekBar != null) {
-                zoomSeekBar.setRotation(0);
-                
-                ConstraintLayout.LayoutParams seekBarParams = 
-                    (ConstraintLayout.LayoutParams) zoomSeekBar.getLayoutParams();
-                seekBarParams.width = ConstraintLayout.LayoutParams.MATCH_PARENT;
-                seekBarParams.height = ConstraintLayout.LayoutParams.WRAP_CONTENT;
-                zoomSeekBar.setLayoutParams(seekBarParams);
-            }
-        }
-        
-        // Apply all constraint changes with a transition
-        Transition transition = new ChangeBounds();
-        transition.setDuration(300); // 300ms animation
-        TransitionManager.beginDelayedTransition(rootLayout, transition);
-        constraintSet.applyTo(rootLayout);
-        
-    } catch (Exception e) {
-        Log.e(TAG, "Error updating UI for orientation: " + e.getMessage());
-        e.printStackTrace();
-    }
-}
-
-    @Override
+@Override
 public void onWindowFocusChanged(boolean hasFocus) {
     super.onWindowFocusChanged(hasFocus);
     if (hasFocus) {
-        ConstraintLayout bottomControls = findViewById(getResources().getIdentifier("bottom_controls", "id", getPackageName()));
-        
-        if (bottomControls != null) {
-            // Add bottom padding for navigation bar
-            int resourceId = getResources().getIdentifier("navigation_bar_height", "dimen", "android");
-            if (resourceId > 0) {
-                int navBarHeight = getResources().getDimensionPixelSize(resourceId);
-                bottomControls.setPadding(
-                    bottomControls.getPaddingLeft(),
-                    bottomControls.getPaddingTop(),
-                    bottomControls.getPaddingRight(),
-                    navBarHeight + 16); // Add extra 16dp padding
-            }
-        }
+        updateNavigationBarPadding(getResources().getConfiguration().orientation);
     }
 }
 
+private void updateNavigationBarPadding(int orientation) {
+    ConstraintLayout bottomControls = findViewById(getResources().getIdentifier("bottom_controls", "id", getPackageName()));
+    
+    if (bottomControls != null) {
+        // Use the same padding logic from onWindowFocusChanged
+        if (!originalPaddingSaved) {
+            originalLeftPadding = bottomControls.getPaddingLeft();
+            originalTopPadding = bottomControls.getPaddingTop();
+            originalRightPadding = bottomControls.getPaddingRight();
+            originalBottomPadding = bottomControls.getPaddingBottom();
+            originalPaddingSaved = true;
+        }
+        
+        int navBarHeightId = getResources().getIdentifier("navigation_bar_height", "dimen", "android");
+        int navBarHeight = 0;
+        if (navBarHeightId > 0) {
+            navBarHeight = getResources().getDimensionPixelSize(navBarHeightId);
+        }
+        
+        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+            bottomControls.setPadding(
+                originalLeftPadding,
+                originalTopPadding,
+                originalRightPadding,
+                navBarHeight + 16);
+        } else {
+            bottomControls.setPadding(
+                originalLeftPadding,
+                originalTopPadding,
+                navBarHeight + 16,
+                originalBottomPadding);
+        }
+    }
+}
     
     // Wide Lens Camera Methods
      @ExperimentalCamera2Interop
