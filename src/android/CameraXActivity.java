@@ -738,6 +738,7 @@ private void updateUIForOrientation(int orientation) {
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
 
                 ResolutionSelector resolutionSelector = new ResolutionSelector.Builder()
+                    .setAspectRatioStrategy(new AspectRatioStrategy(AspectRatioStrategy.RATIO_4_3,AspectRatioStrategy.FALLBACK_RULE_AUTO))
                     .build();
 
                 // Check if device has ultra-wide camera
@@ -758,7 +759,7 @@ private void updateUIForOrientation(int orientation) {
                     .setResolutionSelector(resolutionSelector)
                     .build();
 
-                previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
+                previewView.setScaleType(PreviewView.ScaleType.FILL_CENTER);
                 preview.setSurfaceProvider(previewView.getSurfaceProvider());
                 
                 // Set up the capture use case
@@ -779,6 +780,15 @@ private void updateUIForOrientation(int orientation) {
                             .requireLensFacing(cameraFacing)
                             .build();
                 }
+
+                ViewPort viewPort = new ViewPort.Builder(
+                    new Rational(previewView.getWidth(), previewViw.getHeight()),getWindowManager().getDefaultDisplay.getRotation())
+                    .build();
+
+                UseCaseGroup useCaseGroup = newUseCaseGroup.Builder()
+                    .addUseCase(preview)
+                    .setViewPort(viewPort)
+                    .build();
                 
                 // Unbind any bound use cases before rebinding
                 cameraProvider.unbindAll();
