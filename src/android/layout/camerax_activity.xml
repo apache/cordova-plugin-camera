@@ -83,22 +83,6 @@
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Zoom Level Display -->
-    <TextView
-        android:id="@+id/zoom_level_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="#80000000"
-        android:padding="4dp"
-        android:text="1.0x"
-        android:textColor="@android:color/white"
-        android:textSize="16sp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <!-- Bottom Controls Container -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/bottom_controls"
@@ -107,19 +91,6 @@
         android:background="#33000000"
         android:padding="16dp"
         app:layout_constraintBottom_toBottomOf="parent">
-
-        <!-- Zoom Seek Bar -->
-        <SeekBar
-            android:id="@+id/zoom_seekbar"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:progressTint="@android:color/white"
-            android:thumbTint="@android:color/white"
-            android:visibility="gone"
-            app:layout_constraintBottom_toTopOf="@id/zoom_buttons_container"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
 
         <!-- Zoom Buttons Container -->
         <LinearLayout
@@ -164,5 +135,32 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Zoom Seek Bar -->
+    <SeekBar
+        android:id="@+id/zoom_seekbar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:progressTint="@android:color/white"
+        android:thumbTint="@android:color/white"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/bottom_controls"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/zoom_level_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#80000000"
+        android:padding="4dp"
+        android:text="1.0x"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@id/zoom_seekbar"
+        app:layout_constraintStart_toStartOf="@id/zoom_seekbar"
+        app:layout_constraintEnd_toEndOf="@id/zoom_seekbar" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
