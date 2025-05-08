@@ -783,10 +783,10 @@ private void updateUIForOrientation(int orientation) {
                 }
 
                 ViewPort viewPort = new ViewPort.Builder(
-                    new Rational(previewView.getWidth(), previewViw.getHeight()),getWindowManager().getDefaultDisplay.getRotation())
+                    new Rational(previewView.getWidth(), previewView.getHeight()),getWindowManager().getDefaultDisplay().getRotation())
                     .build();
 
-                UseCaseGroup useCaseGroup = newUseCaseGroup.Builder()
+                UseCaseGroup useCaseGroup = new UseCaseGroup.Builder()
                     .addUseCase(preview)
                     .setViewPort(viewPort)
                     .build();
