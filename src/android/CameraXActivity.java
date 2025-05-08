@@ -56,6 +56,9 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LifecycleOwner;
+import androidx.transition.ChangeBounds;
+import androidx.transition.Transition;
+import androidx.transition.TransitionManager;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -494,19 +497,37 @@ public void onConfigurationChanged(Configuration newConfig) {
 
     try {
 
-         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-        // Use FILL_START in landscape to reduce letterboxing while minimizing zoom
-        previewView.setScaleType(PreviewView.ScaleType.FILL_START);
-        } else {
-        // Use FIT_CENTER in portrait for no zoom
-        previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
-    }
-       
         // Update UI for orientation
         updateUIForOrientation(newConfig.orientation);
+        ConstraintLayout rootLayout = findViewById(getResources().getIdentifier("camera_container", "id", getPackageName()));
+        TransitionManager.beginDelayedTransition(rootLayout);
 
         if (camera != null && imageCapture != null) {
             imageCapture.setTargetRotation(getCameraRotation());
+        }
+
+        if (zoomSeekBar != null) {
+            if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                // Place the seekbar on the right side for landscape
+                ConstraintLayout controlsLayout = findViewById(getResources().getIdentifier("bottom_controls", "id", getPackageName()));
+                ConstraintSet constraintSet = new ConstraintSet();
+                constraintSet.clone(controlsLayout);
+                constraintSet.clear(zoomSeekBar.getId());
+                constraintSet.connect(zoomSeekBar.getId(), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
+                constraintSet.connect(zoomSeekBar.getId(), ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
+                constraintSet.connect(zoomSeekBar.getId(), ConstraintSet.BOTTOM, captureButton.getId(), ConstraintSet.TOP);
+                constraintSet.applyTo(controlsLayout);
+            } else {
+                // Place the seekbar at the top of the bottom controls for portrait
+                ConstraintLayout controlsLayout = findViewById(getResources().getIdentifier("bottom_controls", "id", getPackageName()));
+                ConstraintSet constraintSet = new ConstraintSet();
+                constraintSet.clone(controlsLayout);
+                constraintSet.clear(zoomSeekBar.getId());
+                constraintSet.connect(zoomSeekBar.getId(), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
+                constraintSet.connect(zoomSeekBar.getId(), ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
+                constraintSet.connect(zoomSeekBar.getId(), ConstraintSet.BOTTOM, zoomButtonsContainer.getId(), ConstraintSet.TOP);
+                constraintSet.applyTo(controlsLayout);
+            }
         }
         
         } catch (Exception e){
@@ -516,101 +537,134 @@ public void onConfigurationChanged(Configuration newConfig) {
     }
 
 // Add method to update UI for different orientations
-private void updateUIForOrientation(int orientation) {
+    private void updateUIForOrientation(int orientation) {
     try {
-        // Get the reference to the main layout container
-        View rootView = findViewById(android.R.id.content).getRootView();
+        ConstraintLayout controlsLayout = findViewById(getResources().getIdentifier("bottom_controls", "id", getPackageName()));
+        ConstraintLayout actionBarLayout = findViewById(getResources().getIdentifier("action_bar_background", "id", getPackageName()));
+        ConstraintLayout rootLayout = findViewById(getResources().getIdentifier("camera_container", "id", getPackageName()));
+        
+        // Get constraints to update
+        ConstraintSet constraintSet = new ConstraintSet();
+        constraintSet.clone(rootLayout);
         
         if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            // Handle landscape orientation UI adjustments
+            // In landscape, move bottom controls to the right side
+            constraintSet.clear(controlsLayout.getId(), ConstraintSet.BOTTOM);
+            constraintSet.clear(controlsLayout.getId(), ConstraintSet.START);
+            constraintSet.clear(controlsLayout.getId(), ConstraintSet.END);
+            constraintSet.connect(controlsLayout.getId(), ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
+            constraintSet.connect(controlsLayout.getId(), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
+            constraintSet.connect(controlsLayout.getId(), ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
             
-            // Adjust flash button position for landscape
-            if (flashButton != null) {
-                ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) flashButton.getLayoutParams();
-                params.topMargin = 16;
-                params.leftMargin = 12;
-                flashButton.setLayoutParams(params);
-            }
+            // Set the width and height for landscape
+            constraintSet.constrainWidth(controlsLayout.getId(), ConstraintLayout.LayoutParams.WRAP_CONTENT);
+            constraintSet.constrainHeight(controlsLayout.getId(), ConstraintLayout.LayoutParams.MATCH_PARENT);
             
-            // Adjust flash modes bar layout and orientation
+            // Update zoom buttons to vertical
+            zoomButtonsContainer.setOrientation(LinearLayout.VERTICAL);
+            
+            // Update flash modes bar layout for landscape
             if (flashModesBar != null) {
                 flashModesBar.setOrientation(LinearLayout.VERTICAL);
-                ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) flashModesBar.getLayoutParams();
-                params.topToBottom = getResources().getIdentifier("flash_button", "id", getPackageName());
-                params.leftToLeft = getResources().getIdentifier("action_bar_background", "id", getPackageName());
-                params.topMargin = 8;
-                params.leftMargin = 8;
-                params.rightMargin = 0;
-                flashModesBar.setLayoutParams(params);
+                ConstraintSet actionBarConstraints = new ConstraintSet();
+                actionBarConstraints.clone((ConstraintLayout) flashModesBar.getParent());
+                actionBarConstraints.clear(flashModesBar.getId(), ConstraintSet.START);
+                actionBarConstraints.clear(flashModesBar.getId(), ConstraintSet.TOP);
+                actionBarConstraints.connect(flashModesBar.getId(), ConstraintSet.TOP, flashButton.getId(), ConstraintSet.BOTTOM);
+                actionBarConstraints.connect(flashModesBar.getId(), ConstraintSet.START, flashButton.getId(), ConstraintSet.START);
+                actionBarConstraints.applyTo((ConstraintLayout) flashModesBar.getParent());
             }
             
-            // Adjust zoom buttons container orientation and position
-            if (zoomSeekBar != null) {
-                zoomSeekBar.setRotation(270);
-                // Adjust seekbar width/height for landscape
-                ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) zoomSeekBar.getLayoutParams();
-                params.width = getResources().getDimensionPixelSize(
-                    getResources().getIdentifier("zoom_seekbar_landscape_width", "dimen", getPackageName()));
-                zoomSeekBar.setLayoutParams(params);
-            }
+            // Move action bar to the left side in landscape
+            constraintSet.clear(actionBarLayout.getId(), ConstraintSet.TOP);
+            constraintSet.clear(actionBarLayout.getId(), ConstraintSet.START);
+            constraintSet.clear(actionBarLayout.getId(), ConstraintSet.END);
+            constraintSet.connect(actionBarLayout.getId(), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
+            constraintSet.connect(actionBarLayout.getId(), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
+            constraintSet.connect(actionBarLayout.getId(), ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
             
-            // Set the zoom buttons in vertical orientation
-            if (zoomButtonsContainer != null) {
-                zoomButtonsContainer.setOrientation(LinearLayout.VERTICAL);
-                if (wideAngleButton != null) {
-                    LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) wideAngleButton.getLayoutParams();
-                    params.bottomMargin = 8;
-                    params.rightMargin = 0;
-                    wideAngleButton.setLayoutParams(params);
-                }
-            }
+            // Set width and height for action bar in landscape
+            constraintSet.constrainWidth(actionBarLayout.getId(), ConstraintLayout.LayoutParams.WRAP_CONTENT);
+            constraintSet.constrainHeight(actionBarLayout.getId(), ConstraintLayout.LayoutParams.MATCH_PARENT);
+            
+            // Reorient action bar contents for landscape
+            ConstraintSet actionBarConstraints = new ConstraintSet();
+            actionBarConstraints.clone(actionBarLayout);
+            actionBarConstraints.clear(flashButton.getId(), ConstraintSet.START);
+            actionBarConstraints.clear(flashButton.getId(), ConstraintSet.TOP);
+            actionBarConstraints.connect(flashButton.getId(), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
+            actionBarConstraints.connect(flashButton.getId(), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
+            actionBarConstraints.clear(cameraFlipButton.getId(), ConstraintSet.END);
+            actionBarConstraints.clear(cameraFlipButton.getId(), ConstraintSet.TOP);
+            actionBarConstraints.connect(cameraFlipButton.getId(), ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
+            actionBarConstraints.connect(cameraFlipButton.getId(), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
+            actionBarConstraints.applyTo(actionBarLayout);
             
         } else {
-            // Handle portrait orientation UI adjustments
+            // Portrait orientation - restore default layouts
+            constraintSet.clear(controlsLayout.getId(), ConstraintSet.END);
+            constraintSet.clear(controlsLayout.getId(), ConstraintSet.TOP);
+            constraintSet.clear(controlsLayout.getId(), ConstraintSet.BOTTOM);
+            constraintSet.connect(controlsLayout.getId(), ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM);
+            constraintSet.connect(controlsLayout.getId(), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
+            constraintSet.connect(controlsLayout.getId(), ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
             
-            // Reset flash button position for portrait
-            if (flashButton != null) {
-                ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) flashButton.getLayoutParams();
-                params.topMargin = 8;
-                params.leftMargin = 8;
-                flashButton.setLayoutParams(params);
-            }
+            // Set width and height for portrait
+            constraintSet.constrainWidth(controlsLayout.getId(), ConstraintLayout.LayoutParams.MATCH_PARENT);
+            constraintSet.constrainHeight(controlsLayout.getId(), ConstraintLayout.LayoutParams.WRAP_CONTENT);
             
-            // Adjust flash modes bar layout and orientation
+            // Update zoom buttons to horizontal
+            zoomButtonsContainer.setOrientation(LinearLayout.HORIZONTAL);
+            
+            // Update flash modes bar layout for portrait
             if (flashModesBar != null) {
                 flashModesBar.setOrientation(LinearLayout.HORIZONTAL);
-                ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) flashModesBar.getLayoutParams();
-                params.topToTop = getResources().getIdentifier("action_bar_background", "id", getPackageName());
-                params.leftToRight = getResources().getIdentifier("flash_button", "id", getPackageName());
-                params.topMargin = 8;
-                params.leftMargin = 0;
-                flashModesBar.setLayoutParams(params);
+                ConstraintSet actionBarConstraints = new ConstraintSet();
+                actionBarConstraints.clone((ConstraintLayout) flashModesBar.getParent());
+                actionBarConstraints.clear(flashModesBar.getId(), ConstraintSet.START);
+                actionBarConstraints.clear(flashModesBar.getId(), ConstraintSet.TOP);
+                actionBarConstraints.connect(flashModesBar.getId(), ConstraintSet.START, flashButton.getId(), ConstraintSet.END);
+                actionBarConstraints.connect(flashModesBar.getId(), ConstraintSet.TOP, flashButton.getId(), ConstraintSet.TOP);
+                actionBarConstraints.applyTo((ConstraintLayout) flashModesBar.getParent());
             }
             
-            // Reset zoom seekbar rotation and dimensions
-            if (zoomSeekBar != null) {
-                zoomSeekBar.setRotation(0);
-                ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) zoomSeekBar.getLayoutParams();
-                params.width = ConstraintLayout.LayoutParams.MATCH_PARENT;
-                zoomSeekBar.setLayoutParams(params);
-            }
+            // Restore action bar to top in portrait
+            constraintSet.clear(actionBarLayout.getId(), ConstraintSet.START);
+            constraintSet.clear(actionBarLayout.getId(), ConstraintSet.BOTTOM);
+            constraintSet.connect(actionBarLayout.getId(), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
+            constraintSet.connect(actionBarLayout.getId(), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
+            constraintSet.connect(actionBarLayout.getId(), ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
             
-            // Set the zoom buttons in horizontal orientation
-            if (zoomButtonsContainer != null) {
-                zoomButtonsContainer.setOrientation(LinearLayout.HORIZONTAL);
-                if (wideAngleButton != null) {
-                    LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) wideAngleButton.getLayoutParams();
-                    params.bottomMargin = 0;
-                    params.rightMargin = 8;
-                    wideAngleButton.setLayoutParams(params);
-                }
-            }
+            // Set width and height for action bar in portrait
+            constraintSet.constrainWidth(actionBarLayout.getId(), ConstraintLayout.LayoutParams.MATCH_PARENT);
+            constraintSet.constrainHeight(actionBarLayout.getId(), ConstraintLayout.LayoutParams.WRAP_CONTENT);
+            
+            // Reorient action bar contents for portrait
+            ConstraintSet actionBarConstraints = new ConstraintSet();
+            actionBarConstraints.clone(actionBarLayout);
+            actionBarConstraints.clear(flashButton.getId(), ConstraintSet.TOP);
+            actionBarConstraints.clear(flashButton.getId(), ConstraintSet.START);
+            actionBarConstraints.connect(flashButton.getId(), ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START);
+            actionBarConstraints.connect(flashButton.getId(), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
+            actionBarConstraints.clear(cameraFlipButton.getId(), ConstraintSet.START);
+            actionBarConstraints.clear(cameraFlipButton.getId(), ConstraintSet.BOTTOM);
+            actionBarConstraints.connect(cameraFlipButton.getId(), ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END);
+            actionBarConstraints.connect(cameraFlipButton.getId(), ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP);
+            actionBarConstraints.applyTo(actionBarLayout);
         }
+        
+        // Apply all constraint changes with a transition
+        Transition transition = new ChangeBounds();
+        transition.setDuration(300); // 300ms animation
+        TransitionManager.beginDelayedTransition(rootLayout, transition);
+        constraintSet.applyTo(rootLayout);
+        
     } catch (Exception e) {
         Log.e(TAG, "Error updating UI for orientation: " + e.getMessage());
         e.printStackTrace();
     }
 }
+
     
     // Wide Lens Camera Methods
      @ExperimentalCamera2Interop
