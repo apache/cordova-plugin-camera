@@ -91,6 +91,8 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     };
     private static final int JPEG = 0;
     private static final int PNG = 1;
+
+    private boolean isInitialSetup = true;
     private int originalLeftPadding = 0;
     private int originalTopPadding = 0;
     private int originalRightPadding = 0; 
@@ -149,82 +151,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         super.onCreate(savedInstanceState);
         setContentView(getResources().getIdentifier("camerax_activity", "layout", getPackageName()));
         
-        // Initialize UI components
-        previewView = findViewById(getResources().getIdentifier("preview_view", "id", getPackageName()));
-        captureButton = findViewById(getResources().getIdentifier("capture_button", "id", getPackageName()));
-        cameraFlipButton = findViewById(getResources().getIdentifier("camera_flip_button", "id", getPackageName()));
-        flashButton = findViewById(getResources().getIdentifier("flash_button", "id", getPackageName()));
-        flashModesBar = findViewById(getResources().getIdentifier("flash_modes_bar", "id", getPackageName()));
-        flashAutoButton = findViewById(getResources().getIdentifier("flash_auto_button", "id", getPackageName()));
-        flashOnButton = findViewById(getResources().getIdentifier("flash_on_button", "id", getPackageName()));
-        flashOffButton = findViewById(getResources().getIdentifier("flash_off_button", "id", getPackageName()));
-        zoomLevelText = findViewById(getResources().getIdentifier("zoom_level_text", "id", getPackageName()));
-        zoomSeekBar = findViewById(getResources().getIdentifier("zoom_seekbar", "id", getPackageName()));
-        wideAngleButton = findViewById(getResources().getIdentifier("wide_angle_button", "id", getPackageName()));
-        normalZoomButton = findViewById(getResources().getIdentifier("normal_zoom_button", "id", getPackageName()));
-        zoomButtonsContainer = findViewById(getResources().getIdentifier("zoom_buttons_container", "id", getPackageName()));
-
-        zoomSeekBar.setMax(100);
-        zoomSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-        @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser && camera != null) {
-                    isUserControllingZoom = true;
-                    
-                    CameraInfo cameraInfo = camera.getCameraInfo();
-                    ZoomState zoomState = cameraInfo.getZoomState().getValue();
-                    
-                    if (zoomState == null) return;
-                    
-                    float minZoom = Math.max(0.5f, zoomState.getMinZoomRatio());
-                    float maxZoom = zoomState.getMaxZoomRatio();
-                    float zoomRange = maxZoom - minZoom;
-                    float zoomRatio = minZoom + (progress / 100f) * zoomRange;
-                    
-                    // Convert linear zoom to ratio for display
-                    camera.getCameraControl().setZoomRatio(zoomRatio);
-                    updateZoomLevelDisplay(zoomRatio);
-                }
-            }
-
-        @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                isUserControllingZoom = true;
-                // Cancel auto-hide when user starts interacting
-                handler.removeCallbacks(hideZoomControlsRunnable);
-                handler.removeCallbacks(hideZoomLevelRunnable);
-            }
-
-        @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                // Schedule auto-hide after user stops interacting
-                handler.postDelayed(hideZoomControlsRunnable, 2000);
-            }
-        });
-
-        hideZoomLevelRunnable = () -> {
-            zoomLevelText.setVisibility(View.GONE);
-            if (!isUserControllingZoom) {
-                zoomSeekBar.setVisibility(View.GONE);
-            }
-        };
-        
-        hideZoomControlsRunnable = () -> {
-            zoomLevelText.setVisibility(View.GONE);
-            zoomSeekBar.setVisibility(View.GONE);
-            isUserControllingZoom = false;
-        };
-
-        
-        // Set click listeners
-        captureButton.setOnClickListener(this);
-        cameraFlipButton.setOnClickListener(this);
-        flashButton.setOnClickListener(this);
-        flashAutoButton.setOnClickListener(this);
-        flashOnButton.setOnClickListener(this);
-        flashOffButton.setOnClickListener(this);
-        wideAngleButton.setOnClickListener(this);
-        normalZoomButton.setOnClickListener(this);
+        initializeViews();
         
         // Extract parameters from intent
         Intent intent = getIntent();
@@ -235,88 +162,10 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         correctOrientation = intent.getBooleanExtra("correctOrientation", true);
         allowEdit = intent.getBooleanExtra("allowEdit", false);
         encodingType = intent.getIntExtra("encodingType",0);
-        
-        // Set initial flash mode based on intent or default to AUTO
         flashMode = intent.getIntExtra("flashMode", ImageCapture.FLASH_MODE_AUTO);
+        
         setFlashButtonIcon(flashMode);
-
-        //set up pinch for zoom
-        scaleGestureDetector = new ScaleGestureDetector(this, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
-            private float lastZoomRatio = 1.0f;
-            
-            @Override
-            public boolean onScale(ScaleGestureDetector detector) {
-                if (camera == null) {
-                    return false;
-                }
-
-                showZoomControls();
-                
-                CameraControl cameraControl = camera.getCameraControl();
-                CameraInfo cameraInfo = camera.getCameraInfo();
-                ZoomState zoomState = cameraInfo.getZoomState().getValue();
-                if (zoomState == null) return false;
-                
-                // Get current actual zoom ratio and limits from camera
-                float currentZoomRatio = zoomState.getZoomRatio();
-                float minZoom = Math.max(0.5f, zoomState.getMinZoomRatio());
-                float maxZoom = zoomState.getMaxZoomRatio();
-                
-                // Calculate new zoom based on pinch scale factor
-                float scaleFactor = detector.getScaleFactor();
-                float newZoomRatio = lastZoomRatio * scaleFactor;
-                
-                // Constrain to actual camera limits
-                newZoomRatio = Math.max(minZoom, Math.min(newZoomRatio, maxZoom));
-                
-                // Save for next frame
-                lastZoomRatio = newZoomRatio;
-                
-                updateZoomLevelDisplay(newZoomRatio);
-                
-                zoomSeekBar.setVisibility(View.VISIBLE);
-                
-                // Calculate and set slider position based on the zoom ratio
-                float zoomProgress = ((newZoomRatio - minZoom) / (maxZoom - minZoom)) * 100;
-                zoomSeekBar.setProgress((int)zoomProgress);
-                
-                cameraControl.setZoomRatio(newZoomRatio);
-                return true;
-            }
-            
-            @Override
-            public boolean onScaleBegin(ScaleGestureDetector detector) {
-                if (camera != null) {
-                    ZoomState zoomState = camera.getCameraInfo().getZoomState().getValue();
-                    if (zoomState != null) {
-                        // Initialize with current zoom
-                        lastZoomRatio = zoomState.getZoomRatio();
-                    }
-                }
-                
-                // Show zoom controls
-                zoomLevelText.setVisibility(View.VISIBLE);
-                zoomSeekBar.setVisibility(View.VISIBLE);
-                
-                // Remove any pending hide callbacks
-                handler.removeCallbacks(hideZoomLevelRunnable);
-                handler.removeCallbacks(hideZoomControlsRunnable);
-                return true;
-            }
-            
-            @Override
-            public void onScaleEnd(ScaleGestureDetector detector) {
-                // Hide zoom controls after a delay
-                handler.postDelayed(hideZoomControlsRunnable, 2000);
-            }
-        });
-
-        //add pinch to preview view
-        previewView.setOnTouchListener((view,event) -> {
-            scaleGestureDetector.onTouchEvent(event);
-            return true;
-        });
-
+        
         //set up orientation listener
         setupOrientationListener();
         
@@ -515,35 +364,6 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
 }
 
 @Override
-public void onConfigurationChanged(Configuration newConfig) {
-    super.onConfigurationChanged(newConfig);
-
-    try {
-        // Save current zoom visibility state
-        boolean wasZoomSeekBarVisible = false;
-        if (zoomSeekBar != null) {
-            wasZoomSeekBarVisible = zoomSeekBar.getVisibility() == View.VISIBLE;
-        }
-        
-        // Update rotation for image capture
-        if (camera != null && imageCapture != null) {
-            imageCapture.setTargetRotation(getCameraRotation());
-        }
-
-        updateNavigationBarPadding(newConfig.orientation);
-        
-        // Restore zoom visibility if needed
-        if (wasZoomSeekBarVisible && zoomSeekBar != null) {
-            zoomSeekBar.setVisibility(View.VISIBLE);
-        }
-        
-    } catch (Exception e){
-        Log.e(TAG, "Error in onConfigurationChanged: " + e.getMessage());
-        e.printStackTrace();
-    }
-}
-
-@Override
 public void onWindowFocusChanged(boolean hasFocus) {
     super.onWindowFocusChanged(hasFocus);
     if (hasFocus) {
@@ -551,33 +371,94 @@ public void onWindowFocusChanged(boolean hasFocus) {
     }
 }
 
-private void updateNavigationBarPadding(int orientation) {
-    ConstraintLayout bottomControls = findViewById(getResources().getIdentifier("bottom_controls", "id", getPackageName()));
-    
-    if (bottomControls != null) {
-        // Use the same padding logic from onWindowFocusChanged
-        if (!originalPaddingSaved) {
-            originalLeftPadding = bottomControls.getPaddingLeft();
-            originalTopPadding = bottomControls.getPaddingTop();
-            originalRightPadding = bottomControls.getPaddingRight();
-            originalBottomPadding = bottomControls.getPaddingBottom();
-            originalPaddingSaved = true;
+// Store view references as class variables
+private boolean isInitialSetup = true;
+
+// Add these variables to save padding values
+private int originalLeftPadding = 0;
+private int originalTopPadding = 0;
+private int originalRightPadding = 0; 
+private int originalBottomPadding = 0;
+private boolean originalPaddingSaved = false;
+
+@Override
+public void onConfigurationChanged(Configuration newConfig) {
+    super.onConfigurationChanged(newConfig);
+
+    try {
+        // Save important state before changing layouts
+        boolean wasZoomSeekBarVisible = false;
+        if (zoomSeekBar != null) {
+            wasZoomSeekBarVisible = zoomSeekBar.getVisibility() == View.VISIBLE;
         }
         
+        // Save camera state
+        boolean isCameraRunning = camera != null;
+        int currentCameraFacing = cameraFacing;
+        boolean currentUsingUltraWide = usingUltraWideCamera;
+        
+        // Manually apply the appropriate layout
+        setContentView(getResources().getIdentifier("camerax_activity", "layout", getPackageName()));
+        
+        // Reinitialize all view references
+        initializeViews();
+        
+        // Restore camera state
+        if (isCameraRunning) {
+            cameraFacing = currentCameraFacing;
+            usingUltraWideCamera = currentUsingUltraWide;
+            startCamera();
+        }
+        
+        // Update padding for system UI
+        updateNavigationBarPadding(newConfig.orientation);
+        
+        // Restore zoom visibility
+        if (wasZoomSeekBarVisible && zoomSeekBar != null) {
+            zoomSeekBar.setVisibility(View.VISIBLE);
+        }
+        
+        // Update rotation for image capture
+        if (camera != null && imageCapture != null) {
+            imageCapture.setTargetRotation(getCameraRotation());
+        }
+    } catch (Exception e) {
+        Log.e(TAG, "Error in onConfigurationChanged: " + e.getMessage());
+        e.printStackTrace();
+    }
+}
+
+// Helper method to update padding for navigation bars
+private void updateNavigationBarPadding(int orientation) {
+    ConstraintLayout controlsLayout = findViewById(getResources().getIdentifier("bottom_controls", "id", getPackageName()));
+    
+    if (controlsLayout != null) {
+        // Save original paddings the first time
+        if (!originalPaddingSaved && isInitialSetup) {
+            originalLeftPadding = controlsLayout.getPaddingLeft();
+            originalTopPadding = controlsLayout.getPaddingTop();
+            originalRightPadding = controlsLayout.getPaddingRight();
+            originalBottomPadding = controlsLayout.getPaddingBottom();
+            originalPaddingSaved = true;
+            isInitialSetup = false;
+        }
+        
+        // Get navigation bar height
         int navBarHeightId = getResources().getIdentifier("navigation_bar_height", "dimen", "android");
         int navBarHeight = 0;
         if (navBarHeightId > 0) {
             navBarHeight = getResources().getDimensionPixelSize(navBarHeightId);
         }
         
+        // Apply appropriate padding based on orientation
         if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-            bottomControls.setPadding(
+            controlsLayout.setPadding(
                 originalLeftPadding,
                 originalTopPadding,
                 originalRightPadding,
                 navBarHeight + 16);
         } else {
-            bottomControls.setPadding(
+            controlsLayout.setPadding(
                 originalLeftPadding,
                 originalTopPadding,
                 navBarHeight + 16,
@@ -585,56 +466,196 @@ private void updateNavigationBarPadding(int orientation) {
         }
     }
 }
-    
-    // Wide Lens Camera Methods
-     @ExperimentalCamera2Interop
-    private void switchToWideAngleCamera() {
-        if (!hasUltraWideCamera || cameraFacing != CameraSelector.LENS_FACING_BACK) {
-            // Wide angle not available or front camera is active
-            Toast.makeText(this, "Wide angle camera not available", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        
-        if (!usingUltraWideCamera) {
-            usingUltraWideCamera = true;
-            
-            // Disable flash for ultra-wide camera
-            setFlashMode(ImageCapture.FLASH_MODE_OFF);
-            
-            updateZoomButtonsState();
-            startCamera(); // Restart camera with wide angle
-        }
+
+// New helper method to initialize all view references
+private void initializeViews() {
+    // Find all UI elements by resource ID
+    previewView = findViewById(getResources().getIdentifier("preview_view", "id", getPackageName()));
+    captureButton = findViewById(getResources().getIdentifier("capture_button", "id", getPackageName()));
+    cameraFlipButton = findViewById(getResources().getIdentifier("camera_flip_button", "id", getPackageName()));
+    flashButton = findViewById(getResources().getIdentifier("flash_button", "id", getPackageName()));
+    flashModesBar = findViewById(getResources().getIdentifier("flash_modes_bar", "id", getPackageName()));
+    flashAutoButton = findViewById(getResources().getIdentifier("flash_auto_button", "id", getPackageName()));
+    flashOnButton = findViewById(getResources().getIdentifier("flash_on_button", "id", getPackageName()));
+    flashOffButton = findViewById(getResources().getIdentifier("flash_off_button", "id", getPackageName()));
+    zoomLevelText = findViewById(getResources().getIdentifier("zoom_level_text", "id", getPackageName()));
+    zoomSeekBar = findViewById(getResources().getIdentifier("zoom_seekbar", "id", getPackageName()));
+    wideAngleButton = findViewById(getResources().getIdentifier("wide_angle_button", "id", getPackageName()));
+    normalZoomButton = findViewById(getResources().getIdentifier("normal_zoom_button", "id", getPackageName()));
+    zoomButtonsContainer = findViewById(getResources().getIdentifier("zoom_buttons_container", "id", getPackageName()));
+
+    // Configure zoom seekbar
+    if (zoomSeekBar != null) {
+        zoomSeekBar.setMax(100);
+        zoomSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser && camera != null) {
+                    isUserControllingZoom = true;
+                    
+                    CameraInfo cameraInfo = camera.getCameraInfo();
+                    ZoomState zoomState = cameraInfo.getZoomState().getValue();
+                    
+                    if (zoomState == null) return;
+                    
+                    float minZoom = Math.max(0.5f, zoomState.getMinZoomRatio());
+                    float maxZoom = zoomState.getMaxZoomRatio();
+                    float zoomRange = maxZoom - minZoom;
+                    float zoomRatio = minZoom + (progress / 100f) * zoomRange;
+                    
+                    // Apply zoom to camera
+                    camera.getCameraControl().setZoomRatio(zoomRatio);
+                    updateZoomLevelDisplay(zoomRatio);
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                isUserControllingZoom = true;
+                // Cancel auto-hide when user starts interacting
+                handler.removeCallbacks(hideZoomControlsRunnable);
+                handler.removeCallbacks(hideZoomLevelRunnable);
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // Schedule auto-hide after user stops interacting
+                handler.postDelayed(hideZoomControlsRunnable, 2000);
+            }
+        });
     }
     
-    private void switchToNormalCamera() {
-        if (usingUltraWideCamera) {
-            usingUltraWideCamera = false;
-            updateZoomButtonsState();
-            startCamera(); // Restart camera with normal lens
-        }
+    // Initialize or reinitialize the runnables if needed
+    if (hideZoomLevelRunnable == null) {
+        hideZoomLevelRunnable = () -> {
+            if (zoomLevelText != null) {
+                zoomLevelText.setVisibility(View.GONE);
+            }
+            if (!isUserControllingZoom && zoomSeekBar != null) {
+                zoomSeekBar.setVisibility(View.GONE);
+            }
+        };
     }
     
-    private void updateZoomButtonsState() {
-        if (usingUltraWideCamera) {
-            wideAngleButton.setBackground(getDrawable(getResources().getIdentifier("circular_button_selected", "drawable", getPackageName())));
-            wideAngleButton.setTextColor(getResources().getColor(android.R.color.black));
-            normalZoomButton.setBackground(getDrawable(getResources().getIdentifier("circular_button", "drawable", getPackageName())));
-            normalZoomButton.setTextColor(getResources().getColor(android.R.color.white));
-            
-            // Disable flash controls for ultra-wide camera
-            flashButton.setAlpha(0.5f);
-            flashButton.setEnabled(false);
-        } else {
-            normalZoomButton.setBackground(getDrawable(getResources().getIdentifier("circular_button_selected", "drawable", getPackageName())));
-            normalZoomButton.setTextColor(getResources().getColor(android.R.color.black));
-            wideAngleButton.setBackground(getDrawable(getResources().getIdentifier("circular_button", "drawable", getPackageName())));
-            wideAngleButton.setTextColor(getResources().getColor(android.R.color.white));
-            
-            // Re-enable flash controls for normal camera
-            flashButton.setAlpha(1.0f);
-            flashButton.setEnabled(true);
-        }
+    if (hideZoomControlsRunnable == null) {
+        hideZoomControlsRunnable = () -> {
+            if (zoomLevelText != null) {
+                zoomLevelText.setVisibility(View.GONE);
+            }
+            if (zoomSeekBar != null) {
+                zoomSeekBar.setVisibility(View.GONE);
+            }
+            isUserControllingZoom = false;
+        };
     }
+    
+    // Set up click listeners for all buttons
+    if (captureButton != null) captureButton.setOnClickListener(this);
+    if (cameraFlipButton != null) cameraFlipButton.setOnClickListener(this);
+    if (flashButton != null) flashButton.setOnClickListener(this);
+    if (flashAutoButton != null) flashAutoButton.setOnClickListener(this);
+    if (flashOnButton != null) flashOnButton.setOnClickListener(this);
+    if (flashOffButton != null) flashOffButton.setOnClickListener(this);
+    if (wideAngleButton != null) wideAngleButton.setOnClickListener(this);
+    if (normalZoomButton != null) normalZoomButton.setOnClickListener(this);
+    
+    // Set up pinch gesture detector if it's not already initialized
+    if (scaleGestureDetector == null) {
+        scaleGestureDetector = new ScaleGestureDetector(this, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            private float lastZoomRatio = 1.0f;
+            
+            @Override
+            public boolean onScale(ScaleGestureDetector detector) {
+                if (camera == null) {
+                    return false;
+                }
+                
+                showZoomControls();
+                
+                CameraControl cameraControl = camera.getCameraControl();
+                CameraInfo cameraInfo = camera.getCameraInfo();
+                ZoomState zoomState = cameraInfo.getZoomState().getValue();
+                if (zoomState == null) return false;
+                
+                // Get current actual zoom ratio and limits from camera
+                float currentZoomRatio = zoomState.getZoomRatio();
+                float minZoom = Math.max(0.5f, zoomState.getMinZoomRatio());
+                float maxZoom = zoomState.getMaxZoomRatio();
+                
+                // Calculate new zoom based on pinch scale factor
+                float scaleFactor = detector.getScaleFactor();
+                float newZoomRatio = lastZoomRatio * scaleFactor;
+                
+                // Constrain to actual camera limits
+                newZoomRatio = Math.max(minZoom, Math.min(newZoomRatio, maxZoom));
+                
+                // Save for next frame
+                lastZoomRatio = newZoomRatio;
+                
+                updateZoomLevelDisplay(newZoomRatio);
+                
+                if (zoomSeekBar != null) {
+                    zoomSeekBar.setVisibility(View.VISIBLE);
+                    
+                    // Calculate and set slider position based on the zoom ratio
+                    float zoomProgress = ((newZoomRatio - minZoom) / (maxZoom - minZoom)) * 100;
+                    zoomSeekBar.setProgress((int)zoomProgress);
+                }
+                
+                cameraControl.setZoomRatio(newZoomRatio);
+                return true;
+            }
+            
+            @Override
+            public boolean onScaleBegin(ScaleGestureDetector detector) {
+                if (camera != null) {
+                    ZoomState zoomState = camera.getCameraInfo().getZoomState().getValue();
+                    if (zoomState != null) {
+                        // Initialize with current zoom
+                        lastZoomRatio = zoomState.getZoomRatio();
+                    }
+                }
+                
+                // Show zoom controls
+                if (zoomLevelText != null) {
+                    zoomLevelText.setVisibility(View.VISIBLE);
+                }
+                if (zoomSeekBar != null) {
+                    zoomSeekBar.setVisibility(View.VISIBLE);
+                }
+                
+                // Remove any pending hide callbacks
+                handler.removeCallbacks(hideZoomLevelRunnable);
+                handler.removeCallbacks(hideZoomControlsRunnable);
+                return true;
+            }
+            
+            @Override
+            public void onScaleEnd(ScaleGestureDetector detector) {
+                // Hide zoom controls after a delay
+                handler.postDelayed(hideZoomControlsRunnable, 2000);
+            }
+        });
+    }
+    
+    // Set up touch listener for pinch zoom
+    if (previewView != null) {
+        previewView.setOnTouchListener((view, event) -> {
+            if (scaleGestureDetector != null) {
+                scaleGestureDetector.onTouchEvent(event);
+            }
+            return true;
+        });
+    }
+    
+    // Update flash mode button icon
+    if (flashButton != null) {
+        setFlashButtonIcon(flashMode);
+    }
+    
+    // Update zoom button states if needed
+    updateZoomButtonsState();
+}
     
     @ExperimentalCamera2Interop
     private void detectUltraWideCamera(ProcessCameraProvider cameraProvider) {
