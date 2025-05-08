@@ -798,7 +798,7 @@ private void updateUIForOrientation(int orientation) {
                 camera = cameraProvider.bindToLifecycle(
                         ((LifecycleOwner) this),
                         cameraSelector,
-                        preview,
+                        useCaseGroup,
                         imageCapture);
                 
                 // Update camera zoom state when switching cameras
