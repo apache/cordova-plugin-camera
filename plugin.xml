@@ -109,7 +109,7 @@
         <source-file src="src/android/drawable/ic_flash_on.xml" target-dir="res/drawable" />
         <source-file src="src/android/drawable/ic_flash_off.xml" target-dir="res/drawable" />
         <source-file src="src/android/drawable/ic_camera_flip.xml" target-dir="res/drawable" />
-        <source-file src="src/android/drawable/circle_background.xml" target-dir="res/drawable" />
+        <source-file src="src/android/drawable/capture_button_background.xml" target-dir="res/drawable" />
         <source-file src="src/android/drawable/zoom_progress_drawable.xml" target-dir="res/drawable" />
         <source-file src="src/android/drawable/zoom_thumb.xml" target-dir="res/drawable" />
         <source-file src="src/android/drawable/circular_button.xml" target-dir="res/drawable" />
