@@ -119,7 +119,7 @@
             android:id="@+id/capture_button"
             android:layout_width="72dp"
             android:layout_height="72dp"
-            android:background="@drawable/circle_background"
+            android:background="@drawable/capture_button_background"
             android:contentDescription="Take Photo"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
