@@ -493,6 +493,14 @@ public void onConfigurationChanged(Configuration newConfig) {
     super.onConfigurationChanged(newConfig);
 
     try {
+
+         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+        // Use FILL_START in landscape to reduce letterboxing while minimizing zoom
+        previewView.setScaleType(PreviewView.ScaleType.FILL_START);
+        } else {
+        // Use FIT_CENTER in portrait for no zoom
+        previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
+    }
        
         // Update UI for orientation
         updateUIForOrientation(newConfig.orientation);
@@ -738,7 +746,6 @@ private void updateUIForOrientation(int orientation) {
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
 
                 ResolutionSelector resolutionSelector = new ResolutionSelector.Builder()
-                    .setAspectRatioStrategy(new AspectRatioStrategy(AspectRatioStrategy.FALLBACK_RULE_AUTO))
                     .build();
 
                 // Check if device has ultra-wide camera
@@ -759,7 +766,7 @@ private void updateUIForOrientation(int orientation) {
                     .setResolutionSelector(resolutionSelector)
                     .build();
 
-                previewView.setScaleType(PreviewView.ScaleType.FILL_CENTER);
+                previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
                 preview.setSurfaceProvider(previewView.getSurfaceProvider());
                 
                 // Set up the capture use case
