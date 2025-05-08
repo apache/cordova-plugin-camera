@@ -452,7 +452,7 @@ private void updateNavigationBarPadding(int orientation) {
                 originalLeftPadding,
                 originalTopPadding,
                 navBarHeight + 16,
-                originalBottomPadding);
+                originalBottomPadding + 5);
         }
     }
 }
