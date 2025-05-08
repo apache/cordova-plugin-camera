@@ -759,6 +759,7 @@ private void updateUIForOrientation(int orientation) {
                     .setResolutionSelector(resolutionSelector)
                     .build();
 
+                previewView.setImplementationMode(Preview.ImplementationMode.PERFORMANCE);
                 previewView.setScaleType(PreviewView.ScaleType.FILL_CENTER);
                 preview.setSurfaceProvider(previewView.getSurfaceProvider());
                 
