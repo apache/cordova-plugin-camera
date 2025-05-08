@@ -9,7 +9,7 @@
         android:id="@+id/preview_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent" 
-        android: layout_gravity="center"/>
+        android:layout_gravity="center"/>
 
     <!-- Reduced the height of the top bar from 64dp to 48dp -->
     <View
