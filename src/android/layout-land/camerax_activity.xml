@@ -87,22 +87,6 @@
             app:layout_constraintEnd_toEndOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Zoom Level Display - Centered -->
-    <TextView
-        android:id="@+id/zoom_level_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="#80000000"
-        android:padding="4dp"
-        android:text="1.0x"
-        android:textColor="@android:color/white"
-        android:textSize="16sp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <!-- Right Controls Container (was bottom in portrait) -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/bottom_controls"
@@ -126,20 +110,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- Zoom Seek Bar - Above capture button -->
-        <SeekBar
-            android:id="@+id/zoom_seekbar"
-            android:layout_width="wrap_content"
-            android:layout_height="200dp"
-            android:layout_marginBottom="24dp"
-            android:rotation="270"
-            android:visibility="gone"
-            android:progressTint="@android:color/white"
-            android:thumbTint="@android:color/white"
-            app:layout_constraintEnd_toStartOf="@id/capture_button"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
-
         <!-- Zoom Buttons Container - Below capture button, vertical in landscape -->
         <LinearLayout
             android:id="@+id/zoom_buttons_container"
@@ -157,6 +127,7 @@
                 android:id="@+id/normal_zoom_button"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
+                android:layout_marginBottom="8dp"
                 android:background="@drawable/circular_button_selected"
                 android:gravity="center"
                 android:text="1x"
@@ -167,7 +138,6 @@
                 android:id="@+id/wide_angle_button"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
-                android:layout_marginBottom="8dp"
                 android:background="@drawable/circular_button"
                 android:gravity="center"
                 android:text="0.5x"
@@ -177,5 +147,33 @@
 
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+      <!-- Zoom Seek Bar - Left of capture button -->
+    <SeekBar
+        android:id="@+id/zoom_seekbar"
+        android:layout_width="wrap_content"
+        android:layout_height="200dp"
+        android:layout_marginBottom="24dp"
+        android:rotation="270"
+        android:visibility="gone"
+        android:progressTint="@android:color/white"
+        android:thumbTint="@android:color/white"
+        app:layout_constraintEnd_toStartOf="@id/bottom_controls"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+    
+     <TextView
+        android:id="@+id/zoom_level_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#80000000"
+        android:padding="4dp"
+        android:text="1.0x"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintEnd_toStartOf="@id/zoom_seekbar"
+        app:layout_constraintTop_toTopOf="@id/zoom_seekbar"
+        app:layout_constraintBottom_toBottomOf="@id/zoom_seekbar" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
