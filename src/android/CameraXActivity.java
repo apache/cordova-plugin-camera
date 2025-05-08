@@ -646,7 +646,56 @@ private void initializeViews() {
     // Update zoom button states if needed
     updateZoomButtonsState();
 }
+
+    // Wide Lens Camera Methods
+    @ExperimentalCamera2Interop
+    private void switchToWideAngleCamera() {
+        if (!hasUltraWideCamera || cameraFacing != CameraSelector.LENS_FACING_BACK) {
+            // Wide angle not available or front camera is active
+            Toast.makeText(this, "Wide angle camera not available", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        if (!usingUltraWideCamera) {
+            usingUltraWideCamera = true;
+            
+            // Disable flash for ultra-wide camera
+            setFlashMode(ImageCapture.FLASH_MODE_OFF);
+            
+            updateZoomButtonsState();
+            startCamera(); // Restart camera with wide angle
+        }
+    }
     
+    private void switchToNormalCamera() {
+        if (usingUltraWideCamera) {
+            usingUltraWideCamera = false;
+            updateZoomButtonsState();
+            startCamera(); // Restart camera with normal lens
+        }
+    }
+    
+    private void updateZoomButtonsState() {
+        if (usingUltraWideCamera) {
+            wideAngleButton.setBackground(getDrawable(getResources().getIdentifier("circular_button_selected", "drawable", getPackageName())));
+            wideAngleButton.setTextColor(getResources().getColor(android.R.color.black));
+            normalZoomButton.setBackground(getDrawable(getResources().getIdentifier("circular_button", "drawable", getPackageName())));
+            normalZoomButton.setTextColor(getResources().getColor(android.R.color.white));
+            
+            // Disable flash controls for ultra-wide camera
+            flashButton.setAlpha(0.5f);
+            flashButton.setEnabled(false);
+        } else {
+            normalZoomButton.setBackground(getDrawable(getResources().getIdentifier("circular_button_selected", "drawable", getPackageName())));
+            normalZoomButton.setTextColor(getResources().getColor(android.R.color.black));
+            wideAngleButton.setBackground(getDrawable(getResources().getIdentifier("circular_button", "drawable", getPackageName())));
+            wideAngleButton.setTextColor(getResources().getColor(android.R.color.white));
+            
+            // Re-enable flash controls for normal camera
+            flashButton.setAlpha(1.0f);
+            flashButton.setEnabled(true);
+        }
+    }
     @ExperimentalCamera2Interop
     private void detectUltraWideCamera(ProcessCameraProvider cameraProvider) {
         try {
