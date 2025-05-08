@@ -738,7 +738,7 @@ private void updateUIForOrientation(int orientation) {
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
 
                 ResolutionSelector resolutionSelector = new ResolutionSelector.Builder()
-                    .setAspectRatioStrategy(new AspectRatioStrategy(AspectRatioStrategy.RATIO_4_3,AspectRatioStrategy.FALLBACK_RULE_AUTO))
+                    .setAspectRatioStrategy(new AspectRatioStrategy(AspectRatioStrategy.FALLBACK_RULE_AUTO))
                     .build();
 
                 // Check if device has ultra-wide camera
@@ -759,7 +759,6 @@ private void updateUIForOrientation(int orientation) {
                     .setResolutionSelector(resolutionSelector)
                     .build();
 
-                previewView.setImplementationMode(Preview.ImplementationMode.PERFORMANCE);
                 previewView.setScaleType(PreviewView.ScaleType.FILL_CENTER);
                 preview.setSurfaceProvider(previewView.getSurfaceProvider());
                 
@@ -781,15 +780,6 @@ private void updateUIForOrientation(int orientation) {
                             .requireLensFacing(cameraFacing)
                             .build();
                 }
-
-                ViewPort viewPort = new ViewPort.Builder(
-                    new Rational(previewView.getWidth(), previewView.getHeight()),getWindowManager().getDefaultDisplay().getRotation())
-                    .build();
-
-                UseCaseGroup useCaseGroup = new UseCaseGroup.Builder()
-                    .addUseCase(preview)
-                    .setViewPort(viewPort)
-                    .build();
                 
                 // Unbind any bound use cases before rebinding
                 cameraProvider.unbindAll();
@@ -798,7 +788,7 @@ private void updateUIForOrientation(int orientation) {
                 camera = cameraProvider.bindToLifecycle(
                         ((LifecycleOwner) this),
                         cameraSelector,
-                        useCaseGroup,
+                        preview,
                         imageCapture);
                 
                 // Update camera zoom state when switching cameras
