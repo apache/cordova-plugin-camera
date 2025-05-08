@@ -432,6 +432,12 @@ private void updateNavigationBarPadding(int orientation) {
             originalPaddingSaved = true;
             isInitialSetup = false;
         }
+
+        if (orientation == Configuration.ORIENTATION_LANDSCAPE && zoomSeekBar != null) {
+            zoomSeekBar.setRotation(270);
+        } else if (zoomSeekBar != null) {
+            zoomSeekBar.setRotation(0);
+        }
         
         // Get navigation bar height
         int navBarHeightId = getResources().getIdentifier("navigation_bar_height", "dimen", "android");
