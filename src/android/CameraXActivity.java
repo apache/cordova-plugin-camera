@@ -371,16 +371,6 @@ public void onWindowFocusChanged(boolean hasFocus) {
     }
 }
 
-// Store view references as class variables
-private boolean isInitialSetup = true;
-
-// Add these variables to save padding values
-private int originalLeftPadding = 0;
-private int originalTopPadding = 0;
-private int originalRightPadding = 0; 
-private int originalBottomPadding = 0;
-private boolean originalPaddingSaved = false;
-
 @Override
 public void onConfigurationChanged(Configuration newConfig) {
     super.onConfigurationChanged(newConfig);
