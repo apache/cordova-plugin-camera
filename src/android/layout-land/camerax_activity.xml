@@ -148,42 +148,34 @@
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <FrameLayout
-    android:id="@+id/seekbar_frame"
-    android:layout_width="80dp"
-    android:layout_height="match_parent"
-    android:layout_marginEnd="4dp"
-    app:layout_constraintEnd_toStartOf="@id/bottom_controls"
-    app:layout_constraintTop_toTopOf="parent"
-    app:layout_constraintBottom_toBottomOf="parent">
-    
     <SeekBar
-        android:id="@+id/zoom_seekbar"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="10dp"
-        android:layout_gravity="end|center_vertical"
-        android:rotation="270"
-        android:visibility="gone"
-        android:progressTint="@android:color/white"
-        android:thumbTint="@android:color/white"
-        />
-        
-    <TextView
-        android:id="@+id/zoom_level_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical|start"
-        android:layout_marginStart="8dp"
-        android:background="#80000000"
-        android:padding="4dp"
-        android:text="1.0x"
-        android:textColor="@android:color/white"
-        android:textSize="16sp"
-        android:visibility="gone" />
-    
-</FrameLayout>
+    android:id="@+id/zoom_seekbar"
+    android:layout_width="0dp"
+    android:layout_height="48dp"
+    android:layout_marginStart="80dp"
+    android:layout_marginEnd="80dp"
+    android:layout_marginBottom="16dp"
+    android:visibility="gone"
+    android:progressTint="@android:color/white"
+    android:thumbTint="@android:color/white"
+    app:layout_constraintBottom_toBottomOf="@id/preview_view"
+    app:layout_constraintStart_toStartOf="@id/preview_view"
+    app:layout_constraintEnd_toEndOf="@id/preview_view" />
+
+<TextView
+    android:id="@+id/zoom_level_text"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="#80000000"
+    android:padding="4dp"
+    android:text="1.0x"
+    android:visibility="gone"
+    android:textColor="@android:color/white"
+    android:textSize="16sp"
+    android:layout_marginBottom="8dp"
+    app:layout_constraintBottom_toTopOf="@id/zoom_seekbar"
+    app:layout_constraintStart_toStartOf="@id/zoom_seekbar"
+    app:layout_constraintEnd_toEndOf="@id/zoom_seekbar" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
