@@ -457,7 +457,7 @@ private void updateNavigationBarPadding(int orientation) {
                 
                 int seekBarLength = screenHeight - 120; // 60dp margin top and bottom
                 params.width = seekBarLength;
-                params.height = 48;  
+                params.height = 20;  
                 zoomSeekBar.setLayoutParams(params);
                 
                 zoomSeekBar.setPivotX(params.width / 2);
