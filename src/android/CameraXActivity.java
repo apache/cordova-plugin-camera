@@ -202,7 +202,13 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
 }
 
     private void updateZoomLevelDisplay(float zoomRatio) {
-        String formattedZoom = String.format(Locale.US, "%.1fx", zoomRatio);
+        String formattedZoom
+
+        if (usingUltraWideCamera && zoomRatio <= 1.1f) {
+            formattedZoom = "0.5x";
+        } else {formattedZoom = String.format(Locale.US, "%.1fx", zoomRatio);
+               }
+        
         zoomLevelText.setText(formattedZoom);
         zoomLevelText.setVisibility(View.VISIBLE);
 
@@ -210,6 +216,22 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         handler.removeCallbacks(hideZoomControlsRunnable);
         handler.postDelayed(hideZoomControlsRunnable, 2000);
     }
+
+    private void handleZoomLevelCameraSwitching(float zoomRatio) {
+    if (cameraFacing == CameraSelector.LENS_FACING_BACK && hasUltraWideCamera) {
+        if (usingUltraWideCamera && zoomRatio > 1.1f) {
+            // Switch from wide to normal camera when zooming in
+            usingUltraWideCamera = false;
+            updateZoomButtonsState();
+            startCamera();
+        } else if (!usingUltraWideCamera && zoomRatio < 0.9f) {
+            // Switch from normal to wide camera when zooming out
+            usingUltraWideCamera = true;
+            updateZoomButtonsState();
+            startCamera();
+        }
+    }
+}
     @Override
     public void onClick(View view) {
         int id = view.getId();
@@ -506,6 +528,8 @@ private void initializeViews() {
                     // Apply zoom to camera
                     camera.getCameraControl().setZoomRatio(zoomRatio);
                     updateZoomLevelDisplay(zoomRatio);
+                    // switch cameras?
+                    handleZoomLevelCameraSwitching(zoomRatio);
                 }
             }
 
@@ -603,6 +627,7 @@ private void initializeViews() {
                 }
                 
                 cameraControl.setZoomRatio(newZoomRatio);
+                handleZoomLevelCameraSwitching(newZoomRatio);
                 return true;
             }
             
@@ -674,6 +699,10 @@ private void initializeViews() {
             
             updateZoomButtonsState();
             startCamera(); // Restart camera with wide angle
+            zoomLevelText.setText("0.5x");
+            zoomLevelText.setVisibility(View.VISIBLE);
+            handler.removeCallbacks(hideZoomLevelRunnable);
+            handler.postDelayed(hideZoomLevelRunnable, 2000);
         }
     }
     
@@ -682,6 +711,10 @@ private void initializeViews() {
             usingUltraWideCamera = false;
             updateZoomButtonsState();
             startCamera(); // Restart camera with normal lens
+            zoomLevelText.setText("1.0x");
+            zoomLevelText.setVisibility(View.VISIBLE);
+            handler.removeCallbacks(hideZoomLevelRunnable);
+            handler.postDelayed(hideZoomLevelRunnable, 2000);
         }
     }
     
