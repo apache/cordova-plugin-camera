@@ -152,7 +152,7 @@
     android:id="@+id/seekbar_frame"
     android:layout_width="48dp"
     android:layout_height="match_parent"
-    android:layout_marginEnd="4dp"  <!-- Added smaller margin to get closer to right panel -->
+    android:layout_marginEnd="4dp"
     app:layout_constraintEnd_toStartOf="@id/bottom_controls"
     app:layout_constraintTop_toTopOf="parent"
     app:layout_constraintBottom_toBottomOf="parent">
