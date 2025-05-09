@@ -152,17 +152,16 @@
     <SeekBar
         android:id="@+id/zoom_seekbar"
         android:layout_width="wrap_content"
-        android:layout_height="fill_parent"
-        android:layout_marginEnd="4dp"
-        android:layout_marginTop="30dp"
-        android:layout_marginBottom="30dp"
-        android:rotation="270"
+        android:layout_height="48dp"
+        android:layout_marginEnd="16dp"
+        android:rotation="0"
         android:visibility="gone"
         android:progressTint="@android:color/white"
         android:thumbTint="@android:color/white"
         app:layout_constraintEnd_toStartOf="@id/bottom_controls"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        />
     
      <TextView
         android:id="@+id/zoom_level_text"
