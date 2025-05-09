@@ -669,7 +669,11 @@ private void initializeViews() {
                 }
                 
                 cameraControl.setZoomRatio(newZoomRatio);
-                handleZoomLevelCameraSwitching(newZoomRatio);
+                 if (usingUltraWideCamera && newZoomRatio > 1.1f) {
+                    usingUltraWideCamera = false;
+                    updateZoomButtonsState();
+                    startCamera();
+                }
                 return true;
             }
             
