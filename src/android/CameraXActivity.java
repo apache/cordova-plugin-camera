@@ -480,6 +480,10 @@ private void initializeViews() {
     normalZoomButton = findViewById(getResources().getIdentifier("normal_zoom_button", "id", getPackageName()));
     zoomButtonsContainer = findViewById(getResources().getIdentifier("zoom_buttons_container", "id", getPackageName()));
 
+    if (zoomLevelText != null) {
+        zoomLevelText.setVisibility(View.GONE);
+    }
+
     // Configure zoom seekbar
     if (zoomSeekBar != null) {
         zoomSeekBar.setMax(100);
