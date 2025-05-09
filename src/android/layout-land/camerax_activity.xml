@@ -161,12 +161,13 @@
         android:id="@+id/zoom_seekbar"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="30dp"
-        android:layout_marginBottom="30dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
         android:rotation="270"
         android:visibility="gone"
         android:progressTint="@android:color/white"
-        android:thumbTint="@android:color/white" />
+        android:thumbTint="@android:color/white"
+        android:scaleX="1.5"/>
     
 </FrameLayout>
 
