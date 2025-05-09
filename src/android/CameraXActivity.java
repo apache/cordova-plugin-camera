@@ -117,6 +117,9 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     private Handler handler = new Handler();
     private Runnable hideZoomLevelRunnable;
     private Runnable hideZoomControlsRunnable;
+    private boolean hasReachedMinimum = false;
+    private long timeAtMinZoom = 0;
+    private static final long MIN_TIME_AT_MIN_ZOOM = 200;
     
     private boolean isUserControllingZoom = false;
     private boolean hasUltraWideCamera = false;
@@ -217,21 +220,6 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         handler.postDelayed(hideZoomControlsRunnable, 2000);
     }
 
-    private void handleZoomLevelCameraSwitching(float zoomRatio) {
-    if (cameraFacing == CameraSelector.LENS_FACING_BACK && hasUltraWideCamera) {
-        if (usingUltraWideCamera && zoomRatio > 1.1f) {
-            // Switch from wide to normal camera when zooming in
-            usingUltraWideCamera = false;
-            updateZoomButtonsState();
-            startCamera();
-        } else if (!usingUltraWideCamera && zoomRatio < 0.9f) {
-            // Switch from normal to wide camera when zooming out
-            usingUltraWideCamera = true;
-            updateZoomButtonsState();
-            startCamera();
-        }
-    }
-}
     @Override
     public void onClick(View view) {
         int id = view.getId();
@@ -457,8 +445,16 @@ private void updateNavigationBarPadding(int orientation) {
 
         if (orientation == Configuration.ORIENTATION_LANDSCAPE && zoomSeekBar != null) {
             zoomSeekBar.setRotation(270);
+            ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) zoomSeekbar.getLayoutParams();
+            params.width = getResources().getDisplayMetrics().heightPixels - 200; // Use screen height minus margins
+            params.height = 50; // Keep a reasonable thickness
+            zoomSeekbar.setLayoutParams(params);
         } else if (zoomSeekBar != null) {
             zoomSeekBar.setRotation(0);
+            ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) zoomSeekbar.getLayoutParams();
+            params.width = getResources().getDisplayMetrics().widthPixels - 100; // Use screen width minus margins
+            params.height = 50; // Keep a reasonable thickness
+            zoomSeekbar.setLayoutParams(params);
         }
         
         // Get navigation bar height
@@ -524,12 +520,36 @@ private void initializeViews() {
                     float maxZoom = zoomState.getMaxZoomRatio();
                     float zoomRange = maxZoom - minZoom;
                     float zoomRatio = minZoom + (progress / 100f) * zoomRange;
+
+                    if (!usingUltraWideCamera && progress == 0) {
+                        // User has reached the minimum and is likely trying to go further
+                        hasReachedMinimum = true;
+            
+                        // Only switch after a short delay of being at minimum, to avoid accidental switches
+                    handler.postDelayed(() -> {
+                        // If still at minimum after the delay, switch cameras
+                        if (hasReachedMinimum && !usingUltraWideCamera && hasUltraWideCamera) {
+                            usingUltraWideCamera = true;
+                            updateZoomButtonsState();
+                            startCamera();
+                        }
+                    }, 200); // Short delay to confirm intent
+                    } else {
+                        // No longer at minimum
+                        hasReachedMinimum = false;
+                        handler.removeCallbacksAndMessages(null); // Cancel any pending switch
+                    }
                     
                     // Apply zoom to camera
                     camera.getCameraControl().setZoomRatio(zoomRatio);
                     updateZoomLevelDisplay(zoomRatio);
                     // switch cameras?
-                    handleZoomLevelCameraSwitching(zoomRatio);
+
+                    if (usingUltraWideCamera && zoomRatio > 1.1f) {
+                        usingUltraWideCamera = false;
+                        updateZoomButtonsState();
+                        startCamera();
+                    }
                 }
             }
 
@@ -608,9 +628,31 @@ private void initializeViews() {
                 
                 // Calculate new zoom based on pinch scale factor
                 float scaleFactor = detector.getScaleFactor();
-                float newZoomRatio = lastZoomRatio * scaleFactor;
+                boolean isZoomingOut = scaleFactor < 1.0f;
+
+                if (!usingUltraWideCamera && hasUltraWideCamera && isZoomingOut) {
+                    if (Math.abs(currentZoomRatio - minZoom) < 0.05f) { // Very close to minimum
+                        // We're at minimum zoom and still trying to zoom out
+                        long currentTime = System.currentTimeMillis();
+                        
+                        if (timeAtMinZoom == 0) {
+                            // Just reached minimum
+                            timeAtMinZoom = currentTime;
+                        } else if (currentTime - timeAtMinZoom > MIN_TIME_AT_MIN_ZOOM) {
+                            // User has been trying to zoom out at minimum for the threshold time
+                            usingUltraWideCamera = true;
+                            timeAtMinZoom = 0;
+                            updateZoomButtonsState();
+                            startCamera();
+                            return true;
+                        }
+                    } else {
+                        // Not at minimum zoom
+                        timeAtMinZoom = 0;
+                    }
+                }
                 
-                // Constrain to actual camera limits
+                float newZoomRatio = lastZoomRatio * scaleFactor;
                 newZoomRatio = Math.max(minZoom, Math.min(newZoomRatio, maxZoom));
                 
                 // Save for next frame
