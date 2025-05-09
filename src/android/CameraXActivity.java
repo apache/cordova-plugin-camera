@@ -449,8 +449,8 @@ private void updateNavigationBarPadding(int orientation) {
             params.width = (int)(getResources().getDisplayMetrics().heightPixels * 0.75);
             params.height = 40;
             params.setMarginEnd(4);
-            params.topMargin30;
-            params.bottomMargin30;
+            params.topMargin = 30;
+            params.bottomMargin = 30;
     
             zoomSeekBar.setLayoutParams(params);
     
