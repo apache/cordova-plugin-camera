@@ -445,16 +445,16 @@ private void updateNavigationBarPadding(int orientation) {
 
         if (orientation == Configuration.ORIENTATION_LANDSCAPE && zoomSeekBar != null) {
             zoomSeekBar.setRotation(270);
-            ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) zoomSeekbar.getLayoutParams();
+            ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) zoomSeekBar.getLayoutParams();
             params.width = getResources().getDisplayMetrics().heightPixels - 200; // Use screen height minus margins
             params.height = 50; // Keep a reasonable thickness
-            zoomSeekbar.setLayoutParams(params);
+            zoomSeekBar.setLayoutParams(params);
         } else if (zoomSeekBar != null) {
             zoomSeekBar.setRotation(0);
-            ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) zoomSeekbar.getLayoutParams();
+            ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) zoomSeekBar.getLayoutParams();
             params.width = getResources().getDisplayMetrics().widthPixels - 100; // Use screen width minus margins
             params.height = 50; // Keep a reasonable thickness
-            zoomSeekbar.setLayoutParams(params);
+            zoomSeekBar.setLayoutParams(params);
         }
         
         // Get navigation bar height
