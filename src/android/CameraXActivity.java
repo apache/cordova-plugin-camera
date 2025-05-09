@@ -91,7 +91,9 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     };
     private static final int JPEG = 0;
     private static final int PNG = 1;
-
+    
+    private boolean isInitialCameraStart = true;
+    
     private boolean isInitialSetup = true;
     private int originalLeftPadding = 0;
     private int originalTopPadding = 0;
@@ -399,6 +401,16 @@ public void onConfigurationChanged(Configuration newConfig) {
         
         // Manually apply the appropriate layout
         setContentView(getResources().getIdentifier("camerax_activity", "layout", getPackageName()));
+
+
+        TextView zoomLevelText = findViewById(getResources().getIdentifier("zoom_level_text", "id", getPackageName()));
+        if (zoomLevelText != null) {
+            if (currentUsingUltraWide) {
+                zoomLevelText.setText("0.5x");
+            } else {
+                zoomLevelText.setText("1.0x"); // Camera will reset to 1.0x
+            }
+        }
         
         // Reinitialize all view references
         initializeViews();
@@ -412,11 +424,6 @@ public void onConfigurationChanged(Configuration newConfig) {
         
         // Update padding for system UI
         updateNavigationBarPadding(newConfig.orientation);
-        
-        // Restore zoom visibility
-        if (wasZoomSeekBarVisible && zoomSeekBar != null) {
-            zoomSeekBar.setVisibility(View.VISIBLE);
-        }
         
         // Update rotation for image capture
         if (camera != null && imageCapture != null) {
@@ -755,11 +762,7 @@ private void initializeViews() {
             setFlashMode(ImageCapture.FLASH_MODE_OFF);
             
             updateZoomButtonsState();
-            startCamera(); // Restart camera with wide angle
-            zoomLevelText.setText("0.5x");
-            zoomLevelText.setVisibility(View.VISIBLE);
-            handler.removeCallbacks(hideZoomLevelRunnable);
-            handler.postDelayed(hideZoomLevelRunnable, 2000);
+            startCamera();
         }
     }
     
@@ -767,11 +770,7 @@ private void initializeViews() {
         if (usingUltraWideCamera) {
             usingUltraWideCamera = false;
             updateZoomButtonsState();
-            startCamera(); // Restart camera with normal lens
-            zoomLevelText.setText("1.0x");
-            zoomLevelText.setVisibility(View.VISIBLE);
-            handler.removeCallbacks(hideZoomLevelRunnable);
-            handler.postDelayed(hideZoomLevelRunnable, 2000);
+            startCamera(); 
         }
     }
     
@@ -941,20 +940,25 @@ private void initializeViews() {
                         zoomLevelText.setText("1.0x");
                     }
                     
-                    // Reset the seekbar position to match the actual zoom
-                    float defaultPosition = usingUltraWideCamera ? 0 : 0;
-                    zoomSeekBar.setProgress((int)defaultPosition);
+                    zoomSeekBar.setProgress(0);
+
+                    if (!isInitialCameraStart) {
+                        zoomLevelText.setVisibility(View.VISIBLE);
+                        zoomSeekBar.setVisibility(View.VISIBLE);
+                        
+                        handler.postDelayed(() -> {
+                            if (!isUserControllingZoom) {
+                                zoomLevelText.setVisibility(View.GONE);
+                                zoomSeekBar.setVisibility(View.GONE);
+                            }
+                        }, 2000);
+                    } else {
+                        // For initial camera start, keep UI hidden
+                        zoomLevelText.setVisibility(View.GONE);
+                        zoomSeekBar.setVisibility(View.GONE);
+                        isInitialCameraStart = false;
+                    }
                     
-                    // Show zoom UI briefly to indicate the reset, then hide it
-                    zoomLevelText.setVisibility(View.VISIBLE);
-                    zoomSeekBar.setVisibility(View.VISIBLE);
-                    
-                    handler.postDelayed(() -> {
-                        if (!isUserControllingZoom) {
-                            zoomLevelText.setVisibility(View.GONE);
-                            zoomSeekBar.setVisibility(View.GONE);
-                        }
-                    }, 2000);
                     camera.getCameraInfo().getZoomState().observe(this, zoomState -> {
                         if (zoomState != null) {
                                   
