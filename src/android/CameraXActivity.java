@@ -446,18 +446,18 @@ private void updateNavigationBarPadding(int orientation) {
         if (orientation == Configuration.ORIENTATION_LANDSCAPE && zoomSeekBar != null) {
             zoomSeekBar.setRotation(270);
             ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) zoomSeekBar.getLayoutParams();
-            params.width = getResources().getDisplayMetrics().heightPixels - 200; // Use screen height minus margins
-            params.height = 50; // Keep a reasonable thickness
-            params.setMarginEnd(16);
-            params.startToStart = ConstraintLayout.LayoutParams.UNSET; 
-            params.endToStart = getResources().getIdentifier("bottom_controls", "id", getPackageName());
+            params.width = (int)(getResources().getDisplayMetrics().heightPixels * 0.75);
+            params.height = 40;
+            params.setMarginEnd(4);
+            params.setMarginTop(30);
+            params.setMarginBottom(30);
     
             zoomSeekBar.setLayoutParams(params);
     
             TextView zoomLevelText = findViewById(getResources().getIdentifier("zoom_level_text", "id", getPackageName()));
             if (zoomLevelText != null) {
                 ConstraintLayout.LayoutParams textParams = (ConstraintLayout.LayoutParams) zoomLevelText.getLayoutParams();
-                textParams.setMarginEnd(8);
+                textParams.setMarginEnd(4);
                 zoomLevelText.setLayoutParams(textParams);
             }
         } else if (zoomSeekBar != null) {
@@ -934,6 +934,27 @@ private void initializeViews() {
                 
                 // Update camera zoom state when switching cameras
                 if (camera != null) {
+
+                    if (usingUltraWideCamera) {
+                        zoomLevelText.setText("0.5x");
+                    } else {
+                        zoomLevelText.setText("1.0x");
+                    }
+                    
+                    // Reset the seekbar position to match the actual zoom
+                    float defaultPosition = usingUltraWideCamera ? 0 : 0;
+                    zoomSeekBar.setProgress((int)defaultPosition);
+                    
+                    // Show zoom UI briefly to indicate the reset, then hide it
+                    zoomLevelText.setVisibility(View.VISIBLE);
+                    zoomSeekBar.setVisibility(View.VISIBLE);
+                    
+                    handler.postDelayed(() -> {
+                        if (!isUserControllingZoom) {
+                            zoomLevelText.setVisibility(View.GONE);
+                            zoomSeekBar.setVisibility(View.GONE);
+                        }
+                    }, 2000);
                     camera.getCameraInfo().getZoomState().observe(this, zoomState -> {
                         if (zoomState != null) {
                                   
