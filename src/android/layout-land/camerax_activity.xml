@@ -152,7 +152,7 @@
     <SeekBar
         android:id="@+id/zoom_seekbar"
         android:layout_width="wrap_content"
-        android:layout_height="48dp"
+        android:layout_height="20dp"
         android:layout_marginEnd="16dp"
         android:visibility="gone"
         android:progressTint="@android:color/white"
