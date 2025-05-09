@@ -202,7 +202,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
 }
 
     private void updateZoomLevelDisplay(float zoomRatio) {
-        String formattedZoom
+        String formattedZoom;
 
         if (usingUltraWideCamera && zoomRatio <= 1.1f) {
             formattedZoom = "0.5x";
