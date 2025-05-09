@@ -148,32 +148,40 @@
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Zoom Seek Bar - Left of capture button -->
+    <FrameLayout
+    android:id="@+id/seekbar_frame"
+    android:layout_width="48dp"
+    android:layout_height="match_parent"
+    android:layout_marginEnd="4dp"  <!-- Added smaller margin to get closer to right panel -->
+    app:layout_constraintEnd_toStartOf="@id/bottom_controls"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintBottom_toBottomOf="parent">
+    
     <SeekBar
         android:id="@+id/zoom_seekbar"
-        android:layout_width="wrap_content"
-        android:layout_height="20dp"
-        android:layout_marginEnd="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="30dp"
         android:visibility="gone"
         android:progressTint="@android:color/white"
-        android:thumbTint="@android:color/white"
-        app:layout_constraintEnd_toStartOf="@id/bottom_controls"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        />
+        android:thumbTint="@android:color/white" />
     
-     <TextView
-        android:id="@+id/zoom_level_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="#80000000"
-        android:padding="4dp"
-        android:text="1.0x"
-        android:textColor="@android:color/white"
-        android:textSize="16sp"
-        android:layout_marginEnd="4dp"
-        app:layout_constraintEnd_toStartOf="@id/zoom_seekbar"
-        app:layout_constraintTop_toTopOf="@id/zoom_seekbar"
-        app:layout_constraintBottom_toBottomOf="@id/zoom_seekbar" />
+</FrameLayout>
+
+<TextView
+    android:id="@+id/zoom_level_text"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="#80000000"
+    android:padding="4dp"
+    android:text="1.0x"
+    android:textColor="@android:color/white"
+    android:textSize="16sp"
+    android:visibility="gone"
+    android:layout_marginEnd="4dp"
+    app:layout_constraintEnd_toStartOf="@id/seekbar_frame"
+    app:layout_constraintTop_toTopOf="@id/seekbar_frame"
+    app:layout_constraintBottom_toBottomOf="@id/seekbar_frame" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
