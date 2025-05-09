@@ -117,7 +117,6 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     private TextView normalZoomButton;
     
     private Handler handler = new Handler();
-    private Runnable hideZoomLevelRunnable;
     private Runnable hideZoomControlsRunnable;
     private boolean hasReachedMinimum = false;
     private long timeAtMinZoom = 0;
@@ -183,16 +182,7 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     }
     
     // Zoom methods
-    // Convert linear zoom (0.0-1.0) to zoom ratio (minZoom to maxZoom)
-    private float calculateZoomRatioFromLinear(float linearZoom) {
-        return minZoomRatio + (linearZoom * (maxZoomRatio - minZoomRatio));
-    }
-
-    // Convert zoom ratio to linear zoom
-    private float calculateLinearFromZoomRatio(float zoomRatio) {
-        return (zoomRatio - minZoomRatio) / (maxZoomRatio - minZoomRatio);
-    }
-
+ 
     private void showZoomControls() {
     if (zoomSeekBar != null) {
         zoomSeekBar.setVisibility(View.VISIBLE);
@@ -203,7 +193,6 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     
     // Cancel any pending hide operations
     handler.removeCallbacks(hideZoomControlsRunnable);
-    handler.removeCallbacks(hideZoomLevelRunnable);
 }
 
     private void updateZoomLevelDisplay(float zoomRatio) {
@@ -217,7 +206,6 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
         zoomLevelText.setText(formattedZoom);
         zoomLevelText.setVisibility(View.VISIBLE);
 
-        handler.removeCallbacks(hideZoomLevelRunnable);
         handler.removeCallbacks(hideZoomControlsRunnable);
         handler.postDelayed(hideZoomControlsRunnable, 2000);
     }
@@ -389,28 +377,12 @@ public void onConfigurationChanged(Configuration newConfig) {
 
     try {
         // Save important state before changing layouts
-        boolean wasZoomSeekBarVisible = false;
-        if (zoomSeekBar != null) {
-            wasZoomSeekBarVisible = zoomSeekBar.getVisibility() == View.VISIBLE;
-        }
-        
-        // Save camera state
         boolean isCameraRunning = camera != null;
         int currentCameraFacing = cameraFacing;
         boolean currentUsingUltraWide = usingUltraWideCamera;
         
         // Manually apply the appropriate layout
         setContentView(getResources().getIdentifier("camerax_activity", "layout", getPackageName()));
-
-
-        TextView zoomLevelText = findViewById(getResources().getIdentifier("zoom_level_text", "id", getPackageName()));
-        if (zoomLevelText != null) {
-            if (currentUsingUltraWide) {
-                zoomLevelText.setText("0.5x");
-            } else {
-                zoomLevelText.setText("1.0x"); // Camera will reset to 1.0x
-            }
-        }
         
         // Reinitialize all view references
         initializeViews();
@@ -551,7 +523,6 @@ private void initializeViews() {
                 isUserControllingZoom = true;
                 // Cancel auto-hide when user starts interacting
                 handler.removeCallbacks(hideZoomControlsRunnable);
-                handler.removeCallbacks(hideZoomLevelRunnable);
             }
 
             @Override
@@ -563,16 +534,6 @@ private void initializeViews() {
     }
     
     // Initialize or reinitialize the runnables if needed
-    if (hideZoomLevelRunnable == null) {
-        hideZoomLevelRunnable = () -> {
-            if (zoomLevelText != null) {
-                zoomLevelText.setVisibility(View.GONE);
-            }
-            if (!isUserControllingZoom && zoomSeekBar != null) {
-                zoomSeekBar.setVisibility(View.GONE);
-            }
-        };
-    }
     
     if (hideZoomControlsRunnable == null) {
         hideZoomControlsRunnable = () -> {
@@ -689,7 +650,6 @@ private void initializeViews() {
                 }
                 
                 // Remove any pending hide callbacks
-                handler.removeCallbacks(hideZoomLevelRunnable);
                 handler.removeCallbacks(hideZoomControlsRunnable);
                 return true;
             }
@@ -844,121 +804,123 @@ private void initializeViews() {
     }
 
     @ExperimentalCamera2Interop
-    private void startCamera() {
-        ListenableFuture<ProcessCameraProvider> cameraProviderFuture = 
-                ProcessCameraProvider.getInstance(this);
-        
-        cameraProviderFuture.addListener(() -> {
-            try {
-                // Camera provider is now guaranteed to be available
-                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+private void startCamera() {
+    ListenableFuture<ProcessCameraProvider> cameraProviderFuture = 
+            ProcessCameraProvider.getInstance(this);
+    
+    cameraProviderFuture.addListener(() -> {
+        try {
+            // Camera provider is now guaranteed to be available
+            ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
 
-                ResolutionSelector resolutionSelector = new ResolutionSelector.Builder()
-                    .build();
+            // Create resolution selector
+            ResolutionSelector resolutionSelector = new ResolutionSelector.Builder().build();
 
-                // Check if device has ultra-wide camera
-                if (cameraFacing == CameraSelector.LENS_FACING_BACK) {
-                    detectUltraWideCamera(cameraProvider);
-                } else {
-                    // No wide angle for front camera
-                    hasUltraWideCamera = false;
-                    usingUltraWideCamera = false;
-                }
-                
-                // Update button states
-                updateZoomButtonsState();
-
-
-                // Set up the preview use case
-                Preview preview = new Preview.Builder()
-                    .setResolutionSelector(resolutionSelector)
-                    .build();
-
-                previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
-                preview.setSurfaceProvider(previewView.getSurfaceProvider());
-                
-                // Set up the capture use case
-                imageCapture = new ImageCapture.Builder()
-                        .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-                        .setResolutionSelector(resolutionSelector)
-                        .setTargetRotation(getCameraRotation())
-                        .setFlashMode(flashMode)
-                        .build();
-                
-                // Select appropriate camera
-                CameraSelector cameraSelector;
-                if (usingUltraWideCamera && hasUltraWideCamera && cameraFacing == CameraSelector.LENS_FACING_BACK) {
-                    cameraSelector = createUltraWideCameraSelector();
-                } else {
-                    // Use standard camera selector
-                    cameraSelector = new CameraSelector.Builder()
-                            .requireLensFacing(cameraFacing)
-                            .build();
-                }
-                
-                // Unbind any bound use cases before rebinding
-                cameraProvider.unbindAll();
-                
-                // Bind use cases to camera
-                camera = cameraProvider.bindToLifecycle(
-                        ((LifecycleOwner) this),
-                        cameraSelector,
-                        preview,
-                        imageCapture);
-                
-                // Update camera zoom state when switching cameras
-                if (camera != null) {
-
-                    if (usingUltraWideCamera) {
-                        zoomLevelText.setText("0.5x");
-                    } else {
-                        zoomLevelText.setText("1.0x");
-                    }
-                    
-                    zoomSeekBar.setProgress(0);
-
-                    if (!isInitialCameraStart) {
-                        zoomLevelText.setVisibility(View.VISIBLE);
-                        zoomSeekBar.setVisibility(View.VISIBLE);
-                        
-                        handler.postDelayed(() -> {
-                            if (!isUserControllingZoom) {
-                                zoomLevelText.setVisibility(View.GONE);
-                                zoomSeekBar.setVisibility(View.GONE);
-                            }
-                        }, 2000);
-                    } else {
-                        // For initial camera start, keep UI hidden
-                        zoomLevelText.setVisibility(View.GONE);
-                        zoomSeekBar.setVisibility(View.GONE);
-                        isInitialCameraStart = false;
-                    }
-                    
-                    camera.getCameraInfo().getZoomState().observe(this, zoomState -> {
-                        if (zoomState != null) {
-                                  
-                            // Update zoom display if changed externally
-                            if (!isUserControllingZoom && zoomState.getZoomRatio() != 1.0f) {
-                                float minZoom = Math.max(0.5f, zoomState.getMinZoomRatio());
-                                float maxZoom = zoomState.getMaxZoomRatio();
-                                float zoomRatio = zoomState.getZoomRatio();
-                                
-                                // Calculate and set slider position
-                                float zoomProgress = ((zoomRatio - minZoom) / (maxZoom - minZoom)) * 100;
-                                zoomSeekBar.setProgress((int)zoomProgress);
-                                
-                                // Update text display
-                                updateZoomLevelDisplay(zoomRatio);
-                            }
-                        }
-                    });
-                }
-                
-            } catch (ExecutionException | InterruptedException e) {
-                Log.e(TAG, "Error starting camera: " + e.getMessage());
+            // Check for ultra-wide camera on back camera only
+            if (cameraFacing == CameraSelector.LENS_FACING_BACK) {
+                detectUltraWideCamera(cameraProvider);
+            } else {
+                // No wide angle for front camera
+                hasUltraWideCamera = false;
+                usingUltraWideCamera = false;
             }
-        }, ContextCompat.getMainExecutor(this));
-    }
+            
+            // Update UI button states
+            updateZoomButtonsState();
+
+            // Set up the preview use case
+            Preview preview = new Preview.Builder()
+                .setResolutionSelector(resolutionSelector)
+                .build();
+
+            previewView.setScaleType(PreviewView.ScaleType.FIT_CENTER);
+            preview.setSurfaceProvider(previewView.getSurfaceProvider());
+            
+            // Set up the capture use case
+            imageCapture = new ImageCapture.Builder()
+                    .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                    .setResolutionSelector(resolutionSelector)
+                    .setTargetRotation(getCameraRotation())
+                    .setFlashMode(flashMode)
+                    .build();
+            
+            // Select appropriate camera - ultra-wide or standard
+            CameraSelector cameraSelector;
+            if (usingUltraWideCamera && hasUltraWideCamera && cameraFacing == CameraSelector.LENS_FACING_BACK) {
+                cameraSelector = createUltraWideCameraSelector();
+            } else {
+                cameraSelector = new CameraSelector.Builder()
+                        .requireLensFacing(cameraFacing)
+                        .build();
+            }
+            
+            // Unbind any bound use cases before rebinding
+            cameraProvider.unbindAll();
+            
+            // Bind use cases to camera
+            camera = cameraProvider.bindToLifecycle(
+                    this, // LifecycleOwner
+                    cameraSelector,
+                    preview,
+                    imageCapture);
+            
+            // Update camera zoom state when switching cameras
+            if (camera != null) {
+                // Reset zoom to appropriate initial value based on camera
+                currentZoomRatio = usingUltraWideCamera ? 0.5f : 1.0f;
+                
+                // Reset UI to match
+                zoomLevelText.setText(usingUltraWideCamera ? "0.5x" : "1.0x");
+                zoomSeekBar.setProgress(0);
+                
+                // Force the camera to reset zoom
+                camera.getCameraControl().setZoomRatio(currentZoomRatio);
+
+                // Show zoom UI briefly if not initial startup
+                if (!isInitialCameraStart) {
+                    // Show briefly then hide
+                    zoomLevelText.setVisibility(View.VISIBLE);
+                    zoomSeekBar.setVisibility(View.VISIBLE);
+                    
+                    // Hide after delay unless user is interacting
+                    handler.postDelayed(() -> {
+                        if (!isUserControllingZoom) {
+                            zoomLevelText.setVisibility(View.GONE);
+                            zoomSeekBar.setVisibility(View.GONE);
+                        }
+                    }, 2000);
+                } else {
+                    // For initial camera start, keep UI hidden
+                    zoomLevelText.setVisibility(View.GONE);
+                    zoomSeekBar.setVisibility(View.GONE);
+                    isInitialCameraStart = false;
+                }
+                
+                // Set up observer for camera zoom changes
+                camera.getCameraInfo().getZoomState().observe(this, zoomState -> {
+                    if (zoomState != null && !isUserControllingZoom && zoomState.getZoomRatio() != currentZoomRatio) {
+                        // Get zoom limits
+                        float minZoom = Math.max(0.5f, zoomState.getMinZoomRatio());
+                        float maxZoom = zoomState.getMaxZoomRatio();
+                        float zoomRatio = zoomState.getZoomRatio();
+                        
+                        // Update current zoom tracking variable
+                        currentZoomRatio = zoomRatio;
+                        
+                        // Calculate and set slider position
+                        float zoomProgress = ((zoomRatio - minZoom) / (maxZoom - minZoom)) * 100;
+                        zoomSeekBar.setProgress((int)zoomProgress);
+                        
+                        // Update text display
+                        updateZoomLevelDisplay(zoomRatio);
+                    }
+                });
+            }
+        } catch (ExecutionException | InterruptedException e) {
+            Log.e(TAG, "Error starting camera: " + e.getMessage());
+        }
+    }, ContextCompat.getMainExecutor(this));
+}
     
      private void takePhoto() {
     if (imageCapture == null) {
@@ -1082,7 +1044,6 @@ private void initializeViews() {
             executor.shutdown();
         }
 
-        handler.removeCallbacks(hideZoomLevelRunnable);
         handler.removeCallbacks(hideZoomControlsRunnable);
         System.gc();
     }
