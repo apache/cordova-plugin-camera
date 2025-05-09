@@ -449,35 +449,6 @@ private void updateNavigationBarPadding(int orientation) {
             originalPaddingSaved = true;
             isInitialSetup = false;
         }
-
-        if (orientation == Configuration.ORIENTATION_LANDSCAPE && zoomSeekBar != null) {
-             int screenHeight = getResources().getDisplayMetrics().heightPixels;
-
-                ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) zoomSeekBar.getLayoutParams();
-                
-                int seekBarLength = screenHeight - 120; // 60dp margin top and bottom
-                params.width = seekBarLength;
-                params.height = 20;  
-                zoomSeekBar.setLayoutParams(params);
-                
-                zoomSeekBar.setPivotX(params.width / 2);
-                zoomSeekBar.setPivotY(params.height / 2);
-                
-                zoomSeekBar.setRotation(270);
-                
-            TextView zoomLevelText = findViewById(getResources().getIdentifier("zoom_level_text", "id", getPackageName()));
-            if (zoomLevelText != null) {
-                ConstraintLayout.LayoutParams textParams = (ConstraintLayout.LayoutParams) zoomLevelText.getLayoutParams();
-                textParams.setMarginEnd(4);
-                zoomLevelText.setLayoutParams(textParams);
-            }
-        } else if (zoomSeekBar != null) {
-            zoomSeekBar.setRotation(0);
-            ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) zoomSeekBar.getLayoutParams();
-            params.width = ConstraintLayout.LayoutParams.MATCH_PARENT;
-            params.height = 48;
-            zoomSeekBar.setLayoutParams(params);
-        }
         
         // Get navigation bar height
         int navBarHeightId = getResources().getIdentifier("navigation_bar_height", "dimen", "android");
