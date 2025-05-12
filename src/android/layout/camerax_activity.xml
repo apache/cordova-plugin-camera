@@ -163,6 +163,16 @@
         app:layout_constraintStart_toStartOf="@id/zoom_seekbar"
         app:layout_constraintEnd_toEndOf="@id/zoom_seekbar" />
     
+    <!-- Exposure controls frame for positioning -->
+<FrameLayout
+    android:id="@+id/exposure_controls_frame"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent">
+
     <LinearLayout
         android:id="@+id/exposure_control_container"
         android:layout_width="wrap_content"
@@ -171,14 +181,16 @@
         android:background="#80000000"
         android:padding="8dp"
         android:visibility="gone"
-        android:gravity="center_vertical" />
-    
-    <SeekBar
+        android:gravity="center_vertical">
+
+        <SeekBar
             android:id="@+id/exposure_seekbar"
             android:layout_width="75dp"
             android:layout_height="wrap_content"
             android:progressTint="@android:color/white"
             android:progressBackgroundTint="@android:color/white"
-            android:thumb="@drawable/exposure_control" />
+            android:thumb="@drawable/ic_exposure" />
+    </LinearLayout>
+</FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
