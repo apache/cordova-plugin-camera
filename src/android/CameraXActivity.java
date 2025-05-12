@@ -564,9 +564,8 @@ private void initializeViews() {
     if (exposureSeekBar != null) {
         exposureSeekBar.setMax(100);
         exposureSeekBar.setProgress(50);
-    }
 
-    exposureSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        exposureSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
         @Override
         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
             if (fromUser && camera != null) {
@@ -582,19 +581,20 @@ private void initializeViews() {
             }
         }
 
-        @Override
-        public void onStartTrackingTouch(SeekBar seekBar) {
-            isUserControllingExposure = true;
-            // Cancel auto-hide when user starts interacting
-            exposureHideHandler.removeCallbacks(hideExposureControlsRunnable);
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                isUserControllingExposure = true;
+                // Cancel auto-hide when user starts interacting
+                exposureHideHandler.removeCallbacks(hideExposureControlsRunnable);
+            }
+    
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // Schedule auto-hide after user stops interacting
+                exposureHideHandler.postDelayed(hideExposureControlsRunnable, 2000);
+            }
+        });
         }
-
-        @Override
-        public void onStopTrackingTouch(SeekBar seekBar) {
-            // Schedule auto-hide after user stops interacting
-            exposureHideHandler.postDelayed(hideExposureControlsRunnable, 2000);
-        }
-    });
 
 // Initialize the auto-hide runnable
 if (hideExposureControlsRunnable == null) {
@@ -605,6 +605,7 @@ if (hideExposureControlsRunnable == null) {
         isUserControllingExposure = false;
     };
 }
+    
     if (zoomLevelText != null) {
         zoomLevelText.setVisibility(View.GONE);
     }
@@ -853,7 +854,7 @@ if (previewView != null) {
     
     // Update zoom button states if needed
     updateZoomButtonsState();
-}}
+}
 
     // Wide Lens Camera Methods
     @ExperimentalCamera2Interop
