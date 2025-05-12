@@ -178,7 +178,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:background="#80000000"
         android:padding="8dp"
         android:visibility="gone"
         android:gravity="center_vertical">
@@ -187,8 +186,8 @@
             android:id="@+id/exposure_seekbar"
             android:layout_width="75dp"
             android:layout_height="wrap_content"
-            android:progressTint="@android:color/white"
-            android:progressBackgroundTint="@android:color/white"
+            android:progressTint="#FFEB3B"
+            android:progressBackgroundTint="#FFEB3B"
             android:thumb="@drawable/exposure_control" />
     </LinearLayout>
 </FrameLayout>
