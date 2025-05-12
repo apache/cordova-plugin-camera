@@ -577,7 +577,7 @@ private void initializeViews() {
                 currentExposureValue = exposureValue;
                 
                 // Apply exposure to camera
-                camera.getCameraControl().setExposureCompensation((int)exposureValue);
+                camera.getCameraControl().setExposureCompensationIndex((int)exposureValue);
             }
         }
 
@@ -1043,7 +1043,7 @@ private void startCamera() {
             if (camera != null) {
 
                 //reset and hide exposure controls
-                camera.getCameraControl().setExposureCompensation(0);
+                camera.getCameraControl().setExposureCompensationIndex(0);
                 currentExposureValue = 0f;
                 hideExposureControls();
                 
