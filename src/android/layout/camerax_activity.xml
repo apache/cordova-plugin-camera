@@ -184,7 +184,7 @@
 
         <SeekBar
             android:id="@+id/exposure_seekbar"
-            android:layout_width="75dp"
+            android:layout_width="100dp"
             android:layout_height="wrap_content"
             android:progressTint="#FFEB3B"
             android:progressBackgroundTint="#FFEB3B"
