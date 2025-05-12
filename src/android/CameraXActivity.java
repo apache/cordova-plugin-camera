@@ -41,8 +41,12 @@ import androidx.camera.core.Camera;
 import androidx.camera.core.CameraControl;
 import androidx.camera.core.CameraInfo;
 import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ExposureState;
+import androidx.camera.core.FocusMeteringAction;
 import androidx.camera.core.ImageCapture;
-import androidx.camera.core.ImageCaptureException;
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.MeteringPoint;
+import androidx.camera.core.MeteringPointFactory;
 import androidx.camera.core.Preview;
 import androidx.camera.core.ViewPort;
 import androidx.camera.core.UseCaseGroup;
@@ -79,6 +83,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.cordova.camera.ExifHelper;
 
@@ -132,6 +137,16 @@ public class CameraXActivity extends AppCompatActivity implements View.OnClickLi
     private float maxZoomRatio = 8.0f;
     private float minZoomRatio = 0.5f;
     private int currentOrientation = 0;
+
+    // Exposure control
+    private LinearLayout exposureControlContainer;
+    private SeekBar exposureSeekBar;
+    private Handler exposureHideHandler = new Handler();
+    private Runnable hideExposureControlsRunnable;
+    private boolean isUserControllingExposure = false;
+    private float currentExposureValue = 0f; 
+    private float minExposure = -3.0f; 
+    private float maxExposure = 3.0f;  
     
     private ImageCapture imageCapture;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -446,6 +461,83 @@ private void updateNavigationBarPadding(int orientation) {
     }
 }
 
+// exposure methods
+private void showExposureControls(float x, float y) {
+    if (exposureControlContainer == null) return;
+    
+    // Make sure the container is visible
+    exposureControlContainer.setVisibility(View.VISIBLE);
+    
+    // Wait for the view to be measured so we can calculate its position correctly
+    exposureControlContainer.post(() -> {
+        // Get container dimensions
+        int containerWidth = exposureControlContainer.getWidth();
+        int containerHeight = exposureControlContainer.getHeight();
+        
+        // Get screen dimensions
+        int screenWidth = previewView.getWidth();
+        int screenHeight = previewView.getHeight();
+        
+        // Calculate position, keeping the control fully on screen
+        int newX = (int) Math.max(0, Math.min(x - containerWidth / 2, screenWidth - containerWidth));
+        // Position slightly above the tap point so it's not covered by the finger
+        int newY = (int) Math.max(0, Math.min(y - containerHeight - 40, screenHeight - containerHeight));
+        
+        // Create layout parameters
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+        );
+        
+        // Set position
+        params.leftMargin = newX;
+        params.topMargin = newY;
+        
+        // Apply parameters
+        exposureControlContainer.setLayoutParams(params);
+    });
+    
+    // Update the seekbar based on camera's current exposure
+    updateExposureSeekbarValue();
+    
+    // Cancel any pending hide operations
+    exposureHideHandler.removeCallbacks(hideExposureControlsRunnable);
+    
+    // Auto-hide after a delay
+    exposureHideHandler.postDelayed(hideExposureControlsRunnable, 3000);
+}
+
+// Helper method to update the seekbar value
+private void updateExposureSeekbarValue() {
+    if (camera != null && exposureSeekBar != null) {
+        CameraInfo cameraInfo = camera.getCameraInfo();
+        ExposureState exposureState = cameraInfo.getExposureState();
+        
+        if (exposureState.isExposureCompensationSupported()) {
+            // Update min/max exposure ranges
+            minExposure = exposureState.getExposureCompensationRange().getLower();
+            maxExposure = exposureState.getExposureCompensationRange().getUpper();
+            
+            // Get current exposure value
+            int currentExposureCompensation = exposureState.getExposureCompensationIndex();
+            
+            // Calculate progress value (0-100)
+            float exposureRange = maxExposure - minExposure;
+            float progressValue = ((currentExposureCompensation - minExposure) / exposureRange) * 100;
+            
+            // Set seekbar position
+            exposureSeekBar.setProgress((int)progressValue);
+        }
+    }
+}
+
+// Method to hide exposure controls
+private void hideExposureControls() {
+    if (exposureControlContainer != null) {
+        exposureControlContainer.setVisibility(View.GONE);
+    }
+}
+
 // New helper method to initialize all view references
 private void initializeViews() {
     // Find all UI elements by resource ID
@@ -462,7 +554,57 @@ private void initializeViews() {
     wideAngleButton = findViewById(getResources().getIdentifier("wide_angle_button", "id", getPackageName()));
     normalZoomButton = findViewById(getResources().getIdentifier("normal_zoom_button", "id", getPackageName()));
     zoomButtonsContainer = findViewById(getResources().getIdentifier("zoom_buttons_container", "id", getPackageName()));
+    exposureControlContainer = findViewById(getResources().getIdentifier("exposure_control_container", "id", getPackageName()));
+    exposureSeekBar = findViewById(getResources().getIdentifier("exposure_seekbar", "id", getPackageName()));
 
+
+    // exposure logic
+
+    if (exposureSeekBar != null) {
+        exposureSeekBar.setMax(100);
+        exposureSeekBar.setProgress(50);
+    }
+
+    exposureSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            if (fromUser && camera != null) {
+                isUserControllingExposure = true;
+                
+                // Convert progress (0-100) to exposure compensation value (minExposure to maxExposure)
+                float exposureRange = maxExposure - minExposure;
+                float exposureValue = minExposure + (progress / 100f) * exposureRange;
+                currentExposureValue = exposureValue;
+                
+                // Apply exposure to camera
+                camera.getCameraControl().setExposureCompensation((int)exposureValue);
+            }
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+            isUserControllingExposure = true;
+            // Cancel auto-hide when user starts interacting
+            exposureHideHandler.removeCallbacks(hideExposureControlsRunnable);
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+            // Schedule auto-hide after user stops interacting
+            exposureHideHandler.postDelayed(hideExposureControlsRunnable, 2000);
+        }
+    });
+}
+
+// Initialize the auto-hide runnable
+if (hideExposureControlsRunnable == null) {
+    hideExposureControlsRunnable = () -> {
+        if (exposureControlContainer != null) {
+            exposureControlContainer.setVisibility(View.GONE);
+        }
+        isUserControllingExposure = false;
+    };
+}
     if (zoomLevelText != null) {
         zoomLevelText.setVisibility(View.GONE);
     }
@@ -662,15 +804,47 @@ private void initializeViews() {
         });
     }
     
-    // Set up touch listener for pinch zoom
-    if (previewView != null) {
-        previewView.setOnTouchListener((view, event) -> {
-            if (scaleGestureDetector != null) {
-                scaleGestureDetector.onTouchEvent(event);
+   // set up touch listener for zoom and exposure
+if (previewView != null) {
+    previewView.setOnTouchListener((view, event) -> {
+        // Handle scale gestures for zoom
+        boolean handled = scaleGestureDetector.onTouchEvent(event);
+        
+        // Handle tap for focus and exposure (only if not zooming)
+        if (event.getAction() == MotionEvent.ACTION_UP && 
+            camera != null && !scaleGestureDetector.isInProgress()) {
+            
+            // Only handle simple taps
+            if (event.getPointerCount() <= 1) {
+                // Get the tap coordinates
+                float x = event.getX();
+                float y = event.getY();
+                
+                // Create a metering point where the user tapped
+                MeteringPointFactory factory = previewView.getMeteringPointFactory();
+                MeteringPoint point = factory.createPoint(x, y);
+                
+                // Build focus and metering actions
+                FocusMeteringAction focusMeteringAction = new FocusMeteringAction.Builder(point)
+                    .addPoint(point, FocusMeteringAction.FLAG_AF | FocusMeteringAction.FLAG_AE)
+                    .setAutoCancelDuration(3, TimeUnit.SECONDS)
+                    .build();
+                
+                // Start focus and metering
+                camera.getCameraControl().startFocusAndMetering(focusMeteringAction)
+                    .addListener(() -> {
+                        // Show exposure control after focusing
+                        runOnUiThread(() -> {
+                            showExposureControls();
+                        });
+                    }, ContextCompat.getMainExecutor(CameraXActivity.this));
+                
+                return true;
             }
-            return true;
-        });
-    }
+        }
+        return handled;
+    });
+}
     
     // Update flash mode button icon
     if (flashButton != null) {
@@ -866,6 +1040,12 @@ private void startCamera() {
             
             // Update camera zoom state when switching cameras
             if (camera != null) {
+
+                //reset and hide exposure controls
+                camera.getCameraControl().setExposureCompensation(0);
+                currentExposureValue = 0f;
+                hideExposureControls();
+                
                 // Reset zoom to appropriate initial value based on camera
                 currentZoomRatio = usingUltraWideCamera ? 0.5f : 1.0f;
                 
@@ -1039,12 +1219,14 @@ private void startCamera() {
         orientationListener.disable();
     }
         super.onDestroy();
-        
+
+        handler.removeCallbacks(hideZoomControlsRunnable);
+        exposureHideHandler.removeCallbacks(hideExposureControlsRunnable);
+
         if (!executor.isShutdown()) {
             executor.shutdown();
         }
 
-        handler.removeCallbacks(hideZoomControlsRunnable);
         System.gc();
     }
 }
