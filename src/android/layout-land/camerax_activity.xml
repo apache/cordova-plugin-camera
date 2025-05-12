@@ -202,7 +202,7 @@
             android:layout_height="wrap_content"
             android:progressTint="@android:color/white"
             android:progressBackgroundTint="@android:color/white"
-            android:thumb="@drawable/ic_exposure" />
+            android:thumb="@drawable/exposure_control" />
     </LinearLayout>
 </FrameLayout>
 
