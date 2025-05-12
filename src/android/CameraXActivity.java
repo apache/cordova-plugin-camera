@@ -45,7 +45,7 @@ import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ExposureState;
 import androidx.camera.core.FocusMeteringAction;
 import androidx.camera.core.ImageCapture;
-import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.ImageCaptureException;
 import androidx.camera.core.MeteringPoint;
 import androidx.camera.core.MeteringPointFactory;
 import androidx.camera.core.Preview;
@@ -595,7 +595,6 @@ private void initializeViews() {
             exposureHideHandler.postDelayed(hideExposureControlsRunnable, 2000);
         }
     });
-}
 
 // Initialize the auto-hide runnable
 if (hideExposureControlsRunnable == null) {
@@ -836,7 +835,7 @@ if (previewView != null) {
                     .addListener(() -> {
                         // Show exposure control after focusing
                         runOnUiThread(() -> {
-                            showExposureControls();
+                            showExposureControls(x, y);
                         });
                     }, ContextCompat.getMainExecutor(CameraXActivity.this));
                 
@@ -854,7 +853,7 @@ if (previewView != null) {
     
     // Update zoom button states if needed
     updateZoomButtonsState();
-}
+}}
 
     // Wide Lens Camera Methods
     @ExperimentalCamera2Interop
