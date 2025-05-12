@@ -162,5 +162,23 @@
         app:layout_constraintBottom_toTopOf="@id/zoom_seekbar"
         app:layout_constraintStart_toStartOf="@id/zoom_seekbar"
         app:layout_constraintEnd_toEndOf="@id/zoom_seekbar" />
+    
+    <LinearLayout
+        android:id="@+id/exposure_control_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#80000000"
+        android:padding="8dp"
+        android:visibility="gone"
+        android:gravity="center_vertical" />
+    
+    <SeekBar
+            android:id="@+id/exposure_seekbar"
+            android:layout_width="75dp"
+            android:layout_height="wrap_content"
+            android:progressTint="@android:color/white"
+            android:progressBackgroundTint="@android:color/white"
+            android:thumb="@drawable/exposure_control" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
