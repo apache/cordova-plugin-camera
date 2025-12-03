@@ -30,6 +30,10 @@
 #import <MobileCoreServices/UTCoreTypes.h>
 #import <objc/message.h>
 #import <Photos/Photos.h>
+// Since iOS 14, we can use PHPickerViewController to select images from the photo library
+#if __has_include(<PhotosUI/PhotosUI.h>)
+#import <PhotosUI/PhotosUI.h>
+#endif
 
 #ifndef __CORDOVA_4_0_0
     #import <Cordova/NSData+Base64.h>
@@ -184,26 +188,40 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                  }
              }];
         } else {
-            [weakSelf options:pictureOptions requestPhotoPermissions:^(BOOL granted) {
-                if (!granted) {
-                    // Denied; show an alert
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"] message:NSLocalizedString(@"Access to the camera roll has been prohibited; please enable it in the Settings to continue.", nil) preferredStyle:UIAlertControllerStyleAlert];
-                        [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"OK", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-                            [weakSelf sendNoPermissionResult:command.callbackId];
-                        }]];
-                        [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"Settings", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-                            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
-                            [weakSelf sendNoPermissionResult:command.callbackId];
-                        }]];
-                        [weakSelf.viewController presentViewController:alertController animated:YES completion:nil];
-                    });
-                } else {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [weakSelf showCameraPicker:command.callbackId withOptions:pictureOptions];
-                    });
-                }
-            }];
+            // For photo library on iOS 14+, PHPickerViewController doesn't require permissions
+            // Only request permissions if we're on iOS < 14 or need UIImagePickerController
+            BOOL needsPermissionCheck = YES;
+            if (@available(iOS 14, *)) {
+                needsPermissionCheck = NO; // PHPickerViewController will be used, no permission needed
+            }
+            
+            if (needsPermissionCheck) {
+                [weakSelf options:pictureOptions requestPhotoPermissions:^(BOOL granted) {
+                    if (!granted) {
+                        // Denied; show an alert
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            UIAlertController *alertController = [UIAlertController alertControllerWithTitle:[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"] message:NSLocalizedString(@"Access to the camera roll has been prohibited; please enable it in the Settings to continue.", nil) preferredStyle:UIAlertControllerStyleAlert];
+                            [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"OK", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                                [weakSelf sendNoPermissionResult:command.callbackId];
+                            }]];
+                            [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"Settings", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+                                [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
+                                [weakSelf sendNoPermissionResult:command.callbackId];
+                            }]];
+                            [weakSelf.viewController presentViewController:alertController animated:YES completion:nil];
+                        });
+                    } else {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            [weakSelf showCameraPicker:command.callbackId withOptions:pictureOptions];
+                        });
+                    }
+                }];
+            } else {
+                // iOS 14+ with PHPickerViewController - no permission needed, show picker directly
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [weakSelf showCameraPicker:command.callbackId withOptions:pictureOptions];
+                });
+            }
         }
     }];
 }
@@ -212,6 +230,15 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 {
     // Perform UI operations on the main thread
     dispatch_async(dispatch_get_main_queue(), ^{
+     // Use PHPickerViewController for photo library on iOS 14+
+#if __has_include(<PhotosUI/PhotosUI.h>)
+        if (pictureOptions.sourceType == UIImagePickerControllerSourceTypePhotoLibrary) {
+            [self showPHPicker:callbackId withOptions:pictureOptions];
+            return;
+        }
+#endif
+        
+        // Fallback to UIImagePickerController for camera or older iOS versions
         CDVCameraPicker* cameraPicker = [CDVCameraPicker createFromPictureOptions:pictureOptions];
         self.pickerController = cameraPicker;
 
@@ -241,6 +268,40 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         }
     });
 }
+
+// Since iOS 14, we can use PHPickerViewController to select images from the photo library
+#if __has_include(<PhotosUI/PhotosUI.h>)
+- (void)showPHPicker:(NSString*)callbackId withOptions:(CDVPictureOptions*)pictureOptions API_AVAILABLE(ios(14))
+{
+    PHPickerConfiguration *config = [[PHPickerConfiguration alloc] init];
+    
+    // Configure filter based on media type
+    if (pictureOptions.mediaType == MediaTypeVideo) {
+        config.filter = [PHPickerFilter videosFilter];
+    } else if (pictureOptions.mediaType == MediaTypeAll) {
+        config.filter = [PHPickerFilter anyFilterMatchingSubfilters:@[
+            [PHPickerFilter imagesFilter],
+            [PHPickerFilter videosFilter]
+        ]];
+    } else {
+        config.filter = [PHPickerFilter imagesFilter];
+    }
+    
+    config.selectionLimit = 1;
+    config.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeCurrent;
+    
+    PHPickerViewController *picker = [[PHPickerViewController alloc] initWithConfiguration:config];
+    picker.delegate = self;
+    
+    // Store callback ID and options
+    objc_setAssociatedObject(picker, "callbackId", callbackId, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(picker, "pictureOptions", pictureOptions, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    
+    [self.viewController presentViewController:picker animated:YES completion:^{
+        self.hasPendingOperation = NO;
+    }];
+}
+#endif
 
 - (void)sendNoPermissionResult:(NSString*)callbackId
 {
@@ -897,6 +958,154 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         UIImageWriteToSavedPhotosAlbum([[UIImage alloc] initWithData:self.data], nil, nil, nil);
     }
 }
+
+#if __has_include(<PhotosUI/PhotosUI.h>)
+// PHPickerViewController Delegate Methods (iOS 14+)
+- (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14))
+{
+    NSString *callbackId = objc_getAssociatedObject(picker, "callbackId");
+    CDVPictureOptions *pictureOptions = objc_getAssociatedObject(picker, "pictureOptions");
+    
+    __weak CDVCamera* weakSelf = self;
+    
+    [picker dismissViewControllerAnimated:YES completion:^{
+        if (results.count == 0) {
+            // User cancelled
+            CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"No Image Selected"];
+            [weakSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
+            weakSelf.hasPendingOperation = NO;
+            return;
+        }
+        
+        PHPickerResult *pickerResult = results.firstObject;
+        
+        // Check if it's a video
+        if ([pickerResult.itemProvider hasItemConformingToTypeIdentifier:UTTypeMovie.identifier]) {
+            [pickerResult.itemProvider loadFileRepresentationForTypeIdentifier:UTTypeMovie.identifier completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
+                if (error) {
+                    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
+                    [weakSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
+                    weakSelf.hasPendingOperation = NO;
+                    return;
+                }
+                
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    NSString* videoPath = [weakSelf createTmpVideo:[url path]];
+                    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:videoPath];
+                    [weakSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
+                    weakSelf.hasPendingOperation = NO;
+                });
+            }];
+        }
+        // Handle image
+        else if ([pickerResult.itemProvider canLoadObjectOfClass:[UIImage class]]) {
+            [pickerResult.itemProvider loadObjectOfClass:[UIImage class] completionHandler:^(__kindof id<NSItemProviderReading>  _Nullable object, NSError * _Nullable error) {
+                if (error) {
+                    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
+                    [weakSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
+                    weakSelf.hasPendingOperation = NO;
+                    return;
+                }
+                
+                UIImage *image = (UIImage *)object;
+                
+                // Get asset identifier to fetch metadata
+                NSString *assetIdentifier = pickerResult.assetIdentifier;
+                
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [weakSelf processPHPickerImage:image assetIdentifier:assetIdentifier callbackId:callbackId options:pictureOptions];
+                });
+            }];
+        }
+    }];
+}
+
+- (void)processPHPickerImage:(UIImage*)image assetIdentifier:(NSString*)assetIdentifier callbackId:(NSString*)callbackId options:(CDVPictureOptions*)options API_AVAILABLE(ios(14))
+{
+    __weak CDVCamera* weakSelf = self;
+    
+    // Fetch metadata if asset identifier is available
+    if (assetIdentifier) {
+        PHFetchResult *result = [PHAsset fetchAssetsWithLocalIdentifiers:@[assetIdentifier] options:nil];
+        PHAsset *asset = result.firstObject;
+        
+        if (asset) {
+            PHImageRequestOptions *imageOptions = [[PHImageRequestOptions alloc] init];
+            imageOptions.synchronous = YES;
+            imageOptions.networkAccessAllowed = YES;
+            
+            [[PHImageManager defaultManager] requestImageDataForAsset:asset options:imageOptions resultHandler:^(NSData * _Nullable imageData, NSString * _Nullable dataUTI, UIImageOrientation orientation, NSDictionary * _Nullable info) {
+                NSDictionary *metadata = nil;
+                if (imageData) {
+                    metadata = [weakSelf convertImageMetadata:imageData];
+                }
+                
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [weakSelf finalizePHPickerImage:image metadata:metadata callbackId:callbackId options:options];
+                });
+            }];
+            return;
+        }
+    }
+    
+    // No metadata available
+    [self finalizePHPickerImage:image metadata:nil callbackId:callbackId options:options];
+}
+
+- (void)finalizePHPickerImage:(UIImage*)image metadata:(NSDictionary*)metadata callbackId:(NSString*)callbackId options:(CDVPictureOptions*)options API_AVAILABLE(ios(14))
+{
+    // Process image according to options
+    UIImage *processedImage = image;
+    
+    if (options.correctOrientation) {
+        processedImage = [processedImage imageCorrectedForCaptureOrientation];
+    }
+    
+    if ((options.targetSize.width > 0) && (options.targetSize.height > 0)) {
+        if (options.cropToSize) {
+            processedImage = [processedImage imageByScalingAndCroppingForSize:options.targetSize];
+        } else {
+            processedImage = [processedImage imageByScalingNotCroppingForSize:options.targetSize];
+        }
+    }
+    
+    // Create info dictionary similar to UIImagePickerController
+    NSMutableDictionary *info = [NSMutableDictionary dictionary];
+    [info setObject:processedImage forKey:UIImagePickerControllerOriginalImage];
+    if (metadata) {
+        [info setObject:metadata forKey:@"UIImagePickerControllerMediaMetadata"];
+    }
+    
+    // Store metadata for processing
+    if (metadata) {
+        self.metadata = [[NSMutableDictionary alloc] init];
+        
+        NSMutableDictionary* EXIFDictionary = [[metadata objectForKey:(NSString*)kCGImagePropertyExifDictionary] mutableCopy];
+        if (EXIFDictionary) {
+            [self.metadata setObject:EXIFDictionary forKey:(NSString*)kCGImagePropertyExifDictionary];
+        }
+        
+        NSMutableDictionary* TIFFDictionary = [[metadata objectForKey:(NSString*)kCGImagePropertyTIFFDictionary] mutableCopy];
+        if (TIFFDictionary) {
+            [self.metadata setObject:TIFFDictionary forKey:(NSString*)kCGImagePropertyTIFFDictionary];
+        }
+        
+        NSMutableDictionary* GPSDictionary = [[metadata objectForKey:(NSString*)kCGImagePropertyGPSDictionary] mutableCopy];
+        if (GPSDictionary) {
+            [self.metadata setObject:GPSDictionary forKey:(NSString*)kCGImagePropertyGPSDictionary];
+        }
+    }
+    
+    __weak CDVCamera* weakSelf = self;
+    
+    // Process and return result
+    [self resultForImage:options info:info completion:^(CDVPluginResult* res) {
+        [weakSelf.commandDelegate sendPluginResult:res callbackId:callbackId];
+        weakSelf.hasPendingOperation = NO;
+        weakSelf.pickerController = nil;
+    }];
+}
+#endif
 
 @end
 
