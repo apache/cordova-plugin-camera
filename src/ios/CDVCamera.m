@@ -30,10 +30,7 @@
 #import <MobileCoreServices/UTCoreTypes.h>
 #import <objc/message.h>
 #import <Photos/Photos.h>
-// Since iOS 14, we can use PHPickerViewController to select images from the photo library
-#if __has_include(<PhotosUI/PhotosUI.h>)
 #import <PhotosUI/PhotosUI.h>
-#endif
 
 #ifndef __CORDOVA_4_0_0
     #import <Cordova/NSData+Base64.h>
@@ -230,13 +227,13 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 {
     // Perform UI operations on the main thread
     dispatch_async(dispatch_get_main_queue(), ^{
-     // Use PHPickerViewController for photo library on iOS 14+
-#if __has_include(<PhotosUI/PhotosUI.h>)
-        if (pictureOptions.sourceType == UIImagePickerControllerSourceTypePhotoLibrary) {
-            [self showPHPicker:callbackId withOptions:pictureOptions];
-            return;
+        // Use PHPickerViewController for photo library on iOS 14+
+        if (@available(iOS 14, *)) {
+            if (pictureOptions.sourceType == UIImagePickerControllerSourceTypePhotoLibrary) {
+                [self showPHPicker:callbackId withOptions:pictureOptions];
+                return;
+            }
         }
-#endif
         
         // Fallback to UIImagePickerController for camera or older iOS versions
         CDVCameraPicker* cameraPicker = [CDVCameraPicker createFromPictureOptions:pictureOptions];
@@ -270,7 +267,6 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 }
 
 // Since iOS 14, we can use PHPickerViewController to select images from the photo library
-#if __has_include(<PhotosUI/PhotosUI.h>)
 - (void)showPHPicker:(NSString*)callbackId withOptions:(CDVPictureOptions*)pictureOptions API_AVAILABLE(ios(14))
 {
     PHPickerConfiguration *config = [[PHPickerConfiguration alloc] init];
@@ -301,7 +297,6 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         self.hasPendingOperation = NO;
     }];
 }
-#endif
 
 - (void)sendNoPermissionResult:(NSString*)callbackId
 {
@@ -959,7 +954,6 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     }
 }
 
-#if __has_include(<PhotosUI/PhotosUI.h>)
 // PHPickerViewController Delegate Methods (iOS 14+)
 - (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14))
 {
@@ -1105,7 +1099,6 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         weakSelf.pickerController = nil;
     }];
 }
-#endif
 
 @end
 

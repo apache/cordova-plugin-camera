@@ -21,10 +21,7 @@
 #import <CoreLocation/CoreLocation.h>
 #import <CoreLocation/CLLocationManager.h>
 #import <Cordova/CDVPlugin.h>
-// Since iOS 14, we can use PHPickerViewController to select images from the photo library
-#if __has_include(<PhotosUI/PhotosUI.h>)
 #import <PhotosUI/PhotosUI.h>
-#endif
 
 enum CDVDestinationType {
     DestinationTypeDataUrl = 0,
@@ -83,7 +80,8 @@ typedef NSUInteger CDVMediaType;
 
 // ======================================================================= //
 // Since iOS 14, we can use PHPickerViewController to select images from the photo library
-#if __has_include(<PhotosUI/PhotosUI.h>)
+// PHPickerViewControllerDelegate is only availabe since iOS 14
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 140000
 @interface CDVCamera : CDVPlugin <UIImagePickerControllerDelegate,
                        UINavigationControllerDelegate,
                        UIPopoverControllerDelegate,
