@@ -953,7 +953,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     }
 }
 
-#pragma mark PHPickerViewControllerDelegate methods
+#pragma mark - PHPickerViewControllerDelegate methods
 
 // PHPickerViewController Delegate Methods (iOS 14+)
 - (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14))
