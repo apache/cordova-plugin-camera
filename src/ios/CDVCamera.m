@@ -967,9 +967,9 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     }
 }
 
-#pragma mark PHPickerViewControllerDelegate methods
+#pragma mark PHPickerViewController related methods iOS 14+
 
-// PHPickerViewController Delegate Methods (iOS 14+)
+// PHPickerViewControllerDelegate method
 - (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14))
 {
     NSString *callbackId = objc_getAssociatedObject(picker, "callbackId");
@@ -1029,7 +1029,10 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     }];
 }
 
-- (void)processPHPickerImage:(UIImage*)image assetIdentifier:(NSString*)assetIdentifier callbackId:(NSString*)callbackId options:(CDVPictureOptions*)options API_AVAILABLE(ios(14))
+- (void)processPHPickerImage:(UIImage*)image
+             assetIdentifier:(NSString*)assetIdentifier
+                  callbackId:(NSString*)callbackId
+                     options:(CDVPictureOptions*)options API_AVAILABLE(ios(14))
 {
     __weak CDVCamera* weakSelf = self;
     
@@ -1061,7 +1064,10 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     [self finalizePHPickerImage:image metadata:nil callbackId:callbackId options:options];
 }
 
-- (void)finalizePHPickerImage:(UIImage*)image metadata:(NSDictionary*)metadata callbackId:(NSString*)callbackId options:(CDVPictureOptions*)options API_AVAILABLE(ios(14))
+- (void)finalizePHPickerImage:(UIImage*)image
+                     metadata:(NSDictionary*)metadata
+                   callbackId:(NSString*)callbackId
+                      options:(CDVPictureOptions*)options API_AVAILABLE(ios(14))
 {
     // Process image according to options
     UIImage *processedImage = image;
