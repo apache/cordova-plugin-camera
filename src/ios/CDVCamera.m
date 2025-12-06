@@ -30,7 +30,6 @@
 #import <MobileCoreServices/UTCoreTypes.h>
 #import <objc/message.h>
 #import <Photos/Photos.h>
-#import <PhotosUI/PhotosUI.h>
 
 #ifndef __CORDOVA_4_0_0
     #import <Cordova/NSData+Base64.h>
@@ -953,6 +952,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         UIImageWriteToSavedPhotosAlbum([[UIImage alloc] initWithData:self.data], nil, nil, nil);
     }
 }
+
+#pragma mark PHPickerViewControllerDelegate methods
 
 // PHPickerViewController Delegate Methods (iOS 14+)
 - (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14))
