@@ -356,25 +356,29 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                                                                animated:YES];
 }
 
-- (void)navigationController:(UINavigationController *)navigationController willShowViewController:(UIViewController *)viewController animated:(BOOL)animated
+// UINavigationControllerDelegate method
+- (void)navigationController:(UINavigationController *)navigationController
+      willShowViewController:(UIViewController *)viewController
+                    animated:(BOOL)animated
 {
-    if([navigationController isKindOfClass:[UIImagePickerController class]]){
-        
-        // If popoverWidth and popoverHeight are specified and are greater than 0, then set popover size, else use apple's default popoverSize
+    if([navigationController isKindOfClass:[UIImagePickerController class]]) {
+        // If popoverWidth and popoverHeight are specified and are greater than 0,
+        // then set popover size, else use apple's default popoverSize
         NSDictionary* options = self.pickerController.pictureOptions.popoverOptions;
+        
         if(options) {
             NSInteger popoverWidth = [self integerValueForKey:options key:@"popoverWidth" defaultValue:0];
             NSInteger popoverHeight = [self integerValueForKey:options key:@"popoverHeight" defaultValue:0];
-            if(popoverWidth > 0 && popoverHeight > 0)
-            {
+            
+            if(popoverWidth > 0 && popoverHeight > 0) {
                 [viewController setPreferredContentSize:CGSizeMake(popoverWidth,popoverHeight)];
             }
         }
         
-        
-        UIImagePickerController* cameraPicker = (UIImagePickerController*)navigationController;
+        UIImagePickerController* imagePicker = (UIImagePickerController*)navigationController;
 
-        if(![cameraPicker.mediaTypes containsObject:(NSString*)kUTTypeImage]){
+        // Set "Videos" title if mediaType is not for images
+        if(![imagePicker.mediaTypes containsObject:(NSString*)kUTTypeImage]) {
             [viewController.navigationItem setTitle:NSLocalizedString(@"Videos", nil)];
         }
     }
@@ -742,6 +746,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     return [[NSURL fileURLWithPath:copyMoviePath] absoluteString];
 }
 
+#pragma mark UIImagePickerControllerDelegate methods
+
 - (void)imagePickerController:(UIImagePickerController*)picker didFinishPickingMediaWithInfo:(NSDictionary*)info
 {
     __weak CDVCameraPicker* cameraPicker = (CDVCameraPicker*)picker;
@@ -779,7 +785,9 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 }
 
 // older api calls newer didFinishPickingMediaWithInfo
-- (void)imagePickerController:(UIImagePickerController*)picker didFinishPickingImage:(UIImage*)image editingInfo:(NSDictionary*)editingInfo
+- (void)imagePickerController:(UIImagePickerController*)picker
+        didFinishPickingImage:(UIImage*)image
+                  editingInfo:(NSDictionary*)editingInfo
 {
     NSDictionary* imageInfo = [NSDictionary dictionaryWithObject:image forKey:UIImagePickerControllerOriginalImage];
 
@@ -809,6 +817,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     [[cameraPicker presentingViewController] dismissViewControllerAnimated:YES completion:invoke];
 }
 
+#pragma mark CLLocationManager
+
 - (CLLocationManager*)locationManager
 {
     if (locationManager != nil) {
@@ -822,7 +832,11 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     return locationManager;
 }
 
-- (void)locationManager:(CLLocationManager*)manager didUpdateToLocation:(CLLocation*)newLocation fromLocation:(CLLocation*)oldLocation
+# pragma mark CLLocationManagerDelegate methods
+
+- (void)locationManager:(CLLocationManager*)manager
+    didUpdateToLocation:(CLLocation*)newLocation
+           fromLocation:(CLLocation*)oldLocation
 {
     if (locationManager == nil) {
         return;
@@ -953,7 +967,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     }
 }
 
-#pragma mark - PHPickerViewControllerDelegate methods
+#pragma mark PHPickerViewControllerDelegate methods
 
 // PHPickerViewController Delegate Methods (iOS 14+)
 - (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14))
