@@ -22,7 +22,6 @@
 #import "CDVCamera.h"
 #import "UIImage+CropScaleOrientation.h"
 #import <MobileCoreServices/UTCoreTypes.h>
-#import <PhotosUI/PhotosUI.h>
 
 
 @interface CameraTest : XCTestCase
@@ -38,6 +37,8 @@
 - (UIImage*)retrieveImage:(NSDictionary*)info options:(CDVPictureOptions*)options;
 - (CDVPluginResult*)resultForImage:(CDVPictureOptions*)options info:(NSDictionary*)info;
 - (CDVPluginResult*)resultForVideo:(NSDictionary*)info;
+
+// PHPickerViewController specific methods (iOS 14+)
 - (void)showPHPicker:(NSString*)callbackId withOptions:(CDVPictureOptions*)pictureOptions API_AVAILABLE(ios(14));
 - (void)processPHPickerImage:(UIImage*)image assetIdentifier:(NSString*)assetIdentifier callbackId:(NSString*)callbackId options:(CDVPictureOptions*)options API_AVAILABLE(ios(14));
 - (void)finalizePHPickerImage:(UIImage*)image metadata:(NSDictionary*)metadata callbackId:(NSString*)callbackId options:(CDVPictureOptions*)options API_AVAILABLE(ios(14));
@@ -513,49 +514,46 @@
     // TODO: usesGeolocation is not tested
 }
 
+#pragma mark - PHPickerViewController Tests (iOS 14+)
+
 - (void) testPHPickerAvailability API_AVAILABLE(ios(14))
 {
-    if (@available(iOS 14, *)) {
-        // Test that PHPickerViewController is available on iOS 14+
-        XCTAssertNotNil([PHPickerViewController class]);
-        
-        PHPickerConfiguration *config = [[PHPickerConfiguration alloc] init];
-        XCTAssertNotNil(config);
-        
-        config.filter = [PHPickerFilter imagesFilter];
-        XCTAssertNotNil(config.filter);
-        
-        PHPickerViewController *picker = [[PHPickerViewController alloc] initWithConfiguration:config];
-        XCTAssertNotNil(picker);
-    }
+    XCTAssertNotNil([PHPickerViewController class]);
+    
+    PHPickerConfiguration *config = [[PHPickerConfiguration alloc] init];
+    XCTAssertNotNil(config);
+    
+    config.filter = [PHPickerFilter imagesFilter];
+    XCTAssertNotNil(config.filter);
+    
+    PHPickerViewController *picker = [[PHPickerViewController alloc] initWithConfiguration:config];
+    XCTAssertNotNil(picker);
 }
 
 - (void) testPHPickerConfiguration API_AVAILABLE(ios(14))
 {
-    if (@available(iOS 14, *)) {
-        // Test image filter configuration
-        PHPickerConfiguration *imageConfig = [[PHPickerConfiguration alloc] init];
-        imageConfig.filter = [PHPickerFilter imagesFilter];
-        imageConfig.selectionLimit = 1;
-        
-        XCTAssertNotNil(imageConfig);
-        XCTAssertEqual(imageConfig.selectionLimit, 1);
-        
-        // Test video filter configuration
-        PHPickerConfiguration *videoConfig = [[PHPickerConfiguration alloc] init];
-        videoConfig.filter = [PHPickerFilter videosFilter];
-        
-        XCTAssertNotNil(videoConfig.filter);
-        
-        // Test all media types configuration
-        PHPickerConfiguration *allConfig = [[PHPickerConfiguration alloc] init];
-        allConfig.filter = [PHPickerFilter anyFilterMatchingSubfilters:@[
-            [PHPickerFilter imagesFilter],
-            [PHPickerFilter videosFilter]
-        ]];
-        
-        XCTAssertNotNil(allConfig.filter);
-    }
+    // Test image filter configuration
+    PHPickerConfiguration *imageConfig = [[PHPickerConfiguration alloc] init];
+    imageConfig.filter = [PHPickerFilter imagesFilter];
+    imageConfig.selectionLimit = 1;
+    
+    XCTAssertNotNil(imageConfig);
+    XCTAssertEqual(imageConfig.selectionLimit, 1);
+    
+    // Test video filter configuration
+    PHPickerConfiguration *videoConfig = [[PHPickerConfiguration alloc] init];
+    videoConfig.filter = [PHPickerFilter videosFilter];
+    
+    XCTAssertNotNil(videoConfig.filter);
+    
+    // Test all media types configuration
+    PHPickerConfiguration *allConfig = [[PHPickerConfiguration alloc] init];
+    allConfig.filter = [PHPickerFilter anyFilterMatchingSubfilters:@[
+        [PHPickerFilter imagesFilter],
+        [PHPickerFilter videosFilter]
+    ]];
+    
+    XCTAssertNotNil(allConfig.filter);
 }
 
 - (void) testConvertImageMetadata
@@ -576,31 +574,27 @@
 
 - (void) testPHPickerDelegateConformance API_AVAILABLE(ios(14))
 {
-    if (@available(iOS 14, *)) {
-        // Test that CDVCamera conforms to PHPickerViewControllerDelegate
-        XCTAssertTrue([self.plugin conformsToProtocol:@protocol(PHPickerViewControllerDelegate)]);
-        
-        // Test that the delegate method is implemented
-        SEL delegateSelector = @selector(picker:didFinishPicking:);
-        XCTAssertTrue([self.plugin respondsToSelector:delegateSelector]);
-    }
+    // Test that CDVCamera conforms to PHPickerViewControllerDelegate
+    XCTAssertTrue([self.plugin conformsToProtocol:@protocol(PHPickerViewControllerDelegate)]);
+    
+    // Test that the delegate method is implemented
+    SEL delegateSelector = @selector(picker:didFinishPicking:);
+    XCTAssertTrue([self.plugin respondsToSelector:delegateSelector]);
 }
 
 - (void) testShowPHPickerMethod API_AVAILABLE(ios(14))
 {
-    if (@available(iOS 14, *)) {
-        // Test that showPHPicker method exists
-        SEL showPHPickerSelector = @selector(showPHPicker:withOptions:);
-        XCTAssertTrue([self.plugin respondsToSelector:showPHPickerSelector]);
-        
-        // Test that processPHPickerImage method exists
-        SEL processSelector = @selector(processPHPickerImage:assetIdentifier:callbackId:options:);
-        XCTAssertTrue([self.plugin respondsToSelector:processSelector]);
-        
-        // Test that finalizePHPickerImage method exists
-        SEL finalizeSelector = @selector(finalizePHPickerImage:metadata:callbackId:options:);
-        XCTAssertTrue([self.plugin respondsToSelector:finalizeSelector]);
-    }
+    // Test that showPHPicker method exists
+    SEL showPHPickerSelector = @selector(showPHPicker:withOptions:);
+    XCTAssertTrue([self.plugin respondsToSelector:showPHPickerSelector]);
+    
+    // Test that processPHPickerImage method exists
+    SEL processSelector = @selector(processPHPickerImage:assetIdentifier:callbackId:options:);
+    XCTAssertTrue([self.plugin respondsToSelector:processSelector]);
+    
+    // Test that finalizePHPickerImage method exists
+    SEL finalizeSelector = @selector(finalizePHPickerImage:metadata:callbackId:options:);
+    XCTAssertTrue([self.plugin respondsToSelector:finalizeSelector]);
 }
 
 - (void) testPictureOptionsForPHPicker
