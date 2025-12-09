@@ -23,6 +23,11 @@
 #import <Cordova/CDVPlugin.h>
 
 // Since iOS 14, we can use PHPickerViewController to select images from the photo library
+//
+// The following condition checks if the iOS 14 SDK is available for XCode
+// which is true for XCode 12+. It does not check on runtime, if the device is running iOS 14+.
+// For that API_AVAILABLE(ios(14)) is used for methods declarations and @available(iOS 14, *) for the code.
+// The condition here makes just sure that the code can compile in XCode
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 140000
 
 // Import UniformTypeIdentifiers.h for using UTType* things, available since iOS 14,
@@ -34,6 +39,9 @@
 // PhotosUI is already available since iOS 8, but since we need it currently
 // only for the PHPickerViewController, we import it conditionally here
 #import <PhotosUI/PhotosUI.h>
+
+// Define a macro to indicate that iOS SDK 14+ is available for PHPicker related things
+#define IOS_SDK_14_AVAILABLE 1
 
 #endif
 
@@ -95,7 +103,7 @@ typedef NSUInteger CDVMediaType;
 // ======================================================================= //
 // Use PHPickerViewController in iOS 14+ to select images from the photo library
 // PHPickerViewControllerDelegate is only available since iOS 14
-#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 140000
+#ifdef IOS_SDK_14_AVAILABLE
 @interface CDVCamera : CDVPlugin <UIImagePickerControllerDelegate,
                        UINavigationControllerDelegate,
                        UIPopoverControllerDelegate,
@@ -142,10 +150,12 @@ typedef NSUInteger CDVMediaType;
 - (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error;
 
 // PHPickerViewController specific methods (iOS 14+)
+#ifdef IOS_SDK_14_AVAILABLE // Always true on XCode12+
 - (void)showPHPicker:(NSString*)callbackId withOptions:(CDVPictureOptions*)pictureOptions API_AVAILABLE(ios(14));
 - (void)processPHPickerImage:(UIImage*)image assetIdentifier:(NSString*)assetIdentifier callbackId:(NSString*)callbackId options:(CDVPictureOptions*)options API_AVAILABLE(ios(14));
 - (void)finalizePHPickerImage:(UIImage*)image metadata:(NSDictionary*)metadata callbackId:(NSString*)callbackId options:(CDVPictureOptions*)options API_AVAILABLE(ios(14));
 // PHPickerViewControllerDelegate method
 - (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14));
+#endif
 
 @end

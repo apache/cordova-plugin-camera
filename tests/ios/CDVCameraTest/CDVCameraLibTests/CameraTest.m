@@ -511,6 +511,7 @@
 
 #pragma mark - PHPickerViewController Tests (iOS 14+)
 
+#ifdef IOS_SDK_14_AVAILABLE // Always true on XCode12+
 - (void) testPHPickerAvailability API_AVAILABLE(ios(14))
 {
     XCTAssertNotNil([PHPickerViewController class]);
@@ -575,6 +576,7 @@
     SEL finalizeSelector = @selector(finalizePHPickerImage:metadata:callbackId:options:);
     XCTAssertTrue([self.plugin respondsToSelector:finalizeSelector]);
 }
+#endif // IOS_SDK_14_AVAILABLE
 
 - (void) testConvertImageMetadata
 {
