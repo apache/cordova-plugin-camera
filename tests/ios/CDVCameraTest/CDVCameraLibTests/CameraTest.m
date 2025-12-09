@@ -551,22 +551,6 @@
     XCTAssertNotNil(allConfig.filter);
 }
 
-- (void) testConvertImageMetadata
-{
-    // Create a test image
-    UIImage* testImage = [self createImage:CGRectMake(0, 0, 100, 100) orientation:UIImageOrientationUp];
-    NSData* imageData = UIImageJPEGRepresentation(testImage, 1.0);
-    
-    XCTAssertNotNil(imageData);
-    
-    // Test metadata conversion
-    NSDictionary* metadata = [self.plugin convertImageMetadata:imageData];
-    
-    // Metadata may be nil for generated images, but the method should not crash
-    // Real camera images would have EXIF data
-    XCTAssertTrue(metadata == nil || [metadata isKindOfClass:[NSDictionary class]]);
-}
-
 - (void) testPHPickerDelegateConformance API_AVAILABLE(ios(14))
 {
     // Test that CDVCamera conforms to PHPickerViewControllerDelegate
@@ -590,6 +574,22 @@
     // Test that finalizePHPickerImage method exists
     SEL finalizeSelector = @selector(finalizePHPickerImage:metadata:callbackId:options:);
     XCTAssertTrue([self.plugin respondsToSelector:finalizeSelector]);
+}
+
+- (void) testConvertImageMetadata
+{
+    // Create a test image
+    UIImage* testImage = [self createImage:CGRectMake(0, 0, 100, 100) orientation:UIImageOrientationUp];
+    NSData* imageData = UIImageJPEGRepresentation(testImage, 1.0);
+    
+    XCTAssertNotNil(imageData);
+    
+    // Test metadata conversion
+    NSDictionary* metadata = [self.plugin convertImageMetadata:imageData];
+    
+    // Metadata may be nil for generated images, but the method should not crash
+    // Real camera images would have EXIF data
+    XCTAssertTrue(metadata == nil || [metadata isKindOfClass:[NSDictionary class]]);
 }
 
 - (void) testPictureOptionsForPHPicker
