@@ -37,11 +37,6 @@
 - (UIImage*)retrieveImage:(NSDictionary*)info options:(CDVPictureOptions*)options;
 - (CDVPluginResult*)resultForImage:(CDVPictureOptions*)options info:(NSDictionary*)info;
 - (CDVPluginResult*)resultForVideo:(NSDictionary*)info;
-
-// PHPickerViewController specific methods (iOS 14+)
-- (void)showPHPicker:(NSString*)callbackId withOptions:(CDVPictureOptions*)pictureOptions API_AVAILABLE(ios(14));
-- (void)processPHPickerImage:(UIImage*)image assetIdentifier:(NSString*)assetIdentifier callbackId:(NSString*)callbackId options:(CDVPictureOptions*)options API_AVAILABLE(ios(14));
-- (void)finalizePHPickerImage:(UIImage*)image metadata:(NSDictionary*)metadata callbackId:(NSString*)callbackId options:(CDVPictureOptions*)options API_AVAILABLE(ios(14));
 - (NSDictionary*)convertImageMetadata:(NSData*)imageData;
 
 @end
