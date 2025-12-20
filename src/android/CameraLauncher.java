@@ -1139,8 +1139,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @return
      */
     public int[] calculateAspectRatio(int origWidth, int origHeight) {
-        int newWidth = this.targetWidth;
-        int newHeight = this.targetHeight;
+        int newWidth = Math.min(this.targetWidth, origWidth);
+        int newHeight = Math.min(this.targetHeight, origHeight);
 
         // If no new width or height were specified return the original bitmap
         if (newWidth <= 0 && newHeight <= 0) {

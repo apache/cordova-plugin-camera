@@ -28,8 +28,8 @@
     CGSize imageSize = sourceImage.size;
     CGFloat width = imageSize.width;
     CGFloat height = imageSize.height;
-    CGFloat targetWidth = targetSize.width;
-    CGFloat targetHeight = targetSize.height;
+    CGFloat targetWidth = MIN(targetSize.width, width);
+    CGFloat targetHeight = MIN(targetSize.height, height);
     CGFloat scaleFactor = 0.0;
     CGFloat scaledWidth = targetWidth;
     CGFloat scaledHeight = targetHeight;
@@ -136,8 +136,8 @@
     CGSize imageSize = sourceImage.size;
     CGFloat width = imageSize.width;
     CGFloat height = imageSize.height;
-    CGFloat targetWidth = targetSize.width;
-    CGFloat targetHeight = targetSize.height;
+    CGFloat targetWidth = MIN(targetSize.width, width);
+    CGFloat targetHeight = MIN(targetSize.height, height);
     CGFloat scaleFactor = 0.0;
     CGSize scaledSize = targetSize;
     
