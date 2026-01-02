@@ -77,9 +77,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private static final int DATA_URL = 0;              // Return base64 encoded string
     private static final int FILE_URI = 1;              // Return file uri (content://media/external/images/media/2 for Android)
 
-    private static final int PHOTOLIBRARY = 0;          // Choose image from picture library (same as SAVEDPHOTOALBUM for Android)
+    private static final int PHOTOLIBRARY = 0;          // Choose image from picture library
     private static final int CAMERA = 1;                // Take picture from camera
-    private static final int SAVEDPHOTOALBUM = 2;       // Choose image from picture library (same as PHOTOLIBRARY for Android)
+    private static final int SAVEDPHOTOALBUM = 2;       // Same as PHOTOLIBRARY. This settings makes only a difference on iOS older than 14,
+                                                        // where an image can only be chosen from the device's Camera Roll album, with this setting.
 
     private static final int PICTURE = 0;               // allow selection of still pictures only. DEFAULT. Will return format specified via DestinationType
     private static final int VIDEO = 1;                 // allow selection of video only, ONLY RETURNS URL
@@ -423,9 +424,15 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             intent.setAction(Intent.ACTION_GET_CONTENT);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
         }
+
         if (this.cordova != null) {
-            this.cordova.startActivityForResult((CordovaPlugin) this, Intent.createChooser(intent,
-                    new String(title)), (srcType + 1) * 16 + returnType + 1);
+            this.cordova.startActivityForResult(
+                (CordovaPlugin) this,
+                Intent.createChooser(
+                    intent,
+                    new String(title)),
+                    // Requestcode
+                    (srcType + 1) * 16 + returnType + 1);
         }
     }
 
