@@ -31,9 +31,7 @@ It's not necessary to use this plugin for selecting images or using the camera. 
 
 ### Select image
 
-You can select an image from the device using `<input type="file" accept="image/*">`. 
-
-This is the simplest and most modern approach:
+You can select an image from the device using `<input type="file" accept="image/*">`:
 
 **HTML**
 
@@ -53,7 +51,7 @@ imageInput.addEventListener('change', (event) => {
     const file = event.target.files[0];
 
     // Check if user selected successfully a file
-    // If can be "undefined" if:
+    // It can be "undefined" if:
     // 1. The user opens the file picker but cancels without selecting a file
     // 2. The input's value is cleared or no file is selected
     if (!file) return;
