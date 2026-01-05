@@ -25,6 +25,159 @@ description: Take pictures with the device camera.
 
 [![Android Testsuite](https://github.com/apache/cordova-plugin-camera/actions/workflows/android.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/android.yml) [![Chrome Testsuite](https://github.com/apache/cordova-plugin-camera/actions/workflows/chrome.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/chrome.yml) [![iOS Testsuite](https://github.com/apache/cordova-plugin-camera/actions/workflows/ios.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/ios.yml) [![Lint Test](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml)
 
+## Consider using native Browser features
+
+It's not necessary to use this plugin for selecting images or using the camera. You can use native browser features instead, primarly the `<input>` tag.
+
+### Select image
+
+You can select an image from the device using `<input type="file" accept="image/*">`. 
+
+This is the simplest and most modern approach:
+
+**HTML**
+
+```html
+<input type="file" id="imageInput" accept="image/*">
+<img id="imagePreview">
+```
+
+**JavaScript**
+
+```js
+const imageInput = document.getElementById('imageInput');
+const imagePreview = document.getElementById('imagePreview');
+
+imageInput.addEventListener('change', (event) => {
+    // Get the first selected file
+    const file = event.target.files[0];
+
+    // Check if user selected successfully a file
+    // If can be "undefined" if:
+    // 1. The user opens the file picker but cancels without selecting a file
+    // 2. The input's value is cleared or no file is selected
+    if (!file) return;
+
+    // Output file informations
+    console.log(`Selected file, name: ${file.name}, size: ${file.size} bytes, type: ${file.type}`);
+
+    // Use native FileReader API
+    const reader = new FileReader();
+
+    // Listen to the load event of the FileReader, which is fired,
+    // when the file was succesfully read
+    reader.addEventListener('load', (event) => {
+        imagePreview.src = event.target.result;
+    };
+
+    // Get base64 encoded string of file, which will be "data:*/*;base64,"
+    reader.readAsDataURL(file);
+});
+```
+
+This approach works on all modern browsers and mobile devices without requiring a native plugin.
+
+MDN documentation for `<input type="file">`: https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/file
+
+### Take a picture
+
+You can access the device camera using `<input type="file" accept="image/*" capture>`:
+
+**HTML**
+
+```html
+<input type="file" id="cameraInput" accept="image/*" capture="environment">
+<img id="capturedPhoto" style="max-width: 300px;">
+```
+
+**JavaScript**
+
+```js
+const cameraInput = document.getElementById('cameraInput');
+const capturedPhoto = document.getElementById('capturedPhoto');
+
+cameraInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    
+    if (!file) return;
+    
+    // Output file information
+    console.log(`Photo captured, name: ${file.name}, size: ${file.size} bytes, type: ${file.type}`);
+    
+    // Display the photo
+    const reader = new FileReader();
+    reader.addEventListener('load', (event) => {
+        capturedPhoto.src = event.target.result;
+    });
+    reader.readAsDataURL(file);
+});
+```
+
+The `capture` attribute can have different values:
+- `capture="environment"` - Open the back camera
+- `capture="user"` - Open the front camera (selfie)
+- `capture` (without value) - Let the device choose
+
+MDN documentation for the `capture` attribute: https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/capture
+
+#### Take a picture with `<video>` and `getUserMedia` API
+
+For more advanced camera control, you can use the `getUserMedia()` API with a `<video>` element. This gives you full control over the camera stream:
+
+```html
+<!-- Live stream of the camera -->
+<video id="cameraStream" width="300" height="300" style="border: 1px solid #ccc;"></video>
+
+<!-- Button to capture a photo from the live stream -->
+<button id="captureButton">Capture Photo</button>
+
+<!-- Shows the captured photo -->
+<img id="photo" style="max-width: 300px;">
+```
+
+```js
+const cameraStream = document.getElementById('cameraStream');
+const captureButton = document.getElementById('captureButton');
+const photo = document.getElementById('photo');
+
+// Request camera access and get stream
+navigator.mediaDevices.getUserMedia({ video: true })
+    .then((stream) => {
+        console.log('Camera access granted');
+
+        // Display the camera stream in the video element
+        cameraStream.srcObject = stream;
+    })
+    .catch((error) => {
+        console.error('Camera access denied:', error);
+    });
+
+// Capture a photo from the video stream
+captureButton.addEventListener('click', () => {
+    // Create a canvas to capture the frame
+    const canvas = document.createElement('canvas');
+    canvas.width = cameraStream.videoWidth;
+    canvas.height = cameraStream.videoHeight;
+    
+    // Draw the current video frame to the canvas
+    const context = canvas.getContext('2d');
+    context.drawImage(cameraStream, 0, 0, canvas.width, canvas.height);
+    
+    // Convert canvas to data URL and display
+    const imageData = canvas.toDataURL('image/jpeg');
+    photo.src = imageData;
+    
+    // Log file information
+    console.log(`Photo captured, dimensions: ${canvas.width}x${canvas.height}`);
+});
+```
+
+**Note:** The `getUserMedia()` API requires HTTPS or localhost and asks for user permission to access the camera.
+
+MDN documentation for `getUserMedia()`: https://developer.mozilla.org/de/docs/Web/API/MediaDevices/getUserMedia
+
+## Use this plugin
+
 This plugin defines a global `navigator.camera` object, which provides an API for taking pictures and for choosing images from
 the system's image library.
 
