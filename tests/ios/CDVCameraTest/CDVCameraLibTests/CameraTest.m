@@ -43,19 +43,21 @@
 
 @implementation CameraTest
 
-- (void)setUp {
+- (void)setUp
+{
     [super setUp];
     // Put setup code here. This method is called before the invocation of each test method in the class.
     
     self.plugin = [[CDVCamera alloc] init];
 }
 
-- (void)tearDown {
+- (void)tearDown
+{
     // Put teardown code here. This method is called after the invocation of each test method in the class.
     [super tearDown];
 }
 
-- (void) testPictureOptionsCreate
+- (void)testPictureOptionsCreate
 {
     NSArray* args;
     CDVPictureOptions* options;
@@ -119,7 +121,7 @@
     XCTAssertEqual(options.usesGeolocation, NO);
 }
 
-- (void) testCameraPickerCreate
+- (void)testCameraPickerCreate
 {
     NSDictionary* popoverOptions;
     NSArray* args;
@@ -219,7 +221,8 @@
     }
 }
 
-- (UIImage*) createImage:(CGRect)rect orientation:(UIImageOrientation)imageOrientation {
+- (UIImage*)createImage:(CGRect)rect orientation:(UIImageOrientation)imageOrientation
+{
     UIGraphicsBeginImageContext(rect.size);
     CGContextRef context = UIGraphicsGetCurrentContext();
     
@@ -234,8 +237,8 @@
     return image;
 }
 
-- (void) testImageScaleCropForSize {
-    
+- (void)testImageScaleCropForSize
+{
     UIImage *sourceImagePortrait, *sourceImageLandscape, *targetImage;
     CGSize targetSize = CGSizeZero;
     
@@ -280,7 +283,8 @@
     XCTAssertEqual(targetImage.size.height, targetSize.height);
 }
 
-- (void) testImageScaleNoCropForSize {
+- (void)testImageScaleNoCropForSize
+{
     UIImage *sourceImagePortrait, *sourceImageLandscape, *targetImage;
     CGSize targetSize = CGSizeZero;
     
@@ -331,7 +335,8 @@
     XCTAssertEqual(targetImage.size.height, targetSize.height);
 }
 
-- (void) testImageCorrectedForOrientation {
+- (void)testImageCorrectedForOrientation
+{
     UIImage *sourceImagePortrait, *sourceImageLandscape, *targetImage;
     CGSize targetSize = CGSizeZero;
     
@@ -384,7 +389,7 @@
 }
 
 
-- (void) testRetrieveImage
+- (void)testRetrieveImage
 {
     CDVPictureOptions* pictureOptions = [[CDVPictureOptions alloc] init];
     NSDictionary *infoDict1, *infoDict2;
@@ -462,7 +467,7 @@
     XCTAssertEqual(resultImage.size.height, scaledImageWithCrop.size.height);
 }
 
-- (void) testProcessImage
+- (void)testProcessImage
 {
     CDVPictureOptions* pictureOptions = [[CDVPictureOptions alloc] init];
     NSData* resultData;
@@ -512,7 +517,7 @@
 #pragma mark - PHPickerViewController Tests (iOS 14+)
 
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 140000 // Always true on XCode12+
-- (void) testPHPickerAvailability API_AVAILABLE(ios(14))
+- (void)testPHPickerAvailability API_AVAILABLE(ios(14))
 {
     XCTAssertNotNil([PHPickerViewController class]);
     
@@ -526,7 +531,7 @@
     XCTAssertNotNil(picker);
 }
 
-- (void) testPHPickerConfiguration API_AVAILABLE(ios(14))
+- (void)testPHPickerConfiguration API_AVAILABLE(ios(14))
 {
     // Test image filter configuration
     PHPickerConfiguration *imageConfig = [[PHPickerConfiguration alloc] init];
@@ -552,7 +557,7 @@
     XCTAssertNotNil(allConfig.filter);
 }
 
-- (void) testPHPickerDelegateConformance API_AVAILABLE(ios(14))
+- (void)testPHPickerDelegateConformance API_AVAILABLE(ios(14))
 {
     // Test that CDVCamera conforms to PHPickerViewControllerDelegate
     XCTAssertTrue([self.plugin conformsToProtocol:@protocol(PHPickerViewControllerDelegate)]);
@@ -562,7 +567,7 @@
     XCTAssertTrue([self.plugin respondsToSelector:delegateSelector]);
 }
 
-- (void) testShowPHPickerMethod API_AVAILABLE(ios(14))
+- (void)testShowPHPickerMethod API_AVAILABLE(ios(14))
 {
     // Test that showPHPicker method exists
     SEL showPHPickerSelector = @selector(showPHPicker:withOptions:);
@@ -578,7 +583,7 @@
 }
 #endif
 
-- (void) testConvertImageMetadata
+- (void)testConvertImageMetadata
 {
     // Create a test image
     UIImage* testImage = [self createImage:CGRectMake(0, 0, 100, 100) orientation:UIImageOrientationUp];
@@ -594,7 +599,7 @@
     XCTAssertTrue(metadata == nil || [metadata isKindOfClass:[NSDictionary class]]);
 }
 
-- (void) testPictureOptionsForPHPicker
+- (void)testPictureOptionsForPHPicker
 {
     NSArray* args;
     CDVPictureOptions* options;

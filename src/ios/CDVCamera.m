@@ -39,7 +39,8 @@
 
 static NSSet* org_apache_cordova_validArrowDirections;
 
-static NSString* toBase64(NSData* data) {
+static NSString* toBase64(NSData* data)
+{
     SEL s1 = NSSelectorFromString(@"cdv_base64EncodedString");
     SEL s2 = NSSelectorFromString(@"base64EncodedString");
     SEL s3 = NSSelectorFromString(@"base64EncodedStringWithOptions:");
@@ -63,7 +64,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 @implementation CDVPictureOptions
 
-+ (instancetype) createFromTakePictureArguments:(CDVInvokedUrlCommand*)command
++ (instancetype)createFromTakePictureArguments:(CDVInvokedUrlCommand*)command
 {
     CDVPictureOptions* pictureOptions = [[CDVPictureOptions alloc] init];
 
@@ -110,7 +111,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 @synthesize hasPendingOperation, pickerController, locationManager;
 
-- (NSURL*) urlTransformer:(NSURL*)url
+- (NSURL*)urlTransformer:(NSURL*)url
 {
     NSURL* urlToTransform = url;
 
@@ -163,7 +164,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
  then presents the appropriate UI (UIImagePickerController or PHPickerViewController on iOS 14+).
  The result is returned via the Cordova callback.
  */
-- (void)takePicture:(CDVInvokedUrlCommand*)command {
+- (void)takePicture:(CDVInvokedUrlCommand*)command
+{
     self.hasPendingOperation = YES;
     __weak CDVCamera* weakSelf = self;
 
@@ -223,7 +225,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
  @param message The alert message to show.
  @param callbackId The Cordova callback identifier to send an error if needed.
  */
-- (void)presentPermissionDeniedAlertWithMessage:(NSString *)message callbackId:(NSString *)callbackId {
+- (void)presentPermissionDeniedAlertWithMessage:(NSString*)message callbackId:(NSString*)callbackId
+{
     dispatch_async(dispatch_get_main_queue(), ^{
         
         NSString *bundleDisplayName = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
@@ -283,7 +286,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
  @param callbackId The Cordova callback identifier used to deliver results back to JavaScript.
  @param pictureOptions Parsed camera options (sourceType, mediaType, allowsEditing, popoverOptions, etc.).
  */
-- (void)showCameraPicker:(NSString*)callbackId withOptions:(CDVPictureOptions *)pictureOptions
+- (void)showCameraPicker:(NSString*)callbackId withOptions:(CDVPictureOptions*)pictureOptions
 {
     // Perform UI operations on the main thread
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -333,7 +336,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 // Since iOS 14, we can use PHPickerViewController to select images from the photo library
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 140000 // Always true on XCode12+
-- (void)showPHPicker:(NSString*)callbackId withOptions:(CDVPictureOptions*)pictureOptions API_AVAILABLE(ios(14)) {
+- (void)showPHPicker:(NSString*)callbackId withOptions:(CDVPictureOptions*)pictureOptions API_AVAILABLE(ios(14))
+{
     PHPickerConfiguration *config = [[PHPickerConfiguration alloc] init];
     
     // Configure filter based on media type
@@ -372,7 +376,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 }
 
 // PHPickerViewControllerDelegate method
-- (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14))
+- (void)picker:(PHPickerViewController*)picker didFinishPicking:(NSArray<PHPickerResult*>*)results API_AVAILABLE(ios(14))
 {
     NSString *callbackId = objc_getAssociatedObject(picker, "callbackId");
     CDVPictureOptions *pictureOptions = objc_getAssociatedObject(picker, "pictureOptions");
@@ -572,8 +576,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 }
 
 // UINavigationControllerDelegate method
-- (void)navigationController:(UINavigationController *)navigationController
-      willShowViewController:(UIViewController *)viewController
+- (void)navigationController:(UINavigationController*)navigationController
+      willShowViewController:(UIViewController*)viewController
                     animated:(BOOL)animated
 {
     if([navigationController isKindOfClass:[UIImagePickerController class]]) {
@@ -649,7 +653,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     self.hasPendingOperation = NO;
 }
 
-- (NSString*) getMimeForEncoding:(CDVEncodingType) encoding {
+- (NSString*)getMimeForEncoding:(CDVEncodingType)encoding
+{
     switch (encoding) {
         case EncodingTypePNG: return MIME_PNG;
         case EncodingTypeJPEG:
@@ -658,7 +663,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     }
 }
 
-- (NSString*) formatAsDataURI:(NSData*) data withMIME:(NSString*) mime {
+- (NSString*)formatAsDataURI:(NSData*)data withMIME:(NSString*)mime
+{
     NSString* base64 = toBase64(data);
     
     if (base64 == nil) {
@@ -668,20 +674,20 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     return [NSString stringWithFormat:@"data:%@;base64,%@", mime, base64];
 }
 
-- (NSString*) processImageAsDataUri:(UIImage*) image info:(NSDictionary*) info options:(CDVPictureOptions*) options
+- (NSString*)processImageAsDataUri:(UIImage*)image info:(NSDictionary*)info options:(CDVPictureOptions*)options
 {
     NSString* mime = nil;
-    NSData* data = [self processImage: image info: info options: options outMime: &mime];
+    NSData* data = [self processImage:image info:info options:options outMime:&mime];
     
-    return [self formatAsDataURI: data withMIME: mime];
+    return [self formatAsDataURI:data withMIME:mime];
 }
 
-- (NSData*) processImage:(UIImage*) image info:(NSDictionary*) info options:(CDVPictureOptions*) options
+- (NSData*)processImage:(UIImage*)image info:(NSDictionary*)info options:(CDVPictureOptions*)options
 {
-    return [self processImage:image  info: info options: options outMime: nil];
+    return [self processImage:image info:info options:options outMime:nil];
 }
 
-- (NSData*) processImage:(UIImage*)image info:(NSDictionary*)info options:(CDVPictureOptions*)options outMime:(NSString**) outMime
+- (NSData*)processImage:(UIImage*)image info:(NSDictionary*)info options:(CDVPictureOptions*)options outMime:(NSString**)outMime
 {
     NSData* data = nil;
 
@@ -758,8 +764,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 /* --------------------------------------------------------------
 -- get the metadata of the image from a PHAsset
 -------------------------------------------------------------- */
-- (NSDictionary*)getImageMetadataFromAsset:(PHAsset*)asset {
-
+- (NSDictionary*)getImageMetadataFromAsset:(PHAsset*)asset
+{
     if(asset == nil) {
         return nil;
     }
@@ -777,7 +783,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     return dict;
 }
 
--(NSDictionary*)convertImageMetadata:(NSData*)imageData {
+- (NSDictionary*)convertImageMetadata:(NSData*)imageData
+{
     CGImageSourceRef imageSource = CGImageSourceCreateWithData((__bridge CFDataRef)(imageData), NULL);
     if (imageSource) {
         NSDictionary *options = @{(NSString *)kCGImageSourceShouldCache : [NSNumber numberWithBool:NO]};
@@ -804,7 +811,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
  @param completion A block invoked with YES when access is authorized (or not required),
                    or NO when access is denied or restricted.
  */
-- (void)options:(CDVPictureOptions*)options requestPhotoPermissions:(void (^)(BOOL auth))completion {
+- (void)options:(CDVPictureOptions*)options requestPhotoPermissions:(void (^)(BOOL auth))completion
+{
     // This is would be no good response
     if(options.sourceType == UIImagePickerControllerSourceTypeCamera) {
         completion(YES);
@@ -875,7 +883,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 - (void)resultForImage:(CDVPictureOptions*)options
                   info:(NSDictionary*)info
-            completion:(void (^)(CDVPluginResult* res))completion {
+            completion:(void (^)(CDVPluginResult* res))completion
+{
     CDVPluginResult* result = nil;
     BOOL saveToPhotoAlbum = options.saveToPhotoAlbum;
     UIImage* image = nil;
@@ -960,7 +969,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     return [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:moviePath];
 }
 
-- (NSString *) createTmpVideo:(NSString *) moviePath {
+- (NSString*)createTmpVideo:(NSString*)moviePath
+{
     NSString* moviePathExtension = [moviePath pathExtension];
     NSString* copyMoviePath = [self tempFilePath:moviePathExtension];
     NSFileManager* fileMgr = [[NSFileManager alloc] init];
@@ -1199,11 +1209,13 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     return YES;
 }
 
-- (UIViewController*)childViewControllerForStatusBarHidden {
+- (UIViewController*)childViewControllerForStatusBarHidden
+{
     return nil;
 }
 
-- (void)viewWillAppear:(BOOL)animated {
+- (void)viewWillAppear:(BOOL)animated
+{
     SEL sel = NSSelectorFromString(@"setNeedsStatusBarAppearanceUpdate");
     if ([self respondsToSelector:sel]) {
         [self performSelector:sel withObject:nil afterDelay:0];
@@ -1212,7 +1224,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     [super viewWillAppear:animated];
 }
 
-+ (instancetype)createFromPictureOptions:(CDVPictureOptions*)pictureOptions {
++ (instancetype)createFromPictureOptions:(CDVPictureOptions*)pictureOptions
+{
     CDVCameraPicker* cameraPicker = [[CDVCameraPicker alloc] init];
     cameraPicker.pictureOptions = pictureOptions;
     cameraPicker.sourceType = pictureOptions.sourceType;
