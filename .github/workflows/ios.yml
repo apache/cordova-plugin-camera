@@ -50,17 +50,25 @@ jobs:
     strategy:
       matrix:
         versions:
-          - os-version: macos-12
+          - os-version: macos-14
             ios-version: 15.x
-            xcode-version: 13.x
+            xcode-version: 15.x
 
           - os-version: macos-14
             ios-version: 16.x
-            xcode-version: 14.x
+            xcode-version: 15.x
 
           - os-version: macos-14
             ios-version: 17.x
             xcode-version: 15.x
+
+          - os-version: macos-15
+            ios-version: 18.x
+            xcode-version: 16.x
+
+          - os-version: macos-26
+            ios-version: 26.x
+            xcode-version: 26.x
 
     steps:
       - uses: actions/checkout@v4
