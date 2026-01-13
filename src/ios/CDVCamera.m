@@ -396,9 +396,13 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         
         // Check if it's a video
         if ([pickerResult.itemProvider hasItemConformingToTypeIdentifier:UTTypeMovie.identifier]) {
-            [pickerResult.itemProvider loadFileRepresentationForTypeIdentifier:UTTypeMovie.identifier completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
+            // Writes a copy of the data to a temporary file. This file will be deleted
+            // when the completion handler returns. The program should copy or move the file within the completion handler.
+            [pickerResult.itemProvider loadFileRepresentationForTypeIdentifier:UTTypeMovie.identifier
+                                                             completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
                 if (error) {
-                    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
+                    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                                                                messageAsString:[error localizedDescription]];
                     [weakSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
                     weakSelf.hasPendingOperation = NO;
                     return;
@@ -406,7 +410,15 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                 
                 dispatch_async(dispatch_get_main_queue(), ^{
                     NSString* videoPath = [weakSelf createTmpVideo:[url path]];
-                    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:videoPath];
+                    CDVPluginResult* result = nil;
+                    
+                    if (videoPath == nil) {
+                        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION
+                                                   messageAsString:@"Failed to copy video file to temporary location"];
+                    } else {
+                        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:videoPath];
+                    }
+                    
                     [weakSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
                     weakSelf.hasPendingOperation = NO;
                 });
@@ -971,12 +983,35 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 - (NSString*)createTmpVideo:(NSString*)moviePath
 {
-    NSString* moviePathExtension = [moviePath pathExtension];
-    NSString* copyMoviePath = [self tempFilePath:moviePathExtension];
+    NSString* copyMoviePath = [self tempFilePath:[moviePath pathExtension]];
     NSFileManager* fileMgr = [[NSFileManager alloc] init];
-    NSError *error;
-    [fileMgr copyItemAtPath:moviePath toPath:copyMoviePath error:&error];
-    return [[NSURL fileURLWithPath:copyMoviePath] absoluteString];
+    NSError *error = nil;
+    
+    // Ensure the source file exists and is accessible
+    if (![fileMgr fileExistsAtPath:moviePath]) {
+        NSLog(@"CDVCamera: Source video file does not exist at path: %@", moviePath);
+        return nil;
+    }
+    
+    // Copy the video file to the temp directory
+    BOOL copySuccess = [fileMgr copyItemAtPath:moviePath toPath:copyMoviePath error:&error];
+    
+    if (!copySuccess || error) {
+        NSLog(@"CDVCamera: Failed to copy video file from %@ to %@. Error: %@", moviePath, copyMoviePath, [error localizedDescription]);
+        return nil;
+    }
+    
+    // Verify the copied file exists
+    if (![fileMgr fileExistsAtPath:copyMoviePath]) {
+        NSLog(@"CDVCamera: Copied video file does not exist at path: %@", copyMoviePath);
+        return nil;
+    }
+    
+    // Resolve symlinks in the path to ensure consistency with how the File plugin resolves paths
+    NSString *resolvedPath = [[[NSURL fileURLWithPath:copyMoviePath] URLByResolvingSymlinksInPath] path];
+    
+    // Use urlTransformer to get the proper URI for the webview
+    return [[self urlTransformer:[NSURL fileURLWithPath:resolvedPath]] absoluteString];
 }
 
 #pragma mark UIImagePickerControllerDelegate methods
