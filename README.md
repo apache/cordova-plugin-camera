@@ -30,11 +30,13 @@ the system's image library.
 
 Although the object is attached to the global scoped `navigator`, it is not available until after the `deviceready` event.
 
-    document.addEventListener("deviceready", onDeviceReady, false);
-    function onDeviceReady() {
-        console.log(navigator.camera);
-    }
+```js
+document.addEventListener("deviceready", onDeviceReady, false);
 
+function onDeviceReady() {
+    console.log(navigator.camera);
+}
+```
 
 ## Installation
 
@@ -65,40 +67,36 @@ In order for your changes to be accepted, you need to sign and submit an Apache 
 
 **And don't forget to test and document your code.**
 
-### iOS Quirks
+### iOS Specifics
 
-Since iOS 10 it's mandatory to provide an usage description in the `info.plist` if trying to access privacy-sensitive data. When the system prompts the user to allow access, this usage description string will displayed as part of the permission dialog box, but if you didn't provide the usage description, the app will crash before showing the dialog. Also, Apple will reject apps that access private data but don't provide an usage description.
+Since iOS 10 it's mandatory to provide a usage description in the `info.plist` when accessing privacy-sensitive data. The required keys depend on how you use the plugin and which iOS versions you support:
 
-This plugins requires the following usage descriptions:
+| Key                            | Description |
+| ------------------------------ | ----------- |
+| NSCameraUsageDescription | Required whenever the camera is used (e.g. `Camera.PictureSourceType.CAMERA`). |
+| NSPhotoLibraryUsageDescription | Required only when your app runs on iOS 13 or older and using as `sourceType` `Camera.PictureSourceType.PHOTOLIBRARY`. On iOS 14+ the plugin uses PHPicker for read-only access, which does not need this key. |
+| NSPhotoLibraryAddUsageDescription | Required when the plugin writes to the user's library (e.g. `saveToPhotoAlbum=true`). |
+| NSLocationWhenInUseUsageDescription | Required if `CameraUsesGeolocation` is set to `true`. |
 
-- `NSCameraUsageDescription` specifies the reason for your app to access the device's camera.
-- `NSPhotoLibraryUsageDescription` specifies the reason for your app to access the user's photo library.
-- `NSLocationWhenInUseUsageDescription` specifies the reason for your app to access the user's location information while your app is in use. (Set it if you have `CameraUsesGeolocation` preference set to `true`)
-- `NSPhotoLibraryAddUsageDescription` specifies the reason for your app to get write-only access to the user's photo library
+When the system prompts the user to allow access, this usage description string will be displayed as part of the permission dialog box. If you don't provide the required usage description, the app will crash before showing the dialog. Also, Apple will reject apps that access private data but don't provide a usage description.
 
 To add these entries into the `info.plist`, you can use the `edit-config` tag in the `config.xml` like this:
 
-```
+```xml
 <edit-config target="NSCameraUsageDescription" file="*-Info.plist" mode="merge">
     <string>need camera access to take pictures</string>
 </edit-config>
-```
 
-```
 <edit-config target="NSPhotoLibraryUsageDescription" file="*-Info.plist" mode="merge">
     <string>need photo library access to get pictures from there</string>
 </edit-config>
-```
 
-```
-<edit-config target="NSLocationWhenInUseUsageDescription" file="*-Info.plist" mode="merge">
-    <string>need location access to find things nearby</string>
-</edit-config>
-```
-
-```
 <edit-config target="NSPhotoLibraryAddUsageDescription" file="*-Info.plist" mode="merge">
     <string>need photo library access to save pictures there</string>
+</edit-config>
+
+<edit-config target="NSLocationWhenInUseUsageDescription" file="*-Info.plist" mode="merge">
+    <string>need location access to find things nearby</string>
 </edit-config>
 ```
 
@@ -368,9 +366,11 @@ Defines the output format of `Camera.getPicture` call.
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| PHOTOLIBRARY | <code>number</code> | <code>0</code> | Choose image from the device's photo library (same as SAVEDPHOTOALBUM for Android) |
+| PHOTOLIBRARY | <code>number</code> | <code>0</code> | Choose image from the device's photo library. |
 | CAMERA | <code>number</code> | <code>1</code> | Take picture from camera |
-| SAVEDPHOTOALBUM | <code>number</code> | <code>2</code> | Choose image only from the device's Camera Roll album (same as PHOTOLIBRARY for Android) |
+| SAVEDPHOTOALBUM | <code>number</code> | <code>2</code> | Same as `PHOTOLIBRARY`, when running on Android or iOS 14+. On iOS older than 14, an image can only be chosen from the device's Camera Roll album with this setting. |
+
+
 
 <a name="module_Camera.PopoverArrowDirection"></a>
 
@@ -643,23 +643,25 @@ function openCamera(selection) {
 
 ## Select a File from the Picture Library <a name="selectFile"></a>
 
-When selecting a file using the file picker, you also need to set the CameraOptions object. In this example, set the `sourceType` to `Camera.PictureSourceType.SAVEDPHOTOALBUM`. To open the file picker, call `getPicture` just as you did in the previous example, passing in the success and error callbacks along with CameraOptions object.
+When selecting a file using the file picker, you also need to set the CameraOptions object. In this example, set the `sourceType` to `Camera.PictureSourceType.PHOTOLIBRARY`. To open the file picker, call `getPicture` just as you did in the previous example, passing in the success and error callbacks along with CameraOptions object.
 
 ```js
 function openFilePicker(selection) {
 
-    var srcType = Camera.PictureSourceType.SAVEDPHOTOALBUM;
+    var srcType = Camera.PictureSourceType.PHOTOLIBRARY;
     var options = setOptions(srcType);
     var func = createNewFileEntry;
 
-    navigator.camera.getPicture(function cameraSuccess(imageUri) {
-
-        // Do something
-
-    }, function cameraError(error) {
-        console.debug("Unable to obtain picture: " + error, "app");
-
-    }, options);
+    navigator.camera.getPicture(
+        // success callback
+        (imageUri) => {
+            // Do something
+        },
+        // error callback
+        (error) => {
+            console.debug("Unable to obtain picture: " + error, "app");
+        },
+        options);
 }
 ```
 
@@ -670,7 +672,7 @@ Resizing a file selected with the file picker works just like resizing using the
 ```js
 function openFilePicker(selection) {
 
-    var srcType = Camera.PictureSourceType.SAVEDPHOTOALBUM;
+    var srcType = Camera.PictureSourceType.PHOTOLIBRARY;
     var options = setOptions(srcType);
     var func = createNewFileEntry;
 
@@ -681,14 +683,16 @@ function openFilePicker(selection) {
         options.targetWidth = 100;
     }
 
-    navigator.camera.getPicture(function cameraSuccess(imageUri) {
-
-        // Do something with image
-
-    }, function cameraError(error) {
-        console.debug("Unable to obtain picture: " + error, "app");
-
-    }, options);
+    navigator.camera.getPicture(
+        // success callback
+        (imageUri) {
+            // Do something with image
+        },
+        // error callback
+        (error) => {
+            console.debug("Unable to obtain picture: " + error, "app");
+        },
+        options);
 }
 ```
 

@@ -39,7 +39,8 @@
 
 static NSSet* org_apache_cordova_validArrowDirections;
 
-static NSString* toBase64(NSData* data) {
+static NSString* toBase64(NSData* data)
+{
     SEL s1 = NSSelectorFromString(@"cdv_base64EncodedString");
     SEL s2 = NSSelectorFromString(@"base64EncodedString");
     SEL s3 = NSSelectorFromString(@"base64EncodedStringWithOptions:");
@@ -63,7 +64,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 @implementation CDVPictureOptions
 
-+ (instancetype) createFromTakePictureArguments:(CDVInvokedUrlCommand*)command
++ (instancetype)createFromTakePictureArguments:(CDVInvokedUrlCommand*)command
 {
     CDVPictureOptions* pictureOptions = [[CDVPictureOptions alloc] init];
 
@@ -110,7 +111,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 @synthesize hasPendingOperation, pickerController, locationManager;
 
-- (NSURL*) urlTransformer:(NSURL*)url
+- (NSURL*)urlTransformer:(NSURL*)url
 {
     NSURL* urlToTransform = url;
 
@@ -140,6 +141,29 @@ static NSString* MIME_JPEG    = @"image/jpeg";
            (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad);
 }
 
+/**
+ Called by JS function navigator.camera.getPicture(cameraSuccess, cameraError, cameraOptions)
+ which will invoke the camera or photo picker to capture or select an image or video.
+ 
+ @param command A Cordova command whose arguments map to camera options:
+   - index 0 (quality): NSNumber (1–100). JPEG quality when encodingType is JPEG. Default: 50.
+   - index 1 (destinationType): NSNumber (DestinationType). File URI or Data URL. Default: File URI.
+   - index 2 (sourceType): NSNumber (UIImagePickerControllerSourceType). Camera or Photo Library. Default: Camera.
+   - index 3 (targetWidth): NSNumber (optional). Desired width for scaling/cropping.
+   - index 4 (targetHeight): NSNumber (optional). Desired height for scaling/cropping.
+   - index 5 (encodingType): NSNumber (EncodingType). JPEG or PNG. Default: JPEG.
+   - index 6 (mediaType): NSNumber (MediaType). Picture, Video, or All. Default: Picture.
+   - index 7 (allowsEditing): NSNumber(BOOL). Allow user to crop/edit. Default: NO.
+   - index 8 (correctOrientation): NSNumber(BOOL). Fix EXIF orientation. Default: NO.
+   - index 9 (saveToPhotoAlbum): NSNumber(BOOL). Save captured image to Photos. Default: NO.
+   - index 10 (popoverOptions): NSDictionary (iPad only). Popover positioning and sizing.
+   - index 11 (cameraDirection): NSNumber (UIImagePickerControllerCameraDevice). Front/Rear. Default: Rear.
+
+ @discussion
+ This method validates hardware availability and permissions (camera or photo library),
+ then presents the appropriate UI (UIImagePickerController or PHPickerViewController on iOS 14+).
+ The result is returned via the Cordova callback.
+ */
 - (void)takePicture:(CDVInvokedUrlCommand*)command
 {
     self.hasPendingOperation = YES;
@@ -151,67 +175,133 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         pictureOptions.usesGeolocation = [weakSelf usesGeolocation];
         pictureOptions.cropToSize = NO;
 
-        BOOL hasCamera = [UIImagePickerController isSourceTypeAvailable:pictureOptions.sourceType];
-        if (!hasCamera) {
-            NSLog(@"Camera.getPicture: source type %lu not available.", (unsigned long)pictureOptions.sourceType);
-            CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"No camera available"];
-            [weakSelf.commandDelegate sendPluginResult:result callbackId:command.callbackId];
-            return;
-        }
-
-        // Validate the app has permission to access the camera
+        // The camera should be used to take a picture
         if (pictureOptions.sourceType == UIImagePickerControllerSourceTypeCamera) {
-            [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted)
-             {
-                 if (!granted)
-                 {
-                     // Denied; show an alert
-                     dispatch_async(dispatch_get_main_queue(), ^{
-                         UIAlertController *alertController = [UIAlertController alertControllerWithTitle:[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"] message:NSLocalizedString(@"Access to the camera has been prohibited; please enable it in the Settings app to continue.", nil) preferredStyle:UIAlertControllerStyleAlert];
-                         [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"OK", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-                             [weakSelf sendNoPermissionResult:command.callbackId];
-                         }]];
-                         [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"Settings", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-                             [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString] options:@{} completionHandler:nil];
-                             [weakSelf sendNoPermissionResult:command.callbackId];
-                         }]];
-                         [weakSelf.viewController presentViewController:alertController animated:YES completion:nil];
-                     });
+            // Check if camera is available
+            if (![UIImagePickerController isSourceTypeAvailable:pictureOptions.sourceType]) {
+                NSLog(@"Camera.getPicture: source type %lu not available.", (unsigned long)pictureOptions.sourceType);
+                [weakSelf.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"No camera available"]
+                                                callbackId:command.callbackId];
+                return;
+            }
+            
+            // Validate the app has permission to access the camera
+            [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
+                 // Show an alert if not granted
+                 if (!granted) {
+                     [weakSelf presentPermissionDeniedAlertWithMessage:@"Access to the camera has been prohibited; please enable it in the Settings app to continue."
+                                                            callbackId:command.callbackId];
                  } else {
-                     dispatch_async(dispatch_get_main_queue(), ^{
-                         [weakSelf showCameraPicker:command.callbackId withOptions:pictureOptions];
-                     });
+                     [weakSelf showCameraPicker:command.callbackId withOptions:pictureOptions];
                  }
              }];
+            
+            // A photo should be picked from the photo library
         } else {
-            [weakSelf options:pictureOptions requestPhotoPermissions:^(BOOL granted) {
-                if (!granted) {
-                    // Denied; show an alert
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"] message:NSLocalizedString(@"Access to the camera roll has been prohibited; please enable it in the Settings to continue.", nil) preferredStyle:UIAlertControllerStyleAlert];
-                        [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"OK", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-                            [weakSelf sendNoPermissionResult:command.callbackId];
-                        }]];
-                        [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"Settings", nil) style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-                            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]];
-                            [weakSelf sendNoPermissionResult:command.callbackId];
-                        }]];
-                        [weakSelf.viewController presentViewController:alertController animated:YES completion:nil];
-                    });
-                } else {
-                    dispatch_async(dispatch_get_main_queue(), ^{
+            // Use PHPickerViewController on iOS 14+
+            // Doesn't require permissions
+            if (@available(iOS 14, *)) {
+                    [weakSelf showCameraPicker:command.callbackId withOptions:pictureOptions];
+                
+                // On iOS < 14, use UIImagePickerController and request permissions
+            } else {
+                // Request permission
+                [weakSelf options:pictureOptions requestPhotoPermissions:^(BOOL granted) {
+                    if (!granted) {
+                        // Denied; show an alert
+                        [weakSelf presentPermissionDeniedAlertWithMessage:@"Access to the camera roll has been prohibited; please enable it in the Settings to continue."
+                                                               callbackId:command.callbackId];
+                    } else {
                         [weakSelf showCameraPicker:command.callbackId withOptions:pictureOptions];
-                    });
-                }
-            }];
+                    }
+                }];
+            }
         }
     }];
 }
 
-- (void)showCameraPicker:(NSString*)callbackId withOptions:(CDVPictureOptions *) pictureOptions
+/**
+ Presents a permission denial alert with OK and Settings actions.
+ @param message The alert message to show.
+ @param callbackId The Cordova callback identifier to send an error if needed.
+ */
+- (void)presentPermissionDeniedAlertWithMessage:(NSString*)message callbackId:(NSString*)callbackId
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        
+        NSString *bundleDisplayName = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
+        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:bundleDisplayName
+                                                                                 message:NSLocalizedString(message, nil)
+                                                                          preferredStyle:UIAlertControllerStyleAlert];
+        
+        // Add buttons
+        __weak CDVCamera *weakSelf = self;
+        
+        // Ok button
+        [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"OK", nil)
+                                                            style:UIAlertActionStyleDefault
+                                                          handler:^(UIAlertAction * _Nonnull action) {
+            [weakSelf sendNoPermissionResult:callbackId];
+        }]];
+        
+        // Button for open settings
+        [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"Settings", nil)
+                                                            style:UIAlertActionStyleDefault
+                                                          handler:^(UIAlertAction * _Nonnull action) {
+            // Open settings
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]
+                                               options:@{}
+                                     completionHandler:nil];
+            [weakSelf sendNoPermissionResult:callbackId];
+        }]];
+
+        [self.viewController presentViewController:alertController animated:YES completion:nil];
+    });
+}
+
+- (void)sendNoPermissionResult:(NSString*)callbackId
+{
+    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"has no access to camera"];   // error callback expects string ATM
+
+    [self.commandDelegate sendPluginResult:result callbackId:callbackId];
+    self.hasPendingOperation = NO;
+    self.pickerController = nil;
+}
+
+/**
+ Presents the appropriate UI to capture or select media based on the provided options and OS version.
+ 
+ On iOS 14 and later, when the source type is PHOTOLIBRARY (or SAVEDPHOTOALBUM), this method presents
+ PHPickerViewController to select media without requiring Photos authorization. Otherwise, it falls back
+ to UIImagePickerController for camera usage or on older iOS versions.
+ 
+ Threading:
+ - Ensures presentation occurs on the main thread.
+ 
+ Behavior:
+ - Dismisses any visible popover before presenting a new picker (iPad).
+ - Configures delegates, media types, and popover presentation as needed.
+ - Updates `hasPendingOperation` to reflect plugin activity state.
+ 
+ @param callbackId The Cordova callback identifier used to deliver results back to JavaScript.
+ @param pictureOptions Parsed camera options (sourceType, mediaType, allowsEditing, popoverOptions, etc.).
+ */
+- (void)showCameraPicker:(NSString*)callbackId withOptions:(CDVPictureOptions*)pictureOptions
 {
     // Perform UI operations on the main thread
     dispatch_async(dispatch_get_main_queue(), ^{
+        // Use PHPickerViewController for photo library on iOS 14+
+        if (@available(iOS 14, *)) {
+            // sourceType is PHOTOLIBRARY
+            if (pictureOptions.sourceType == UIImagePickerControllerSourceTypePhotoLibrary ||
+                // sourceType is SAVEDPHOTOALBUM (same as PHOTOLIBRARY)
+                pictureOptions.sourceType == UIImagePickerControllerSourceTypeSavedPhotosAlbum) {
+                [self showPHPicker:callbackId withOptions:pictureOptions];
+                return;
+            }
+        }
+        
+        // Use UIImagePickerController for camera or as image picker for iOS older than 14
         CDVCameraPicker* cameraPicker = [CDVCameraPicker createFromPictureOptions:pictureOptions];
         self.pickerController = cameraPicker;
 
@@ -235,22 +325,206 @@ static NSString* MIME_JPEG    = @"image/jpeg";
             self.hasPendingOperation = NO;
         } else {
             cameraPicker.modalPresentationStyle = UIModalPresentationCurrentContext;
-            [self.viewController presentViewController:cameraPicker animated:YES completion:^{
+            [self.viewController presentViewController:cameraPicker
+                                              animated:YES
+                                            completion:^{
                 self.hasPendingOperation = NO;
             }];
         }
     });
 }
 
-- (void)sendNoPermissionResult:(NSString*)callbackId
+// Since iOS 14, we can use PHPickerViewController to select images from the photo library
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 140000 // Always true on XCode12+
+- (void)showPHPicker:(NSString*)callbackId withOptions:(CDVPictureOptions*)pictureOptions API_AVAILABLE(ios(14))
 {
-    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"has no access to camera"];   // error callback expects string ATM
-
-    [self.commandDelegate sendPluginResult:result callbackId:callbackId];
-
-    self.hasPendingOperation = NO;
-    self.pickerController = nil;
+    PHPickerConfiguration *config = [[PHPickerConfiguration alloc] init];
+    
+    // Configure filter based on media type
+    // Images
+    if (pictureOptions.mediaType == MediaTypePicture) {
+        config.filter = [PHPickerFilter imagesFilter];
+        
+        // Videos
+    } else if (pictureOptions.mediaType == MediaTypeVideo) {
+        config.filter = [PHPickerFilter videosFilter];
+        
+        // Images and videos
+    } else if (pictureOptions.mediaType == MediaTypeAll) {
+        config.filter = [PHPickerFilter anyFilterMatchingSubfilters:@[
+            [PHPickerFilter imagesFilter],
+            [PHPickerFilter videosFilter]
+        ]];
+    }
+    
+    config.selectionLimit = 1;
+    config.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeCurrent;
+    
+    PHPickerViewController *picker = [[PHPickerViewController alloc] initWithConfiguration:config];
+    picker.delegate = self;
+    
+    // Store callback ID and options in picker with objc_setAssociatedObject
+    // PHPickerViewController’s delegate method picker:didFinishPicking: only gives you back the picker instance
+    // and the results array. It doesn’t carry arbitrary context. By associating the callbackId and pictureOptions
+    // with the picker, you can retrieve them later inside the delegate method
+    objc_setAssociatedObject(picker, "callbackId", callbackId, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    objc_setAssociatedObject(picker, "pictureOptions", pictureOptions, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    
+    [self.viewController presentViewController:picker animated:YES completion:^{
+        self.hasPendingOperation = NO;
+    }];
 }
+
+// PHPickerViewControllerDelegate method
+- (void)picker:(PHPickerViewController*)picker didFinishPicking:(NSArray<PHPickerResult*>*)results API_AVAILABLE(ios(14))
+{
+    NSString *callbackId = objc_getAssociatedObject(picker, "callbackId");
+    CDVPictureOptions *pictureOptions = objc_getAssociatedObject(picker, "pictureOptions");
+    
+    __weak CDVCamera* weakSelf = self;
+    
+    [picker dismissViewControllerAnimated:YES completion:^{
+        if (results.count == 0) {
+            // User cancelled
+            CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"No Image Selected"];
+            [weakSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
+            weakSelf.hasPendingOperation = NO;
+            return;
+        }
+        
+        PHPickerResult *pickerResult = results.firstObject;
+        
+        // Check if it's a video
+        if ([pickerResult.itemProvider hasItemConformingToTypeIdentifier:UTTypeMovie.identifier]) {
+            [pickerResult.itemProvider loadFileRepresentationForTypeIdentifier:UTTypeMovie.identifier completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
+                if (error) {
+                    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
+                    [weakSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
+                    weakSelf.hasPendingOperation = NO;
+                    return;
+                }
+                
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    NSString* videoPath = [weakSelf createTmpVideo:[url path]];
+                    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:videoPath];
+                    [weakSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
+                    weakSelf.hasPendingOperation = NO;
+                });
+            }];
+            
+            // Handle image
+        } else if ([pickerResult.itemProvider canLoadObjectOfClass:[UIImage class]]) {
+            [pickerResult.itemProvider loadObjectOfClass:[UIImage class] completionHandler:^(__kindof id<NSItemProviderReading>  _Nullable object, NSError * _Nullable error) {
+                if (error) {
+                    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
+                    [weakSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
+                    weakSelf.hasPendingOperation = NO;
+                    return;
+                }
+                
+                UIImage *image = (UIImage *)object;
+                
+                // Get asset identifier to fetch metadata
+                NSString *assetIdentifier = pickerResult.assetIdentifier;
+                
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [weakSelf processPHPickerImage:image assetIdentifier:assetIdentifier callbackId:callbackId options:pictureOptions];
+                });
+            }];
+        }
+    }];
+}
+
+- (void)processPHPickerImage:(UIImage*)image
+             assetIdentifier:(NSString*)assetIdentifier
+                  callbackId:(NSString*)callbackId
+                     options:(CDVPictureOptions*)options API_AVAILABLE(ios(14))
+{
+    __weak CDVCamera* weakSelf = self;
+    
+    // Fetch metadata if asset identifier is available
+    if (assetIdentifier) {
+        PHFetchResult *result = [PHAsset fetchAssetsWithLocalIdentifiers:@[assetIdentifier] options:nil];
+        PHAsset *asset = result.firstObject;
+        
+        if (asset) {
+            PHImageRequestOptions *imageOptions = [[PHImageRequestOptions alloc] init];
+            imageOptions.synchronous = YES;
+            imageOptions.networkAccessAllowed = YES;
+            
+            [[PHImageManager defaultManager] requestImageDataAndOrientationForAsset:asset
+                                                                            options:imageOptions
+                                                                      resultHandler:^(NSData *_Nullable imageData, NSString *_Nullable dataUTI, CGImagePropertyOrientation orientation, NSDictionary *_Nullable info) {
+                NSDictionary *metadata = imageData ? [weakSelf convertImageMetadata:imageData] : nil;
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [weakSelf finalizePHPickerImage:image metadata:metadata callbackId:callbackId options:options];
+                });
+            }];
+            return;
+        }
+    }
+    
+    // No metadata available
+    [self finalizePHPickerImage:image metadata:nil callbackId:callbackId options:options];
+}
+
+- (void)finalizePHPickerImage:(UIImage*)image
+                     metadata:(NSDictionary*)metadata
+                   callbackId:(NSString*)callbackId
+                      options:(CDVPictureOptions*)options API_AVAILABLE(ios(14))
+{
+    // Process image according to options
+    UIImage *processedImage = image;
+    
+    if (options.correctOrientation) {
+        processedImage = [processedImage imageCorrectedForCaptureOrientation];
+    }
+    
+    if ((options.targetSize.width > 0) && (options.targetSize.height > 0)) {
+        if (options.cropToSize) {
+            processedImage = [processedImage imageByScalingAndCroppingForSize:options.targetSize];
+        } else {
+            processedImage = [processedImage imageByScalingNotCroppingForSize:options.targetSize];
+        }
+    }
+    
+    // Create info dictionary similar to UIImagePickerController
+    NSMutableDictionary *info = [NSMutableDictionary dictionary];
+    [info setObject:processedImage forKey:UIImagePickerControllerOriginalImage];
+    if (metadata) {
+        [info setObject:metadata forKey:@"UIImagePickerControllerMediaMetadata"];
+    }
+    
+    // Store metadata for processing
+    if (metadata) {
+        self.metadata = [[NSMutableDictionary alloc] init];
+        
+        NSMutableDictionary* EXIFDictionary = [[metadata objectForKey:(NSString*)kCGImagePropertyExifDictionary] mutableCopy];
+        if (EXIFDictionary) {
+            [self.metadata setObject:EXIFDictionary forKey:(NSString*)kCGImagePropertyExifDictionary];
+        }
+        
+        NSMutableDictionary* TIFFDictionary = [[metadata objectForKey:(NSString*)kCGImagePropertyTIFFDictionary] mutableCopy];
+        if (TIFFDictionary) {
+            [self.metadata setObject:TIFFDictionary forKey:(NSString*)kCGImagePropertyTIFFDictionary];
+        }
+        
+        NSMutableDictionary* GPSDictionary = [[metadata objectForKey:(NSString*)kCGImagePropertyGPSDictionary] mutableCopy];
+        if (GPSDictionary) {
+            [self.metadata setObject:GPSDictionary forKey:(NSString*)kCGImagePropertyGPSDictionary];
+        }
+    }
+    
+    __weak CDVCamera* weakSelf = self;
+    
+    // Process and return result
+    [self resultForImage:options info:info completion:^(CDVPluginResult* res) {
+        [weakSelf.commandDelegate sendPluginResult:res callbackId:callbackId];
+        weakSelf.hasPendingOperation = NO;
+        weakSelf.pickerController = nil;
+    }];
+}
+#endif
 
 - (void)repositionPopover:(CDVInvokedUrlCommand*)command
 {
@@ -301,25 +575,29 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                                                                animated:YES];
 }
 
-- (void)navigationController:(UINavigationController *)navigationController willShowViewController:(UIViewController *)viewController animated:(BOOL)animated
+// UINavigationControllerDelegate method
+- (void)navigationController:(UINavigationController*)navigationController
+      willShowViewController:(UIViewController*)viewController
+                    animated:(BOOL)animated
 {
-    if([navigationController isKindOfClass:[UIImagePickerController class]]){
-        
-        // If popoverWidth and popoverHeight are specified and are greater than 0, then set popover size, else use apple's default popoverSize
+    if([navigationController isKindOfClass:[UIImagePickerController class]]) {
+        // If popoverWidth and popoverHeight are specified and are greater than 0,
+        // then set popover size, else use apple's default popoverSize
         NSDictionary* options = self.pickerController.pictureOptions.popoverOptions;
+        
         if(options) {
             NSInteger popoverWidth = [self integerValueForKey:options key:@"popoverWidth" defaultValue:0];
             NSInteger popoverHeight = [self integerValueForKey:options key:@"popoverHeight" defaultValue:0];
-            if(popoverWidth > 0 && popoverHeight > 0)
-            {
+            
+            if(popoverWidth > 0 && popoverHeight > 0) {
                 [viewController setPreferredContentSize:CGSizeMake(popoverWidth,popoverHeight)];
             }
         }
         
-        
-        UIImagePickerController* cameraPicker = (UIImagePickerController*)navigationController;
+        UIImagePickerController* imagePicker = (UIImagePickerController*)navigationController;
 
-        if(![cameraPicker.mediaTypes containsObject:(NSString*)kUTTypeImage]){
+        // Set "Videos" title if mediaType is not for images
+        if(![imagePicker.mediaTypes containsObject:(NSString*)kUTTypeImage]) {
             [viewController.navigationItem setTitle:NSLocalizedString(@"Videos", nil)];
         }
     }
@@ -375,7 +653,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     self.hasPendingOperation = NO;
 }
 
-- (NSString*) getMimeForEncoding:(CDVEncodingType) encoding {
+- (NSString*)getMimeForEncoding:(CDVEncodingType)encoding
+{
     switch (encoding) {
         case EncodingTypePNG: return MIME_PNG;
         case EncodingTypeJPEG:
@@ -384,7 +663,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     }
 }
 
-- (NSString*) formatAsDataURI:(NSData*) data withMIME:(NSString*) mime {
+- (NSString*)formatAsDataURI:(NSData*)data withMIME:(NSString*)mime
+{
     NSString* base64 = toBase64(data);
     
     if (base64 == nil) {
@@ -394,20 +674,20 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     return [NSString stringWithFormat:@"data:%@;base64,%@", mime, base64];
 }
 
-- (NSString*) processImageAsDataUri:(UIImage*) image info:(NSDictionary*) info options:(CDVPictureOptions*) options
+- (NSString*)processImageAsDataUri:(UIImage*)image info:(NSDictionary*)info options:(CDVPictureOptions*)options
 {
     NSString* mime = nil;
-    NSData* data = [self processImage: image info: info options: options outMime: &mime];
+    NSData* data = [self processImage:image info:info options:options outMime:&mime];
     
-    return [self formatAsDataURI: data withMIME: mime];
+    return [self formatAsDataURI:data withMIME:mime];
 }
 
-- (NSData*) processImage:(UIImage*) image info:(NSDictionary*) info options:(CDVPictureOptions*) options
+- (NSData*)processImage:(UIImage*)image info:(NSDictionary*)info options:(CDVPictureOptions*)options
 {
-    return [self processImage:image  info: info options: options outMime: nil];
+    return [self processImage:image info:info options:options outMime:nil];
 }
 
-- (NSData*) processImage:(UIImage*)image info:(NSDictionary*)info options:(CDVPictureOptions*)options outMime:(NSString**) outMime
+- (NSData*)processImage:(UIImage*)image info:(NSDictionary*)info options:(CDVPictureOptions*)options outMime:(NSString**)outMime
 {
     NSData* data = nil;
 
@@ -484,8 +764,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 /* --------------------------------------------------------------
 -- get the metadata of the image from a PHAsset
 -------------------------------------------------------------- */
-- (NSDictionary*)getImageMetadataFromAsset:(PHAsset*)asset {
-
+- (NSDictionary*)getImageMetadataFromAsset:(PHAsset*)asset
+{
     if(asset == nil) {
         return nil;
     }
@@ -503,7 +783,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     return dict;
 }
 
--(NSDictionary*)convertImageMetadata:(NSData*)imageData {
+- (NSDictionary*)convertImageMetadata:(NSData*)imageData
+{
     CGImageSourceRef imageSource = CGImageSourceCreateWithData((__bridge CFDataRef)(imageData), NULL);
     if (imageSource) {
         NSDictionary *options = @{(NSString *)kCGImageSourceShouldCache : [NSNumber numberWithBool:NO]};
@@ -522,12 +803,20 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     return nil;
 }
 
+/**
+ Requests Photos library permissions when needed for picking media from the photo library.
+ This is only needed for iOS 13 and older when using UIImagePickerController for picking an image.
+ On iOS 14 and later, PHPickerViewController is used and does not need extra permissions.
+ @param options The picture options indicating the requested source type.
+ @param completion A block invoked with YES when access is authorized (or not required),
+                   or NO when access is denied or restricted.
+ */
 - (void)options:(CDVPictureOptions*)options requestPhotoPermissions:(void (^)(BOOL auth))completion
 {
-    if((unsigned long)options.sourceType == 1){
+    // This is would be no good response
+    if(options.sourceType == UIImagePickerControllerSourceTypeCamera) {
         completion(YES);
-    }
-    else{
+    } else {
         PHAuthorizationStatus status = [PHPhotoLibrary authorizationStatus];
 
         switch (status) {
@@ -592,7 +881,9 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     return (scaledImage == nil ? image : scaledImage);
 }
 
-- (void)resultForImage:(CDVPictureOptions*)options info:(NSDictionary*)info completion:(void (^)(CDVPluginResult* res))completion
+- (void)resultForImage:(CDVPictureOptions*)options
+                  info:(NSDictionary*)info
+            completion:(void (^)(CDVPluginResult* res))completion
 {
     CDVPluginResult* result = nil;
     BOOL saveToPhotoAlbum = options.saveToPhotoAlbum;
@@ -678,7 +969,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     return [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:moviePath];
 }
 
-- (NSString *) createTmpVideo:(NSString *) moviePath {
+- (NSString*)createTmpVideo:(NSString*)moviePath
+{
     NSString* moviePathExtension = [moviePath pathExtension];
     NSString* copyMoviePath = [self tempFilePath:moviePathExtension];
     NSFileManager* fileMgr = [[NSFileManager alloc] init];
@@ -686,6 +978,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     [fileMgr copyItemAtPath:moviePath toPath:copyMoviePath error:&error];
     return [[NSURL fileURLWithPath:copyMoviePath] absoluteString];
 }
+
+#pragma mark UIImagePickerControllerDelegate methods
 
 - (void)imagePickerController:(UIImagePickerController*)picker didFinishPickingMediaWithInfo:(NSDictionary*)info
 {
@@ -724,7 +1018,9 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 }
 
 // older api calls newer didFinishPickingMediaWithInfo
-- (void)imagePickerController:(UIImagePickerController*)picker didFinishPickingImage:(UIImage*)image editingInfo:(NSDictionary*)editingInfo
+- (void)imagePickerController:(UIImagePickerController*)picker
+        didFinishPickingImage:(UIImage*)image
+                  editingInfo:(NSDictionary*)editingInfo
 {
     NSDictionary* imageInfo = [NSDictionary dictionaryWithObject:image forKey:UIImagePickerControllerOriginalImage];
 
@@ -754,6 +1050,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     [[cameraPicker presentingViewController] dismissViewControllerAnimated:YES completion:invoke];
 }
 
+#pragma mark CLLocationManager
+
 - (CLLocationManager*)locationManager
 {
     if (locationManager != nil) {
@@ -767,7 +1065,11 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     return locationManager;
 }
 
-- (void)locationManager:(CLLocationManager*)manager didUpdateToLocation:(CLLocation*)newLocation fromLocation:(CLLocation*)oldLocation
+# pragma mark CLLocationManagerDelegate methods
+
+- (void)locationManager:(CLLocationManager*)manager
+    didUpdateToLocation:(CLLocation*)newLocation
+           fromLocation:(CLLocation*)oldLocation
 {
     if (locationManager == nil) {
         return;
@@ -922,7 +1224,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     [super viewWillAppear:animated];
 }
 
-+ (instancetype) createFromPictureOptions:(CDVPictureOptions*)pictureOptions;
++ (instancetype)createFromPictureOptions:(CDVPictureOptions*)pictureOptions
 {
     CDVCameraPicker* cameraPicker = [[CDVCameraPicker alloc] init];
     cameraPicker.pictureOptions = pictureOptions;

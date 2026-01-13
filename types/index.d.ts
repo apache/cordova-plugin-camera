@@ -58,7 +58,7 @@ interface CameraOptions {
      * Defined in navigator.camera.PictureSourceType. Default is CAMERA.
      *      PHOTOLIBRARY : 0,
      *      CAMERA : 1,
-     *      SAVEDPHOTOALBUM : 2
+     *      SAVEDPHOTOALBUM : 2 // same as PHOTOLIBRARY, kept for backward compatibility
      */
     sourceType?: number;
     /** Allow simple editing of image before selection. */

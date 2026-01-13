@@ -37,24 +37,27 @@
 - (UIImage*)retrieveImage:(NSDictionary*)info options:(CDVPictureOptions*)options;
 - (CDVPluginResult*)resultForImage:(CDVPictureOptions*)options info:(NSDictionary*)info;
 - (CDVPluginResult*)resultForVideo:(NSDictionary*)info;
+- (NSDictionary*)convertImageMetadata:(NSData*)imageData;
 
 @end
 
 @implementation CameraTest
 
-- (void)setUp {
+- (void)setUp
+{
     [super setUp];
     // Put setup code here. This method is called before the invocation of each test method in the class.
     
     self.plugin = [[CDVCamera alloc] init];
 }
 
-- (void)tearDown {
+- (void)tearDown
+{
     // Put teardown code here. This method is called after the invocation of each test method in the class.
     [super tearDown];
 }
 
-- (void) testPictureOptionsCreate
+- (void)testPictureOptionsCreate
 {
     NSArray* args;
     CDVPictureOptions* options;
@@ -118,14 +121,14 @@
     XCTAssertEqual(options.usesGeolocation, NO);
 }
 
-- (void) testCameraPickerCreate
+- (void)testCameraPickerCreate
 {
     NSDictionary* popoverOptions;
     NSArray* args;
     CDVPictureOptions* pictureOptions;
     CDVCameraPicker* picker;
     
-    // Souce is Camera, and image type
+    // Source is Camera, and image type - Camera always uses UIImagePickerController
     
     popoverOptions = @{ @"x" : @1, @"y" : @2, @"width" : @3, @"height" : @4, @"popoverWidth": @200, @"popoverHeight": @300 };
     args = @[
@@ -157,7 +160,7 @@
         XCTAssertEqual(picker.cameraDevice, pictureOptions.cameraDirection);
     }
 
-    // Souce is not Camera, and all media types
+    // Source is Photo Library, and all media types - On iOS 14+ uses PHPicker, below uses UIImagePickerController
 
     args = @[
           @(49),
@@ -187,7 +190,7 @@
          XCTAssertEqualObjects(picker.mediaTypes, [UIImagePickerController availableMediaTypesForSourceType:picker.sourceType]);
     }
     
-    // Souce is not Camera, and either Image or Movie media type
+    // Source is Photo Library, and either Image or Movie media type - On iOS 14+ uses PHPicker
 
     args = @[
              @(49),
@@ -218,7 +221,8 @@
     }
 }
 
-- (UIImage*) createImage:(CGRect)rect orientation:(UIImageOrientation)imageOrientation {
+- (UIImage*)createImage:(CGRect)rect orientation:(UIImageOrientation)imageOrientation
+{
     UIGraphicsBeginImageContext(rect.size);
     CGContextRef context = UIGraphicsGetCurrentContext();
     
@@ -233,8 +237,8 @@
     return image;
 }
 
-- (void) testImageScaleCropForSize {
-    
+- (void)testImageScaleCropForSize
+{
     UIImage *sourceImagePortrait, *sourceImageLandscape, *targetImage;
     CGSize targetSize = CGSizeZero;
     
@@ -279,7 +283,8 @@
     XCTAssertEqual(targetImage.size.height, targetSize.height);
 }
 
-- (void) testImageScaleNoCropForSize {
+- (void)testImageScaleNoCropForSize
+{
     UIImage *sourceImagePortrait, *sourceImageLandscape, *targetImage;
     CGSize targetSize = CGSizeZero;
     
@@ -330,7 +335,8 @@
     XCTAssertEqual(targetImage.size.height, targetSize.height);
 }
 
-- (void) testImageCorrectedForOrientation {
+- (void)testImageCorrectedForOrientation
+{
     UIImage *sourceImagePortrait, *sourceImageLandscape, *targetImage;
     CGSize targetSize = CGSizeZero;
     
@@ -383,7 +389,7 @@
 }
 
 
-- (void) testRetrieveImage
+- (void)testRetrieveImage
 {
     CDVPictureOptions* pictureOptions = [[CDVPictureOptions alloc] init];
     NSDictionary *infoDict1, *infoDict2;
@@ -461,7 +467,7 @@
     XCTAssertEqual(resultImage.size.height, scaledImageWithCrop.size.height);
 }
 
-- (void) testProcessImage
+- (void)testProcessImage
 {
     CDVPictureOptions* pictureOptions = [[CDVPictureOptions alloc] init];
     NSData* resultData;
@@ -506,6 +512,125 @@
     XCTAssertEqualObjects([resultData base64EncodedStringWithOptions:0], [originalImageDataJPEGWithQuality base64EncodedStringWithOptions:0]);
     
     // TODO: usesGeolocation is not tested
+}
+
+#pragma mark - PHPickerViewController Tests (iOS 14+)
+
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 140000 // Always true on XCode12+
+- (void)testPHPickerAvailability API_AVAILABLE(ios(14))
+{
+    XCTAssertNotNil([PHPickerViewController class]);
+    
+    PHPickerConfiguration *config = [[PHPickerConfiguration alloc] init];
+    XCTAssertNotNil(config);
+    
+    config.filter = [PHPickerFilter imagesFilter];
+    XCTAssertNotNil(config.filter);
+    
+    PHPickerViewController *picker = [[PHPickerViewController alloc] initWithConfiguration:config];
+    XCTAssertNotNil(picker);
+}
+
+- (void)testPHPickerConfiguration API_AVAILABLE(ios(14))
+{
+    // Test image filter configuration
+    PHPickerConfiguration *imageConfig = [[PHPickerConfiguration alloc] init];
+    imageConfig.filter = [PHPickerFilter imagesFilter];
+    imageConfig.selectionLimit = 1;
+    
+    XCTAssertNotNil(imageConfig);
+    XCTAssertEqual(imageConfig.selectionLimit, 1);
+    
+    // Test video filter configuration
+    PHPickerConfiguration *videoConfig = [[PHPickerConfiguration alloc] init];
+    videoConfig.filter = [PHPickerFilter videosFilter];
+    
+    XCTAssertNotNil(videoConfig.filter);
+    
+    // Test all media types configuration
+    PHPickerConfiguration *allConfig = [[PHPickerConfiguration alloc] init];
+    allConfig.filter = [PHPickerFilter anyFilterMatchingSubfilters:@[
+        [PHPickerFilter imagesFilter],
+        [PHPickerFilter videosFilter]
+    ]];
+    
+    XCTAssertNotNil(allConfig.filter);
+}
+
+- (void)testPHPickerDelegateConformance API_AVAILABLE(ios(14))
+{
+    // Test that CDVCamera conforms to PHPickerViewControllerDelegate
+    XCTAssertTrue([self.plugin conformsToProtocol:@protocol(PHPickerViewControllerDelegate)]);
+    
+    // Test that the delegate method is implemented
+    SEL delegateSelector = @selector(picker:didFinishPicking:);
+    XCTAssertTrue([self.plugin respondsToSelector:delegateSelector]);
+}
+
+- (void)testShowPHPickerMethod API_AVAILABLE(ios(14))
+{
+    // Test that showPHPicker method exists
+    SEL showPHPickerSelector = @selector(showPHPicker:withOptions:);
+    XCTAssertTrue([self.plugin respondsToSelector:showPHPickerSelector]);
+    
+    // Test that processPHPickerImage method exists
+    SEL processSelector = @selector(processPHPickerImage:assetIdentifier:callbackId:options:);
+    XCTAssertTrue([self.plugin respondsToSelector:processSelector]);
+    
+    // Test that finalizePHPickerImage method exists
+    SEL finalizeSelector = @selector(finalizePHPickerImage:metadata:callbackId:options:);
+    XCTAssertTrue([self.plugin respondsToSelector:finalizeSelector]);
+}
+#endif
+
+- (void)testConvertImageMetadata
+{
+    // Create a test image
+    UIImage* testImage = [self createImage:CGRectMake(0, 0, 100, 100) orientation:UIImageOrientationUp];
+    NSData* imageData = UIImageJPEGRepresentation(testImage, 1.0);
+    
+    XCTAssertNotNil(imageData);
+    
+    // Test metadata conversion
+    NSDictionary* metadata = [self.plugin convertImageMetadata:imageData];
+    
+    // Metadata may be nil for generated images, but the method should not crash
+    // Real camera images would have EXIF data
+    XCTAssertTrue(metadata == nil || [metadata isKindOfClass:[NSDictionary class]]);
+}
+
+- (void)testPictureOptionsForPHPicker
+{
+    NSArray* args;
+    CDVPictureOptions* options;
+    
+    // Test options configuration for photo library (which would use PHPicker on iOS 14+)
+    args = @[
+             @(75),
+             @(DestinationTypeFileUri),
+             @(UIImagePickerControllerSourceTypePhotoLibrary),
+             @(800),
+             @(600),
+             @(EncodingTypeJPEG),
+             @(MediaTypePicture),
+             @NO,
+             @YES,
+             @NO,
+             [NSNull null],
+             @(UIImagePickerControllerCameraDeviceRear),
+             ];
+    
+    CDVInvokedUrlCommand* command = [[CDVInvokedUrlCommand alloc] initWithArguments:args callbackId:@"dummy" className:@"myclassname" methodName:@"mymethodname"];
+    options = [CDVPictureOptions createFromTakePictureArguments:command];
+    
+    // Verify options are correctly set for photo library source
+    XCTAssertEqual(options.sourceType, (int)UIImagePickerControllerSourceTypePhotoLibrary);
+    XCTAssertEqual([options.quality intValue], 75);
+    XCTAssertEqual(options.destinationType, (int)DestinationTypeFileUri);
+    XCTAssertEqual(options.targetSize.width, 800);
+    XCTAssertEqual(options.targetSize.height, 600);
+    XCTAssertEqual(options.correctOrientation, YES);
+    XCTAssertEqual(options.mediaType, (int)MediaTypePicture);
 }
 
 @end
