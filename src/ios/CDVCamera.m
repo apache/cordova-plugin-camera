@@ -409,7 +409,12 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                 }
                 
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    NSString* videoPath = [weakSelf createTmpVideo:[url path]];
+                    // Promote weakSelf to strongSelf so work halts cleanly
+                    // if the controller was deallocated mid-async
+                    CDVCamera* strongSelf = weakSelf;
+                    if (strongSelf == nil) return;
+                    
+                    NSString* videoPath = [strongSelf createTmpVideo:[url path]];
                     CDVPluginResult* result = nil;
                     
                     if (videoPath == nil) {
@@ -419,8 +424,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                         result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:videoPath];
                     }
                     
-                    [weakSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
-                    weakSelf.hasPendingOperation = NO;
+                    [strongSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
+                    strongSelf.hasPendingOperation = NO;
                 });
             }];
             
