@@ -37,8 +37,6 @@
 
 #define CDV_PHOTO_PREFIX @"cdv_photo_"
 
-static NSSet* org_apache_cordova_validArrowDirections;
-
 static NSString* toBase64(NSData* data)
 {
     SEL s1 = NSSelectorFromString(@"cdv_base64EncodedString");
