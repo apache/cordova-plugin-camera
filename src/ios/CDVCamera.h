@@ -72,10 +72,8 @@ typedef NSUInteger CDVMediaType;
 @property (assign) BOOL allowsEditing;
 @property (assign) BOOL correctOrientation;
 @property (assign) BOOL saveToPhotoAlbum;
-@property (strong) NSDictionary* popoverOptions;
 @property (assign) UIImagePickerControllerCameraDevice cameraDirection;
 
-@property (assign) BOOL popoverSupported;
 @property (assign) BOOL usesGeolocation;
 @property (assign) BOOL cropToSize;
 
@@ -89,7 +87,6 @@ typedef NSUInteger CDVMediaType;
 
 @property (copy)   NSString* callbackId;
 @property (copy)   NSString* postUrl;
-@property (strong) UIPopoverController* pickerPopoverController;
 @property (assign) BOOL cropToSize;
 @property (strong) UIView* webView;
 
@@ -103,14 +100,12 @@ typedef NSUInteger CDVMediaType;
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 140000 // Always true on XCode12+
 @interface CDVCamera : CDVPlugin <UIImagePickerControllerDelegate,
                        UINavigationControllerDelegate,
-                       UIPopoverControllerDelegate,
                        CLLocationManagerDelegate,
                        PHPickerViewControllerDelegate>
 {}
 #else
 @interface CDVCamera : CDVPlugin <UIImagePickerControllerDelegate,
                        UINavigationControllerDelegate,
-                       UIPopoverControllerDelegate,
                        CLLocationManagerDelegate>
 {}
 #endif
@@ -122,7 +117,6 @@ typedef NSUInteger CDVMediaType;
 
 - (void)takePicture:(CDVInvokedUrlCommand*)command;
 - (void)cleanup:(CDVInvokedUrlCommand*)command;
-- (void)repositionPopover:(CDVInvokedUrlCommand*)command;
 
 // UIImagePickerControllerDelegate methods
 - (void)imagePickerController:(UIImagePickerController*)picker didFinishPickingMediaWithInfo:(NSDictionary*)info;

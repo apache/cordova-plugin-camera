@@ -61,7 +61,6 @@
 {
     NSArray* args;
     CDVPictureOptions* options;
-    NSDictionary* popoverOptions;
     
     // No arguments, check whether the defaults are set
     args = @[];
@@ -79,14 +78,10 @@
     XCTAssertEqual(options.allowsEditing, NO);
     XCTAssertEqual(options.correctOrientation, NO);
     XCTAssertEqual(options.saveToPhotoAlbum, NO);
-    XCTAssertEqualObjects(options.popoverOptions, nil);
     XCTAssertEqual(options.cameraDirection, (int)UIImagePickerControllerCameraDeviceRear);
-    XCTAssertEqual(options.popoverSupported, NO);
     XCTAssertEqual(options.usesGeolocation, NO);
     
     // Set each argument, check whether they are set. different from defaults
-    popoverOptions = @{ @"x" : @1, @"y" : @2, @"width" : @3, @"height" : @4, @"popoverWidth": @200, @"popoverHeight": @300 };
-    
     args = @[
              @(49),
              @(DestinationTypeDataUrl),
@@ -98,7 +93,7 @@
              @YES,
              @YES,
              @YES,
-             popoverOptions,
+             nil, // popoverOptions - iPadOS only, not used anymore
              @(UIImagePickerControllerCameraDeviceFront),
              ];
     
@@ -115,22 +110,17 @@
     XCTAssertEqual(options.allowsEditing, YES);
     XCTAssertEqual(options.correctOrientation, YES);
     XCTAssertEqual(options.saveToPhotoAlbum, YES);
-    XCTAssertEqualObjects(options.popoverOptions, popoverOptions);
     XCTAssertEqual(options.cameraDirection, (int)UIImagePickerControllerCameraDeviceFront);
-    XCTAssertEqual(options.popoverSupported, NO);
     XCTAssertEqual(options.usesGeolocation, NO);
 }
 
 - (void)testCameraPickerCreate
 {
-    NSDictionary* popoverOptions;
     NSArray* args;
     CDVPictureOptions* pictureOptions;
     CDVCameraPicker* picker;
     
-    // Source is Camera, and image type - Camera always uses UIImagePickerController
-    
-    popoverOptions = @{ @"x" : @1, @"y" : @2, @"width" : @3, @"height" : @4, @"popoverWidth": @200, @"popoverHeight": @300 };
+    // Source is Camera, uses always UIImagePickerController
     args = @[
              @(49),
              @(DestinationTypeDataUrl),
@@ -142,7 +132,7 @@
              @YES,
              @YES,
              @YES,
-             popoverOptions,
+             nil, // popoverOptions - iPadOS only, not used anymore
              @(UIImagePickerControllerCameraDeviceFront),
              ];
     
@@ -173,7 +163,7 @@
           @YES,
           @YES,
           @YES,
-          popoverOptions,
+          nil, // popoverOptions - iPadOS only, not used anymore
           @(UIImagePickerControllerCameraDeviceFront),
           ];
     
@@ -203,7 +193,7 @@
              @YES,
              @YES,
              @YES,
-             popoverOptions,
+             nil, // popoverOptions - iPadOS only, not used anymore
              @(UIImagePickerControllerCameraDeviceFront),
              ];
     

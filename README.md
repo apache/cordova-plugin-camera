@@ -118,11 +118,7 @@ To add these entries into the `info.plist`, you can use the `edit-config` tag in
     * [.EncodingType](#module_Camera.EncodingType) : <code>enum</code>
     * [.MediaType](#module_Camera.MediaType) : <code>enum</code>
     * [.PictureSourceType](#module_Camera.PictureSourceType) : <code>enum</code>
-    * [.PopoverArrowDirection](#module_Camera.PopoverArrowDirection) : <code>enum</code>
     * [.Direction](#module_Camera.Direction) : <code>enum</code>
-
-* [CameraPopoverHandle](#module_CameraPopoverHandle)
-* [CameraPopoverOptions](#module_CameraPopoverOptions)
 
 ---
 
@@ -312,7 +308,6 @@ Optional parameters to customize the camera settings.
 | mediaType | <code>[MediaType](#module_Camera.MediaType)</code> | <code>PICTURE</code> | Set the type of media to select from.  Only works when `PictureSourceType` is `PHOTOLIBRARY` or `SAVEDPHOTOALBUM`. |
 | correctOrientation | <code>Boolean</code> |  | Rotate the image to correct for the orientation of the device during capture. |
 | saveToPhotoAlbum | <code>Boolean</code> |  | Save the image to the photo album on the device after capture.<br />See [Android Quirks](#cameragetpicturesuccesscallback-errorcallback-options). |
-| popoverOptions | <code>[CameraPopoverOptions](#module_CameraPopoverOptions)</code> |  | iOS-only options that specify popover location in iPad. |
 | cameraDirection | <code>[Direction](#module_Camera.Direction)</code> | <code>BACK</code> | Choose the camera to use (front- or back-facing). |
 
 ---
@@ -370,24 +365,6 @@ Defines the output format of `Camera.getPicture` call.
 | CAMERA | <code>number</code> | <code>1</code> | Take picture from camera |
 | SAVEDPHOTOALBUM | <code>number</code> | <code>2</code> | Same as `PHOTOLIBRARY`, when running on Android or iOS 14+. On iOS older than 14, an image can only be chosen from the device's Camera Roll album with this setting. |
 
-
-
-<a name="module_Camera.PopoverArrowDirection"></a>
-
-### Camera.PopoverArrowDirection : <code>enum</code>
-Matches iOS UIPopoverArrowDirection constants to specify arrow location on popover.
-
-**Kind**: static enum property of <code>[Camera](#module_Camera)</code>
-**Properties**
-
-| Name | Type | Default |
-| --- | --- | --- |
-| ARROW_UP | <code>number</code> | <code>1</code> |
-| ARROW_DOWN | <code>number</code> | <code>2</code> |
-| ARROW_LEFT | <code>number</code> | <code>4</code> |
-| ARROW_RIGHT | <code>number</code> | <code>8</code> |
-| ARROW_ANY | <code>number</code> | <code>15</code> |
-
 <a name="module_Camera.Direction"></a>
 
 ### Camera.Direction : <code>enum</code>
@@ -400,58 +377,6 @@ Matches iOS UIPopoverArrowDirection constants to specify arrow location on popov
 | FRONT | <code>number</code> | <code>1</code> | Use the front-facing camera |
 
 ---
-
-<a name="module_CameraPopoverOptions"></a>
-
-## CameraPopoverOptions
-iOS-only parameters that specify the anchor element location and arrow
-direction of the popover when selecting images from an iPad's library
-or album.
-Note that the size of the popover may change to adjust to the
-direction of the arrow and orientation of the screen.  Make sure to
-account for orientation changes when specifying the anchor element
-location.
-
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| [x] | <code>Number</code> | <code>0</code> | x pixel coordinate of screen element onto which to anchor the popover. |
-| [y] | <code>Number</code> | <code>32</code> | y pixel coordinate of screen element onto which to anchor the popover. |
-| [width] | <code>Number</code> | <code>320</code> | width, in pixels, of the screen element onto which to anchor the popover. |
-| [height] | <code>Number</code> | <code>480</code> | height, in pixels, of the screen element onto which to anchor the popover. |
-| [arrowDir] | <code>[PopoverArrowDirection](#module_Camera.PopoverArrowDirection)</code> | <code>ARROW_ANY</code> | Direction the arrow on the popover should point. |
-| [popoverWidth] | <code>Number</code> | <code>0</code> | width of the popover (0 or not specified will use apple's default width). |
-| [popoverHeight] | <code>Number</code> | <code>0</code> | height of the popover (0 or not specified will use apple's default height). |
-
----
-
-<a name="module_CameraPopoverHandle"></a>
-
-## CameraPopoverHandle
-A handle to an image picker popover.
-
-__Supported Platforms__
-
-- iOS
-
-**Example**
-```js
-navigator.camera.getPicture(onSuccess, onFail,
-{
-    destinationType: Camera.DestinationType.FILE_URI,
-    sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
-    popoverOptions: new CameraPopoverOptions(300, 300, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY, 300, 600)
-});
-
-// Reposition the popover if the orientation changes.
-window.onorientationchange = function() {
-    var cameraPopoverHandle = new CameraPopoverHandle();
-    var cameraPopoverOptions = new CameraPopoverOptions(0, 0, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY, 400, 500);
-    cameraPopoverHandle.setPosition(cameraPopoverOptions);
-}
-```
----
-
 
 ## `camera.getPicture` Errata
 
@@ -525,7 +450,7 @@ Can only return photos as data URI image.
 
 Including a JavaScript `alert()` in either of the callback functions
 can cause problems.  Wrap the alert within a `setTimeout()` to allow
-the iOS image picker or popover to fully close before the alert
+the iOS image picker to fully close before the alert
 displays:
 
 ```javascript

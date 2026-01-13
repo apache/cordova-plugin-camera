@@ -36,11 +36,6 @@ interface Camera {
         cameraSuccess: (data: string) => void,
         cameraError: (message: string) => void,
         cameraOptions?: CameraOptions): void;
-    // Next will work only on iOS
-    //getPicture(
-    //    cameraSuccess: (data: string) => void,
-    //    cameraError: (message: string) => void,
-    //    cameraOptions?: CameraOptions): CameraPopoverHandle;
 }
 
 interface CameraOptions {
@@ -100,46 +95,6 @@ interface CameraOptions {
      *      BACK: 1
      */
     cameraDirection?: number;
-    /** iOS-only options that specify popover location in iPad. Defined in CameraPopoverOptions. */
-    popoverOptions?: CameraPopoverOptions;
-}
-
-/**
- * A handle to the popover dialog created by navigator.camera.getPicture. Used on iOS only.
- */
-interface CameraPopoverHandle {
-    /**
-     * Set the position of the popover.
-     * @param popoverOptions the CameraPopoverOptions that specify the new position.
-     */
-    setPosition(popoverOptions: CameraPopoverOptions): void;
-}
-
-/**
- * iOS-only parameters that specify the anchor element location and arrow direction
- * of the popover when selecting images from an iPad's library or album.
- */
-interface CameraPopoverOptions {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    /**
-     * Direction the arrow on the popover should point. Defined in Camera.PopoverArrowDirection
-     * Matches iOS UIPopoverArrowDirection constants.
-     *      ARROW_UP : 1,        
-     *      ARROW_DOWN : 2,
-     *      ARROW_LEFT : 4,
-     *      ARROW_RIGHT : 8,
-     *      ARROW_ANY : 15
-     */
-    arrowDir : number;
-    popoverWidth: number;
-    popoverHeight: number;
-}
-
-declare class CameraPopoverOptions implements CameraPopoverOptions {
-    constructor(x?: number, y?: number, width?: number, height?: number, arrowDir?: number);
 }
 
 declare var Camera: {
@@ -165,13 +120,5 @@ declare var Camera: {
         PHOTOLIBRARY: number;
         CAMERA: number;
         SAVEDPHOTOALBUM: number;
-    }
-    // Used only on iOS
-    PopoverArrowDirection: {
-        ARROW_UP: number;
-        ARROW_DOWN: number;
-        ARROW_LEFT: number;
-        ARROW_RIGHT: number;
-        ARROW_ANY: number;
     }
 };
