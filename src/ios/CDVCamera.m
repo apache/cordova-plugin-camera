@@ -84,7 +84,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     pictureOptions.allowsEditing = [[command argumentAtIndex:7 withDefault:@(NO)] boolValue];
     pictureOptions.correctOrientation = [[command argumentAtIndex:8 withDefault:@(NO)] boolValue];
     pictureOptions.saveToPhotoAlbum = [[command argumentAtIndex:9 withDefault:@(NO)] boolValue];
-    pictureOptions.cameraDirection = [[command argumentAtIndex:11 withDefault:@(UIImagePickerControllerCameraDeviceRear)] unsignedIntegerValue];
+    pictureOptions.cameraDirection = [[command argumentAtIndex:10 withDefault:@(UIImagePickerControllerCameraDeviceRear)] unsignedIntegerValue];
 
     pictureOptions.usesGeolocation = NO;
 
@@ -143,8 +143,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
    - index 7 (allowsEditing): NSNumber(BOOL). Allow user to crop/edit. Default: NO.
    - index 8 (correctOrientation): NSNumber(BOOL). Fix EXIF orientation. Default: NO.
    - index 9 (saveToPhotoAlbum): NSNumber(BOOL). Save captured image to Photos. Default: NO.
-   - index 10 (popoverOptions): NSDictionary (iPad only). Popover positioning and sizing. - Not used anymore
-   - index 11 (cameraDirection): NSNumber (UIImagePickerControllerCameraDevice). Front/Rear. Default: Rear.
+   - index 10 (cameraDirection): NSNumber (UIImagePickerControllerCameraDevice). Front/Rear. Default: Rear.
 
  @discussion
  This method validates hardware availability and permissions (camera or photo library),

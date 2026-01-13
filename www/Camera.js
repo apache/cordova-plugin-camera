@@ -143,11 +143,8 @@ cameraExport.getPicture = function (successCallback, errorCallback, options) {
         console.warn('allowEdit is deprecated. It does not work reliably on all platforms. Utilise a dedicated image editing library instead. allowEdit functionality is scheduled to be removed in a future release.');
     }
 
-    const args = [
-        quality, destinationType, sourceType, targetWidth, targetHeight, encodingType,
-        mediaType, allowEdit, correctOrientation, saveToPhotoAlbum,
-        null, // popoverOptions, iPadOS only, not used anymore
-        cameraDirection];
+    const args = [quality, destinationType, sourceType, targetWidth, targetHeight, encodingType,
+        mediaType, allowEdit, correctOrientation, saveToPhotoAlbum, cameraDirection];
 
     exec(successCallback, errorCallback, 'Camera', 'takePicture', args);
 };

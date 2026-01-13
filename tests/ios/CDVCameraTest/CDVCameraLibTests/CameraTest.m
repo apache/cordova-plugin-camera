@@ -93,7 +93,6 @@
              @YES,
              @YES,
              @YES,
-             nil, // popoverOptions - iPadOS only, not used anymore
              @(UIImagePickerControllerCameraDeviceFront),
              ];
     
@@ -132,7 +131,6 @@
              @YES,
              @YES,
              @YES,
-             nil, // popoverOptions - iPadOS only, not used anymore
              @(UIImagePickerControllerCameraDeviceFront),
              ];
     
@@ -163,7 +161,6 @@
           @YES,
           @YES,
           @YES,
-          nil, // popoverOptions - iPadOS only, not used anymore
           @(UIImagePickerControllerCameraDeviceFront),
           ];
     
@@ -193,7 +190,6 @@
              @YES,
              @YES,
              @YES,
-             nil, // popoverOptions - iPadOS only, not used anymore
              @(UIImagePickerControllerCameraDeviceFront),
              ];
     
