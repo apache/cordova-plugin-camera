@@ -76,17 +76,6 @@ module.exports = {
         SAVEDPHOTOALBUM: 2
     },
     /**
-     * Matches iOS UIPopoverArrowDirection constants to specify arrow location on popover.
-     * @enum {number}
-     */
-    PopoverArrowDirection: {
-        ARROW_UP: 1,
-        ARROW_DOWN: 2,
-        ARROW_LEFT: 4,
-        ARROW_RIGHT: 8,
-        ARROW_ANY: 15
-    },
-    /**
      * @enum {number}
      */
     Direction: {

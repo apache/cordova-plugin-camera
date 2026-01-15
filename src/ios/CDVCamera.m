@@ -37,8 +37,6 @@
 
 #define CDV_PHOTO_PREFIX @"cdv_photo_"
 
-static NSSet* org_apache_cordova_validArrowDirections;
-
 static NSString* toBase64(NSData* data)
 {
     SEL s1 = NSSelectorFromString(@"cdv_base64EncodedString");
@@ -84,10 +82,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     pictureOptions.allowsEditing = [[command argumentAtIndex:7 withDefault:@(NO)] boolValue];
     pictureOptions.correctOrientation = [[command argumentAtIndex:8 withDefault:@(NO)] boolValue];
     pictureOptions.saveToPhotoAlbum = [[command argumentAtIndex:9 withDefault:@(NO)] boolValue];
-    pictureOptions.popoverOptions = [command argumentAtIndex:10 withDefault:nil];
-    pictureOptions.cameraDirection = [[command argumentAtIndex:11 withDefault:@(UIImagePickerControllerCameraDeviceRear)] unsignedIntegerValue];
+    pictureOptions.cameraDirection = [[command argumentAtIndex:10 withDefault:@(UIImagePickerControllerCameraDeviceRear)] unsignedIntegerValue];
 
-    pictureOptions.popoverSupported = NO;
     pictureOptions.usesGeolocation = NO;
 
     return pictureOptions;
@@ -103,11 +99,6 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 @end
 
 @implementation CDVCamera
-
-+ (void)initialize
-{
-    org_apache_cordova_validArrowDirections = [[NSSet alloc] initWithObjects:[NSNumber numberWithInt:UIPopoverArrowDirectionUp], [NSNumber numberWithInt:UIPopoverArrowDirectionDown], [NSNumber numberWithInt:UIPopoverArrowDirectionLeft], [NSNumber numberWithInt:UIPopoverArrowDirectionRight], [NSNumber numberWithInt:UIPopoverArrowDirectionAny], nil];
-}
 
 @synthesize hasPendingOperation, pickerController, locationManager;
 
@@ -135,12 +126,6 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     return [(NSNumber*)useGeo boolValue];
 }
 
-- (BOOL)popoverSupported
-{
-    return (NSClassFromString(@"UIPopoverController") != nil) &&
-           (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad);
-}
-
 /**
  Called by JS function navigator.camera.getPicture(cameraSuccess, cameraError, cameraOptions)
  which will invoke the camera or photo picker to capture or select an image or video.
@@ -156,8 +141,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
    - index 7 (allowsEditing): NSNumber(BOOL). Allow user to crop/edit. Default: NO.
    - index 8 (correctOrientation): NSNumber(BOOL). Fix EXIF orientation. Default: NO.
    - index 9 (saveToPhotoAlbum): NSNumber(BOOL). Save captured image to Photos. Default: NO.
-   - index 10 (popoverOptions): NSDictionary (iPad only). Popover positioning and sizing.
-   - index 11 (cameraDirection): NSNumber (UIImagePickerControllerCameraDevice). Front/Rear. Default: Rear.
+   - index 10 (cameraDirection): NSNumber (UIImagePickerControllerCameraDevice). Front/Rear. Default: Rear.
 
  @discussion
  This method validates hardware availability and permissions (camera or photo library),
@@ -171,7 +155,6 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
     [self.commandDelegate runInBackground:^{
         CDVPictureOptions* pictureOptions = [CDVPictureOptions createFromTakePictureArguments:command];
-        pictureOptions.popoverSupported = [weakSelf popoverSupported];
         pictureOptions.usesGeolocation = [weakSelf usesGeolocation];
         pictureOptions.cropToSize = NO;
 
@@ -279,12 +262,11 @@ static NSString* MIME_JPEG    = @"image/jpeg";
  - Ensures presentation occurs on the main thread.
  
  Behavior:
- - Dismisses any visible popover before presenting a new picker (iPad).
- - Configures delegates, media types, and popover presentation as needed.
+ - Configures delegates and media types
  - Updates `hasPendingOperation` to reflect plugin activity state.
  
  @param callbackId The Cordova callback identifier used to deliver results back to JavaScript.
- @param pictureOptions Parsed camera options (sourceType, mediaType, allowsEditing, popoverOptions, etc.).
+ @param pictureOptions Parsed camera options (sourceType, mediaType, allowsEditing, etc.).
  */
 - (void)showCameraPicker:(NSString*)callbackId withOptions:(CDVPictureOptions*)pictureOptions
 {
@@ -309,28 +291,12 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         cameraPicker.callbackId = callbackId;
         // we need to capture this state for memory warnings that dealloc this object
         cameraPicker.webView = self.webView;
-
-        // If a popover is already open, close it; we only want one at a time.
-        if (([[self pickerController] pickerPopoverController] != nil) && [[[self pickerController] pickerPopoverController] isPopoverVisible]) {
-            [[[self pickerController] pickerPopoverController] dismissPopoverAnimated:YES];
-            [[[self pickerController] pickerPopoverController] setDelegate:nil];
-            [[self pickerController] setPickerPopoverController:nil];
-        }
-
-        if ([self popoverSupported] && (pictureOptions.sourceType != UIImagePickerControllerSourceTypeCamera)) {
-            if (cameraPicker.pickerPopoverController == nil) {
-                cameraPicker.pickerPopoverController = [[NSClassFromString(@"UIPopoverController") alloc] initWithContentViewController:cameraPicker];
-            }
-            [self displayPopover:pictureOptions.popoverOptions];
+        cameraPicker.modalPresentationStyle = UIModalPresentationCurrentContext;
+        [self.viewController presentViewController:cameraPicker
+                                          animated:YES
+                                        completion:^{
             self.hasPendingOperation = NO;
-        } else {
-            cameraPicker.modalPresentationStyle = UIModalPresentationCurrentContext;
-            [self.viewController presentViewController:cameraPicker
-                                              animated:YES
-                                            completion:^{
-                self.hasPendingOperation = NO;
-            }];
-        }
+        }];
     });
 }
 
@@ -526,17 +492,6 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 }
 #endif
 
-- (void)repositionPopover:(CDVInvokedUrlCommand*)command
-{
-    if (([[self pickerController] pickerPopoverController] != nil) && [[[self pickerController] pickerPopoverController] isPopoverVisible]) {
-
-        [[[self pickerController] pickerPopoverController] dismissPopoverAnimated:NO];
-
-        NSDictionary* options = [command argumentAtIndex:0 withDefault:nil];
-        [self displayPopover:options];
-    }
-}
-
 - (NSInteger)integerValueForKey:(NSDictionary*)dict key:(NSString*)key defaultValue:(NSInteger)defaultValue
 {
     NSInteger value = defaultValue;
@@ -549,55 +504,18 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     return value;
 }
 
-- (void)displayPopover:(NSDictionary*)options
-{
-    NSInteger x = 0;
-    NSInteger y = 32;
-    NSInteger width = 320;
-    NSInteger height = 480;
-    UIPopoverArrowDirection arrowDirection = UIPopoverArrowDirectionAny;
-
-    if (options) {
-        x = [self integerValueForKey:options key:@"x" defaultValue:0];
-        y = [self integerValueForKey:options key:@"y" defaultValue:32];
-        width = [self integerValueForKey:options key:@"width" defaultValue:320];
-        height = [self integerValueForKey:options key:@"height" defaultValue:480];
-        arrowDirection = [self integerValueForKey:options key:@"arrowDir" defaultValue:UIPopoverArrowDirectionAny];
-        if (![org_apache_cordova_validArrowDirections containsObject:[NSNumber numberWithUnsignedInteger:arrowDirection]]) {
-            arrowDirection = UIPopoverArrowDirectionAny;
-        }
-    }
-
-    [[[self pickerController] pickerPopoverController] setDelegate:self];
-    [[[self pickerController] pickerPopoverController] presentPopoverFromRect:CGRectMake(x, y, width, height)
-                                                                 inView:[self.webView superview]
-                                               permittedArrowDirections:arrowDirection
-                                                               animated:YES];
-}
-
 // UINavigationControllerDelegate method
 - (void)navigationController:(UINavigationController*)navigationController
       willShowViewController:(UIViewController*)viewController
                     animated:(BOOL)animated
 {
+    // Backward compatibility for iOS < 14
+    // Set title "Videos", when picking videos with the legacy UIImagePickerController
     if([navigationController isKindOfClass:[UIImagePickerController class]]) {
-        // If popoverWidth and popoverHeight are specified and are greater than 0,
-        // then set popover size, else use apple's default popoverSize
-        NSDictionary* options = self.pickerController.pictureOptions.popoverOptions;
-        
-        if(options) {
-            NSInteger popoverWidth = [self integerValueForKey:options key:@"popoverWidth" defaultValue:0];
-            NSInteger popoverHeight = [self integerValueForKey:options key:@"popoverHeight" defaultValue:0];
-            
-            if(popoverWidth > 0 && popoverHeight > 0) {
-                [viewController setPreferredContentSize:CGSizeMake(popoverWidth,popoverHeight)];
-            }
-        }
-        
-        UIImagePickerController* imagePicker = (UIImagePickerController*)navigationController;
+        UIImagePickerController* imagePickerController = (UIImagePickerController*)navigationController;
 
-        // Set "Videos" title if mediaType is not for images
-        if(![imagePicker.mediaTypes containsObject:(NSString*)kUTTypeImage]) {
+        // Set title "Videos" when picking not images
+        if(![imagePickerController.mediaTypes containsObject:(NSString*)kUTTypeImage]) {
             [viewController.navigationItem setTitle:NSLocalizedString(@"Videos", nil)];
         }
     }
@@ -636,21 +554,6 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     }
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-}
-
-- (void)popoverControllerDidDismissPopover:(id)popoverController
-{
-    UIPopoverController* pc = (UIPopoverController*)popoverController;
-
-    [pc dismissPopoverAnimated:YES];
-    pc.delegate = nil;
-    if (self.pickerController && self.pickerController.callbackId && self.pickerController.pickerPopoverController) {
-        self.pickerController.pickerPopoverController = nil;
-        NSString* callbackId = self.pickerController.callbackId;
-        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"no image selected"];   // error callback expects string ATM
-        [self.commandDelegate sendPluginResult:result callbackId:callbackId];
-    }
-    self.hasPendingOperation = NO;
 }
 
 - (NSString*)getMimeForEncoding:(CDVEncodingType)encoding
@@ -1007,14 +910,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         }
     };
 
-    if (cameraPicker.pictureOptions.popoverSupported && (cameraPicker.pickerPopoverController != nil)) {
-        [cameraPicker.pickerPopoverController dismissPopoverAnimated:YES];
-        cameraPicker.pickerPopoverController.delegate = nil;
-        cameraPicker.pickerPopoverController = nil;
-        invoke();
-    } else {
-        [[cameraPicker presentingViewController] dismissViewControllerAnimated:YES completion:invoke];
-    }
+    [[cameraPicker presentingViewController] dismissViewControllerAnimated:YES completion:invoke];
 }
 
 // older api calls newer didFinishPickingMediaWithInfo

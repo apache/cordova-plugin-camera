@@ -19,7 +19,7 @@
  *
 */
 
-/* globals Camera, resolveLocalFileSystemURL, FileEntry, CameraPopoverOptions, LocalFileSystem */
+/* globals Camera, resolveLocalFileSystemURL, FileEntry, LocalFileSystem */
 /* eslint-env jasmine */
 
 exports.defineAutoTests = function () {
@@ -156,13 +156,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         clearStatus();
         const options = extractOptions();
         log('Getting picture with options: ' + JSON.stringify(options));
-        const popoverHandle = navigator.camera.getPicture(getPictureWin, onGetPictureError, options);
-
-        // Reposition the popover if the orientation changes.
-        window.onorientationchange = function () {
-            const newPopoverOptions = new CameraPopoverOptions(0, 0, 100, 100, 0, 300, 400);
-            popoverHandle.setPosition(newPopoverOptions);
-        };
+        navigator.camera.getPicture(getPictureWin, onGetPictureError, options);
     }
 
     function logCallback (apiName, success) {
