@@ -362,19 +362,46 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         
         // Check if it's a video
         if ([pickerResult.itemProvider hasItemConformingToTypeIdentifier:UTTypeMovie.identifier]) {
-            [pickerResult.itemProvider loadFileRepresentationForTypeIdentifier:UTTypeMovie.identifier completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
+            // Writes a copy of the data to a temporary file. This file will be deleted
+            // when the completion handler returns. The program should copy or move the file within the completion handler.
+            [pickerResult.itemProvider loadFileRepresentationForTypeIdentifier:UTTypeMovie.identifier
+                                                             completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
                 if (error) {
-                    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
-                    [weakSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
-                    weakSelf.hasPendingOperation = NO;
+                    NSLog(@"CDVCamera: Failed to load video: %@", [error localizedDescription]);
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        CDVCamera* strongSelf = weakSelf;
+                        if (strongSelf == nil) return;
+                        
+                        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION
+                                                                    messageAsString:[NSString stringWithFormat:@"Failed to load video: %@", [error localizedDescription]]];
+                        [strongSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
+                        strongSelf.hasPendingOperation = NO;
+                    });
                     return;
                 }
                 
+                // The temporary file provided by PHPickerViewController is deleted when the completion
+                // handler exits
+                NSString* videoPath = [weakSelf createTmpVideo:[url path]];
+                
+                // Send Cordova plugin result back, which must be done on the main thread
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    NSString* videoPath = [weakSelf createTmpVideo:[url path]];
-                    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:videoPath];
-                    [weakSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
-                    weakSelf.hasPendingOperation = NO;
+                    // Promote weakSelf to strongSelf so work halts cleanly
+                    // if the controller was deallocated mid-async
+                    CDVCamera* strongSelf = weakSelf;
+                    if (strongSelf == nil) return;
+                    
+                    CDVPluginResult* result = nil;
+                    
+                    if (videoPath == nil) {
+                        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION
+                                                   messageAsString:@"Failed to copy video file to temporary location"];
+                    } else {
+                        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:videoPath];
+                    }
+                    
+                    [strongSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
+                    strongSelf.hasPendingOperation = NO;
                 });
             }];
             
@@ -874,12 +901,26 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 - (NSString*)createTmpVideo:(NSString*)moviePath
 {
-    NSString* moviePathExtension = [moviePath pathExtension];
-    NSString* copyMoviePath = [self tempFilePath:moviePathExtension];
+    NSString* copyMoviePath = [self tempFilePath:[moviePath pathExtension]];
     NSFileManager* fileMgr = [[NSFileManager alloc] init];
-    NSError *error;
-    [fileMgr copyItemAtPath:moviePath toPath:copyMoviePath error:&error];
-    return [[NSURL fileURLWithPath:copyMoviePath] absoluteString];
+    NSError *error = nil;
+    
+    // Copy the video file to the temp directory
+    BOOL copySuccess = [fileMgr copyItemAtPath:moviePath toPath:copyMoviePath error:&error];
+    
+    if (!copySuccess || error) {
+        NSLog(@"CDVCamera: Failed to copy video file from %@ to %@. Error: %@", moviePath, copyMoviePath, [error localizedDescription]);
+        return nil;
+    }
+    
+    // Verify the copied file exists
+    if (![fileMgr fileExistsAtPath:copyMoviePath]) {
+        NSLog(@"CDVCamera: Copied video file does not exist at path: %@", copyMoviePath);
+        return nil;
+    }
+    
+    // Use urlTransformer to get the proper URI for the webview
+    return [[self urlTransformer:[NSURL fileURLWithPath:copyMoviePath]] absoluteString];
 }
 
 #pragma mark UIImagePickerControllerDelegate methods
