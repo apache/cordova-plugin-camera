@@ -401,20 +401,30 @@ static NSString* MIME_JPEG    = @"image/jpeg";
             [pickerResult.itemProvider loadFileRepresentationForTypeIdentifier:UTTypeMovie.identifier
                                                              completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
                 if (error) {
-                    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
-                                                                messageAsString:[error localizedDescription]];
-                    [weakSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
-                    weakSelf.hasPendingOperation = NO;
+                    NSLog(@"CDVCamera: Failed to load video: %@", [error localizedDescription]);
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        CDVCamera* strongSelf = weakSelf;
+                        if (strongSelf == nil) return;
+                        
+                        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION
+                                                                    messageAsString:[NSString stringWithFormat:@"Failed to load video: %@", [error localizedDescription]]];
+                        [strongSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
+                        strongSelf.hasPendingOperation = NO;
+                    });
                     return;
                 }
                 
+                // The temporary file provided by PHPickerViewController is deleted when the completion
+                // handler exits
+                NSString* videoPath = [weakSelf createTmpVideo:[url path]];
+                
+                // Send Cordova plugin result back, which must be done on the main thread
                 dispatch_async(dispatch_get_main_queue(), ^{
                     // Promote weakSelf to strongSelf so work halts cleanly
                     // if the controller was deallocated mid-async
                     CDVCamera* strongSelf = weakSelf;
                     if (strongSelf == nil) return;
                     
-                    NSString* videoPath = [strongSelf createTmpVideo:[url path]];
                     CDVPluginResult* result = nil;
                     
                     if (videoPath == nil) {
@@ -992,12 +1002,6 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     NSFileManager* fileMgr = [[NSFileManager alloc] init];
     NSError *error = nil;
     
-    // Ensure the source file exists and is accessible
-    if (![fileMgr fileExistsAtPath:moviePath]) {
-        NSLog(@"CDVCamera: Source video file does not exist at path: %@", moviePath);
-        return nil;
-    }
-    
     // Copy the video file to the temp directory
     BOOL copySuccess = [fileMgr copyItemAtPath:moviePath toPath:copyMoviePath error:&error];
     
@@ -1012,11 +1016,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         return nil;
     }
     
-    // Resolve symlinks in the path to ensure consistency with how the File plugin resolves paths
-    NSString *resolvedPath = [[[NSURL fileURLWithPath:copyMoviePath] URLByResolvingSymlinksInPath] path];
-    
     // Use urlTransformer to get the proper URI for the webview
-    return [[self urlTransformer:[NSURL fileURLWithPath:resolvedPath]] absoluteString];
+    return [[self urlTransformer:[NSURL fileURLWithPath:copyMoviePath]] absoluteString];
 }
 
 #pragma mark UIImagePickerControllerDelegate methods
