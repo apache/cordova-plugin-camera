@@ -94,10 +94,9 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 @interface CDVCamera ()
 
-// Dynamic property for CDVViewController, which is checked, when
-// didReceiveMemoryWarning occurred. If a plugin defines this
-// property and set it to YES, [super didReceiveMemoryWarning]
-// will not be called in CDVViewController.
+// Redeclare CDVPlugin.hasPendingOperation as readwrite,
+// so we can set it. Skips didReceiveMemoryWarning handling in
+// CDVViewController when a plugin has a pending operation.
 @property (readwrite, assign) BOOL hasPendingOperation;
 
 @end
