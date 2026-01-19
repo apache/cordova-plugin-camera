@@ -39,10 +39,6 @@
         <clobbers target="Camera" />
     </js-module>
 
-    <js-module src="www/CameraPopoverOptions.js" name="CameraPopoverOptions">
-        <clobbers target="CameraPopoverOptions" />
-    </js-module>
-
     <js-module src="www/Camera.js" name="camera">
         <clobbers target="navigator.camera" />
     </js-module>
@@ -91,10 +87,6 @@
 
         <preference name="ANDROIDX_CORE_VERSION" default="1.6.+"/>
         <framework src="androidx.core:core:$ANDROIDX_CORE_VERSION" />
-
-        <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
-            <clobbers target="CameraPopoverHandle" />
-          </js-module>
       </platform>
 
      <!-- ios -->
@@ -105,10 +97,6 @@
              </feature>
              <preference name="CameraUsesGeolocation" value="false" />
          </config-file>
-
-         <js-module src="www/ios/CameraPopoverHandle.js" name="CameraPopoverHandle">
-            <clobbers target="CameraPopoverHandle" />
-         </js-module>
 
          <header-file src="src/ios/UIImage+CropScaleOrientation.h" />
          <source-file src="src/ios/UIImage+CropScaleOrientation.m" />
