@@ -406,41 +406,29 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                                                              completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
                 if (error) {
                     NSLog(@"CDVCamera: Failed to load video: %@", [error localizedDescription]);
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        CDVCamera* strongSelf = weakSelf;
-                        if (strongSelf == nil) return;
-                        
-                        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION
-                                                                    messageAsString:[NSString stringWithFormat:@"Failed to load video: %@", [error localizedDescription]]];
-                        [strongSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
-                        strongSelf.hasPendingOperation = NO;
-                    });
+                    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION
+                                                                messageAsString:[NSString stringWithFormat:@"Failed to load video: %@", [error localizedDescription]]];
+                    [weakSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
+                    weakSelf.hasPendingOperation = NO;
                     return;
                 }
                 
                 // The temporary file provided by PHPickerViewController is deleted when the completion
-                // handler exits
+                // handler exits. The file has to be copied in this thread, otherwise it will be gone.
                 NSString* videoPath = [weakSelf createTmpVideo:[url path]];
                 
                 // Send Cordova plugin result back, which must be done on the main thread
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    // Promote weakSelf to strongSelf so work halts cleanly
-                    // if the controller was deallocated mid-async
-                    CDVCamera* strongSelf = weakSelf;
-                    if (strongSelf == nil) return;
-                    
-                    CDVPluginResult* result = nil;
-                    
-                    if (videoPath == nil) {
-                        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION
-                                                   messageAsString:@"Failed to copy video file to temporary location"];
-                    } else {
-                        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:videoPath];
-                    }
-                    
-                    [strongSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
-                    strongSelf.hasPendingOperation = NO;
-                });
+                CDVPluginResult* result = nil;
+                
+                if (videoPath == nil) {
+                    result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION
+                                                messageAsString:@"Failed to copy video file to temporary location"];
+                } else {
+                    result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:videoPath];
+                }
+                
+                [weakSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
+                weakSelf.hasPendingOperation = NO;
             }];
             
             // Handle image
