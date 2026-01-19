@@ -115,24 +115,6 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 @synthesize hasPendingOperation, pickerController, locationManager;
 
-- (NSURL*)urlTransformer:(NSURL*)url
-{
-    NSURL* urlToTransform = url;
-
-    // for backwards compatibility - we check if this property is there
-    SEL sel = NSSelectorFromString(@"urlTransformer");
-    if ([self.commandDelegate respondsToSelector:sel]) {
-        // grab the block from the commandDelegate
-        NSURL* (^urlTransformer)(NSURL*) = ((id(*)(id, SEL))objc_msgSend)(self.commandDelegate, sel);
-        // if block is not null, we call it
-        if (urlTransformer) {
-            urlToTransform = urlTransformer(url);
-        }
-    }
-
-    return urlToTransform;
-}
-
 - (BOOL)usesGeolocation
 {
     id useGeo = [self.commandDelegate.settings objectForKey:[@"CameraUsesGeolocation" lowercaseString]];
@@ -946,10 +928,12 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
                     // save file
                     if (![imageDataWithExif writeToFile:filePath options:NSAtomicWrite error:&err]) {
-                        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
+                        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION
+                                                   messageAsString:[err localizedDescription]];
                     }
                     else {
-                        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[[self urlTransformer:[NSURL fileURLWithPath:filePath]] absoluteString]];
+                        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
+                                                   messageAsString:[[NSURL fileURLWithPath:filePath] absoluteString]];
                     }
                     
                 } else if (pickerController.sourceType != UIImagePickerControllerSourceTypeCamera || !options.usesGeolocation) {
@@ -960,9 +944,11 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
                     // save file
                     if (![data writeToFile:filePath options:NSAtomicWrite error:&err]) {
-                        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
+                        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION
+                                                   messageAsString:[err localizedDescription]];
                     } else {
-                        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[[self urlTransformer:[NSURL fileURLWithPath:filePath]] absoluteString]];
+                        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
+                                                   messageAsString:[[NSURL fileURLWithPath:filePath] absoluteString]];
                     }
                 }
 
@@ -1008,8 +994,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         return nil;
     }
     
-    // Use urlTransformer to get the proper URI for the webview
-    return [[self urlTransformer:[NSURL fileURLWithPath:copyMoviePath]] absoluteString];
+    return [[NSURL fileURLWithPath:copyMoviePath] absoluteString];
 }
 
 #pragma mark UIImagePickerControllerDelegate methods
@@ -1210,10 +1195,12 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
             // save file
             if (![self.data writeToFile:filePath options:NSAtomicWrite error:&err]) {
-                result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:[err localizedDescription]];
+                result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION
+                                           messageAsString:[err localizedDescription]];
             }
             else {
-                result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[[self urlTransformer:[NSURL fileURLWithPath:filePath]] absoluteString]];
+                result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
+                                           messageAsString:[[NSURL fileURLWithPath:filePath] absoluteString]];
             }
         }
             break;
