@@ -347,8 +347,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         
         // Check if it's a video
         if ([pickerResult.itemProvider hasItemConformingToTypeIdentifier:UTTypeMovie.identifier]) {
-            // Writes a copy of the data to a temporary file. This file will be deleted
-            // when the completion handler returns. The program should copy or move the file within the completion handler.
+            // loadFileRepresentationForTypeIdentifier returns an url which will be gone after the completion handler returns,
+            // so we need to copy the video to a temporary location, which can be accessed later
             [pickerResult.itemProvider loadFileRepresentationForTypeIdentifier:UTTypeMovie.identifier
                                                              completionHandler:^(NSURL * _Nullable url, NSError * _Nullable error) {
                 if (error) {
