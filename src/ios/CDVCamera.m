@@ -492,18 +492,6 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 }
 #endif
 
-- (NSInteger)integerValueForKey:(NSDictionary*)dict key:(NSString*)key defaultValue:(NSInteger)defaultValue
-{
-    NSInteger value = defaultValue;
-
-    NSNumber* val = [dict valueForKey:key];  // value is an NSNumber
-
-    if (val != nil) {
-        value = [val integerValue];
-    }
-    return value;
-}
-
 // UINavigationControllerDelegate method
 - (void)navigationController:(UINavigationController*)navigationController
       willShowViewController:(UIViewController*)viewController
@@ -717,7 +705,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 - (void)options:(CDVPictureOptions*)options requestPhotoPermissions:(void (^)(BOOL auth))completion
 {
     // This is would be no good response
-    if(options.sourceType == UIImagePickerControllerSourceTypeCamera) {
+    if (options.sourceType == UIImagePickerControllerSourceTypeCamera) {
         completion(YES);
     } else {
         PHAuthorizationStatus status = [PHPhotoLibrary authorizationStatus];
