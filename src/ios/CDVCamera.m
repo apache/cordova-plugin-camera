@@ -857,10 +857,12 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 - (CDVPluginResult*)resultForVideo:(NSDictionary*)info
 {
     NSString* moviePath = [[info objectForKey:UIImagePickerControllerMediaURL] absoluteString];
+    
     // On iOS 13 the movie path becomes inaccessible, create and return a copy
     if (IsAtLeastiOSVersion(@"13.0")) {
         moviePath = [self createTmpVideo:[[info objectForKey:UIImagePickerControllerMediaURL] path]];
     }
+    
     return [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:moviePath];
 }
 
@@ -898,6 +900,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         __block CDVPluginResult* result = nil;
 
         NSString* mediaType = [info objectForKey:UIImagePickerControllerMediaType];
+        
+        // Image selected
         if ([mediaType isEqualToString:(NSString*)kUTTypeImage]) {
             [weakSelf resultForImage:cameraPicker.pictureOptions info:info completion:^(CDVPluginResult* res) {
                 if (![self usesGeolocation] || picker.sourceType != UIImagePickerControllerSourceTypeCamera) {
@@ -906,8 +910,9 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                     weakSelf.pickerController = nil;
                 }
             }];
-        }
-        else {
+            
+            // Video selected
+        } else {
             result = [weakSelf resultForVideo:info];
             [weakSelf.commandDelegate sendPluginResult:result callbackId:cameraPicker.callbackId];
             weakSelf.hasPendingOperation = NO;
