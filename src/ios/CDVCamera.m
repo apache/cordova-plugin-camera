@@ -393,44 +393,38 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                 NSString *assetIdentifier = pickerResult.assetIdentifier;
                 
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    [weakSelf processPHPickerImage:image assetIdentifier:assetIdentifier callbackId:callbackId options:pictureOptions];
+                    
+                    // Fetch metadata if asset identifier is available
+                    if (assetIdentifier) {
+                        PHFetchResult *result = [PHAsset fetchAssetsWithLocalIdentifiers:@[assetIdentifier] options:nil];
+                        PHAsset *asset = result.firstObject;
+                        
+                        if (asset) {
+                            PHImageRequestOptions *imageOptions = [[PHImageRequestOptions alloc] init];
+                            imageOptions.synchronous = YES;
+                            imageOptions.networkAccessAllowed = YES;
+                            
+                            [[PHImageManager defaultManager] requestImageDataAndOrientationForAsset:asset
+                                                                                            options:imageOptions
+                                                                                      resultHandler:^(NSData *_Nullable imageData, NSString *_Nullable dataUTI, CGImagePropertyOrientation orientation, NSDictionary *_Nullable info) {
+                                NSDictionary *metadata = imageData ? [weakSelf convertImageMetadata:imageData] : nil;
+                                dispatch_async(dispatch_get_main_queue(), ^{
+                                    [weakSelf finalizePHPickerImage:image
+                                                           metadata:metadata
+                                                         callbackId:callbackId
+                                                            options:pictureOptions];
+                                });
+                            }];
+                            return;
+                        }
+                    }
+                    
+                    // No metadata available
+                    [self finalizePHPickerImage:image metadata:nil callbackId:callbackId options:pictureOptions];
                 });
             }];
         }
     }];
-}
-
-- (void)processPHPickerImage:(UIImage*)image
-             assetIdentifier:(NSString*)assetIdentifier
-                  callbackId:(NSString*)callbackId
-                     options:(CDVPictureOptions*)options API_AVAILABLE(ios(14))
-{
-    __weak CDVCamera* weakSelf = self;
-    
-    // Fetch metadata if asset identifier is available
-    if (assetIdentifier) {
-        PHFetchResult *result = [PHAsset fetchAssetsWithLocalIdentifiers:@[assetIdentifier] options:nil];
-        PHAsset *asset = result.firstObject;
-        
-        if (asset) {
-            PHImageRequestOptions *imageOptions = [[PHImageRequestOptions alloc] init];
-            imageOptions.synchronous = YES;
-            imageOptions.networkAccessAllowed = YES;
-            
-            [[PHImageManager defaultManager] requestImageDataAndOrientationForAsset:asset
-                                                                            options:imageOptions
-                                                                      resultHandler:^(NSData *_Nullable imageData, NSString *_Nullable dataUTI, CGImagePropertyOrientation orientation, NSDictionary *_Nullable info) {
-                NSDictionary *metadata = imageData ? [weakSelf convertImageMetadata:imageData] : nil;
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [weakSelf finalizePHPickerImage:image metadata:metadata callbackId:callbackId options:options];
-                });
-            }];
-            return;
-        }
-    }
-    
-    // No metadata available
-    [self finalizePHPickerImage:image metadata:nil callbackId:callbackId options:options];
 }
 
 - (void)finalizePHPickerImage:(UIImage*)image
