@@ -360,18 +360,17 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                     return;
                 }
                 
-                // The temporary file provided by PHPickerViewController is deleted when the completion
-                // handler exits. The file has to be copied in this thread, otherwise it will be gone.
-                NSString* videoPath = [weakSelf createTmpVideo:[url path]];
+                // Copy video to a temporary location, so it can be accessed after this completion handler returns
+                NSString* tempVideoPath = [weakSelf createTmpVideo:[url path]];
                 
                 // Send Cordova plugin result back, which must be done on the main thread
                 CDVPluginResult* result = nil;
                 
-                if (videoPath == nil) {
+                if (tempVideoPath == nil) {
                     result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION
                                                 messageAsString:@"Failed to copy video file to temporary location"];
                 } else {
-                    result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:videoPath];
+                    result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:tempVideoPath];
                 }
                 
                 [weakSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
