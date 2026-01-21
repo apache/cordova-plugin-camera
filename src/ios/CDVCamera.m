@@ -361,7 +361,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                 }
                 
                 // Copy video to a temporary location, so it can be accessed after this completion handler returns
-                NSString* tempVideoPath = [weakSelf createTmpVideo:[url path]];
+                NSString* tempVideoPath = [weakSelf copyFileToTemp:[url path]];
                 
                 // Send Cordova plugin result back, which must be done on the main thread
                 CDVPluginResult* result = nil;
@@ -500,41 +500,6 @@ static NSString* MIME_JPEG    = @"image/jpeg";
             [viewController.navigationItem setTitle:NSLocalizedString(@"Videos", nil)];
         }
     }
-}
-
-- (void)cleanup:(CDVInvokedUrlCommand*)command
-{
-    // empty the tmp directory
-    NSFileManager* fileMgr = [[NSFileManager alloc] init];
-    NSError* err = nil;
-    BOOL hasErrors = NO;
-
-    // clear contents of NSTemporaryDirectory
-    NSString* tempDirectoryPath = NSTemporaryDirectory();
-    NSDirectoryEnumerator* directoryEnumerator = [fileMgr enumeratorAtPath:tempDirectoryPath];
-    NSString* fileName = nil;
-    BOOL result;
-
-    while ((fileName = [directoryEnumerator nextObject])) {
-        // only delete the files we created
-        if (![fileName hasPrefix:CDV_PHOTO_PREFIX]) {
-            continue;
-        }
-        NSString* filePath = [tempDirectoryPath stringByAppendingPathComponent:fileName];
-        result = [fileMgr removeItemAtPath:filePath error:&err];
-        if (!result && err) {
-            NSLog(@"Failed to delete: %@ (error: %@)", filePath, err);
-            hasErrors = YES;
-        }
-    }
-
-    CDVPluginResult* pluginResult;
-    if (hasErrors) {
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:@"One or more files failed to be deleted."];
-    } else {
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-    }
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 - (NSString*)getMimeForEncoding:(CDVEncodingType)encoding
@@ -726,17 +691,6 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 }
 
-- (NSString*)tempFilePath:(NSString*)extension
-{
-    NSString* docsPath = [NSTemporaryDirectory()stringByStandardizingPath];
-    // unique file name
-    NSTimeInterval timeStamp = [[NSDate date] timeIntervalSince1970];
-    NSNumber *timeStampObj = [NSNumber numberWithDouble: timeStamp];
-    NSString* filePath = [NSString stringWithFormat:@"%@/%@%ld.%@", docsPath, CDV_PHOTO_PREFIX, [timeStampObj longValue], extension];
-
-    return filePath;
-}
-
 - (UIImage*)retrieveImage:(NSDictionary*)info options:(CDVPictureOptions*)options
 {
     // get the image
@@ -807,7 +761,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
                     NSError* err = nil;
                     NSString* extension = self.pickerController.pictureOptions.encodingType == EncodingTypePNG ? @"png":@"jpg";
-                    NSString* filePath = [self tempFilePath:extension];
+                    NSString* filePath = [self tempFilePathForExtension:extension];
 
                     // save file
                     if (![imageDataWithExif writeToFile:filePath options:NSAtomicWrite error:&err]) {
@@ -822,7 +776,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                 } else if (pickerController.sourceType != UIImagePickerControllerSourceTypeCamera || !options.usesGeolocation) {
                     // No need to save file if usesGeolocation is true since it will be saved after the location is tracked
                     NSString* extension = options.encodingType == EncodingTypePNG? @"png" : @"jpg";
-                    NSString* filePath = [self tempFilePath:extension];
+                    NSString* filePath = [self tempFilePathForExtension:extension];
                     NSError* err = nil;
 
                     // save file
@@ -853,33 +807,113 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     
     // On iOS 13 the movie path becomes inaccessible, create and return a copy
     if (IsAtLeastiOSVersion(@"13.0")) {
-        moviePath = [self createTmpVideo:[[info objectForKey:UIImagePickerControllerMediaURL] path]];
+        moviePath = [self copyFileToTemp:[[info objectForKey:UIImagePickerControllerMediaURL] path]];
     }
     
     return [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:moviePath];
 }
 
-- (NSString*)createTmpVideo:(NSString*)moviePath
+/**
+ Generates a unique temporary file path for a file extension.
+ 
+ The filename is prefixed with `cdv_photo_` and suffixed with the provided
+ file extension. A UNIX timestamp (seconds since 1970) is used to ensure
+ uniqueness between calls.
+ 
+ Threading: Safe to call from any thread. Uses NSTemporaryDirectory() and
+ does not perform any I/O; it only constructs a path string.
+ 
+ @param fileExtension  The desired file extension without a leading dot
+                      (for example, "jpg", "png", or the original video
+                      extension like "mov").
+ 
+ @return An absolute path string within the app's temporary directory,
+         e.g. `/var/mobile/Containers/Data/Application/<UUID>/tmp/cdv_photo_<timestamp>.jpg`.
+ 
+ @discussion The returned path is not created on disk. Callers are responsible
+             for writing data to the path and handling any errors.
+ 
+ @note Only files whose names start with `cdv_photo_` are cleaned up by the
+       plugin's `cleanup:` method.
+ **/
+- (NSString*)tempFilePathForExtension:(NSString*)fileExtension
 {
-    NSString* copyMoviePath = [self tempFilePath:[moviePath pathExtension]];
-    NSFileManager* fileMgr = [[NSFileManager alloc] init];
+    // Return a unique file name like
+    // `/var/mobile/Containers/Data/Application/<UUID>/tmp/cdv_photo_<timestamp>.jpg`.
+    return [NSString stringWithFormat:
+            @"%@/%@%lld.%@",
+            [NSTemporaryDirectory() stringByStandardizingPath],
+            CDV_PHOTO_PREFIX,
+            (long long)[[NSDate date] timeIntervalSince1970],
+            fileExtension];
+}
+
+- (NSString*)copyFileToTemp:(NSString*)filePath
+{
+    NSFileManager* fileManager = [[NSFileManager alloc] init];
+    NSString* tempFilePath = [self tempFilePathForExtension:[filePath pathExtension]];
     NSError *error = nil;
     
-    // Copy the video file to the temp directory
-    BOOL copySuccess = [fileMgr copyItemAtPath:moviePath toPath:copyMoviePath error:&error];
+    // Copy file to temp directory
+    BOOL copySuccess = [fileManager copyItemAtPath:filePath toPath:tempFilePath error:&error];
     
     if (!copySuccess || error) {
-        NSLog(@"CDVCamera: Failed to copy video file from %@ to %@. Error: %@", moviePath, copyMoviePath, [error localizedDescription]);
+        NSLog(@"CDVCamera: Failed to copy file from %@ to temporary path %@. Error: %@", filePath, tempFilePath, [error localizedDescription]);
         return nil;
     }
     
     // Verify the copied file exists
-    if (![fileMgr fileExistsAtPath:copyMoviePath]) {
-        NSLog(@"CDVCamera: Copied video file does not exist at path: %@", copyMoviePath);
+    if (![fileManager fileExistsAtPath:tempFilePath]) {
+        NSLog(@"CDVCamera: Copied file does not exist at temporary path: %@", tempFilePath);
         return nil;
     }
     
-    return [[NSURL fileURLWithPath:copyMoviePath] absoluteString];
+    return [[NSURL fileURLWithPath:tempFilePath] absoluteString];
+}
+
+/**
+  Called by JS camera.cleanup()
+  Removes intermediate image files that are kept in temporary storage after
+  calling camera.getPicture.
+*/
+- (void)cleanup:(CDVInvokedUrlCommand*)command
+{
+    // empty the tmp directory
+    NSFileManager* fileMgr = [[NSFileManager alloc] init];
+    NSError* err = nil;
+    BOOL hasErrors = NO;
+
+    // clear contents of NSTemporaryDirectory
+    NSString* tempDirectoryPath = NSTemporaryDirectory();
+    NSDirectoryEnumerator* directoryEnumerator = [fileMgr enumeratorAtPath:tempDirectoryPath];
+    NSString* fileName = nil;
+    BOOL result;
+
+    while ((fileName = [directoryEnumerator nextObject])) {
+        
+        // only delete the files we created
+        if (![fileName hasPrefix:CDV_PHOTO_PREFIX]) {
+            continue;
+        }
+        
+        NSString* filePath = [tempDirectoryPath stringByAppendingPathComponent:fileName];
+        result = [fileMgr removeItemAtPath:filePath error:&err];
+        
+        if (!result && err) {
+            NSLog(@"Failed to delete: %@ (error: %@)", filePath, err);
+            hasErrors = YES;
+        }
+    }
+
+    CDVPluginResult* pluginResult;
+    
+    if (hasErrors) {
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:@"One or more files failed to be deleted."];
+    } else {
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    }
+    
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 #pragma mark UIImagePickerControllerDelegate methods
@@ -1072,7 +1106,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         {
             NSError* err = nil;
             NSString* extension = self.pickerController.pictureOptions.encodingType == EncodingTypePNG ? @"png":@"jpg";
-            NSString* filePath = [self tempFilePath:extension];
+            NSString* filePath = [self tempFilePathForExtension:extension];
 
             // save file
             if (![self.data writeToFile:filePath options:NSAtomicWrite error:&err]) {
