@@ -363,7 +363,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                 // Copy video to a temporary location, so it can be accessed after this completion handler returns
                 NSString* tempVideoPath = [weakSelf copyFileToTemp:[url path]];
                 
-                // Send Cordova plugin result back, which must be done on the main thread
+                // Send Cordova plugin result back
                 CDVPluginResult* result = nil;
                 
                 if (tempVideoPath == nil) {
