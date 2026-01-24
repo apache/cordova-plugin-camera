@@ -567,9 +567,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                             [self.metadata setObject:EXIFDictionary forKey:(NSString*)kCGImagePropertyExifDictionary];
                         }
 
-                        if (IsAtLeastiOSVersion(@"8.0")) {
-                            [[self locationManager] performSelector:NSSelectorFromString(@"requestWhenInUseAuthorization") withObject:nil afterDelay:0];
-                        }
+                        [[self locationManager] requestWhenInUseAuthorization];
                         [[self locationManager] startUpdatingLocation];
                     }
                 data = nil;
@@ -806,7 +804,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     NSString* moviePath = [[info objectForKey:UIImagePickerControllerMediaURL] absoluteString];
     
     // On iOS 13 the movie path becomes inaccessible, create and return a copy
-    if (IsAtLeastiOSVersion(@"13.0")) {
+    if (@available(iOS 13, *)) {
         moviePath = [self copyFileToTemp:[[info objectForKey:UIImagePickerControllerMediaURL] path]];
     }
     
