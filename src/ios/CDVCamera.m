@@ -105,6 +105,12 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 @synthesize hasPendingOperation, pickerController, locationManager;
 
+/**
+    Reads the preference CameraUsesGeolocation from config.xml
+    to determine whether to include GPS location data in JPEG EXIF metadata.
+
+    @return YES if CameraUsesGeolocation is set to true, NO otherwise.
+*/
 - (BOOL)usesGeolocation
 {
     id useGeo = [self.commandDelegate.settings objectForKey:[@"CameraUsesGeolocation" lowercaseString]];
@@ -140,6 +146,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
     [self.commandDelegate runInBackground:^{
         CDVPictureOptions* pictureOptions = [CDVPictureOptions createFromTakePictureArguments:command];
+        // Only for capturing JPEG images, get geolocation data to include in the EXIF header
         pictureOptions.usesGeolocation = [weakSelf usesGeolocation];
         pictureOptions.cropToSize = NO;
 
@@ -548,6 +555,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         case EncodingTypeJPEG:
         {
             if (outMime != nil) *outMime = MIME_JPEG;
+
             if ((options.allowsEditing == NO) && (options.targetSize.width <= 0) && (options.targetSize.height <= 0) && (options.correctOrientation == NO) && (([options.quality integerValue] == 100) || (options.sourceType != UIImagePickerControllerSourceTypeCamera))){
                 // use image unedited as requested , don't resize
                 data = UIImageJPEGRepresentation(image, 1.0);
@@ -556,21 +564,33 @@ static NSString* MIME_JPEG    = @"image/jpeg";
             }
 
             if (pickerController.sourceType == UIImagePickerControllerSourceTypeCamera) {
+                // Include geolocation data in EXIF metadata if requested, this will
+                // be done in locationManager:didUpdateLocations:
+                // Note: This will be done only if UIImagePickerControllerMediaMetadata is available
                 if (options.usesGeolocation) {
-                    NSDictionary* controllerMetadata = [info objectForKey:@"UIImagePickerControllerMediaMetadata"];
-                    if (controllerMetadata) {
+
+                    // Get the metadata from the UIImagePickerController info dictionary
+                    NSDictionary *mediaMetadata = info[UIImagePickerControllerMediaMetadata];
+                    
+                    // Get location if mediaMetadata is set
+                    if (mediaMetadata) {
                         self.data = data;
                         self.metadata = [[NSMutableDictionary alloc] init];
+                        
+                        NSDictionary *exifDict = mediaMetadata[(NSString *)kCGImagePropertyExifDictionary];
 
-                        NSMutableDictionary* EXIFDictionary = [[controllerMetadata objectForKey:(NSString*)kCGImagePropertyExifDictionary]mutableCopy];
-                        if (EXIFDictionary)    {
-                            [self.metadata setObject:EXIFDictionary forKey:(NSString*)kCGImagePropertyExifDictionary];
+                        if (exifDict.count > 0) {
+                            self.metadata[(NSString *)kCGImagePropertyExifDictionary] = [exifDict mutableCopy];
                         }
 
                         [[self locationManager] requestWhenInUseAuthorization];
                         [[self locationManager] startUpdatingLocation];
                     }
-                data = nil;
+
+                    // Don't return anything if options.usesGeolocation is set
+                    // Data will be returned in locationManager:didUpdateLocations: or locationManager:didFailWithError:
+                    // Note: If mediaMetadata is not set, this would also be set to nil, is this expected?
+                    data = nil;
                 }
             } else if (pickerController.sourceType == UIImagePickerControllerSourceTypePhotoLibrary) {
                 PHAsset* asset = [info objectForKey:@"UIImagePickerControllerPHAsset"];
@@ -983,6 +1003,11 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 #pragma mark CLLocationManager
 
+/**
+    Lazy instantiation of the CLLocationManager used to get GPS location data when
+    when capturing JPEGs.
+    @return The CLLocationManager instance.
+*/
 - (CLLocationManager*)locationManager
 {
     if (locationManager != nil) {
@@ -998,6 +1023,14 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 # pragma mark CLLocationManagerDelegate methods
 
+/**
+    Called when the CLLocationManager has retrieved a location update.
+    The location data is formatted and added to the image metadata, and
+    the image result is returned. Only used when capturing JPEGs.
+    @param manager The CLLocationManager instance.
+    @param newLocation The new CLLocation data.
+    @param oldLocation The previous CLLocation data.
+*/
 - (void)locationManager:(CLLocationManager*)manager
     didUpdateToLocation:(CLLocation*)newLocation
            fromLocation:(CLLocation*)oldLocation
@@ -1057,6 +1090,13 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     [self imagePickerControllerReturnImageResult];
 }
 
+/**
+    Called when the CLLocationManager fails to retrieve location data.
+    The image result is returned without location metadata.
+    Only used when capturing JPEGs.
+    @param manager The CLLocationManager instance.
+    @param error The error that occurred.
+*/
 - (void)locationManager:(CLLocationManager*)manager didFailWithError:(NSError*)error
 {
     if (locationManager == nil) {
@@ -1069,6 +1109,10 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     [self imagePickerControllerReturnImageResult];
 }
 
+/**
+    Called to return the image result after location data has been added to the metadata
+    or an error occurred while retrieving location data.
+*/
 - (void)imagePickerControllerReturnImageResult
 {
     CDVPictureOptions* options = self.pickerController.pictureOptions;

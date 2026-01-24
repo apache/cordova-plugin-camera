@@ -74,6 +74,10 @@ typedef NSUInteger CDVMediaType;
 @property (assign) BOOL saveToPhotoAlbum;
 @property (assign) UIImagePickerControllerCameraDevice cameraDirection;
 
+/** 
+  Include GPS location information in the image's EXIF metadata, when capturing JPEGs.
+  This is YES when the preference `CameraUsesGeolocation` is set to true in config.xml.
+*/
 @property (assign) BOOL usesGeolocation;
 @property (assign) BOOL cropToSize;
 
