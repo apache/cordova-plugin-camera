@@ -202,34 +202,34 @@ static NSString* MIME_JPEG    = @"image/jpeg";
  */
 - (void)presentPermissionDeniedAlertWithMessage:(NSString*)message callbackId:(NSString*)callbackId
 {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        
-        NSString *bundleDisplayName = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
-        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:bundleDisplayName
-                                                                                 message:NSLocalizedString(message, nil)
-                                                                          preferredStyle:UIAlertControllerStyleAlert];
-        
-        // Add buttons
-        __weak CDVCamera *weakSelf = self;
-        
-        // Ok button
-        [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"OK", nil)
-                                                            style:UIAlertActionStyleDefault
-                                                          handler:^(UIAlertAction * _Nonnull action) {
-            [weakSelf sendNoPermissionResult:callbackId];
-        }]];
-        
-        // Button for open settings
-        [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"Settings", nil)
-                                                            style:UIAlertActionStyleDefault
-                                                          handler:^(UIAlertAction * _Nonnull action) {
-            // Open settings
-            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]
-                                               options:@{}
-                                     completionHandler:nil];
-            [weakSelf sendNoPermissionResult:callbackId];
-        }]];
+    NSString *bundleDisplayName = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:bundleDisplayName
+                                                                             message:NSLocalizedString(message, nil)
+                                                                      preferredStyle:UIAlertControllerStyleAlert];
+    
+    // Add buttons
+    __weak CDVCamera *weakSelf = self;
+    
+    // Ok button
+    [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"OK", nil)
+                                                        style:UIAlertActionStyleDefault
+                                                      handler:^(UIAlertAction * _Nonnull action) {
+        [weakSelf sendNoPermissionResult:callbackId];
+    }]];
+    
+    // Button for open settings
+    [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"Settings", nil)
+                                                        style:UIAlertActionStyleDefault
+                                                      handler:^(UIAlertAction * _Nonnull action) {
+        // Open settings
+        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]
+                                           options:@{}
+                                 completionHandler:nil];
+        [weakSelf sendNoPermissionResult:callbackId];
+    }]];
 
+    // Perform UI operations on the main thread
+    dispatch_async(dispatch_get_main_queue(), ^{
         [self.viewController presentViewController:alertController animated:YES completion:nil];
     });
 }
@@ -262,28 +262,29 @@ static NSString* MIME_JPEG    = @"image/jpeg";
  */
 - (void)showCameraPicker:(NSString*)callbackId withOptions:(CDVPictureOptions*)pictureOptions
 {
+    // Use PHPickerViewController for photo library on iOS 14+
+    if (@available(iOS 14, *)) {
+        // sourceType is PHOTOLIBRARY
+        if (pictureOptions.sourceType == UIImagePickerControllerSourceTypePhotoLibrary ||
+            // sourceType is SAVEDPHOTOALBUM (same as PHOTOLIBRARY)
+            pictureOptions.sourceType == UIImagePickerControllerSourceTypeSavedPhotosAlbum) {
+            [self showPHPicker:callbackId withOptions:pictureOptions];
+            return;
+        }
+    }
+    
+    // Use UIImagePickerController for camera or as image picker for iOS older than 14
+    CDVCameraPicker* cameraPicker = [CDVCameraPicker createFromPictureOptions:pictureOptions];
+    self.pickerController = cameraPicker;
+
+    cameraPicker.delegate = self;
+    cameraPicker.callbackId = callbackId;
+    // we need to capture this state for memory warnings that dealloc this object
+    cameraPicker.webView = self.webView;
+    cameraPicker.modalPresentationStyle = UIModalPresentationCurrentContext;
+
     // Perform UI operations on the main thread
     dispatch_async(dispatch_get_main_queue(), ^{
-        // Use PHPickerViewController for photo library on iOS 14+
-        if (@available(iOS 14, *)) {
-            // sourceType is PHOTOLIBRARY
-            if (pictureOptions.sourceType == UIImagePickerControllerSourceTypePhotoLibrary ||
-                // sourceType is SAVEDPHOTOALBUM (same as PHOTOLIBRARY)
-                pictureOptions.sourceType == UIImagePickerControllerSourceTypeSavedPhotosAlbum) {
-                [self showPHPicker:callbackId withOptions:pictureOptions];
-                return;
-            }
-        }
-        
-        // Use UIImagePickerController for camera or as image picker for iOS older than 14
-        CDVCameraPicker* cameraPicker = [CDVCameraPicker createFromPictureOptions:pictureOptions];
-        self.pickerController = cameraPicker;
-
-        cameraPicker.delegate = self;
-        cameraPicker.callbackId = callbackId;
-        // we need to capture this state for memory warnings that dealloc this object
-        cameraPicker.webView = self.webView;
-        cameraPicker.modalPresentationStyle = UIModalPresentationCurrentContext;
         [self.viewController presentViewController:cameraPicker
                                           animated:YES
                                         completion:^{
@@ -328,9 +329,12 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     objc_setAssociatedObject(picker, "callbackId", callbackId, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     objc_setAssociatedObject(picker, "pictureOptions", pictureOptions, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     
-    [self.viewController presentViewController:picker animated:YES completion:^{
-        self.hasPendingOperation = NO;
-    }];
+    // Perform UI operations on the main thread
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.viewController presentViewController:picker animated:YES completion:^{
+            self.hasPendingOperation = NO;
+        }];
+    });
 }
 
 // PHPickerViewControllerDelegate method
@@ -395,40 +399,33 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                 }
                 
                 UIImage *image = (UIImage *)object;
-                
-                // Get asset identifier to fetch metadata
-                NSString *assetIdentifier = pickerResult.assetIdentifier;
-                
-                dispatch_async(dispatch_get_main_queue(), ^{
                     
-                    // Fetch metadata if asset identifier is available
-                    if (assetIdentifier) {
-                        PHFetchResult *result = [PHAsset fetchAssetsWithLocalIdentifiers:@[assetIdentifier] options:nil];
-                        PHAsset *asset = result.firstObject;
+                // Fetch metadata if asset identifier is available
+                if (pickerResult.assetIdentifier) {
+                    PHFetchResult *result = [PHAsset fetchAssetsWithLocalIdentifiers:@[pickerResult.assetIdentifier] options:nil];
+                    PHAsset *asset = result.firstObject;
+                    
+                    if (asset) {
+                        PHImageRequestOptions *imageOptions = [[PHImageRequestOptions alloc] init];
+                        imageOptions.synchronous = YES;
+                        imageOptions.networkAccessAllowed = YES;
                         
-                        if (asset) {
-                            PHImageRequestOptions *imageOptions = [[PHImageRequestOptions alloc] init];
-                            imageOptions.synchronous = YES;
-                            imageOptions.networkAccessAllowed = YES;
-                            
-                            [[PHImageManager defaultManager] requestImageDataAndOrientationForAsset:asset
-                                                                                            options:imageOptions
-                                                                                      resultHandler:^(NSData *_Nullable imageData, NSString *_Nullable dataUTI, CGImagePropertyOrientation orientation, NSDictionary *_Nullable info) {
-                                NSDictionary *metadata = imageData ? [weakSelf convertImageMetadata:imageData] : nil;
-                                dispatch_async(dispatch_get_main_queue(), ^{
-                                    [weakSelf finalizePHPickerImage:image
-                                                           metadata:metadata
-                                                         callbackId:callbackId
-                                                            options:pictureOptions];
-                                });
-                            }];
-                            return;
-                        }
+                        [[PHImageManager defaultManager] requestImageDataAndOrientationForAsset:asset
+                                                                                        options:imageOptions
+                                                                                  resultHandler:^(NSData *_Nullable imageData, NSString *_Nullable dataUTI, CGImagePropertyOrientation orientation, NSDictionary *_Nullable info) {
+                            NSDictionary *metadata = imageData ? [weakSelf convertImageMetadata:imageData] : nil;
+                            [weakSelf finalizePHPickerImage:image
+                                                   metadata:metadata
+                                                 callbackId:callbackId
+                                                    options:pictureOptions];
+                        }];
+
+                        return;
                     }
-                    
-                    // No metadata available
-                    [self finalizePHPickerImage:image metadata:nil callbackId:callbackId options:pictureOptions];
-                });
+                }
+                
+                // No metadata available
+                [self finalizePHPickerImage:image metadata:nil callbackId:callbackId options:pictureOptions];
             }];
         }
     }];
