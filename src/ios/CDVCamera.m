@@ -839,7 +839,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
  Generates a unique temporary file path for a file extension.
  
  The filename is prefixed with `cdv_photo_` and suffixed with the provided
- file extension. A UNIX timestamp (seconds since 1970) is used to ensure
+ file extension. A UNIX timestamp in milliseconds since 1970 is used to ensure
  uniqueness between calls.
  
  Threading: Safe to call from any thread. Uses NSTemporaryDirectory() and
@@ -866,7 +866,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
             @"%@/%@%lld.%@",
             [NSTemporaryDirectory() stringByStandardizingPath],
             CDV_PHOTO_PREFIX,
-            (long long)[[NSDate date] timeIntervalSince1970],
+            (long long)([[NSDate date] timeIntervalSince1970] * 1000.0),
             fileExtension];
 }
 
