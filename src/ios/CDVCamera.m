@@ -450,35 +450,35 @@ static NSString* MIME_JPEG    = @"image/jpeg";
             processedImage = [processedImage imageByScalingNotCroppingForSize:options.targetSize];
         }
     }
-    
-    // Create info dictionary similar to UIImagePickerController
-    NSMutableDictionary *info = [NSMutableDictionary dictionary];
-    [info setObject:processedImage forKey:UIImagePickerControllerOriginalImage];
-    if (metadata) {
-        [info setObject:metadata forKey:@"UIImagePickerControllerMediaMetadata"];
-    }
-    
-    // Store metadata for processing
-    if (metadata) {
-        self.metadata = [[NSMutableDictionary alloc] init];
-        
-        NSMutableDictionary* EXIFDictionary = [[metadata objectForKey:(NSString*)kCGImagePropertyExifDictionary] mutableCopy];
-        if (EXIFDictionary) {
-            [self.metadata setObject:EXIFDictionary forKey:(NSString*)kCGImagePropertyExifDictionary];
+
+    // Store metadata, which will be processed in resultForImage
+    if (metadata.count > 0) {
+        self.metadata = [NSMutableDictionary dictionary];
+
+        NSDictionary *exif = metadata[(NSString *)kCGImagePropertyExifDictionary];
+        if (exif.count > 0) {
+            self.metadata[(NSString *)kCGImagePropertyExifDictionary] = [exif mutableCopy];
         }
-        
-        NSMutableDictionary* TIFFDictionary = [[metadata objectForKey:(NSString*)kCGImagePropertyTIFFDictionary] mutableCopy];
-        if (TIFFDictionary) {
-            [self.metadata setObject:TIFFDictionary forKey:(NSString*)kCGImagePropertyTIFFDictionary];
+
+        NSDictionary *tiff = metadata[(NSString *)kCGImagePropertyTIFFDictionary];
+        if (tiff.count > 0) {
+            self.metadata[(NSString *)kCGImagePropertyTIFFDictionary] = [tiff mutableCopy];
         }
-        
-        NSMutableDictionary* GPSDictionary = [[metadata objectForKey:(NSString*)kCGImagePropertyGPSDictionary] mutableCopy];
-        if (GPSDictionary) {
-            [self.metadata setObject:GPSDictionary forKey:(NSString*)kCGImagePropertyGPSDictionary];
+
+        NSDictionary *gps = metadata[(NSString *)kCGImagePropertyGPSDictionary];
+        if (gps.count > 0) {
+            self.metadata[(NSString *)kCGImagePropertyGPSDictionary] = [gps mutableCopy];
         }
     }
     
     __weak CDVCamera* weakSelf = self;
+    
+    // Create info dictionary similar to UIImagePickerController
+    NSMutableDictionary *info = [@{ UIImagePickerControllerOriginalImage : processedImage } mutableCopy];
+    
+    if (metadata.count > 0) {
+        info[UIImagePickerControllerMediaMetadata] = metadata;
+    }
     
     // Process and return result
     [self resultForImage:options info:info completion:^(CDVPluginResult* res) {
@@ -594,23 +594,22 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                 NSDictionary* controllerMetadata = [self getImageMetadataFromAsset:asset];
 
                 self.data = data;
-                if (controllerMetadata) {
-                    self.metadata = [[NSMutableDictionary alloc] init];
+                if (controllerMetadata.count > 0) {
+                    self.metadata = [NSMutableDictionary dictionary];
 
-                    NSMutableDictionary* EXIFDictionary = [[controllerMetadata objectForKey:(NSString*)kCGImagePropertyExifDictionary]mutableCopy];
-                    if (EXIFDictionary)    {
-                        [self.metadata setObject:EXIFDictionary forKey:(NSString*)kCGImagePropertyExifDictionary];
+                    NSDictionary *exif = controllerMetadata[(NSString *)kCGImagePropertyExifDictionary];
+                    if (exif.count > 0) {
+                        self.metadata[(NSString *)kCGImagePropertyExifDictionary] = [exif mutableCopy];
                     }
-                    NSMutableDictionary* TIFFDictionary = [[controllerMetadata objectForKey:(NSString*)kCGImagePropertyTIFFDictionary
-                    ]mutableCopy];
-                    if (TIFFDictionary)    {
-                        [self.metadata setObject:TIFFDictionary forKey:(NSString*)kCGImagePropertyTIFFDictionary];
+
+                    NSDictionary *tiff = controllerMetadata[(NSString *)kCGImagePropertyTIFFDictionary];
+                    if (tiff.count > 0) {
+                        self.metadata[(NSString *)kCGImagePropertyTIFFDictionary] = [tiff mutableCopy];
                     }
-                    NSMutableDictionary* GPSDictionary = [[controllerMetadata objectForKey:(NSString*)kCGImagePropertyGPSDictionary
-]mutableCopy];
-                    if (GPSDictionary)    {
-                        [self.metadata setObject:GPSDictionary forKey:(NSString*)kCGImagePropertyGPSDictionary
-];
+
+                    NSDictionary *gps = controllerMetadata[(NSString *)kCGImagePropertyGPSDictionary];
+                    if (gps.count > 0) {
+                        self.metadata[(NSString *)kCGImagePropertyGPSDictionary] = [gps mutableCopy];
                     }
                 }
             }
