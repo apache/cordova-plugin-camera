@@ -900,42 +900,39 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 */
 - (void)cleanup:(CDVInvokedUrlCommand*)command
 {
-    // empty the tmp directory
-    NSFileManager* fileMgr = [[NSFileManager alloc] init];
-    NSError* err = nil;
-    BOOL hasErrors = NO;
-
-    // clear contents of NSTemporaryDirectory
+    NSFileManager* fileManager = [NSFileManager defaultManager];
     NSString* tempDirectoryPath = NSTemporaryDirectory();
-    NSDirectoryEnumerator* directoryEnumerator = [fileMgr enumeratorAtPath:tempDirectoryPath];
-    NSString* fileName = nil;
-    BOOL result;
-
-    while ((fileName = [directoryEnumerator nextObject])) {
-        
-        // only delete the files we created
-        if (![fileName hasPrefix:CDV_PHOTO_PREFIX]) {
-            continue;
-        }
+    NSError* error = nil;
+    
+    NSArray<NSString*>* allFiles = [fileManager contentsOfDirectoryAtPath:tempDirectoryPath error:&error];
+    
+    if (error) {
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION 
+                                                    messageAsString:[error localizedDescription]];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        return;
+    }
+    
+    BOOL hasErrors = NO;
+    
+    for (NSString* fileName in allFiles) {
+        // Only delete files created by the camera plugin
+        if (![fileName hasPrefix:CDV_PHOTO_PREFIX]) continue;
         
         NSString* filePath = [tempDirectoryPath stringByAppendingPathComponent:fileName];
-        result = [fileMgr removeItemAtPath:filePath error:&err];
+        NSError* deleteError = nil;
         
-        if (!result && err) {
-            NSLog(@"Failed to delete: %@ (error: %@)", filePath, err);
+        if (![fileManager removeItemAtPath:filePath error:&deleteError]) {
+            NSLog(@"Failed to delete: %@ (error: %@)", filePath, deleteError);
             hasErrors = YES;
         }
     }
-
-    CDVPluginResult* pluginResult;
     
-    if (hasErrors) {
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:@"One or more files failed to be deleted."];
-    } else {
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-    }
+    CDVPluginResult* result = hasErrors 
+        ? [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsString:@"One or more files failed to be deleted."]
+        : [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
 }
 
 #pragma mark UIImagePickerControllerDelegate methods
