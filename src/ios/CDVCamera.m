@@ -443,9 +443,13 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         processedImage = [processedImage imageCorrectedForCaptureOrientation];
     }
     
+    // Scale with optional cropping
     if ((options.targetSize.width > 0) && (options.targetSize.height > 0)) {
+        // Scale and crop to target size
         if (options.cropToSize) {
             processedImage = [processedImage imageByScalingAndCroppingForSize:options.targetSize];
+
+            // Scale with no cropping
         } else {
             processedImage = [processedImage imageByScalingNotCroppingForSize:options.targetSize];
         }
@@ -471,6 +475,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         }
     }
     
+    // Return Cordova result to WebView
+    // Needed weakSelf for completion block
     __weak CDVCamera* weakSelf = self;
     
     // Create info dictionary similar to UIImagePickerController
@@ -481,8 +487,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     }
     
     // Process and return result
-    [self resultForImage:options info:info completion:^(CDVPluginResult* res) {
-        [weakSelf.commandDelegate sendPluginResult:res callbackId:callbackId];
+    [self resultForImage:options info:info completion:^(CDVPluginResult* pluginResult) {
+        [weakSelf.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
         weakSelf.hasPendingOperation = NO;
         weakSelf.pickerController = nil;
     }];
@@ -592,8 +598,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
             } else if (pickerController.sourceType == UIImagePickerControllerSourceTypePhotoLibrary) {
                 PHAsset* asset = [info objectForKey:@"UIImagePickerControllerPHAsset"];
                 NSDictionary* controllerMetadata = [self getImageMetadataFromAsset:asset];
-
                 self.data = data;
+
                 if (controllerMetadata.count > 0) {
                     self.metadata = [NSMutableDictionary dictionary];
 
@@ -629,29 +635,31 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 -------------------------------------------------------------- */
 - (NSDictionary*)getImageMetadataFromAsset:(PHAsset*)asset
 {
-    if(asset == nil) {
-        return nil;
-    }
+    if(asset == nil) return nil;
 
     // get photo info from this asset
     __block NSDictionary *dict = nil;
     PHImageRequestOptions *imageRequestOptions = [[PHImageRequestOptions alloc] init];
     imageRequestOptions.synchronous = YES;
-    [[PHImageManager defaultManager]
-     requestImageDataForAsset:asset
-     options:imageRequestOptions
-     resultHandler: ^(NSData *imageData, NSString *dataUTI, UIImageOrientation orientation, NSDictionary *info) {
-        dict = [self convertImageMetadata:imageData]; // as this imageData is in NSData format so we need a method to convert this NSData into NSDictionary
-     }];
+    
+    [[PHImageManager defaultManager] requestImageDataForAsset:asset
+                                                      options:imageRequestOptions
+                                                resultHandler: ^(NSData *imageData, NSString *dataUTI, UIImageOrientation orientation, NSDictionary *info) {
+        // as this imageData is in NSData format so we need a method to convert this NSData into NSDictionary
+        dict = [self convertImageMetadata:imageData];
+    }];
+    
     return dict;
 }
 
 - (NSDictionary*)convertImageMetadata:(NSData*)imageData
 {
     CGImageSourceRef imageSource = CGImageSourceCreateWithData((__bridge CFDataRef)(imageData), NULL);
+
     if (imageSource) {
         NSDictionary *options = @{(NSString *)kCGImageSourceShouldCache : [NSNumber numberWithBool:NO]};
         CFDictionaryRef imageProperties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, (__bridge CFDictionaryRef)options);
+
         if (imageProperties) {
             NSDictionary *metadata = (__bridge NSDictionary *)imageProperties;
             CFRelease(imageProperties);
@@ -659,6 +667,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
             NSLog(@"Metadata of selected image%@", metadata);// image metadata after converting NSData into NSDictionary
             return metadata;
         }
+
         CFRelease(imageSource);
     }
 
