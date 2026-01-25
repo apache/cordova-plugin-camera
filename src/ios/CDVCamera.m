@@ -642,9 +642,9 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     PHImageRequestOptions *imageRequestOptions = [[PHImageRequestOptions alloc] init];
     imageRequestOptions.synchronous = YES;
     
-    [[PHImageManager defaultManager] requestImageDataForAsset:asset
-                                                      options:imageRequestOptions
-                                                resultHandler: ^(NSData *imageData, NSString *dataUTI, UIImageOrientation orientation, NSDictionary *info) {
+    [[PHImageManager defaultManager] requestImageDataAndOrientationForAsset:asset
+                                                                    options:imageRequestOptions
+                                                                resultHandler:^(NSData *_Nullable imageData, NSString *_Nullable dataUTI, CGImagePropertyOrientation orientation, NSDictionary *_Nullable info) {
         // as this imageData is in NSData format so we need a method to convert this NSData into NSDictionary
         dict = [self convertImageMetadata:imageData];
     }];
