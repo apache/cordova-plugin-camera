@@ -74,6 +74,10 @@ typedef NSUInteger CDVMediaType;
 @property (assign) BOOL saveToPhotoAlbum;
 @property (assign) UIImagePickerControllerCameraDevice cameraDirection;
 
+/** 
+  Include GPS location information in the image's EXIF metadata, when capturing JPEGs.
+  This is YES when the preference `CameraUsesGeolocation` is set to true in config.xml.
+*/
 @property (assign) BOOL usesGeolocation;
 @property (assign) BOOL cropToSize;
 
@@ -133,7 +137,6 @@ typedef NSUInteger CDVMediaType;
 // PHPickerViewController specific methods (iOS 14+)
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 140000 // Always true on XCode12+
 - (void)showPHPicker:(NSString*)callbackId withOptions:(CDVPictureOptions*)pictureOptions API_AVAILABLE(ios(14));
-- (void)processPHPickerImage:(UIImage*)image assetIdentifier:(NSString*)assetIdentifier callbackId:(NSString*)callbackId options:(CDVPictureOptions*)options API_AVAILABLE(ios(14));
 - (void)finalizePHPickerImage:(UIImage*)image metadata:(NSDictionary*)metadata callbackId:(NSString*)callbackId options:(CDVPictureOptions*)options API_AVAILABLE(ios(14));
 // PHPickerViewControllerDelegate method
 - (void)picker:(PHPickerViewController *)picker didFinishPicking:(NSArray<PHPickerResult *> *)results API_AVAILABLE(ios(14));
