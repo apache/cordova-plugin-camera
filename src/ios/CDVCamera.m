@@ -202,34 +202,33 @@ static NSString* MIME_JPEG    = @"image/jpeg";
  */
 - (void)presentPermissionDeniedAlertWithMessage:(NSString*)message callbackId:(NSString*)callbackId
 {
-    NSString *bundleDisplayName = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
-    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:bundleDisplayName
-                                                                             message:NSLocalizedString(message, nil)
-                                                                      preferredStyle:UIAlertControllerStyleAlert];
-    
-    // Add buttons
     __weak CDVCamera *weakSelf = self;
-    
-    // Ok button
-    [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"OK", nil)
-                                                        style:UIAlertActionStyleDefault
-                                                      handler:^(UIAlertAction * _Nonnull action) {
-        [weakSelf sendNoPermissionResult:callbackId];
-    }]];
-    
-    // Button for open settings
-    [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"Settings", nil)
-                                                        style:UIAlertActionStyleDefault
-                                                      handler:^(UIAlertAction * _Nonnull action) {
-        // Open settings
-        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]
-                                           options:@{}
-                                 completionHandler:nil];
-        [weakSelf sendNoPermissionResult:callbackId];
-    }]];
 
-    // Perform UI operations on the main thread
+    // Perform UI creation and presentation on the main thread
     dispatch_async(dispatch_get_main_queue(), ^{
+        NSString *bundleDisplayName = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
+        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:bundleDisplayName
+                                                                                 message:NSLocalizedString(message, nil)
+                                                                          preferredStyle:UIAlertControllerStyleAlert];
+
+        // Ok button
+        [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"OK", nil)
+                                                            style:UIAlertActionStyleDefault
+                                                          handler:^(UIAlertAction * _Nonnull action) {
+            [weakSelf sendNoPermissionResult:callbackId];
+        }]];
+
+         // Button for open settings
+        [alertController addAction:[UIAlertAction actionWithTitle:NSLocalizedString(@"Settings", nil)
+                                                            style:UIAlertActionStyleDefault
+                                                          handler:^(UIAlertAction * _Nonnull action) {
+            // Open settings
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:UIApplicationOpenSettingsURLString]
+                                               options:@{}
+                                     completionHandler:nil];
+            [weakSelf sendNoPermissionResult:callbackId];
+        }]];
+
         [self.viewController presentViewController:alertController animated:YES completion:nil];
     });
 }
@@ -272,19 +271,19 @@ static NSString* MIME_JPEG    = @"image/jpeg";
             return;
         }
     }
-    
+
     // Use UIImagePickerController for camera or as image picker for iOS older than 14
-    CDVCameraPicker* cameraPicker = [CDVCameraPicker createFromPictureOptions:pictureOptions];
-    self.pickerController = cameraPicker;
-
-    cameraPicker.delegate = self;
-    cameraPicker.callbackId = callbackId;
-    // we need to capture this state for memory warnings that dealloc this object
-    cameraPicker.webView = self.webView;
-    cameraPicker.modalPresentationStyle = UIModalPresentationCurrentContext;
-
-    // Perform UI operations on the main thread
+    // UIImagePickerController must be created and presented on the main thread.
     dispatch_async(dispatch_get_main_queue(), ^{
+        CDVCameraPicker* cameraPicker = [CDVCameraPicker createFromPictureOptions:pictureOptions];
+        self.pickerController = cameraPicker;
+
+        cameraPicker.delegate = self;
+        cameraPicker.callbackId = callbackId;
+        // we need to capture this state for memory warnings that dealloc this object
+        cameraPicker.webView = self.webView;
+        cameraPicker.modalPresentationStyle = UIModalPresentationCurrentContext;
+
         [self.viewController presentViewController:cameraPicker
                                           animated:YES
                                         completion:^{
@@ -297,40 +296,40 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 140000 // Always true on XCode12+
 - (void)showPHPicker:(NSString*)callbackId withOptions:(CDVPictureOptions*)pictureOptions API_AVAILABLE(ios(14))
 {
-    PHPickerConfiguration *config = [[PHPickerConfiguration alloc] init];
-    
-    // Configure filter based on media type
-    // Images
-    if (pictureOptions.mediaType == MediaTypePicture) {
-        config.filter = [PHPickerFilter imagesFilter];
-        
-        // Videos
-    } else if (pictureOptions.mediaType == MediaTypeVideo) {
-        config.filter = [PHPickerFilter videosFilter];
-        
-        // Images and videos
-    } else if (pictureOptions.mediaType == MediaTypeAll) {
-        config.filter = [PHPickerFilter anyFilterMatchingSubfilters:@[
-            [PHPickerFilter imagesFilter],
-            [PHPickerFilter videosFilter]
-        ]];
-    }
-    
-    config.selectionLimit = 1;
-    config.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeCurrent;
-    
-    PHPickerViewController *picker = [[PHPickerViewController alloc] initWithConfiguration:config];
-    picker.delegate = self;
-    
-    // Store callback ID and options in picker with objc_setAssociatedObject
-    // PHPickerViewController’s delegate method picker:didFinishPicking: only gives you back the picker instance
-    // and the results array. It doesn’t carry arbitrary context. By associating the callbackId and pictureOptions
-    // with the picker, you can retrieve them later inside the delegate method
-    objc_setAssociatedObject(picker, "callbackId", callbackId, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    objc_setAssociatedObject(picker, "pictureOptions", pictureOptions, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    
-    // Perform UI operations on the main thread
+    // PHPicker must be created and presented on the main thread.
     dispatch_async(dispatch_get_main_queue(), ^{
+        PHPickerConfiguration *config = [[PHPickerConfiguration alloc] init];
+
+        // Configure filter based on media type
+        // Images
+        if (pictureOptions.mediaType == MediaTypePicture) {
+            config.filter = [PHPickerFilter imagesFilter];
+
+            // Videos
+        } else if (pictureOptions.mediaType == MediaTypeVideo) {
+            config.filter = [PHPickerFilter videosFilter];
+
+            // Images and videos
+        } else if (pictureOptions.mediaType == MediaTypeAll) {
+            config.filter = [PHPickerFilter anyFilterMatchingSubfilters:@[
+                [PHPickerFilter imagesFilter],
+                [PHPickerFilter videosFilter]
+            ]];
+        }
+
+        config.selectionLimit = 1;
+        config.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeCurrent;
+
+        PHPickerViewController *picker = [[PHPickerViewController alloc] initWithConfiguration:config];
+        picker.delegate = self;
+
+        // Store callback ID and options in picker with objc_setAssociatedObject
+        // PHPickerViewController’s delegate method picker:didFinishPicking: only gives you back the picker instance
+        // and the results array. It doesn’t carry arbitrary context. By associating the callbackId and pictureOptions
+        // with the picker, you can retrieve them later inside the delegate method
+        objc_setAssociatedObject(picker, "callbackId", callbackId, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        objc_setAssociatedObject(picker, "pictureOptions", pictureOptions, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+
         [self.viewController presentViewController:picker animated:YES completion:^{
             self.hasPendingOperation = NO;
         }];
