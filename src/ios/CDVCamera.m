@@ -298,6 +298,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 {
     // PHPicker must be created and presented on the main thread.
     dispatch_async(dispatch_get_main_queue(), ^{
+        // Using just [PHPickerConfiguration init] is more flexible and lets the picker return items
+        // that aren’t PHAssets (e.g., cloud/shared providers), but it will not return asset identifiers.
         PHPickerConfiguration *config = [[PHPickerConfiguration alloc] init];
 
         // Configure filter based on media type
@@ -388,43 +390,22 @@ static NSString* MIME_JPEG    = @"image/jpeg";
             }];
             
             // Handle image
-        } else if ([pickerResult.itemProvider canLoadObjectOfClass:[UIImage class]]) {
-            [pickerResult.itemProvider loadObjectOfClass:[UIImage class] completionHandler:^(__kindof id<NSItemProviderReading>  _Nullable object, NSError * _Nullable error) {
+        } else if ([pickerResult.itemProvider hasItemConformingToTypeIdentifier:UTTypeImage.identifier]) {
+            // Load image data for the NSItemProvider
+            [pickerResult.itemProvider loadDataRepresentationForTypeIdentifier:UTTypeImage.identifier
+                                                             completionHandler:^(NSData * _Nullable imageData, NSError * _Nullable error) {
                 if (error) {
-                    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
+                    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                                                                messageAsString:[error localizedDescription]];
                     [weakSelf.commandDelegate sendPluginResult:result callbackId:callbackId];
                     weakSelf.hasPendingOperation = NO;
                     return;
                 }
                 
-                UIImage *image = (UIImage *)object;
-                    
-                // Fetch metadata if asset identifier is available
-                if (pickerResult.assetIdentifier) {
-                    PHFetchResult *result = [PHAsset fetchAssetsWithLocalIdentifiers:@[pickerResult.assetIdentifier] options:nil];
-                    PHAsset *asset = result.firstObject;
-                    
-                    if (asset) {
-                        PHImageRequestOptions *imageOptions = [[PHImageRequestOptions alloc] init];
-                        imageOptions.synchronous = YES;
-                        imageOptions.networkAccessAllowed = YES;
-                        
-                        [[PHImageManager defaultManager] requestImageDataAndOrientationForAsset:asset
-                                                                                        options:imageOptions
-                                                                                  resultHandler:^(NSData *_Nullable imageData, NSString *_Nullable dataUTI, CGImagePropertyOrientation orientation, NSDictionary *_Nullable info) {
-                            NSDictionary *metadata = imageData ? [weakSelf convertImageMetadata:imageData] : nil;
-                            [weakSelf finalizePHPickerImage:image
-                                                   metadata:metadata
-                                                 callbackId:callbackId
-                                                    options:pictureOptions];
-                        }];
-
-                        return;
-                    }
-                }
-                
-                // No metadata available
-                [self finalizePHPickerImage:image metadata:nil callbackId:callbackId options:pictureOptions];
+                [weakSelf finalizePHPickerImage:[UIImage imageWithData:imageData]
+                                       metadata:[weakSelf convertImageMetadata:imageData]
+                                     callbackId:callbackId
+                                        options:pictureOptions];
             }];
         }
     }];
