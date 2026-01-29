@@ -298,8 +298,10 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 {
     // PHPicker must be created and presented on the main thread.
     dispatch_async(dispatch_get_main_queue(), ^{
-        // Using just [PHPickerConfiguration init] is more flexible and lets the picker return items
-        // that aren’t PHAssets (e.g., cloud/shared providers), but it will not return asset identifiers.
+        // Using [PHPickerConfiguration init] instead of
+        // [PHPickerConfiguration initWithPhotoLibrary:[PHPhotoLibrary sharedPhotoLibrary]]
+        // is more open and lets the picker return items that aren’t PHAssets, like cloud/shared providers,
+        // but will not return asset identifiers.
         PHPickerConfiguration *config = [[PHPickerConfiguration alloc] init];
 
         // Configure filter based on media type
