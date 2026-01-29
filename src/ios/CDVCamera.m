@@ -318,6 +318,15 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         }
 
         config.selectionLimit = 1;
+        
+        // PHPickerConfigurationAssetRepresentationModeCurrent:
+        // A mode that uses the current representation to avoid transcoding, if possible.
+        // This means PHPicker tries to give you a representation already available without
+        // re‑encoding. That usually is the stored file on device (e.g., HEIC/JPEG),
+        // but if the asset is only in iCloud or already has a cached “current” rendition,
+        // you might get that cached representation instead of downloading the original.
+        // This plugin supports only JPEG and PNG currently and will convert the
+        // image later in processImage: to the requested format.
         config.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeCurrent;
 
         PHPickerViewController *picker = [[PHPickerViewController alloc] initWithConfiguration:config];
