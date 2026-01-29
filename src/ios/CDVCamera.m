@@ -413,75 +413,63 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                     return;
                 }
                 
-                [weakSelf finalizePHPickerImage:[UIImage imageWithData:imageData]
-                                       metadata:[weakSelf convertImageMetadata:imageData]
-                                     callbackId:callbackId
-                                        options:pictureOptions];
+                // Process image according to pictureOptions
+                UIImage *processedImage = [UIImage imageWithData:imageData];
+                
+                if (pictureOptions.correctOrientation) {
+                    processedImage = [processedImage imageCorrectedForCaptureOrientation];
+                }
+                
+                // Scale with optional cropping
+                if ((pictureOptions.targetSize.width > 0) && (pictureOptions.targetSize.height > 0)) {
+                    // Scale and crop to target size
+                    if (pictureOptions.cropToSize) {
+                        processedImage = [processedImage imageByScalingAndCroppingForSize:pictureOptions.targetSize];
+
+                        // Scale with no cropping
+                    } else {
+                        processedImage = [processedImage imageByScalingNotCroppingForSize:pictureOptions.targetSize];
+                    }
+                }
+
+                // Store metadata of exif, tiff, gps in self.metadata, which will be processed in resultForImage
+                NSDictionary *metadata = [weakSelf convertImageMetadata:imageData];
+                
+                if (metadata.count > 0) {
+                    self.metadata = [NSMutableDictionary dictionary];
+
+                    NSDictionary *exif = metadata[(NSString *)kCGImagePropertyExifDictionary];
+                    if (exif.count > 0) {
+                        self.metadata[(NSString *)kCGImagePropertyExifDictionary] = [exif mutableCopy];
+                    }
+
+                    NSDictionary *tiff = metadata[(NSString *)kCGImagePropertyTIFFDictionary];
+                    if (tiff.count > 0) {
+                        self.metadata[(NSString *)kCGImagePropertyTIFFDictionary] = [tiff mutableCopy];
+                    }
+
+                    NSDictionary *gps = metadata[(NSString *)kCGImagePropertyGPSDictionary];
+                    if (gps.count > 0) {
+                        self.metadata[(NSString *)kCGImagePropertyGPSDictionary] = [gps mutableCopy];
+                    }
+                }
+                
+                // Return CDVPluginResult to WebView
+                // Create info dictionary similar to UIImagePickerController
+                NSMutableDictionary *info = [@{ UIImagePickerControllerOriginalImage : processedImage } mutableCopy];
+                
+                if (metadata.count > 0) {
+                    info[UIImagePickerControllerMediaMetadata] = metadata;
+                }
+                
+                // Process and return result
+                [self resultForImage:pictureOptions info:info completion:^(CDVPluginResult* pluginResult) {
+                    [weakSelf.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
+                    weakSelf.hasPendingOperation = NO;
+                    weakSelf.pickerController = nil;
+                }];
             }];
         }
-    }];
-}
-
-- (void)finalizePHPickerImage:(UIImage*)image
-                     metadata:(NSDictionary*)metadata
-                   callbackId:(NSString*)callbackId
-                      options:(CDVPictureOptions*)options API_AVAILABLE(ios(14))
-{
-    // Process image according to options
-    UIImage *processedImage = image;
-    
-    if (options.correctOrientation) {
-        processedImage = [processedImage imageCorrectedForCaptureOrientation];
-    }
-    
-    // Scale with optional cropping
-    if ((options.targetSize.width > 0) && (options.targetSize.height > 0)) {
-        // Scale and crop to target size
-        if (options.cropToSize) {
-            processedImage = [processedImage imageByScalingAndCroppingForSize:options.targetSize];
-
-            // Scale with no cropping
-        } else {
-            processedImage = [processedImage imageByScalingNotCroppingForSize:options.targetSize];
-        }
-    }
-
-    // Store metadata, which will be processed in resultForImage
-    if (metadata.count > 0) {
-        self.metadata = [NSMutableDictionary dictionary];
-
-        NSDictionary *exif = metadata[(NSString *)kCGImagePropertyExifDictionary];
-        if (exif.count > 0) {
-            self.metadata[(NSString *)kCGImagePropertyExifDictionary] = [exif mutableCopy];
-        }
-
-        NSDictionary *tiff = metadata[(NSString *)kCGImagePropertyTIFFDictionary];
-        if (tiff.count > 0) {
-            self.metadata[(NSString *)kCGImagePropertyTIFFDictionary] = [tiff mutableCopy];
-        }
-
-        NSDictionary *gps = metadata[(NSString *)kCGImagePropertyGPSDictionary];
-        if (gps.count > 0) {
-            self.metadata[(NSString *)kCGImagePropertyGPSDictionary] = [gps mutableCopy];
-        }
-    }
-    
-    // Return Cordova result to WebView
-    // Needed weakSelf for completion block
-    __weak CDVCamera* weakSelf = self;
-    
-    // Create info dictionary similar to UIImagePickerController
-    NSMutableDictionary *info = [@{ UIImagePickerControllerOriginalImage : processedImage } mutableCopy];
-    
-    if (metadata.count > 0) {
-        info[UIImagePickerControllerMediaMetadata] = metadata;
-    }
-    
-    // Process and return result
-    [self resultForImage:options info:info completion:^(CDVPluginResult* pluginResult) {
-        [weakSelf.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
-        weakSelf.hasPendingOperation = NO;
-        weakSelf.pickerController = nil;
     }];
 }
 #endif

@@ -562,10 +562,6 @@
     // Test that processPHPickerImage method exists
     SEL processSelector = @selector(processPHPickerImage:assetIdentifier:callbackId:options:);
     XCTAssertTrue([self.plugin respondsToSelector:processSelector]);
-    
-    // Test that finalizePHPickerImage method exists
-    SEL finalizeSelector = @selector(finalizePHPickerImage:metadata:callbackId:options:);
-    XCTAssertTrue([self.plugin respondsToSelector:finalizeSelector]);
 }
 #endif
 
