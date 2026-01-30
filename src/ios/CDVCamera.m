@@ -413,7 +413,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                     return;
                 }
                 
-                [weakSelf finalizePHPickerImage:[UIImage imageWithData:imageData]
+                [weakSelf processPHPickerImage:[UIImage imageWithData:imageData]
                                        metadata:[weakSelf convertImageMetadata:imageData]
                                      callbackId:callbackId
                                         options:pictureOptions];
@@ -422,12 +422,18 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     }];
 }
 
-- (void)finalizePHPickerImage:(UIImage*)image
+/**
+    Processes an image obtained from PHPickerViewController according to specified pictureOptions,
+    after it returns the CDVPluginResult.
+    The processing of the image is similar what retrieveImage: and processImage: is doing for UIImagePickerController.
+*/
+- (void)processPHPickerImage:(UIImage*)image
                      metadata:(NSDictionary*)metadata
                    callbackId:(NSString*)callbackId
                       options:(CDVPictureOptions*)options API_AVAILABLE(ios(14))
 {
     // Process image according to options
+    // The same is done in retrieveImage:
     UIImage *processedImage = image;
     
     if (options.correctOrientation) {
@@ -446,7 +452,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         }
     }
 
-    // Store metadata, which will be processed in resultForImage
+    // Prepare self.metadata, which replicates the logic from processImage: for the UIImagePickerController
+    // self.metadata which will be set to the image in resultForImage:
     if (metadata.count > 0) {
         self.metadata = [NSMutableDictionary dictionary];
 
@@ -471,9 +478,11 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     __weak CDVCamera* weakSelf = self;
     
     // Create info dictionary similar to UIImagePickerController
+    // Will be used in retrieveImage: to get the image and do processing like here was done
     NSMutableDictionary *info = [@{ UIImagePickerControllerOriginalImage : processedImage } mutableCopy];
     
     if (metadata.count > 0) {
+        // This is not used anywhere and can be removed
         info[UIImagePickerControllerMediaMetadata] = metadata;
     }
     
