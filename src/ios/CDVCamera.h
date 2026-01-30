@@ -114,7 +114,7 @@ typedef NSUInteger CDVMediaType;
 {}
 #endif
 
-@property (strong) CDVUIImagePickerController* pickerController;
+@property (strong) CDVUIImagePickerController* cdvUIImagePickerController;
 @property (strong) NSMutableDictionary *metadata;
 @property (strong, nonatomic) CLLocationManager *locationManager;
 @property (strong) NSData* data;
