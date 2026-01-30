@@ -103,7 +103,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 @implementation CDVCamera
 
-@synthesize hasPendingOperation, pickerController, locationManager;
+@synthesize hasPendingOperation, cdvUIImagePickerController, locationManager;
 
 /**
     Reads the preference CameraUsesGeolocation from config.xml
@@ -239,7 +239,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
     [self.commandDelegate sendPluginResult:result callbackId:callbackId];
     self.hasPendingOperation = NO;
-    self.pickerController = nil;
+    self.cdvUIImagePickerController = nil;
 }
 
 /**
@@ -275,16 +275,14 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     // Use UIImagePickerController for camera or as image picker for iOS older than 14
     // UIImagePickerController must be created and presented on the main thread.
     dispatch_async(dispatch_get_main_queue(), ^{
-        CDVUIImagePickerController* cameraPicker = [CDVUIImagePickerController createFromPictureOptions:pictureOptions];
-        self.pickerController = cameraPicker;
-
-        cameraPicker.delegate = self;
-        cameraPicker.callbackId = callbackId;
+        self.cdvUIImagePickerController = [CDVUIImagePickerController createFromPictureOptions:pictureOptions];
+        self.cdvUIImagePickerController.delegate = self;
+        self.cdvUIImagePickerController.callbackId = callbackId;
         // we need to capture this state for memory warnings that dealloc this object
-        cameraPicker.webView = self.webView;
-        cameraPicker.modalPresentationStyle = UIModalPresentationCurrentContext;
+        self.cdvUIImagePickerController.webView = self.webView;
+        self.cdvUIImagePickerController.modalPresentationStyle = UIModalPresentationCurrentContext;
 
-        [self.viewController presentViewController:cameraPicker
+        [self.viewController presentViewController:self.cdvUIImagePickerController
                                           animated:YES
                                         completion:^{
             self.hasPendingOperation = NO;
@@ -490,7 +488,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     [self resultForImage:options info:info completion:^(CDVPluginResult* pluginResult) {
         [weakSelf.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
         weakSelf.hasPendingOperation = NO;
-        weakSelf.pickerController = nil;
+        weakSelf.cdvUIImagePickerController = nil;
     }];
 }
 #endif
@@ -566,7 +564,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                 data = UIImageJPEGRepresentation(image, [options.quality floatValue] / 100.0f);
             }
 
-            if (pickerController.sourceType == UIImagePickerControllerSourceTypeCamera) {
+            if (self.cdvUIImagePickerController.sourceType == UIImagePickerControllerSourceTypeCamera) {
                 // Include geolocation data in EXIF metadata if requested, this will
                 // be done in locationManager:didUpdateLocations:
                 // Note: This will be done only if UIImagePickerControllerMediaMetadata is available
@@ -595,7 +593,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                     // Note: If mediaMetadata is not set, this would also be set to nil, is this expected?
                     data = nil;
                 }
-            } else if (pickerController.sourceType == UIImagePickerControllerSourceTypePhotoLibrary) {
+            } else if (self.cdvUIImagePickerController.sourceType == UIImagePickerControllerSourceTypePhotoLibrary) {
                 PHAsset* asset = [info objectForKey:@"UIImagePickerControllerPHAsset"];
                 NSDictionary* controllerMetadata = [self getImageMetadataFromAsset:asset];
                 self.data = data;
@@ -766,7 +764,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
             NSData* data = [self processImage:image info:info options:options];
             
             if (data) {
-                if (pickerController.sourceType == UIImagePickerControllerSourceTypePhotoLibrary) {
+                if (self.cdvUIImagePickerController.sourceType == UIImagePickerControllerSourceTypePhotoLibrary) {
                     NSMutableData *imageDataWithExif = [NSMutableData data];
                     if (self.metadata) {
                         CGImageSourceRef sourceImage = CGImageSourceCreateWithData((__bridge CFDataRef)self.data, NULL);
@@ -783,7 +781,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                     }
 
                     NSError* err = nil;
-                    NSString* extension = self.pickerController.pictureOptions.encodingType == EncodingTypePNG ? @"png":@"jpg";
+                    NSString* extension = self.cdvUIImagePickerController.pictureOptions.encodingType == EncodingTypePNG ? @"png":@"jpg";
                     NSString* filePath = [self tempFilePathForExtension:extension];
 
                     // save file
@@ -796,7 +794,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                                                    messageAsString:[[NSURL fileURLWithPath:filePath] absoluteString]];
                     }
                     
-                } else if (pickerController.sourceType != UIImagePickerControllerSourceTypeCamera || !options.usesGeolocation) {
+                } else if (self.cdvUIImagePickerController.sourceType != UIImagePickerControllerSourceTypeCamera || !options.usesGeolocation) {
                     // No need to save file if usesGeolocation is true since it will be saved after the location is tracked
                     NSString* extension = options.encodingType == EncodingTypePNG? @"png" : @"jpg";
                     NSString* filePath = [self tempFilePathForExtension:extension];
@@ -954,7 +952,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                 if (![self usesGeolocation] || picker.sourceType != UIImagePickerControllerSourceTypeCamera) {
                     [weakSelf.commandDelegate sendPluginResult:res callbackId:cameraPicker.callbackId];
                     weakSelf.hasPendingOperation = NO;
-                    weakSelf.pickerController = nil;
+                    weakSelf.cdvUIImagePickerController = nil;
                 }
             }];
             
@@ -963,7 +961,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
             result = [weakSelf resultForVideo:info];
             [weakSelf.commandDelegate sendPluginResult:result callbackId:cameraPicker.callbackId];
             weakSelf.hasPendingOperation = NO;
-            weakSelf.pickerController = nil;
+            weakSelf.cdvUIImagePickerController = nil;
         }
     };
 
@@ -997,7 +995,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         [weakSelf.commandDelegate sendPluginResult:result callbackId:cameraPicker.callbackId];
 
         weakSelf.hasPendingOperation = NO;
-        weakSelf.pickerController = nil;
+        weakSelf.cdvUIImagePickerController = nil;
     };
 
     [[cameraPicker presentingViewController] dismissViewControllerAnimated:YES completion:invoke];
@@ -1117,7 +1115,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 */
 - (void)imagePickerControllerReturnImageResult
 {
-    CDVPictureOptions* options = self.pickerController.pictureOptions;
+    CDVPictureOptions* options = self.cdvUIImagePickerController.pictureOptions;
     CDVPluginResult* result = nil;
    
     NSMutableData *imageDataWithExif = [NSMutableData data];
@@ -1141,7 +1139,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     switch (options.destinationType) {
         case DestinationTypeDataUrl:
         {
-            NSString* mime = [self getMimeForEncoding: self.pickerController.pictureOptions.encodingType];
+            NSString* mime = [self getMimeForEncoding: self.cdvUIImagePickerController.pictureOptions.encodingType];
             NSString* uri = [self formatAsDataURI: self.data withMIME: mime];
             result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString: uri];
         }
@@ -1149,7 +1147,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         default: // DestinationTypeFileUri
         {
             NSError* err = nil;
-            NSString* extension = self.pickerController.pictureOptions.encodingType == EncodingTypePNG ? @"png":@"jpg";
+            NSString* extension = self.cdvUIImagePickerController.pictureOptions.encodingType == EncodingTypePNG ? @"png":@"jpg";
             NSString* filePath = [self tempFilePathForExtension:extension];
 
             // save file
@@ -1166,11 +1164,11 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     };
 
     if (result) {
-        [self.commandDelegate sendPluginResult:result callbackId:self.pickerController.callbackId];
+        [self.commandDelegate sendPluginResult:result callbackId:self.cdvUIImagePickerController.callbackId];
     }
 
     self.hasPendingOperation = NO;
-    self.pickerController = nil;
+    self.cdvUIImagePickerController = nil;
     self.data = nil;
     self.metadata = nil;
     imageDataWithExif = nil;
