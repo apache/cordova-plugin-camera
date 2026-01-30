@@ -275,7 +275,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     // Use UIImagePickerController for camera or as image picker for iOS older than 14
     // UIImagePickerController must be created and presented on the main thread.
     dispatch_async(dispatch_get_main_queue(), ^{
-        CDVImagePickerController* cameraPicker = [CDVImagePickerController createFromPictureOptions:pictureOptions];
+        CDVUIImagePickerController* cameraPicker = [CDVUIImagePickerController createFromPictureOptions:pictureOptions];
         self.pickerController = cameraPicker;
 
         cameraPicker.delegate = self;
@@ -931,7 +931,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 - (void)imagePickerController:(UIImagePickerController*)picker didFinishPickingMediaWithInfo:(NSDictionary*)info
 {
-    __weak CDVImagePickerController* cameraPicker = (CDVImagePickerController*)picker;
+    __weak CDVUIImagePickerController* cameraPicker = (CDVUIImagePickerController*)picker;
     __weak CDVCamera* weakSelf = self;
 
     dispatch_block_t invoke = ^(void) {
@@ -973,7 +973,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController*)picker
 {
-    __weak CDVImagePickerController* cameraPicker = (CDVImagePickerController*)picker;
+    __weak CDVUIImagePickerController* cameraPicker = (CDVUIImagePickerController*)picker;
     __weak CDVCamera* weakSelf = self;
 
     dispatch_block_t invoke = ^ (void) {
@@ -1172,7 +1172,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 @end
 
-@implementation CDVImagePickerController
+@implementation CDVUIImagePickerController
 
 - (BOOL)prefersStatusBarHidden
 {
@@ -1196,7 +1196,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 + (instancetype)createFromPictureOptions:(CDVPictureOptions*)pictureOptions
 {
-    CDVImagePickerController* cameraPicker = [[CDVImagePickerController alloc] init];
+    CDVUIImagePickerController* cameraPicker = [[CDVUIImagePickerController alloc] init];
     cameraPicker.pictureOptions = pictureOptions;
     cameraPicker.sourceType = pictureOptions.sourceType;
     cameraPicker.allowsEditing = pictureOptions.allowsEditing;

@@ -85,7 +85,7 @@ typedef NSUInteger CDVMediaType;
 
 @end
 
-@interface CDVImagePickerController : UIImagePickerController
+@interface CDVUIImagePickerController : UIImagePickerController
 
 @property (strong) CDVPictureOptions* pictureOptions;
 
@@ -114,7 +114,7 @@ typedef NSUInteger CDVMediaType;
 {}
 #endif
 
-@property (strong) CDVImagePickerController* pickerController;
+@property (strong) CDVUIImagePickerController* pickerController;
 @property (strong) NSMutableDictionary *metadata;
 @property (strong, nonatomic) CLLocationManager *locationManager;
 @property (strong) NSData* data;

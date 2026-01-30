@@ -117,7 +117,7 @@
 {
     NSArray* args;
     CDVPictureOptions* pictureOptions;
-    CDVImagePickerController* picker;
+    CDVUIImagePickerController* picker;
     
     // Source is Camera, uses always UIImagePickerController
     args = @[
@@ -138,7 +138,7 @@
     pictureOptions = [CDVPictureOptions createFromTakePictureArguments:command];
     
     if ([UIImagePickerController isSourceTypeAvailable:pictureOptions.sourceType]) {
-        picker = [CDVImagePickerController createFromPictureOptions:pictureOptions];
+        picker = [CDVUIImagePickerController createFromPictureOptions:pictureOptions];
         
         XCTAssertEqualObjects(picker.pictureOptions, pictureOptions);
 
@@ -168,7 +168,7 @@
     pictureOptions = [CDVPictureOptions createFromTakePictureArguments:command];
 
     if ([UIImagePickerController isSourceTypeAvailable:pictureOptions.sourceType]) {
-        picker = [CDVImagePickerController createFromPictureOptions:pictureOptions];
+        picker = [CDVUIImagePickerController createFromPictureOptions:pictureOptions];
 
          XCTAssertEqualObjects(picker.pictureOptions, pictureOptions);
          
@@ -197,7 +197,7 @@
     pictureOptions = [CDVPictureOptions createFromTakePictureArguments:command];
     
     if ([UIImagePickerController isSourceTypeAvailable:pictureOptions.sourceType]) {
-        picker = [CDVImagePickerController createFromPictureOptions:pictureOptions];
+        picker = [CDVUIImagePickerController createFromPictureOptions:pictureOptions];
         
         XCTAssertEqualObjects(picker.pictureOptions, pictureOptions);
         
