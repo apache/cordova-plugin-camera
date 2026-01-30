@@ -938,7 +938,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 - (void)imagePickerController:(UIImagePickerController*)picker didFinishPickingMediaWithInfo:(NSDictionary*)info
 {
-    __weak CDVUIImagePickerController* cameraPicker = (CDVUIImagePickerController*)picker;
+    __weak CDVUIImagePickerController* weakCDVUIImagePickerController = (CDVUIImagePickerController*)picker;
     __weak CDVCamera* weakSelf = self;
 
     dispatch_block_t invoke = ^(void) {
@@ -948,9 +948,9 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         
         // Image selected
         if ([mediaType isEqualToString:(NSString*)kUTTypeImage]) {
-            [weakSelf resultForImage:cameraPicker.pictureOptions info:info completion:^(CDVPluginResult* res) {
+            [weakSelf resultForImage:weakCDVUIImagePickerController.pictureOptions info:info completion:^(CDVPluginResult* res) {
                 if (![self usesGeolocation] || picker.sourceType != UIImagePickerControllerSourceTypeCamera) {
-                    [weakSelf.commandDelegate sendPluginResult:res callbackId:cameraPicker.callbackId];
+                    [weakSelf.commandDelegate sendPluginResult:res callbackId:weakCDVUIImagePickerController.callbackId];
                     weakSelf.hasPendingOperation = NO;
                     weakSelf.cdvUIImagePickerController = nil;
                 }
@@ -959,13 +959,13 @@ static NSString* MIME_JPEG    = @"image/jpeg";
             // Video selected
         } else {
             result = [weakSelf resultForVideo:info];
-            [weakSelf.commandDelegate sendPluginResult:result callbackId:cameraPicker.callbackId];
+            [weakSelf.commandDelegate sendPluginResult:result callbackId:weakCDVUIImagePickerController.callbackId];
             weakSelf.hasPendingOperation = NO;
             weakSelf.cdvUIImagePickerController = nil;
         }
     };
 
-    [[cameraPicker presentingViewController] dismissViewControllerAnimated:YES completion:invoke];
+    [[weakCDVUIImagePickerController presentingViewController] dismissViewControllerAnimated:YES completion:invoke];
 }
 
 // older api calls newer didFinishPickingMediaWithInfo
@@ -980,7 +980,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController*)picker
 {
-    __weak CDVUIImagePickerController* cameraPicker = (CDVUIImagePickerController*)picker;
+    __weak CDVUIImagePickerController* weakCDVUIImagePickerController = (CDVUIImagePickerController*)picker;
     __weak CDVCamera* weakSelf = self;
 
     dispatch_block_t invoke = ^ (void) {
@@ -992,13 +992,13 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         }
 
 
-        [weakSelf.commandDelegate sendPluginResult:result callbackId:cameraPicker.callbackId];
+        [weakSelf.commandDelegate sendPluginResult:result callbackId:weakCDVUIImagePickerController.callbackId];
 
         weakSelf.hasPendingOperation = NO;
         weakSelf.cdvUIImagePickerController = nil;
     };
 
-    [[cameraPicker presentingViewController] dismissViewControllerAnimated:YES completion:invoke];
+    [[weakCDVUIImagePickerController presentingViewController] dismissViewControllerAnimated:YES completion:invoke];
 }
 
 #pragma mark CLLocationManager
@@ -1203,24 +1203,24 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 + (instancetype)createFromPictureOptions:(CDVPictureOptions*)pictureOptions
 {
-    CDVUIImagePickerController* cameraPicker = [[CDVUIImagePickerController alloc] init];
-    cameraPicker.pictureOptions = pictureOptions;
-    cameraPicker.sourceType = pictureOptions.sourceType;
-    cameraPicker.allowsEditing = pictureOptions.allowsEditing;
+    CDVUIImagePickerController* cdvUIImagePickerController = [[CDVUIImagePickerController alloc] init];
+    cdvUIImagePickerController.pictureOptions = pictureOptions;
+    cdvUIImagePickerController.sourceType = pictureOptions.sourceType;
+    cdvUIImagePickerController.allowsEditing = pictureOptions.allowsEditing;
 
-    if (cameraPicker.sourceType == UIImagePickerControllerSourceTypeCamera) {
+    if (cdvUIImagePickerController.sourceType == UIImagePickerControllerSourceTypeCamera) {
         // We only allow taking pictures (no video) in this API.
-        cameraPicker.mediaTypes = @[(NSString*)kUTTypeImage];
+        cdvUIImagePickerController.mediaTypes = @[(NSString*)kUTTypeImage];
         // We can only set the camera device if we're actually using the camera.
-        cameraPicker.cameraDevice = pictureOptions.cameraDirection;
+        cdvUIImagePickerController.cameraDevice = pictureOptions.cameraDirection;
     } else if (pictureOptions.mediaType == MediaTypeAll) {
-        cameraPicker.mediaTypes = [UIImagePickerController availableMediaTypesForSourceType:cameraPicker.sourceType];
+        cdvUIImagePickerController.mediaTypes = [UIImagePickerController availableMediaTypesForSourceType:cdvUIImagePickerController.sourceType];
     } else {
         NSArray* mediaArray = @[(NSString*)(pictureOptions.mediaType == MediaTypeVideo ? kUTTypeMovie : kUTTypeImage)];
-        cameraPicker.mediaTypes = mediaArray;
+        cdvUIImagePickerController.mediaTypes = mediaArray;
     }
 
-    return cameraPicker;
+    return cdvUIImagePickerController;
 }
 
 @end
