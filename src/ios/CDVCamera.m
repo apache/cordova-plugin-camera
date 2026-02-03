@@ -740,19 +740,18 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     return (scaledImage == nil ? image : scaledImage);
 }
 
-- (void)resultForImage:(CDVPictureOptions*)options
+- (void)resultForImage:(CDVPictureOptions*)pictureOptions
                   info:(NSDictionary*)info
             completion:(void (^)(CDVPluginResult* res))completion
 {
     CDVPluginResult* result = nil;
-    BOOL saveToPhotoAlbum = options.saveToPhotoAlbum;
     UIImage* image = nil;
 
-    switch (options.destinationType) {
+    switch (pictureOptions.destinationType) {
         case DestinationTypeDataUrl:
         {
-            image = [self retrieveImage:info options:options];
-            NSString* data = [self processImageAsDataUri:image info:info options:options];
+            image = [self retrieveImage:info options:pictureOptions];
+            NSString* data = [self processImageAsDataUri:image info:info options:pictureOptions];
             if (data)  {
                 result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString: data];
             }
@@ -760,48 +759,57 @@ static NSString* MIME_JPEG    = @"image/jpeg";
             break;
         default: // DestinationTypeFileUri
         {
-            image = [self retrieveImage:info options:options];
-            NSData* data = [self processImage:image info:info options:options];
+            image = [self retrieveImage:info options:pictureOptions];
+            NSData* imageData = [self processImage:image info:info options:pictureOptions];
             
-            if (data) {
-                if (self.cdvUIImagePickerController.sourceType == UIImagePickerControllerSourceTypePhotoLibrary) {
-                    NSMutableData *imageDataWithExif = [NSMutableData data];
+            if (imageData) {
+                if (pictureOptions.sourceType == UIImagePickerControllerSourceTypePhotoLibrary) {
+                    
+                    // Copy custom choosen meta data stored in self.metadata to the image
+                    // This will make the image smaller
+                    NSMutableData *imageDataWithExif = nil;
+                    
                     if (self.metadata) {
+                        imageDataWithExif = [NSMutableData data];
+                        
+                        // Prepare source image
                         CGImageSourceRef sourceImage = CGImageSourceCreateWithData((__bridge CFDataRef)self.data, NULL);
                         CFStringRef sourceType = CGImageSourceGetType(sourceImage);
-
+                        
+                        // Prepare dest image
                         CGImageDestinationRef destinationImage = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)imageDataWithExif, sourceType, 1, NULL);
+                        
+                        // Copy source to dest with metadata
                         CGImageDestinationAddImageFromSource(destinationImage, sourceImage, 0, (__bridge CFDictionaryRef)self.metadata);
                         CGImageDestinationFinalize(destinationImage);
 
                         CFRelease(sourceImage);
                         CFRelease(destinationImage);
-                    } else {
-                        imageDataWithExif = [self.data mutableCopy];
                     }
 
+                    NSData *imageDataToWrite = imageDataWithExif != nil ? imageDataWithExif : imageData;
+                    NSString* tempFilePath = [self tempFilePathForExtension:pictureOptions.encodingType == EncodingTypePNG ? @"png":@"jpg"];
                     NSError* err = nil;
-                    NSString* extension = self.cdvUIImagePickerController.pictureOptions.encodingType == EncodingTypePNG ? @"png":@"jpg";
-                    NSString* filePath = [self tempFilePathForExtension:extension];
-
-                    // save file
-                    if (![imageDataWithExif writeToFile:filePath options:NSAtomicWrite error:&err]) {
+                    
+                    // Write image to temp path
+                    if ([imageDataToWrite writeToFile:tempFilePath options:NSAtomicWrite error:&err]) {
+                        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
+                                                   messageAsString:[[NSURL fileURLWithPath:tempFilePath] absoluteString]];
+                        
+                        // Write was not successful
+                    } else {
                         result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION
                                                    messageAsString:[err localizedDescription]];
                     }
-                    else {
-                        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
-                                                   messageAsString:[[NSURL fileURLWithPath:filePath] absoluteString]];
-                    }
                     
-                } else if (self.cdvUIImagePickerController.sourceType != UIImagePickerControllerSourceTypeCamera || !options.usesGeolocation) {
+                } else if (pictureOptions.sourceType != UIImagePickerControllerSourceTypeCamera || !pictureOptions.usesGeolocation) {
                     // No need to save file if usesGeolocation is true since it will be saved after the location is tracked
-                    NSString* extension = options.encodingType == EncodingTypePNG? @"png" : @"jpg";
+                    NSString* extension = pictureOptions.encodingType == EncodingTypePNG? @"png" : @"jpg";
                     NSString* filePath = [self tempFilePathForExtension:extension];
                     NSError* err = nil;
 
                     // save file
-                    if (![data writeToFile:filePath options:NSAtomicWrite error:&err]) {
+                    if (![imageData writeToFile:filePath options:NSAtomicWrite error:&err]) {
                         result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION
                                                    messageAsString:[err localizedDescription]];
                     } else {
@@ -815,7 +823,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
             break;
     };
 
-    if (saveToPhotoAlbum && image) {
+    // Save the image to the photo album after capture
+    if (pictureOptions.saveToPhotoAlbum && image) {
         UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil);
     }
 
