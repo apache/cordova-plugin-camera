@@ -421,37 +421,17 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 }
 
 /**
-    Processes an image obtained from PHPickerViewController according to specified pictureOptions,
-    after it returns the CDVPluginResult.
-    The processing of the image is similar what retrieveImage: and processImage: is doing for UIImagePickerController.
+    Prepares the image and metadata obtained from PHPickerImageViewController which will be processed in
+    resultForImage:. After that CDVPluginResult is returned.
 */
 - (void)processPHPickerImage:(UIImage*)image
                      metadata:(NSDictionary*)metadata
                    callbackId:(NSString*)callbackId
                       options:(CDVPictureOptions*)options API_AVAILABLE(ios(14))
 {
-    // Process image according to options
-    // The same is done in retrieveImage:
-    UIImage *processedImage = image;
-    
-    if (options.correctOrientation) {
-        processedImage = [processedImage imageCorrectedForCaptureOrientation];
-    }
-    
-    // Scale with optional cropping
-    if ((options.targetSize.width > 0) && (options.targetSize.height > 0)) {
-        // Scale and crop to target size
-        if (options.cropToSize) {
-            processedImage = [processedImage imageByScalingAndCroppingForSize:options.targetSize];
-
-            // Scale with no cropping
-        } else {
-            processedImage = [processedImage imageByScalingNotCroppingForSize:options.targetSize];
-        }
-    }
-
-    // Prepare self.metadata, which replicates the logic from processImage: for the UIImagePickerController
-    // self.metadata which will be set to the image in resultForImage:
+    // To shrink the file size, only selected meta data like EXIF, TIFF, and GPS is used,
+    // which will be stored in self.metadata, which is set to the image in resultForImage:
+    // This code replicates the logic from processImage: for the UIImagePickerController
     if (metadata.count > 0) {
         self.metadata = [NSMutableDictionary dictionary];
 
@@ -471,18 +451,19 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         }
     }
     
-    // Return Cordova result to WebView
-    // Needed weakSelf for completion block
-    __weak CDVCamera* weakSelf = self;
+    // Mimic the info dictionary which would be created by UIImagePickerController
+    // Add image, which will be used in retrieveImage: to get the image and do processing
+    NSMutableDictionary *info = [@{UIImagePickerControllerOriginalImage : image} mutableCopy];
     
-    // Create info dictionary similar to UIImagePickerController
-    // Will be used in retrieveImage: to get the image and do processing like here was done
-    NSMutableDictionary *info = [@{ UIImagePickerControllerOriginalImage : processedImage } mutableCopy];
-    
+    // Add metadata if available
     if (metadata.count > 0) {
         // This is not used anywhere and can be removed
         info[UIImagePickerControllerMediaMetadata] = metadata;
     }
+
+    // Return Cordova result to WebView
+    // Needed weakSelf for completion block
+    __weak CDVCamera* weakSelf = self;
     
     // Process and return result
     [self resultForImage:options info:info completion:^(CDVPluginResult* pluginResult) {
@@ -714,30 +695,35 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 - (UIImage*)retrieveImage:(NSDictionary*)info options:(CDVPictureOptions*)options
 {
-    // get the image
-    UIImage* image = nil;
+    UIImage* pickedImage = nil;
+
+    // Get the picked image from info dictionary
     if (options.allowsEditing && [info objectForKey:UIImagePickerControllerEditedImage]) {
-        image = [info objectForKey:UIImagePickerControllerEditedImage];
+        pickedImage = [info objectForKey:UIImagePickerControllerEditedImage];
     } else {
-        image = [info objectForKey:UIImagePickerControllerOriginalImage];
+        pickedImage = [info objectForKey:UIImagePickerControllerOriginalImage];
     }
 
+    // Process image according to options
+    UIImage *processedImage = pickedImage;
+    
     if (options.correctOrientation) {
-        image = [image imageCorrectedForCaptureOrientation];
+        processedImage = [processedImage imageCorrectedForCaptureOrientation];
     }
-
-    UIImage* scaledImage = nil;
-
-    if ((options.targetSize.width > 0) && (options.targetSize.height > 0)) {
-        // if cropToSize, resize image and crop to target size, otherwise resize to fit target without cropping
+    
+    // Scale with optional cropping
+    if (options.targetSize.width > 0 && options.targetSize.height > 0) {
+        // Scale and crop to target size
         if (options.cropToSize) {
-            scaledImage = [image imageByScalingAndCroppingForSize:options.targetSize];
+            processedImage = [processedImage imageByScalingAndCroppingForSize:options.targetSize];
+
+            // Scale with no cropping
         } else {
-            scaledImage = [image imageByScalingNotCroppingForSize:options.targetSize];
+            processedImage = [processedImage imageByScalingNotCroppingForSize:options.targetSize];
         }
     }
 
-    return (scaledImage == nil ? image : scaledImage);
+    return processedImage;
 }
 
 - (void)resultForImage:(CDVPictureOptions*)options
