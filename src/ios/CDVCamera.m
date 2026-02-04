@@ -765,29 +765,29 @@ static NSString* MIME_JPEG    = @"image/jpeg";
             if (imageData) {
                 if (pictureOptions.sourceType == UIImagePickerControllerSourceTypePhotoLibrary) {
                     
-                    // Copy custom choosen meta data stored in self.metadata to the image
-                    // This will make the image smaller
-                    NSMutableData *imageDataWithExif = nil;
+                    NSData *imageDataToWrite = imageData;
                     
+                    // Copy custom choosen meta data stored in self.metadata to the image
                     if (self.metadata) {
-                        imageDataWithExif = [NSMutableData data];
+                        NSMutableData *imageDataWithCustomMetaData = [NSMutableData data];
                         
                         // Prepare source image
-                        CGImageSourceRef sourceImage = CGImageSourceCreateWithData((__bridge CFDataRef)self.data, NULL);
+                        CGImageSourceRef sourceImage = CGImageSourceCreateWithData((__bridge CFDataRef)imageDataToWrite, NULL);
                         CFStringRef sourceType = CGImageSourceGetType(sourceImage);
                         
                         // Prepare dest image
-                        CGImageDestinationRef destinationImage = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)imageDataWithExif, sourceType, 1, NULL);
+                        CGImageDestinationRef destinationImage = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)imageDataWithCustomMetaData, sourceType, 1, NULL);
                         
-                        // Copy source to dest with metadata
+                        // Copy source to dest with self.metadata
                         CGImageDestinationAddImageFromSource(destinationImage, sourceImage, 0, (__bridge CFDictionaryRef)self.metadata);
                         CGImageDestinationFinalize(destinationImage);
 
                         CFRelease(sourceImage);
                         CFRelease(destinationImage);
+                        
+                        imageDataToWrite = imageDataWithCustomMetaData;
                     }
 
-                    NSData *imageDataToWrite = imageDataWithExif != nil ? imageDataWithExif : imageData;
                     NSString* tempFilePath = [self tempFilePathForExtension:pictureOptions.encodingType == EncodingTypePNG ? @"png":@"jpg"];
                     NSError* err = nil;
                     
