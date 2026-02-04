@@ -938,7 +938,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 - (void)imagePickerController:(UIImagePickerController*)picker didFinishPickingMediaWithInfo:(NSDictionary*)info
 {
-    __weak CDVUIImagePickerController* weakCDVUIImagePickerController = (CDVUIImagePickerController*)picker;
+    __weak CDVUIImagePickerController* cdvUIImagePickerController = (CDVUIImagePickerController*)picker;
     __weak CDVCamera* weakSelf = self;
 
     dispatch_block_t invoke = ^(void) {
@@ -948,9 +948,9 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         
         // Image selected
         if ([mediaType isEqualToString:(NSString*)kUTTypeImage]) {
-            [weakSelf resultForImage:weakCDVUIImagePickerController.pictureOptions info:info completion:^(CDVPluginResult* res) {
+            [weakSelf resultForImage:cdvUIImagePickerController.pictureOptions info:info completion:^(CDVPluginResult* res) {
                 if (![self usesGeolocation] || picker.sourceType != UIImagePickerControllerSourceTypeCamera) {
-                    [weakSelf.commandDelegate sendPluginResult:res callbackId:weakCDVUIImagePickerController.callbackId];
+                    [weakSelf.commandDelegate sendPluginResult:res callbackId:cdvUIImagePickerController.callbackId];
                     weakSelf.hasPendingOperation = NO;
                     weakSelf.cdvUIImagePickerController = nil;
                 }
@@ -959,13 +959,13 @@ static NSString* MIME_JPEG    = @"image/jpeg";
             // Video selected
         } else {
             result = [weakSelf resultForVideo:info];
-            [weakSelf.commandDelegate sendPluginResult:result callbackId:weakCDVUIImagePickerController.callbackId];
+            [weakSelf.commandDelegate sendPluginResult:result callbackId:cdvUIImagePickerController.callbackId];
             weakSelf.hasPendingOperation = NO;
             weakSelf.cdvUIImagePickerController = nil;
         }
     };
 
-    [[weakCDVUIImagePickerController presentingViewController] dismissViewControllerAnimated:YES completion:invoke];
+    [[cdvUIImagePickerController presentingViewController] dismissViewControllerAnimated:YES completion:invoke];
 }
 
 // older api calls newer didFinishPickingMediaWithInfo
@@ -980,7 +980,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController*)picker
 {
-    __weak CDVUIImagePickerController* weakCDVUIImagePickerController = (CDVUIImagePickerController*)picker;
+    __weak CDVUIImagePickerController* cdvUIImagePickerController = (CDVUIImagePickerController*)picker;
     __weak CDVCamera* weakSelf = self;
 
     dispatch_block_t invoke = ^ (void) {
@@ -992,13 +992,13 @@ static NSString* MIME_JPEG    = @"image/jpeg";
         }
 
 
-        [weakSelf.commandDelegate sendPluginResult:result callbackId:weakCDVUIImagePickerController.callbackId];
+        [weakSelf.commandDelegate sendPluginResult:result callbackId:cdvUIImagePickerController.callbackId];
 
         weakSelf.hasPendingOperation = NO;
         weakSelf.cdvUIImagePickerController = nil;
     };
 
-    [[weakCDVUIImagePickerController presentingViewController] dismissViewControllerAnimated:YES completion:invoke];
+    [[cdvUIImagePickerController presentingViewController] dismissViewControllerAnimated:YES completion:invoke];
 }
 
 #pragma mark CLLocationManager
