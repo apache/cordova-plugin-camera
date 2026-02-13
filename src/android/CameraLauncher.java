@@ -749,6 +749,23 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
         String uriString = uri.toString();
         String mimeTypeOfGalleryFile = FileHelper.getMimeType(uriString, this.cordova);
+
+        // If you ask for video or the selected file cannot be processed
+        // there will be no attempt to resize any returned data.
+        if (this.mediaType == VIDEO || !isImageMimeTypeProcessable(mimeTypeOfGalleryFile)) {
+            this.callbackContext.success(uriString);
+            return;
+        }
+
+        // This is a special case to just return the path as no scaling,
+        // rotating, nor compressing needs to be done
+        if (this.targetHeight == -1 && this.targetWidth == -1 &&
+                destType == FILE_URI && !this.correctOrientation &&
+                getMimetypeForEncodingType().equalsIgnoreCase(mimeTypeOfGalleryFile)) {
+            this.callbackContext.success(uriString);
+            return;
+        }
+
         InputStream input;
         try {
             input = cordova.getActivity().getContentResolver().openInputStream(uri);
@@ -764,105 +781,53 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
         try {
             byte[] data = readData(input);
+            Bitmap bitmap = null;
 
-            // If you ask for video or the selected file cannot be processed
-            // there will be no attempt to resize any returned data.
-            if (this.mediaType == VIDEO || !isImageMimeTypeProcessable(mimeTypeOfGalleryFile)) {
-                this.callbackContext.success(uriString);
-            } else {
-                Bitmap bitmap = null;
-
-                // This is a special case to just return the path as no scaling,
-                // rotating, nor compressing needs to be done
-                if (this.targetHeight == -1 && this.targetWidth == -1 &&
-                    destType == FILE_URI && !this.correctOrientation &&
-                    getMimetypeForEncodingType().equalsIgnoreCase(mimeTypeOfGalleryFile)) {
-                    this.callbackContext.success(uriString);
-                } else {
-                    try {
-                        bitmap = getScaledAndRotatedBitmap(data, mimeTypeOfGalleryFile);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    if (bitmap == null) {
-                        LOG.d(LOG_TAG, "I either have an unreadable uri or null bitmap");
-                        this.failPicture("Unable to create bitmap!");
-                        return;
-                    }
-
-                    // If sending base64 image back
-                    if (destType == DATA_URL) {
-                        this.processPicture(bitmap, this.encodingType);
-                    }
-
-                    // If sending filename back
-                    else if (destType == FILE_URI) {
-                        // Did we modify the image?
-                        if ((this.targetHeight > 0 && this.targetWidth > 0) ||
-                            (this.correctOrientation && this.orientationCorrected) ||
-                            !mimeTypeOfGalleryFile.equalsIgnoreCase(getMimetypeForEncodingType())) {
-                            try {
-                                String modifiedPath = this.outputModifiedBitmap(bitmap, uri, mimeTypeOfGalleryFile);
-                                // The modified image is cached by the app in order to get around this and not have to delete you
-                                // application cache I'm adding the current system time to the end of the file url.
-                                this.callbackContext.success("file://" + modifiedPath + "?" + System.currentTimeMillis());
-
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                                this.failPicture("Error retrieving image: " + e.getLocalizedMessage());
-                            }
-                        } else {
-                            this.callbackContext.success(uriString);
-                        }
-                    }
-                    if (bitmap != null) {
-                        bitmap.recycle();
-                        bitmap = null;
-                    }
-                    System.gc();
-                }
-                if (bitmap == null) {
-                    LOG.d(LOG_TAG, "I either have an unreadable uri or null bitmap");
-                    this.failPicture("Unable to create bitmap!");
-                    return;
-                }
-
-                // If sending base64 image back
-                if (destType == DATA_URL) {
-                    this.processPicture(bitmap, this.encodingType);
-                }
-
-                // If sending filename back
-                else if (destType == FILE_URI) {
-                    // Did we modify the image?
-                    if ( (this.targetHeight > 0 && this.targetWidth > 0) ||
-                            (this.correctOrientation && this.orientationCorrected) ||
-                            !mimeTypeOfGalleryFile.equalsIgnoreCase(getMimetypeForEncodingType()))
-                    {
-                        try {
-                            String modifiedPath = this.outputModifiedBitmap(bitmap, uri, mimeTypeOfGalleryFile);
-                            // The modified image is cached by the app in order to get around this and not have to delete you
-                            // application cache I'm adding the current system time to the end of the file url.
-                            this.callbackContext.success("file://" + modifiedPath + "?" + System.currentTimeMillis());
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            this.failPicture("Error retrieving image: "+e.getLocalizedMessage());
-                        }
-                    } else {
-                        this.callbackContext.success(uriString);
-                    }
-                }
-                if (bitmap != null) {
-                    bitmap.recycle();
-                    bitmap = null;
-                }
-                System.gc();
+            try {
+                bitmap = getScaledAndRotatedBitmap(data, mimeTypeOfGalleryFile);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
 
+            if (bitmap == null) {
+                LOG.d(LOG_TAG, "I either have an unreadable uri or null bitmap");
+                this.failPicture("Unable to create bitmap!");
+                return;
+            }
+
+            // If sending base64 image back
+            if (destType == DATA_URL) {
+                this.processPicture(bitmap, this.encodingType);
+            }
+            // If sending filename back
+            else if (destType == FILE_URI) {
+                // Did we modify the image?
+                if ((this.targetHeight > 0 && this.targetWidth > 0) ||
+                        (this.correctOrientation && this.orientationCorrected) ||
+                        !mimeTypeOfGalleryFile.equalsIgnoreCase(getMimetypeForEncodingType())) {
+                    try {
+                        String modifiedPath = this.outputModifiedBitmap(bitmap, uri, mimeTypeOfGalleryFile);
+                        // The modified image is cached by the app in order to get around this and not have to delete you
+                        // application cache I'm adding the current system time to the end of the file url.
+                        this.callbackContext.success("file://" + modifiedPath + "?" + System.currentTimeMillis());
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        this.failPicture("Error retrieving image: " + e.getLocalizedMessage());
+                    }
+                } else {
+                    this.callbackContext.success(uriString);
+                }
+            }
+
+            if (bitmap != null) {
+                bitmap.recycle();
+                bitmap = null;
+            }
+
+            System.gc();
             input.close();
-        }
-        catch (Exception e) {
+        }  catch (Exception e) {
             try {
                 input.close();
             } catch (IOException ex) {
