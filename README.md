@@ -55,18 +55,6 @@ The variable is configured on install time
 
     cordova plugin add cordova-plugin-camera --variable ANDROIDX_CORE_VERSION=1.18.0
 
-## How to Contribute
-
-Contributors are welcome! And we need your contributions to keep the project moving forward. You can[report bugs, improve the documentation, or [contribute code](https://github.com/apache/cordova-plugin-camera/pulls).
-
-There is a specific [contributor workflow](http://wiki.apache.org/cordova/ContributorWorkflow) we recommend. Start reading there. More information is available on [our wiki](http://wiki.apache.org/cordova).
-
-**Have a solution?** Send a [Pull Request](https://github.com/apache/cordova-plugin-camera/pulls).
-
-In order for your changes to be accepted, you need to sign and submit an Apache [ICLA](http://www.apache.org/licenses/#clas) (Individual Contributor License Agreement). Then your name will appear on the list of CLAs signed by [non-committers](https://people.apache.org/committer-index.html#unlistedclas) or [Cordova committers](http://people.apache.org/committers-by-project.html#cordova).
-
-**And don't forget to test and document your code.**
-
 ### iOS Specifics
 
 Since iOS 10 it's mandatory to provide a usage description in the `info.plist` when accessing privacy-sensitive data. The required keys depend on how you use the plugin and which iOS versions you support:
