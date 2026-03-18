@@ -23,7 +23,13 @@ description: Take pictures with the device camera.
 
 # cordova-plugin-camera
 
-[![Android Testsuite](https://github.com/apache/cordova-plugin-camera/actions/workflows/android.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/android.yml) [![Chrome Testsuite](https://github.com/apache/cordova-plugin-camera/actions/workflows/chrome.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/chrome.yml) [![iOS Testsuite](https://github.com/apache/cordova-plugin-camera/actions/workflows/ios.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/ios.yml) [![Lint Test](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml)
+[![npm - Latest](https://img.shields.io/npm/v/cordova-plugin-camera/latest?label=Latest%20Release%20(npm))](https://npmjs.com/package/cordova-plugin-camera)
+
+[![GitHub](https://img.shields.io/github/package-json/v/apache/cordova-plugin-camera?label=Development%20(Git))](https://github.com/apache/cordova-plugin-camera)
+[![GitHub - Android Workflow](https://github.com/apache/cordova-plugin-camera/actions/workflows/android.yml/badge.svg?branch=master)](https://github.com/apache/cordova-plugin-camera/actions/workflows/android.yml?query=branch%3Amaster)
+[![GitHub - Chrome Workflow](https://github.com/apache/cordova-plugin-camera/actions/workflows/chrome.yml/badge.svg?branch=master)](https://github.com/apache/cordova-plugin-camera/actions/workflows/chrome.yml?query=branch%3Amaster)
+[![GitHub - iOS Workflow](https://github.com/apache/cordova-plugin-camera/actions/workflows/ios.yml/badge.svg?branch=master)](https://github.com/apache/cordova-plugin-camera/actions/workflows/ios.yml?query=branch%3Amaster)
+[![GitHub - Lint](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml/badge.svg?branch=master)](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml?query=branch%3Amaster)
 
 This plugin defines a global `navigator.camera` object, which provides an API for taking pictures and for choosing images from
 the system's image library.
