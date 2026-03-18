@@ -71,9 +71,18 @@ Plugin variables let you configure parts of a plugin and must be set during inst
     cordova plugin add cordova-plugin-camera --variable ANDROIDX_CORE_VERSION=1.8.0
     ```
 
-### iOS Specifics
+## App Configuration
 
-Since iOS 10 it's mandatory to provide a usage description in the `info.plist` when accessing privacy-sensitive data. The required keys depend on how you use the plugin and which iOS versions you support:
+The following preferences can be set in the app's `config.xml` file to configure the plugin.
+
+### iOS-Specific
+
+#### Mandatory Usage Description
+
+> [!WARNING]
+> Since iOS 10, you must provide usage descriptions in the `info.plist` when accessing privacy-sensitive data.
+
+The required keys depend on how you use the plugin and which iOS versions you support:
 
 | Key                            | Description |
 | ------------------------------ | ----------- |
@@ -103,6 +112,20 @@ To add these entries into the `info.plist`, you can use the `edit-config` tag in
     <string>need location access to find things nearby</string>
 </edit-config>
 ```
+
+#### Preferences
+
+- **`CameraUsesGeolocation`**
+
+    **Default:** `false` (boolean)
+
+    Enables geolocation data in the EXIF header when capturing JPEG images. When set to `true`, the app will request for geolocation permissions .
+
+    To set this preference, add the following:
+
+    ```xml
+    <preference name="CameraUsesGeolocation" value="false" />
+    ```
 
 ---
 
@@ -428,12 +451,6 @@ function onFail(message) {
     alert('Failed because: ' + message);
 }
 ```
-
-#### Preferences (iOS)
-
--  __CameraUsesGeolocation__ (boolean, defaults to false). For capturing JPEGs, set to true to get geolocation data in the EXIF header. This will trigger a request for geolocation permissions if set to true.
-
-        <preference name="CameraUsesGeolocation" value="false" />
 
 #### Android Quirks
 
