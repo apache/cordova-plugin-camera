@@ -31,10 +31,9 @@ description: Take pictures with the device camera.
 [![GitHub - iOS Workflow](https://github.com/apache/cordova-plugin-camera/actions/workflows/ios.yml/badge.svg?branch=master)](https://github.com/apache/cordova-plugin-camera/actions/workflows/ios.yml?query=branch%3Amaster)
 [![GitHub - Lint](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml/badge.svg?branch=master)](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml?query=branch%3Amaster)
 
-This plugin defines a global `navigator.camera` object, which provides an API for taking pictures and for choosing images from
-the system's image library.
+This plugin defines a global `navigator.camera` object, which provides an API for taking pictures and choosing images from the device's image library.
 
-Although the object is attached to the global scoped `navigator`, it is not available until after the `deviceready` event.
+Although the object is attached to the global `navigator` object, it is not available until after the `deviceready` event.
 
 ```js
 document.addEventListener("deviceready", onDeviceReady, false);
