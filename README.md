@@ -75,6 +75,25 @@ Plugin variables let you configure parts of a plugin and must be set during inst
 
 The following preferences can be set in the app's `config.xml` file to configure the plugin.
 
+### Android-Specific
+
+#### Supporting `saveToPhotoAlbum` on Android 9 (API 28) & Lower
+
+> [!WARNING]
+> If you support Android 9 (API 28) and lower and need `saveToPhotoAlbum`, then this step is required.
+>
+> If you support only Android 10 (API 29) and later, or do not need `saveToPhotoAlbum`, then skip this step.
+>
+> Configuring the `WRITE_EXTERNAL_STORAGE` permission for Android 10 or later has no effect.
+
+To declare the `WRITE_EXTERNAL_STORAGE` permission, add the following:
+
+```xml
+<config-file target="AndroidManifest.xml" parent="/*" xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+</config-file>
+```
+
 ### iOS-Specific
 
 #### Mandatory Usage Description
@@ -204,18 +223,6 @@ selected from the device's gallery are not downscaled to a lower
 quality, even if a `quality` parameter is specified.  To avoid common
 memory problems, set `Camera.destinationType` to `FILE_URI` rather
 than `DATA_URL`.
-
-__NOTE__: To use `saveToPhotoAlbum` option on Android 9 (API 28) and lower, the `WRITE_EXTERNAL_STORAGE` permission must be declared.
-
-To do this, add the following in your `config.xml`:
-
-```xml
-<config-file target="AndroidManifest.xml" parent="/*" xmlns:android="http://schemas.android.com/apk/res/android">
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
-</config-file>
-```
-
-Android 10 (API 29) and later devices does not require `WRITE_EXTERNAL_STORAGE` permission. If your application only supports Android 10 or later, then this step is not necessary.
 
 #### FILE_URI Usage
 
