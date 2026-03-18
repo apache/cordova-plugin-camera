@@ -51,16 +51,25 @@ function onDeviceReady() {
 
 ## Installation
 
-    cordova plugin add cordova-plugin-camera
+```bash
+cordova plugin add cordova-plugin-camera
+```
 
-## Plugin variables
+### Plugin Variables
 
-The plugin uses the `ANDROIDX_CORE_VERSION` variable to configure `androidx.core:core` dependency. This allows to avoid conflicts with other plugins that have the dependency hardcoded.
-If no value is passed, it will use `1.18.0` as the default value.
+Plugin variables let you configure parts of a plugin and must be set during installation. To set these variables, append `--variable {VARIABLE_NAME}={VALUE}` to the `cordova plugin add` command for each variable. If you wish you change or remove any of the plugin variables, uninstall and reinstall with the updated variables.
 
-The variable is configured on install time
+- **`ANDROIDX_CORE_VERSION`**
 
-    cordova plugin add cordova-plugin-camera --variable ANDROIDX_CORE_VERSION=1.18.0
+    **Default:** `1.6.+`
+
+    This variable allows you to configure the `androidx.core:core` dependency for this plugin only. Some plugins may include this dependency with hard-coded versions, so you can use this variable to try to match those versions and reduce conflicts.
+
+    **Example:**
+
+    ```bash
+    cordova plugin add cordova-plugin-camera --variable ANDROIDX_CORE_VERSION=1.8.0
+    ```
 
 ### iOS Specifics
 
