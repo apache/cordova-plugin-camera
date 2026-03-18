@@ -43,6 +43,12 @@ function onDeviceReady() {
 }
 ```
 
+## Supported Platforms
+
+- Android
+- Browser
+- iOS
+
 ## Installation
 
     cordova plugin add cordova-plugin-camera
