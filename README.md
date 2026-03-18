@@ -42,10 +42,6 @@ function onDeviceReady() {
 
     cordova plugin add cordova-plugin-camera
 
-It is also possible to install via repo url directly ( unstable )
-
-    cordova plugin add https://github.com/apache/cordova-plugin-camera.git
-
 ## Plugin variables
 
 The plugin uses the `ANDROIDX_CORE_VERSION` variable to configure `androidx.core:core` dependency. This allows to avoid conflicts with other plugins that have the dependency hardcoded.
