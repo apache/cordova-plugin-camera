@@ -150,21 +150,19 @@ To add these entries into the `info.plist`, you can use the `edit-config` tag in
 
 # API Reference <a name="reference"></a>
 
+- [camera](#module_camera)
+  - [.getPicture(successCallback, errorCallback, options)](#module_camera.getPicture)
+  - [.cleanup()](#module_camera.cleanup)
+  - [.onError](#module_camera.onError) : <code>function</code>
+  - [.onSuccess](#module_camera.onSuccess) : <code>function</code>
+  - [.CameraOptions](#module_camera.CameraOptions) : <code>Object</code>
 
-* [camera](#module_camera)
-    * [.getPicture(successCallback, errorCallback, options)](#module_camera.getPicture)
-    * [.cleanup()](#module_camera.cleanup)
-    * [.onError](#module_camera.onError) : <code>function</code>
-    * [.onSuccess](#module_camera.onSuccess) : <code>function</code>
-    * [.CameraOptions](#module_camera.CameraOptions) : <code>Object</code>
-
-
-* [Camera](#module_Camera)
-    * [.DestinationType](#module_Camera.DestinationType) : <code>enum</code>
-    * [.EncodingType](#module_Camera.EncodingType) : <code>enum</code>
-    * [.MediaType](#module_Camera.MediaType) : <code>enum</code>
-    * [.PictureSourceType](#module_Camera.PictureSourceType) : <code>enum</code>
-    * [.Direction](#module_Camera.Direction) : <code>enum</code>
+- [Camera](#module_Camera)
+  - [.DestinationType](#module_Camera.DestinationType) : <code>enum</code>
+  - [.EncodingType](#module_Camera.EncodingType) : <code>enum</code>
+  - [.MediaType](#module_Camera.MediaType) : <code>enum</code>
+  - [.PictureSourceType](#module_Camera.PictureSourceType) : <code>enum</code>
+  - [.Direction](#module_Camera.Direction) : <code>enum</code>
 
 ---
 
@@ -325,7 +323,8 @@ function cameraCallback(imageData) {
 
 ### camera.CameraOptions : <code>Object</code>
 Optional parameters to customize the camera settings.
-* [Quirks](#CameraOptions-quirks)
+
+- [Quirks](#CameraOptions-quirks)
 
 **Kind**: static typedef of <code>[camera](#module_camera)</code>
 **Properties**
@@ -505,12 +504,12 @@ setTimeout(function() {
 
 The Camera plugin allows you to do things like open the device's Camera app and take a picture, or open the file picker and select one. The code snippets in this section demonstrate different tasks including:
 
-* Open the Camera app and [take a Picture](#takePicture)
-* Take a picture and [return thumbnails](#getThumbnails) (resized picture)
-* Take a picture and [generate a FileEntry object](#convert)
-* [Select a file](#selectFile) from the picture library
-* Select a JPEG image and [return thumbnails](#getFileThumbnails) (resized image)
-* Select an image and [generate a FileEntry object](#convert)
+- Open the Camera app and [take a Picture](#takePicture)
+- Take a picture and [return thumbnails](#getThumbnails) (resized picture)
+- Take a picture and [generate a FileEntry object](#convert)
+- [Select a file](#selectFile) from the picture library
+- Select a JPEG image and [return thumbnails](#getFileThumbnails) (resized image)
+- Select an image and [generate a FileEntry object](#convert)
 
 ## Take a Picture <a name="takePicture"></a>
 
