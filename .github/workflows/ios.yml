@@ -55,6 +55,14 @@ jobs:
       matrix:
         versions:
           - os-version: macos-14
+            ios-version: 15.x
+            xcode-version: 15.x
+
+          - os-version: macos-14
+            ios-version: 16.x
+            xcode-version: 15.x
+
+          - os-version: macos-14
             ios-version: 17.x
             xcode-version: 15.x
 
