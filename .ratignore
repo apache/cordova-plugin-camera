@@ -15,4 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-node_modules
+# This file used by release audit workflow
+
+.git/
+coverage/
+node_modules/
+types/index.d.ts

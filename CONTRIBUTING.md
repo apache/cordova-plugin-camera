@@ -18,7 +18,6 @@
 # under the License.
 #
 -->
-
 # Contributing to Apache Cordova
 
 Anyone can contribute to Cordova. We welcome your contributions.
