@@ -23,12 +23,17 @@ description: Take pictures with the device camera.
 
 # cordova-plugin-camera
 
-[![Android Testsuite](https://github.com/apache/cordova-plugin-camera/actions/workflows/android.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/android.yml) [![Chrome Testsuite](https://github.com/apache/cordova-plugin-camera/actions/workflows/chrome.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/chrome.yml) [![iOS Testsuite](https://github.com/apache/cordova-plugin-camera/actions/workflows/ios.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/ios.yml) [![Lint Test](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml)
+[![npm - Latest](https://img.shields.io/npm/v/cordova-plugin-camera/latest?label=Latest%20Release%20(npm))](https://npmjs.com/package/cordova-plugin-camera)
 
-This plugin defines a global `navigator.camera` object, which provides an API for taking pictures and for choosing images from
-the system's image library.
+[![GitHub](https://img.shields.io/github/package-json/v/apache/cordova-plugin-camera?label=Development%20(Git))](https://github.com/apache/cordova-plugin-camera)
+[![GitHub - Android Workflow](https://github.com/apache/cordova-plugin-camera/actions/workflows/android.yml/badge.svg?branch=master)](https://github.com/apache/cordova-plugin-camera/actions/workflows/android.yml?query=branch%3Amaster)
+[![GitHub - Chrome Workflow](https://github.com/apache/cordova-plugin-camera/actions/workflows/chrome.yml/badge.svg?branch=master)](https://github.com/apache/cordova-plugin-camera/actions/workflows/chrome.yml?query=branch%3Amaster)
+[![GitHub - iOS Workflow](https://github.com/apache/cordova-plugin-camera/actions/workflows/ios.yml/badge.svg?branch=master)](https://github.com/apache/cordova-plugin-camera/actions/workflows/ios.yml?query=branch%3Amaster)
+[![GitHub - Lint](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml/badge.svg?branch=master)](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml?query=branch%3Amaster)
 
-Although the object is attached to the global scoped `navigator`, it is not available until after the `deviceready` event.
+This plugin defines a global `navigator.camera` object, which provides an API for taking pictures and choosing images from the device's image library.
+
+Although the object is attached to the global `navigator` object, it is not available until after the `deviceready` event.
 
 ```js
 document.addEventListener("deviceready", onDeviceReady, false);
@@ -38,38 +43,65 @@ function onDeviceReady() {
 }
 ```
 
+## Supported Platforms
+
+- Android
+- Browser
+- iOS
+
 ## Installation
 
-    cordova plugin add cordova-plugin-camera
+```bash
+cordova plugin add cordova-plugin-camera
+```
 
-It is also possible to install via repo url directly ( unstable )
+### Plugin Variables
 
-    cordova plugin add https://github.com/apache/cordova-plugin-camera.git
+Plugin variables let you configure parts of a plugin and must be set during installation. To set these variables, append `--variable {VARIABLE_NAME}={VALUE}` to the `cordova plugin add` command for each variable. If you wish you change or remove any of the plugin variables, uninstall and reinstall with the updated variables.
 
-## Plugin variables
+- **`ANDROIDX_CORE_VERSION`**
 
-The plugin uses the `ANDROIDX_CORE_VERSION` variable to configure `androidx.core:core` dependency. This allows to avoid conflicts with other plugins that have the dependency hardcoded.
-If no value is passed, it will use `1.18.0` as the default value.
+    **Default:** `1.6.+`
 
-The variable is configured on install time
+    This variable allows you to configure the `androidx.core:core` dependency for this plugin only. Some plugins may include this dependency with hard-coded versions, so you can use this variable to try to match those versions and reduce conflicts.
 
-    cordova plugin add cordova-plugin-camera --variable ANDROIDX_CORE_VERSION=1.18.0
+    **Example:**
 
-## How to Contribute
+    ```bash
+    cordova plugin add cordova-plugin-camera --variable ANDROIDX_CORE_VERSION=1.8.0
+    ```
 
-Contributors are welcome! And we need your contributions to keep the project moving forward. You can[report bugs, improve the documentation, or [contribute code](https://github.com/apache/cordova-plugin-camera/pulls).
+## App Configuration
 
-There is a specific [contributor workflow](http://wiki.apache.org/cordova/ContributorWorkflow) we recommend. Start reading there. More information is available on [our wiki](http://wiki.apache.org/cordova).
+The following preferences can be set in the app's `config.xml` file to configure the plugin.
 
-**Have a solution?** Send a [Pull Request](https://github.com/apache/cordova-plugin-camera/pulls).
+### Android-Specific
 
-In order for your changes to be accepted, you need to sign and submit an Apache [ICLA](http://www.apache.org/licenses/#clas) (Individual Contributor License Agreement). Then your name will appear on the list of CLAs signed by [non-committers](https://people.apache.org/committer-index.html#unlistedclas) or [Cordova committers](http://people.apache.org/committers-by-project.html#cordova).
+#### Supporting `saveToPhotoAlbum` on Android 9 (API 28) & Lower
 
-**And don't forget to test and document your code.**
+> [!WARNING]
+> If you support Android 9 (API 28) and lower and need `saveToPhotoAlbum`, then this step is required.
+>
+> If you support only Android 10 (API 29) and later, or do not need `saveToPhotoAlbum`, then skip this step.
+>
+> Configuring the `WRITE_EXTERNAL_STORAGE` permission for Android 10 or later has no effect.
 
-### iOS Specifics
+To declare the `WRITE_EXTERNAL_STORAGE` permission, add the following:
 
-Since iOS 10 it's mandatory to provide a usage description in the `info.plist` when accessing privacy-sensitive data. The required keys depend on how you use the plugin and which iOS versions you support:
+```xml
+<config-file target="AndroidManifest.xml" parent="/*" xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+</config-file>
+```
+
+### iOS-Specific
+
+#### Mandatory Usage Description
+
+> [!WARNING]
+> Since iOS 10, you must provide usage descriptions in the `info.plist` when accessing privacy-sensitive data.
+
+The required keys depend on how you use the plugin and which iOS versions you support:
 
 | Key                            | Description |
 | ------------------------------ | ----------- |
@@ -100,25 +132,37 @@ To add these entries into the `info.plist`, you can use the `edit-config` tag in
 </edit-config>
 ```
 
+#### Preferences
+
+- **`CameraUsesGeolocation`**
+
+    **Default:** `false` (boolean)
+
+    Enables geolocation data in the EXIF header when capturing JPEG images. When set to `true`, the app will request for geolocation permissions .
+
+    To set this preference, add the following:
+
+    ```xml
+    <preference name="CameraUsesGeolocation" value="false" />
+    ```
+
 ---
 
 # API Reference <a name="reference"></a>
 
+- [camera](#module_camera)
+  - [.getPicture(successCallback, errorCallback, options)](#module_camera.getPicture)
+  - [.cleanup()](#module_camera.cleanup)
+  - [.onError](#module_camera.onError) : <code>function</code>
+  - [.onSuccess](#module_camera.onSuccess) : <code>function</code>
+  - [.CameraOptions](#module_camera.CameraOptions) : <code>Object</code>
 
-* [camera](#module_camera)
-    * [.getPicture(successCallback, errorCallback, options)](#module_camera.getPicture)
-    * [.cleanup()](#module_camera.cleanup)
-    * [.onError](#module_camera.onError) : <code>function</code>
-    * [.onSuccess](#module_camera.onSuccess) : <code>function</code>
-    * [.CameraOptions](#module_camera.CameraOptions) : <code>Object</code>
-
-
-* [Camera](#module_Camera)
-    * [.DestinationType](#module_Camera.DestinationType) : <code>enum</code>
-    * [.EncodingType](#module_Camera.EncodingType) : <code>enum</code>
-    * [.MediaType](#module_Camera.MediaType) : <code>enum</code>
-    * [.PictureSourceType](#module_Camera.PictureSourceType) : <code>enum</code>
-    * [.Direction](#module_Camera.Direction) : <code>enum</code>
+- [Camera](#module_Camera)
+  - [.DestinationType](#module_Camera.DestinationType) : <code>enum</code>
+  - [.EncodingType](#module_Camera.EncodingType) : <code>enum</code>
+  - [.MediaType](#module_Camera.MediaType) : <code>enum</code>
+  - [.PictureSourceType](#module_Camera.PictureSourceType) : <code>enum</code>
+  - [.Direction](#module_Camera.Direction) : <code>enum</code>
 
 ---
 
@@ -177,18 +221,6 @@ selected from the device's gallery are not downscaled to a lower
 quality, even if a `quality` parameter is specified.  To avoid common
 memory problems, set `Camera.destinationType` to `FILE_URI` rather
 than `DATA_URL`.
-
-__NOTE__: To use `saveToPhotoAlbum` option on Android 9 (API 28) and lower, the `WRITE_EXTERNAL_STORAGE` permission must be declared.
-
-To do this, add the following in your `config.xml`:
-
-```xml
-<config-file target="AndroidManifest.xml" parent="/*" xmlns:android="http://schemas.android.com/apk/res/android">
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
-</config-file>
-```
-
-Android 10 (API 29) and later devices does not require `WRITE_EXTERNAL_STORAGE` permission. If your application only supports Android 10 or later, then this step is not necessary.
 
 #### FILE_URI Usage
 
@@ -291,7 +323,8 @@ function cameraCallback(imageData) {
 
 ### camera.CameraOptions : <code>Object</code>
 Optional parameters to customize the camera settings.
-* [Quirks](#CameraOptions-quirks)
+
+- [Quirks](#CameraOptions-quirks)
 
 **Kind**: static typedef of <code>[camera](#module_camera)</code>
 **Properties**
@@ -425,12 +458,6 @@ function onFail(message) {
 }
 ```
 
-#### Preferences (iOS)
-
--  __CameraUsesGeolocation__ (boolean, defaults to false). For capturing JPEGs, set to true to get geolocation data in the EXIF header. This will trigger a request for geolocation permissions if set to true.
-
-        <preference name="CameraUsesGeolocation" value="false" />
-
 #### Android Quirks
 
 Android uses intents to launch the camera activity on the device to capture
@@ -477,12 +504,12 @@ setTimeout(function() {
 
 The Camera plugin allows you to do things like open the device's Camera app and take a picture, or open the file picker and select one. The code snippets in this section demonstrate different tasks including:
 
-* Open the Camera app and [take a Picture](#takePicture)
-* Take a picture and [return thumbnails](#getThumbnails) (resized picture)
-* Take a picture and [generate a FileEntry object](#convert)
-* [Select a file](#selectFile) from the picture library
-* Select a JPEG image and [return thumbnails](#getFileThumbnails) (resized image)
-* Select an image and [generate a FileEntry object](#convert)
+- Open the Camera app and [take a Picture](#takePicture)
+- Take a picture and [return thumbnails](#getThumbnails) (resized picture)
+- Take a picture and [generate a FileEntry object](#convert)
+- [Select a file](#selectFile) from the picture library
+- Select a JPEG image and [return thumbnails](#getFileThumbnails) (resized image)
+- Select an image and [generate a FileEntry object](#convert)
 
 ## Take a Picture <a name="takePicture"></a>
 
