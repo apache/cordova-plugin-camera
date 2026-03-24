@@ -31,6 +31,7 @@ description: Take pictures with the device camera.
 [![GitHub - Chrome Workflow](https://github.com/apache/cordova-plugin-camera/actions/workflows/chrome.yml/badge.svg?branch=master)](https://github.com/apache/cordova-plugin-camera/actions/workflows/chrome.yml?query=branch%3Amaster)
 [![GitHub - iOS Workflow](https://github.com/apache/cordova-plugin-camera/actions/workflows/ios.yml/badge.svg?branch=master)](https://github.com/apache/cordova-plugin-camera/actions/workflows/ios.yml?query=branch%3Amaster)
 [![GitHub - Lint](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml/badge.svg?branch=master)](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml?query=branch%3Amaster)
+[![GitHub - Release Audit Workflow](https://github.com/apache/cordova-plugin-camera/actions/workflows/release-audit.yml/badge.svg?branch=master)](https://github.com/apache/cordova-plugin-camera/actions/workflows/release-audit.yml?query=branch%3Amaster)
 
 This plugin defines a global `navigator.camera` object, which provides an API for taking pictures and choosing images from the device's image library.
 
