@@ -1,26 +1,21 @@
-/*
- *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- *
-*/
+/**
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
 
-/* globals Camera, resolveLocalFileSystemURL, FileEntry, LocalFileSystem */
-/* eslint-env jasmine */
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+*/
 
 exports.defineAutoTests = function () {
     describe('Camera (navigator.camera)', function () {
@@ -181,9 +176,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
         function onFileReceived (file) {
             log('Got file: ' + JSON.stringify(file));
             fileObj = file;
-            /* eslint-disable no-undef */
             const reader = new FileReader();
-            /* eslint-enable no-undef */
             reader.onload = function () {
                 log('FileReader.readAsDataURL() - length = ' + reader.result.length);
             };
@@ -294,7 +287,6 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     }
 
     function testNativeFile2 (inputEl) {
-        /* eslint-disable no-undef */
         if (!inputEl.value) {
             alert('No file selected.');
             return;
@@ -304,7 +296,6 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             alert('Got value but no file.');
             return;
         }
-        /* eslint-enable no-undef */
         const URLApi = window.URL || window.webkitURL;
         if (URLApi) {
             const blobURL = URLApi.createObjectURL(fileObj);
