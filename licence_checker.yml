@@ -15,45 +15,5 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Lint Test
-
-on:
-  push:
-    paths:
-      - '**.js'
-      - '.eslint*'
-      - '.github/workflow/lint.yml'
-  pull_request:
-    paths:
-      - '**.js'
-      - '.eslint*'
-      - '.github/workflow/lint.yml'
-
-permissions:
-  contents: read
-
-jobs:
-  test:
-    name: Lint Test
-    runs-on: ubuntu-latest
-    env:
-      node-version: 24
-
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.node-version }}
-
-      - name: Run Environment Information
-        run: |
-          node --version
-          npm --version
-
-      - name: Run npm install
-        run: |
-          npm ci
-
-      - name: Run lint test
-        run: |
-          npm run lint
+# Empty for the release audit workflow.
+# The `license-config` is required even if there are no custom configs
