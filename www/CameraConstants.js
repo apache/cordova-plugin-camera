@@ -1,22 +1,20 @@
 /*
- *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- *
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
 */
 
 /**
@@ -62,23 +60,18 @@ module.exports = {
      * @enum {number}
      */
     PictureSourceType: {
-        /** Choose image from the device's photo library (same as SAVEDPHOTOALBUM for Android) */
+        /**
+         * Choose image from the device's photo library.
+         **/
         PHOTOLIBRARY: 0,
         /** Take picture from camera */
         CAMERA: 1,
-        /** Choose image only from the device's Camera Roll album (same as PHOTOLIBRARY for Android) */
+        /**
+         * Same as PHOTOLIBRARY, when running on Android, or iOS 14+.
+         * On iOS older than 14, an image can only be chosen from the device's Camera Roll album
+         * with this setting.
+         **/
         SAVEDPHOTOALBUM: 2
-    },
-    /**
-     * Matches iOS UIPopoverArrowDirection constants to specify arrow location on popover.
-     * @enum {number}
-     */
-    PopoverArrowDirection: {
-        ARROW_UP: 1,
-        ARROW_DOWN: 2,
-        ARROW_LEFT: 4,
-        ARROW_RIGHT: 8,
-        ARROW_ANY: 15
     },
     /**
      * @enum {number}

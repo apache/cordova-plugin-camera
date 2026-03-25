@@ -2,280 +2,169 @@
 title: Camera
 description: Take pictures with the device camera.
 ---
-<!---
-# license: Licensed to the Apache Software Foundation (ASF) under one
-#         or more contributor license agreements.  See the NOTICE file
-#         distributed with this work for additional information
-#         regarding copyright ownership.  The ASF licenses this file
-#         to you under the Apache License, Version 2.0 (the
-#         "License"); you may not use this file except in compliance
-#         with the License.  You may obtain a copy of the License at
+<!--
 #
-#           http://www.apache.org/licenses/LICENSE-2.0
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
 #
-#         Unless required by applicable law or agreed to in writing,
-#         software distributed under the License is distributed on an
-#         "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-#         KIND, either express or implied.  See the License for the
-#         specific language governing permissions and limitations
-#         under the License.
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
 -->
-
 # cordova-plugin-camera
 
-[![Android Testsuite](https://github.com/apache/cordova-plugin-camera/actions/workflows/android.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/android.yml) [![Chrome Testsuite](https://github.com/apache/cordova-plugin-camera/actions/workflows/chrome.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/chrome.yml) [![iOS Testsuite](https://github.com/apache/cordova-plugin-camera/actions/workflows/ios.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/ios.yml) [![Lint Test](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml/badge.svg)](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml)
+[![npm - Latest](https://img.shields.io/npm/v/cordova-plugin-camera/latest?label=Latest%20Release%20(npm))](https://npmjs.com/package/cordova-plugin-camera)
 
-## Consider using native Browser features
+[![GitHub](https://img.shields.io/github/package-json/v/apache/cordova-plugin-camera?label=Development%20(Git))](https://github.com/apache/cordova-plugin-camera)
+[![GitHub - Android Workflow](https://github.com/apache/cordova-plugin-camera/actions/workflows/android.yml/badge.svg?branch=master)](https://github.com/apache/cordova-plugin-camera/actions/workflows/android.yml?query=branch%3Amaster)
+[![GitHub - Chrome Workflow](https://github.com/apache/cordova-plugin-camera/actions/workflows/chrome.yml/badge.svg?branch=master)](https://github.com/apache/cordova-plugin-camera/actions/workflows/chrome.yml?query=branch%3Amaster)
+[![GitHub - iOS Workflow](https://github.com/apache/cordova-plugin-camera/actions/workflows/ios.yml/badge.svg?branch=master)](https://github.com/apache/cordova-plugin-camera/actions/workflows/ios.yml?query=branch%3Amaster)
+[![GitHub - Lint](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml/badge.svg?branch=master)](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml?query=branch%3Amaster)
+[![GitHub - Release Audit Workflow](https://github.com/apache/cordova-plugin-camera/actions/workflows/release-audit.yml/badge.svg?branch=master)](https://github.com/apache/cordova-plugin-camera/actions/workflows/release-audit.yml?query=branch%3Amaster)
 
-It's not necessary to use this plugin for selecting images or using the camera. You can use native browser features instead, primarly the `<input>` tag.
+This plugin defines a global `navigator.camera` object, which provides an API for taking pictures and choosing images from the device's image library.
 
-### Select image
-
-You can select an image from the device using `<input type="file" accept="image/*">`:
-
-**HTML**
-
-```html
-<input type="file" id="imageInput" accept="image/*">
-<img id="imagePreview">
-```
-
-**JavaScript**
+Although the object is attached to the global `navigator` object, it is not available until after the `deviceready` event.
 
 ```js
-const imageInput = document.getElementById('imageInput');
-const imagePreview = document.getElementById('imagePreview');
+document.addEventListener("deviceready", onDeviceReady, false);
 
-imageInput.addEventListener('change', (event) => {
-    // Get the first selected file
-    const file = event.target.files[0];
-
-    // Check if user selected successfully a file
-    // It can be "undefined" if:
-    // 1. The user opens the file picker but cancels without selecting a file
-    // 2. The input's value is cleared or no file is selected
-    if (!file) return;
-
-    // Output file informations
-    console.log(`Selected file, name: ${file.name}, size: ${file.size} bytes, type: ${file.type}`);
-
-    // Use native FileReader API
-    const reader = new FileReader();
-
-    // Listen to the load event of the FileReader, which is fired,
-    // when the file was succesfully read
-    reader.addEventListener('load', (event) => {
-        imagePreview.src = event.target.result;
-    };
-
-    // Get base64 encoded string of file, which will be "data:*/*;base64,"
-    reader.readAsDataURL(file);
-});
+function onDeviceReady() {
+    console.log(navigator.camera);
+}
 ```
 
-This approach works on all modern browsers and mobile devices without requiring a native plugin.
+## Supported Platforms
 
-MDN documentation for `<input type="file">`: https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/file
-
-### Take a picture
-
-You can access the device camera using `<input type="file" accept="image/*" capture>`:
-
-**HTML**
-
-```html
-<input type="file" id="cameraInput" accept="image/*" capture="environment">
-<img id="capturedPhoto" style="max-width: 300px;">
-```
-
-**JavaScript**
-
-```js
-const cameraInput = document.getElementById('cameraInput');
-const capturedPhoto = document.getElementById('capturedPhoto');
-
-cameraInput.addEventListener('change', (event) => {
-    const file = event.target.files[0];
-    
-    if (!file) return;
-    
-    // Output file information
-    console.log(`Photo captured, name: ${file.name}, size: ${file.size} bytes, type: ${file.type}`);
-    
-    // Display the photo
-    const reader = new FileReader();
-    reader.addEventListener('load', (event) => {
-        capturedPhoto.src = event.target.result;
-    });
-    reader.readAsDataURL(file);
-});
-```
-
-The `capture` attribute can have different values:
-- `capture="environment"` - Open the back camera
-- `capture="user"` - Open the front camera (selfie)
-- `capture` (without value) - Let the device choose
-
-MDN documentation for the `capture` attribute: https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/capture
-
-#### Take a picture with `<video>` and `getUserMedia` API
-
-For more advanced camera control, you can use the `getUserMedia()` API with a `<video>` element. This gives you full control over the camera stream:
-
-```html
-<!-- Live stream of the camera -->
-<video id="cameraStream" width="300" height="300" style="border: 1px solid #ccc;"></video>
-
-<!-- Button to capture a photo from the live stream -->
-<button id="captureButton">Capture Photo</button>
-
-<!-- Shows the captured photo -->
-<img id="photo" style="max-width: 300px;">
-```
-
-```js
-const cameraStream = document.getElementById('cameraStream');
-const captureButton = document.getElementById('captureButton');
-const photo = document.getElementById('photo');
-
-// Request camera access and get stream
-navigator.mediaDevices.getUserMedia({ video: true })
-    .then((stream) => {
-        console.log('Camera access granted');
-
-        // Display the camera stream in the video element
-        cameraStream.srcObject = stream;
-    })
-    .catch((error) => {
-        console.error('Camera access denied:', error);
-    });
-
-// Capture a photo from the video stream
-captureButton.addEventListener('click', () => {
-    // Create a canvas to capture the frame
-    const canvas = document.createElement('canvas');
-    canvas.width = cameraStream.videoWidth;
-    canvas.height = cameraStream.videoHeight;
-    
-    // Draw the current video frame to the canvas
-    const context = canvas.getContext('2d');
-    context.drawImage(cameraStream, 0, 0, canvas.width, canvas.height);
-    
-    // Convert canvas to data URL and display
-    const imageData = canvas.toDataURL('image/jpeg');
-    photo.src = imageData;
-    
-    // Log file information
-    console.log(`Photo captured, dimensions: ${canvas.width}x${canvas.height}`);
-});
-```
-
-**Note:** The `getUserMedia()` API requires HTTPS or localhost and asks for user permission to access the camera.
-
-MDN documentation for `getUserMedia()`: https://developer.mozilla.org/de/docs/Web/API/MediaDevices/getUserMedia
-
-## Use this plugin
-
-This plugin defines a global `navigator.camera` object, which provides an API for taking pictures and for choosing images from
-the system's image library.
-
-Although the object is attached to the global scoped `navigator`, it is not available until after the `deviceready` event.
-
-    document.addEventListener("deviceready", onDeviceReady, false);
-    function onDeviceReady() {
-        console.log(navigator.camera);
-    }
-
+- Android
+- Browser
+- iOS
 
 ## Installation
 
-    cordova plugin add cordova-plugin-camera
+```bash
+cordova plugin add cordova-plugin-camera
+```
 
-It is also possible to install via repo url directly ( unstable )
+### Plugin Variables
 
-    cordova plugin add https://github.com/apache/cordova-plugin-camera.git
+Plugin variables let you configure parts of a plugin and must be set during installation. To set these variables, append `--variable {VARIABLE_NAME}={VALUE}` to the `cordova plugin add` command for each variable. If you wish you change or remove any of the plugin variables, uninstall and reinstall with the updated variables.
 
-## Plugin variables
+- **`ANDROIDX_CORE_VERSION`**
 
-The plugin uses the `ANDROIDX_CORE_VERSION` variable to configure `androidx.core:core` dependency. This allows to avoid conflicts with other plugins that have the dependency hardcoded.
-If no value is passed, it will use `1.6.+` as the default value.
+    **Default:** `1.6.+`
 
-The variable is configured on install time
+    This variable allows you to configure the `androidx.core:core` dependency for this plugin only. Some plugins may include this dependency with hard-coded versions, so you can use this variable to try to match those versions and reduce conflicts.
 
+    **Example:**
+
+    ```bash
     cordova plugin add cordova-plugin-camera --variable ANDROIDX_CORE_VERSION=1.8.0
+    ```
 
-## How to Contribute
+## App Configuration
 
-Contributors are welcome! And we need your contributions to keep the project moving forward. You can[report bugs, improve the documentation, or [contribute code](https://github.com/apache/cordova-plugin-camera/pulls).
+The following preferences can be set in the app's `config.xml` file to configure the plugin.
 
-There is a specific [contributor workflow](http://wiki.apache.org/cordova/ContributorWorkflow) we recommend. Start reading there. More information is available on [our wiki](http://wiki.apache.org/cordova).
+### Android-Specific
 
-**Have a solution?** Send a [Pull Request](https://github.com/apache/cordova-plugin-camera/pulls).
+#### Supporting `saveToPhotoAlbum` on Android 9 (API 28) & Lower
 
-In order for your changes to be accepted, you need to sign and submit an Apache [ICLA](http://www.apache.org/licenses/#clas) (Individual Contributor License Agreement). Then your name will appear on the list of CLAs signed by [non-committers](https://people.apache.org/committer-index.html#unlistedclas) or [Cordova committers](http://people.apache.org/committers-by-project.html#cordova).
+> [!WARNING]
+> If you support Android 9 (API 28) and lower and need `saveToPhotoAlbum`, then this step is required.
+>
+> If you support only Android 10 (API 29) and later, or do not need `saveToPhotoAlbum`, then skip this step.
+>
+> Configuring the `WRITE_EXTERNAL_STORAGE` permission for Android 10 or later has no effect.
 
-**And don't forget to test and document your code.**
+To declare the `WRITE_EXTERNAL_STORAGE` permission, add the following:
 
-### iOS Quirks
+```xml
+<config-file target="AndroidManifest.xml" parent="/*" xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
+</config-file>
+```
 
-Since iOS 10 it's mandatory to provide an usage description in the `info.plist` if trying to access privacy-sensitive data. When the system prompts the user to allow access, this usage description string will displayed as part of the permission dialog box, but if you didn't provide the usage description, the app will crash before showing the dialog. Also, Apple will reject apps that access private data but don't provide an usage description.
+### iOS-Specific
 
-This plugins requires the following usage descriptions:
+#### Mandatory Usage Description
 
-- `NSCameraUsageDescription` specifies the reason for your app to access the device's camera.
-- `NSPhotoLibraryUsageDescription` specifies the reason for your app to access the user's photo library.
-- `NSLocationWhenInUseUsageDescription` specifies the reason for your app to access the user's location information while your app is in use. (Set it if you have `CameraUsesGeolocation` preference set to `true`)
-- `NSPhotoLibraryAddUsageDescription` specifies the reason for your app to get write-only access to the user's photo library
+> [!WARNING]
+> Since iOS 10, you must provide usage descriptions in the `info.plist` when accessing privacy-sensitive data.
+
+The required keys depend on how you use the plugin and which iOS versions you support:
+
+| Key                            | Description |
+| ------------------------------ | ----------- |
+| NSCameraUsageDescription | Required whenever the camera is used (e.g. `Camera.PictureSourceType.CAMERA`). |
+| NSPhotoLibraryUsageDescription | Required only when your app runs on iOS 13 or older and using as `sourceType` `Camera.PictureSourceType.PHOTOLIBRARY`. On iOS 14+ the plugin uses PHPicker for read-only access, which does not need this key. |
+| NSPhotoLibraryAddUsageDescription | Required when the plugin writes to the user's library (e.g. `saveToPhotoAlbum=true`). |
+| NSLocationWhenInUseUsageDescription | Required if `CameraUsesGeolocation` is set to `true`. |
+
+When the system prompts the user to allow access, this usage description string will be displayed as part of the permission dialog box. If you don't provide the required usage description, the app will crash before showing the dialog. Also, Apple will reject apps that access private data but don't provide a usage description.
 
 To add these entries into the `info.plist`, you can use the `edit-config` tag in the `config.xml` like this:
 
-```
+```xml
 <edit-config target="NSCameraUsageDescription" file="*-Info.plist" mode="merge">
     <string>need camera access to take pictures</string>
 </edit-config>
-```
 
-```
 <edit-config target="NSPhotoLibraryUsageDescription" file="*-Info.plist" mode="merge">
     <string>need photo library access to get pictures from there</string>
 </edit-config>
-```
 
-```
+<edit-config target="NSPhotoLibraryAddUsageDescription" file="*-Info.plist" mode="merge">
+    <string>need photo library access to save pictures there</string>
+</edit-config>
+
 <edit-config target="NSLocationWhenInUseUsageDescription" file="*-Info.plist" mode="merge">
     <string>need location access to find things nearby</string>
 </edit-config>
 ```
 
-```
-<edit-config target="NSPhotoLibraryAddUsageDescription" file="*-Info.plist" mode="merge">
-    <string>need photo library access to save pictures there</string>
-</edit-config>
-```
+#### Preferences
+
+- **`CameraUsesGeolocation`**
+
+    **Default:** `false` (boolean)
+
+    Enables geolocation data in the EXIF header when capturing JPEG images. When set to `true`, the app will request for geolocation permissions .
+
+    To set this preference, add the following:
+
+    ```xml
+    <preference name="CameraUsesGeolocation" value="false" />
+    ```
 
 ---
 
 # API Reference <a name="reference"></a>
 
+- [camera](#module_camera)
+  - [.getPicture(successCallback, errorCallback, options)](#module_camera.getPicture)
+  - [.cleanup()](#module_camera.cleanup)
+  - [.onError](#module_camera.onError) : <code>function</code>
+  - [.onSuccess](#module_camera.onSuccess) : <code>function</code>
+  - [.CameraOptions](#module_camera.CameraOptions) : <code>Object</code>
 
-* [camera](#module_camera)
-    * [.getPicture(successCallback, errorCallback, options)](#module_camera.getPicture)
-    * [.cleanup()](#module_camera.cleanup)
-    * [.onError](#module_camera.onError) : <code>function</code>
-    * [.onSuccess](#module_camera.onSuccess) : <code>function</code>
-    * [.CameraOptions](#module_camera.CameraOptions) : <code>Object</code>
-
-
-* [Camera](#module_Camera)
-    * [.DestinationType](#module_Camera.DestinationType) : <code>enum</code>
-    * [.EncodingType](#module_Camera.EncodingType) : <code>enum</code>
-    * [.MediaType](#module_Camera.MediaType) : <code>enum</code>
-    * [.PictureSourceType](#module_Camera.PictureSourceType) : <code>enum</code>
-    * [.PopoverArrowDirection](#module_Camera.PopoverArrowDirection) : <code>enum</code>
-    * [.Direction](#module_Camera.Direction) : <code>enum</code>
-
-* [CameraPopoverHandle](#module_CameraPopoverHandle)
-* [CameraPopoverOptions](#module_CameraPopoverOptions)
+- [Camera](#module_Camera)
+  - [.DestinationType](#module_Camera.DestinationType) : <code>enum</code>
+  - [.EncodingType](#module_Camera.EncodingType) : <code>enum</code>
+  - [.MediaType](#module_Camera.MediaType) : <code>enum</code>
+  - [.PictureSourceType](#module_Camera.PictureSourceType) : <code>enum</code>
+  - [.Direction](#module_Camera.Direction) : <code>enum</code>
 
 ---
 
@@ -334,18 +223,6 @@ selected from the device's gallery are not downscaled to a lower
 quality, even if a `quality` parameter is specified.  To avoid common
 memory problems, set `Camera.destinationType` to `FILE_URI` rather
 than `DATA_URL`.
-
-__NOTE__: To use `saveToPhotoAlbum` option on Android 9 (API 28) and lower, the `WRITE_EXTERNAL_STORAGE` permission must be declared.
-
-To do this, add the following in your `config.xml`:
-
-```xml
-<config-file target="AndroidManifest.xml" parent="/*" xmlns:android="http://schemas.android.com/apk/res/android">
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
-</config-file>
-```
-
-Android 10 (API 29) and later devices does not require `WRITE_EXTERNAL_STORAGE` permission. If your application only supports Android 10 or later, then this step is not necessary.
 
 #### FILE_URI Usage
 
@@ -448,7 +325,8 @@ function cameraCallback(imageData) {
 
 ### camera.CameraOptions : <code>Object</code>
 Optional parameters to customize the camera settings.
-* [Quirks](#CameraOptions-quirks)
+
+- [Quirks](#CameraOptions-quirks)
 
 **Kind**: static typedef of <code>[camera](#module_camera)</code>
 **Properties**
@@ -465,7 +343,6 @@ Optional parameters to customize the camera settings.
 | mediaType | <code>[MediaType](#module_Camera.MediaType)</code> | <code>PICTURE</code> | Set the type of media to select from.  Only works when `PictureSourceType` is `PHOTOLIBRARY` or `SAVEDPHOTOALBUM`. |
 | correctOrientation | <code>Boolean</code> |  | Rotate the image to correct for the orientation of the device during capture. |
 | saveToPhotoAlbum | <code>Boolean</code> |  | Save the image to the photo album on the device after capture.<br />See [Android Quirks](#cameragetpicturesuccesscallback-errorcallback-options). |
-| popoverOptions | <code>[CameraPopoverOptions](#module_CameraPopoverOptions)</code> |  | iOS-only options that specify popover location in iPad. |
 | cameraDirection | <code>[Direction](#module_Camera.Direction)</code> | <code>BACK</code> | Choose the camera to use (front- or back-facing). |
 
 ---
@@ -519,25 +396,9 @@ Defines the output format of `Camera.getPicture` call.
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
-| PHOTOLIBRARY | <code>number</code> | <code>0</code> | Choose image from the device's photo library (same as SAVEDPHOTOALBUM for Android) |
+| PHOTOLIBRARY | <code>number</code> | <code>0</code> | Choose image from the device's photo library. |
 | CAMERA | <code>number</code> | <code>1</code> | Take picture from camera |
-| SAVEDPHOTOALBUM | <code>number</code> | <code>2</code> | Choose image only from the device's Camera Roll album (same as PHOTOLIBRARY for Android) |
-
-<a name="module_Camera.PopoverArrowDirection"></a>
-
-### Camera.PopoverArrowDirection : <code>enum</code>
-Matches iOS UIPopoverArrowDirection constants to specify arrow location on popover.
-
-**Kind**: static enum property of <code>[Camera](#module_Camera)</code>
-**Properties**
-
-| Name | Type | Default |
-| --- | --- | --- |
-| ARROW_UP | <code>number</code> | <code>1</code> |
-| ARROW_DOWN | <code>number</code> | <code>2</code> |
-| ARROW_LEFT | <code>number</code> | <code>4</code> |
-| ARROW_RIGHT | <code>number</code> | <code>8</code> |
-| ARROW_ANY | <code>number</code> | <code>15</code> |
+| SAVEDPHOTOALBUM | <code>number</code> | <code>2</code> | Same as `PHOTOLIBRARY`, when running on Android or iOS 14+. On iOS older than 14, an image can only be chosen from the device's Camera Roll album with this setting. |
 
 <a name="module_Camera.Direction"></a>
 
@@ -551,58 +412,6 @@ Matches iOS UIPopoverArrowDirection constants to specify arrow location on popov
 | FRONT | <code>number</code> | <code>1</code> | Use the front-facing camera |
 
 ---
-
-<a name="module_CameraPopoverOptions"></a>
-
-## CameraPopoverOptions
-iOS-only parameters that specify the anchor element location and arrow
-direction of the popover when selecting images from an iPad's library
-or album.
-Note that the size of the popover may change to adjust to the
-direction of the arrow and orientation of the screen.  Make sure to
-account for orientation changes when specifying the anchor element
-location.
-
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| [x] | <code>Number</code> | <code>0</code> | x pixel coordinate of screen element onto which to anchor the popover. |
-| [y] | <code>Number</code> | <code>32</code> | y pixel coordinate of screen element onto which to anchor the popover. |
-| [width] | <code>Number</code> | <code>320</code> | width, in pixels, of the screen element onto which to anchor the popover. |
-| [height] | <code>Number</code> | <code>480</code> | height, in pixels, of the screen element onto which to anchor the popover. |
-| [arrowDir] | <code>[PopoverArrowDirection](#module_Camera.PopoverArrowDirection)</code> | <code>ARROW_ANY</code> | Direction the arrow on the popover should point. |
-| [popoverWidth] | <code>Number</code> | <code>0</code> | width of the popover (0 or not specified will use apple's default width). |
-| [popoverHeight] | <code>Number</code> | <code>0</code> | height of the popover (0 or not specified will use apple's default height). |
-
----
-
-<a name="module_CameraPopoverHandle"></a>
-
-## CameraPopoverHandle
-A handle to an image picker popover.
-
-__Supported Platforms__
-
-- iOS
-
-**Example**
-```js
-navigator.camera.getPicture(onSuccess, onFail,
-{
-    destinationType: Camera.DestinationType.FILE_URI,
-    sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
-    popoverOptions: new CameraPopoverOptions(300, 300, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY, 300, 600)
-});
-
-// Reposition the popover if the orientation changes.
-window.onorientationchange = function() {
-    var cameraPopoverHandle = new CameraPopoverHandle();
-    var cameraPopoverOptions = new CameraPopoverOptions(0, 0, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY, 400, 500);
-    cameraPopoverHandle.setPosition(cameraPopoverOptions);
-}
-```
----
-
 
 ## `camera.getPicture` Errata
 
@@ -651,12 +460,6 @@ function onFail(message) {
 }
 ```
 
-#### Preferences (iOS)
-
--  __CameraUsesGeolocation__ (boolean, defaults to false). For capturing JPEGs, set to true to get geolocation data in the EXIF header. This will trigger a request for geolocation permissions if set to true.
-
-        <preference name="CameraUsesGeolocation" value="false" />
-
 #### Android Quirks
 
 Android uses intents to launch the camera activity on the device to capture
@@ -676,7 +479,7 @@ Can only return photos as data URI image.
 
 Including a JavaScript `alert()` in either of the callback functions
 can cause problems.  Wrap the alert within a `setTimeout()` to allow
-the iOS image picker or popover to fully close before the alert
+the iOS image picker to fully close before the alert
 displays:
 
 ```javascript
@@ -703,12 +506,12 @@ setTimeout(function() {
 
 The Camera plugin allows you to do things like open the device's Camera app and take a picture, or open the file picker and select one. The code snippets in this section demonstrate different tasks including:
 
-* Open the Camera app and [take a Picture](#takePicture)
-* Take a picture and [return thumbnails](#getThumbnails) (resized picture)
-* Take a picture and [generate a FileEntry object](#convert)
-* [Select a file](#selectFile) from the picture library
-* Select a JPEG image and [return thumbnails](#getFileThumbnails) (resized image)
-* Select an image and [generate a FileEntry object](#convert)
+- Open the Camera app and [take a Picture](#takePicture)
+- Take a picture and [return thumbnails](#getThumbnails) (resized picture)
+- Take a picture and [generate a FileEntry object](#convert)
+- [Select a file](#selectFile) from the picture library
+- Select a JPEG image and [return thumbnails](#getFileThumbnails) (resized image)
+- Select an image and [generate a FileEntry object](#convert)
 
 ## Take a Picture <a name="takePicture"></a>
 
@@ -794,23 +597,25 @@ function openCamera(selection) {
 
 ## Select a File from the Picture Library <a name="selectFile"></a>
 
-When selecting a file using the file picker, you also need to set the CameraOptions object. In this example, set the `sourceType` to `Camera.PictureSourceType.SAVEDPHOTOALBUM`. To open the file picker, call `getPicture` just as you did in the previous example, passing in the success and error callbacks along with CameraOptions object.
+When selecting a file using the file picker, you also need to set the CameraOptions object. In this example, set the `sourceType` to `Camera.PictureSourceType.PHOTOLIBRARY`. To open the file picker, call `getPicture` just as you did in the previous example, passing in the success and error callbacks along with CameraOptions object.
 
 ```js
 function openFilePicker(selection) {
 
-    var srcType = Camera.PictureSourceType.SAVEDPHOTOALBUM;
+    var srcType = Camera.PictureSourceType.PHOTOLIBRARY;
     var options = setOptions(srcType);
     var func = createNewFileEntry;
 
-    navigator.camera.getPicture(function cameraSuccess(imageUri) {
-
-        // Do something
-
-    }, function cameraError(error) {
-        console.debug("Unable to obtain picture: " + error, "app");
-
-    }, options);
+    navigator.camera.getPicture(
+        // success callback
+        (imageUri) => {
+            // Do something
+        },
+        // error callback
+        (error) => {
+            console.debug("Unable to obtain picture: " + error, "app");
+        },
+        options);
 }
 ```
 
@@ -821,7 +626,7 @@ Resizing a file selected with the file picker works just like resizing using the
 ```js
 function openFilePicker(selection) {
 
-    var srcType = Camera.PictureSourceType.SAVEDPHOTOALBUM;
+    var srcType = Camera.PictureSourceType.PHOTOLIBRARY;
     var options = setOptions(srcType);
     var func = createNewFileEntry;
 
@@ -832,14 +637,16 @@ function openFilePicker(selection) {
         options.targetWidth = 100;
     }
 
-    navigator.camera.getPicture(function cameraSuccess(imageUri) {
-
-        // Do something with image
-
-    }, function cameraError(error) {
-        console.debug("Unable to obtain picture: " + error, "app");
-
-    }, options);
+    navigator.camera.getPicture(
+        // success callback
+        (imageUri) {
+            // Do something with image
+        },
+        // error callback
+        (error) => {
+            console.debug("Unable to obtain picture: " + error, "app");
+        },
+        options);
 }
 ```
 

@@ -15,9 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-root: true
-extends: '@cordova/eslint-config/browser'
+# This file used by release audit workflow
 
-overrides:
-  - files: [tests/**/*.js]
-    extends: '@cordova/eslint-config/node-tests'
+.git/
+coverage/
+node_modules/
+types/index.d.ts

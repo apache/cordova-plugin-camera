@@ -1,29 +1,25 @@
 /*
- *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- *
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
 */
 
 const argscheck = require('cordova/argscheck');
 const exec = require('cordova/exec');
 const Camera = require('./Camera');
-// XXX: commented out
-// CameraPopoverHandle = require('./CameraPopoverHandle');
 
 /**
  * @namespace navigator
@@ -73,7 +69,6 @@ for (const key in Camera) {
  * @property {module:Camera.MediaType} [mediaType=PICTURE] - Set the type of media to select from.  Only works when `PictureSourceType` is `PHOTOLIBRARY` or `SAVEDPHOTOALBUM`.
  * @property {Boolean} [correctOrientation] - Rotate the image to correct for the orientation of the device during capture.
  * @property {Boolean} [saveToPhotoAlbum] - Save the image to the photo album on the device after capture.
- * @property {module:CameraPopoverOptions} [popoverOptions] - iOS-only options that specify popover location in iPad.
  * @property {module:Camera.Direction} [cameraDirection=BACK] - Choose the camera to use (front- or back-facing).
  */
 
@@ -140,7 +135,6 @@ cameraExport.getPicture = function (successCallback, errorCallback, options) {
     const allowEdit = !!options.allowEdit;
     const correctOrientation = !!options.correctOrientation;
     const saveToPhotoAlbum = !!options.saveToPhotoAlbum;
-    const popoverOptions = getValue(options.popoverOptions, null);
     const cameraDirection = getValue(options.cameraDirection, Camera.Direction.BACK);
 
     if (allowEdit) {
@@ -148,11 +142,9 @@ cameraExport.getPicture = function (successCallback, errorCallback, options) {
     }
 
     const args = [quality, destinationType, sourceType, targetWidth, targetHeight, encodingType,
-        mediaType, allowEdit, correctOrientation, saveToPhotoAlbum, popoverOptions, cameraDirection];
+        mediaType, allowEdit, correctOrientation, saveToPhotoAlbum, cameraDirection];
 
     exec(successCallback, errorCallback, 'Camera', 'takePicture', args);
-    // XXX: commented out
-    // return new CameraPopoverHandle();
 };
 
 /**
