@@ -33,6 +33,21 @@ description: Take pictures with the device camera.
 [![GitHub - Lint](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml/badge.svg?branch=master)](https://github.com/apache/cordova-plugin-camera/actions/workflows/lint.yml?query=branch%3Amaster)
 [![GitHub - Release Audit Workflow](https://github.com/apache/cordova-plugin-camera/actions/workflows/release-audit.yml/badge.svg?branch=master)](https://github.com/apache/cordova-plugin-camera/actions/workflows/release-audit.yml?query=branch%3Amaster)
 
+> [!NOTE]
+> Depending on your use case, this plugin may be unnecessary.
+>
+> We strongly recommend using the WebView's native `<input type="file" accept="image/*" capture />` element before opting for this plugin.
+>
+> The example above demonstrates how to capture an image. If you only need to select an existing image, simply remove the `capture` attribute.
+>
+> For more information:
+>
+> - [MDN – HTML element: `<input type="file">`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/input/file)
+> - [MDN – HTML attribute: `accept`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/accept)
+> - [MDN – HTML attribute: `capture`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/capture)
+>
+> For advanced use cases, this plugin may be appropriate.
+
 This plugin defines a global `navigator.camera` object, which provides an API for taking pictures and choosing images from the device's image library.
 
 Although the object is attached to the global `navigator` object, it is not available until after the `deviceready` event.
