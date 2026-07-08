@@ -48,11 +48,16 @@ import android.system.OsConstants;
 import org.apache.cordova.BuildHelper;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
+import org.apache.cordova.CordovaPluginPathHandler;
 import org.apache.cordova.LOG;
 import org.apache.cordova.PermissionHelper;
 import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
+
+import android.webkit.MimeTypeMap;
+import android.webkit.WebResourceResponse;
+import androidx.webkit.WebViewAssetLoader;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -111,6 +116,70 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
     //Where did this come from?
     private static final int CROP_CAMERA = 100;
+
+    private static final String CAMERA_CACHE_PATH = "_cordova_camera_cache_/";
+
+    /**
+     * Registers a PathHandler so the WebView can serve cached camera images
+     * via https://localhost/_cordova_camera_cache_/...
+     *
+     * On cordova-android 15+ the WebView origin is https://localhost and it
+     * cannot load file:// or content:// URIs directly.
+     */
+    @Override
+    public CordovaPluginPathHandler getPathHandler() {
+        return new CordovaPluginPathHandler(new WebViewAssetLoader.PathHandler() {
+            @Override
+            public WebResourceResponse handle(String path) {
+                if (!path.startsWith(CAMERA_CACHE_PATH)) {
+                    return null;
+                }
+                String relativePath = path.substring(CAMERA_CACHE_PATH.length());
+                int queryIdx = relativePath.indexOf('?');
+                if (queryIdx != -1) relativePath = relativePath.substring(0, queryIdx);
+
+                File cacheDir = cordova.getActivity().getCacheDir();
+                File imageFile = new File(cacheDir, relativePath);
+
+                try {
+                    if (!imageFile.getCanonicalPath().startsWith(cacheDir.getCanonicalPath())) {
+                        return null;
+                    }
+                } catch (IOException e) {
+                    return null;
+                }
+
+                if (!imageFile.exists()) return null;
+
+                try {
+                    String ext = MimeTypeMap.getFileExtensionFromUrl(relativePath);
+                    String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
+                    if (mimeType == null) mimeType = "image/jpeg";
+                    return new WebResourceResponse(mimeType, null, new FileInputStream(imageFile));
+                } catch (FileNotFoundException e) {
+                    return null;
+                }
+            }
+        });
+    }
+
+    /**
+     * Converts a cache File to a WebView-accessible URL routed through the
+     * PathHandler registered above.
+     */
+    private String toWebViewAccessibleUri(File file) {
+        String cacheDirPath = cordova.getActivity().getCacheDir().getAbsolutePath();
+        String filePath = file.getAbsolutePath();
+        String relativePath;
+        if (filePath.startsWith(cacheDirPath + "/")) {
+            relativePath = filePath.substring(cacheDirPath.length() + 1);
+        } else {
+            relativePath = file.getName();
+        }
+        String hostname = preferences.getString("hostname", "localhost").toLowerCase();
+        String scheme = preferences.getString("scheme", "https").toLowerCase();
+        return scheme + "://" + hostname + "/" + CAMERA_CACHE_PATH + relativePath;
+    }
 
     private static final String TIME_FORMAT = "yyyyMMdd_HHmmss";
 
@@ -572,25 +641,19 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 if (this.targetHeight == -1 && this.targetWidth == -1 && this.mQuality == 100 &&
                     !this.correctOrientation) {
 
-                    // If we saved the uncompressed photo to the album, we can just
-                    // return the URI we already created
-                    if (this.saveToPhotoAlbum) {
-                        this.callbackContext.success(galleryUri.toString());
+                    File outFile = createCaptureFile(this.encodingType, System.currentTimeMillis() + "");
+                    Uri outUri = Uri.fromFile(outFile);
+
+                    if (this.allowEdit && this.croppedUri != null) {
+                        writeUncompressedImage(Uri.parse(croppedFilePath), outUri);
                     } else {
-                        Uri uri = Uri.fromFile(createCaptureFile(this.encodingType, System.currentTimeMillis() + ""));
-
-                        if (this.allowEdit && this.croppedUri != null) {
-                            Uri croppedUri = Uri.parse(croppedFilePath);
-                            writeUncompressedImage(croppedUri, uri);
-                        } else {
-                            Uri imageUri = this.imageUri;
-                            writeUncompressedImage(imageUri, uri);
-                        }
-
-                        this.callbackContext.success(uri.toString());
+                        writeUncompressedImage(this.imageUri, outUri);
                     }
+
+                    this.callbackContext.success(toWebViewAccessibleUri(outFile));
                 } else {
-                    Uri uri = Uri.fromFile(createCaptureFile(this.encodingType, System.currentTimeMillis() + ""));
+                    File outFile = createCaptureFile(this.encodingType, System.currentTimeMillis() + "");
+                    Uri uri = Uri.fromFile(outFile);
                     bitmap = getScaledAndRotatedBitmap(sourceData, mimeType);
 
                     // Double-check the bitmap.
@@ -619,7 +682,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     }
 
                     // Send Uri back to JavaScript for viewing image
-                    this.callbackContext.success(uri.toString());
+                    this.callbackContext.success(toWebViewAccessibleUri(outFile));
                 }
             } else {
                 throw new IllegalStateException();
@@ -807,9 +870,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                         !mimeTypeOfGalleryFile.equalsIgnoreCase(getMimetypeForEncodingType())) {
                     try {
                         String modifiedPath = this.outputModifiedBitmap(bitmap, uri, mimeTypeOfGalleryFile);
-                        // The modified image is cached by the app in order to get around this and not have to delete you
-                        // application cache I'm adding the current system time to the end of the file url.
-                        this.callbackContext.success("file://" + modifiedPath + "?" + System.currentTimeMillis());
+                        String accessibleUri = toWebViewAccessibleUri(new File(modifiedPath));
+                        this.callbackContext.success(accessibleUri + "?" + System.currentTimeMillis());
 
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -1242,6 +1304,14 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     }
 
     private void scanForGallery(Uri newImage) {
+        // On API 29+ images are saved via MediaStore ContentValues in
+        // writeTakenPictureToGalleryStartingFromAndroidQ; the legacy
+        // MediaScannerConnection.scanFile call is unnecessary and returns
+        // null on API 36+.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            return;
+        }
+
         this.scanMe = newImage;
         if (this.conn != null) {
             this.conn.disconnect();

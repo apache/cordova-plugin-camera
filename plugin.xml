@@ -86,6 +86,9 @@
 
         <preference name="ANDROIDX_CORE_VERSION" default="1.18.0"/>
         <framework src="androidx.core:core:$ANDROIDX_CORE_VERSION" />
+
+        <preference name="ANDROIDX_WEBKIT_VERSION" default="1.14.0"/>
+        <framework src="androidx.webkit:webkit:$ANDROIDX_WEBKIT_VERSION" />
       </platform>
 
      <!-- ios -->
