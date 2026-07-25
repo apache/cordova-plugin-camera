@@ -556,7 +556,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
                     
                     // Get location if mediaMetadata is set
                     if (mediaMetadata) {
-                        self.data = data;
+                        // Store image data temporarly, so it can be returned after a location has gotten
+                        self.tempImageDataForLocationManager = data;
                         self.metadata = [[NSMutableDictionary alloc] init];
                         
                         NSDictionary *exifDict = mediaMetadata[(NSString *)kCGImagePropertyExifDictionary];
@@ -577,8 +578,9 @@ static NSString* MIME_JPEG    = @"image/jpeg";
             } else if (self.cdvUIImagePickerController.sourceType == UIImagePickerControllerSourceTypePhotoLibrary) {
                 PHAsset* asset = [info objectForKey:@"UIImagePickerControllerPHAsset"];
                 NSDictionary* controllerMetadata = [self getImageMetadataFromAsset:asset];
-                self.data = data;
-
+                // Store image data temporarly, so it can be returned after a location has gotten
+                self.tempImageDataForLocationManager = data;
+                
                 if (controllerMetadata.count > 0) {
                     self.metadata = [NSMutableDictionary dictionary];
 
@@ -1082,7 +1084,7 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     [GPSDictionary setObject:[formatter stringFromDate:newLocation.timestamp] forKey:(NSString *)kCGImagePropertyGPSDateStamp];
 
     [self.metadata setObject:GPSDictionary forKey:(NSString *)kCGImagePropertyGPSDictionary];
-    [self imagePickerControllerReturnImageResult];
+    [self returnImageAfterLocationUpdate];
 }
 
 /**
@@ -1101,74 +1103,77 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     [self.locationManager stopUpdatingLocation];
     self.locationManager = nil;
 
-    [self imagePickerControllerReturnImageResult];
+    [self returnImageAfterLocationUpdate];
 }
 
 /**
-    Called to return the image result after location data has been added to the metadata
-    or an error occurred while retrieving location data.
+    Called to return the image result after location data has been added to
+    `self.metadata` or an error occurred while retrieving location data.
+     TODO: The code is similar, what `resultForImage:` is doing and can be refactored:
 */
-- (void)imagePickerControllerReturnImageResult
+- (void)returnImageAfterLocationUpdate
 {
-    CDVPictureOptions* options = self.cdvUIImagePickerController.pictureOptions;
-    CDVPluginResult* result = nil;
-   
-    NSMutableData *imageDataWithExif = [NSMutableData data];
+    CDVPictureOptions* pictureOptions = self.cdvUIImagePickerController.pictureOptions;
+    CDVPluginResult* pluginResult = nil;
+    NSData *imageDataToWrite = self.tempImageDataForLocationManager;
 
+    // Copy custom choosen meta data stored in self.metadata to the image
+    // This will also contain the fetched location from LocationManager
     if (self.metadata) {
-        NSData* dataCopy = [self.data mutableCopy];
-        CGImageSourceRef sourceImage = CGImageSourceCreateWithData((__bridge CFDataRef)dataCopy, NULL);
+        NSMutableData *imageDataWitCustomMetadata = [NSMutableData data];
+        
+        // Prepare source image
+        CGImageSourceRef sourceImage = CGImageSourceCreateWithData((__bridge CFDataRef)imageDataToWrite, NULL);
         CFStringRef sourceType = CGImageSourceGetType(sourceImage);
 
-        CGImageDestinationRef destinationImage = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)imageDataWithExif, sourceType, 1, NULL);
+        CGImageDestinationRef destinationImage = CGImageDestinationCreateWithData((__bridge CFMutableDataRef)imageDataWitCustomMetadata, sourceType, 1, NULL);
+        
+        // Copy choosen metadata
         CGImageDestinationAddImageFromSource(destinationImage, sourceImage, 0, (__bridge CFDictionaryRef)self.metadata);
         CGImageDestinationFinalize(destinationImage);
 
-        dataCopy = nil;
         CFRelease(sourceImage);
         CFRelease(destinationImage);
-    } else {
-        imageDataWithExif = [self.data mutableCopy];
+
+        imageDataToWrite = imageDataWitCustomMetadata;
     }
 
-    switch (options.destinationType) {
+    switch (pictureOptions.destinationType) {
         case DestinationTypeDataUrl:
         {
-            NSString* mime = [self getMimeForEncoding: self.cdvUIImagePickerController.pictureOptions.encodingType];
-            NSString* uri = [self formatAsDataURI: self.data withMIME: mime];
-            result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString: uri];
+            NSString* mime = [self getMimeForEncoding:pictureOptions.encodingType];
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
+                                             messageAsString:[self formatAsDataURI:imageDataToWrite withMIME:mime]];
         }
             break;
         default: // DestinationTypeFileUri
         {
             NSError* err = nil;
-            NSString* extension = self.cdvUIImagePickerController.pictureOptions.encodingType == EncodingTypePNG ? @"png":@"jpg";
-            NSString* filePath = [self tempFilePathForExtension:extension];
+            NSString* tempFilePath = [self tempFilePathForExtension:pictureOptions.encodingType == EncodingTypePNG ? @"png":@"jpg"];
 
-            // save file
-            if (![self.data writeToFile:filePath options:NSAtomicWrite error:&err]) {
-                result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION
-                                           messageAsString:[err localizedDescription]];
-            }
-            else {
-                result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
-                                           messageAsString:[[NSURL fileURLWithPath:filePath] absoluteString]];
+            // Write image to temp file path
+            if ([imageDataToWrite writeToFile:tempFilePath options:NSAtomicWrite error:&err]) {
+                pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
+                                                 messageAsString:[[NSURL fileURLWithPath:tempFilePath] absoluteString]];
+            } else {
+                pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION
+                                                 messageAsString:[err localizedDescription]];
             }
         }
             break;
     };
 
-    if (result) {
-        [self.commandDelegate sendPluginResult:result callbackId:self.cdvUIImagePickerController.callbackId];
+    if (pluginResult) {
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:self.cdvUIImagePickerController.callbackId];
     }
 
     self.hasPendingOperation = NO;
     self.cdvUIImagePickerController = nil;
-    self.data = nil;
+    self.tempImageDataForLocationManager = nil;
     self.metadata = nil;
-    imageDataWithExif = nil;
-    if (options.saveToPhotoAlbum) {
-        UIImageWriteToSavedPhotosAlbum([[UIImage alloc] initWithData:self.data], nil, nil, nil);
+    
+    if (pictureOptions.saveToPhotoAlbum) {
+        UIImageWriteToSavedPhotosAlbum([[UIImage alloc] initWithData:imageDataToWrite], nil, nil, nil);
     }
 }
 
