@@ -99,6 +99,8 @@ static NSString* MIME_JPEG    = @"image/jpeg";
 // CDVViewController when a plugin has a pending operation.
 @property (readwrite, assign) BOOL hasPendingOperation;
 
+- (void)resetPendingState;
+
 @end
 
 @implementation CDVCamera
@@ -238,19 +240,29 @@ static NSString* MIME_JPEG    = @"image/jpeg";
     dispatch_async(dispatch_get_main_queue(), ^{
         UIViewController* presentedViewController = self.viewController.presentedViewController;
         if (presentedViewController == nil) {
+            [self resetPendingState];
             CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
             [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
             return;
         }
 
         [presentedViewController dismissViewControllerAnimated:YES completion:^{
-            self.hasPendingOperation = NO;
-            self.cdvUIImagePickerController = nil;
+            [self resetPendingState];
 
             CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
             [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
         }];
     });
+}
+
+- (void)resetPendingState
+{
+    [self.locationManager stopUpdatingLocation];
+    self.locationManager = nil;
+    self.tempImageDataForLocationManager = nil;
+    self.metadata = nil;
+    self.hasPendingOperation = NO;
+    self.cdvUIImagePickerController = nil;
 }
 
 - (void)sendNoPermissionResult:(NSString*)callbackId
