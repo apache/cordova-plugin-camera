@@ -197,9 +197,9 @@ As of v8.0.0, the result is formatted as URIs. The scheme will vary depending on
 
 |Platform|Destination Type|Format|
 |---|---|---|
-|Android|FILE_URI|An URI scheme such as `file://...` or `content://...`|
+|Android|[FILE_URI](#file_uri-usage)|An URI scheme such as `file://...` or `content://...`|
 ||DATA_URL|Base 64 encoded with the proper data URI header|
-|iOS|FILE_URI|`file://` schemed paths|
+|iOS|[FILE_URI](#file_uri-usage)|`file://` schemed paths|
 ||DATA_URL|Base 64 encoded with the proper data URI header|
 |Browser|FILE_URI|Not supported|
 ||DATA_URL|Base 64 encoded with the proper data URI header|
@@ -250,9 +250,11 @@ Additionally, the file URIs returned is a temporary read access grant. The OS re
 For persistent access to the content, the resource should be copied to your app's storage container. An example use case is an app allowing an user to select a profile picture from their gallery or camera. The application will need
 consistent access to that resource, so it's not suitable to retain the temporary access path. So the appplication should copy the resource to a persistent location.
 
-For use cases that involve temporary use, it is valid and safe to use the temporary file path to display the content. An example of this could be an image editing application, rendering the data into a canvas.
+For use cases that involve temporary use, such as an image editing application rendering the data into a canvas, the temporary file may be used directly, provided the returned URI's scheme is loadable by the WebView (see __WebView note__ below). Otherwise it must first be resolved and its contents read (e.g. as a `data:` URL) before it can be used.
 
 __NOTE__: The returned schemes is an implementation detail. Do not assume that it will always be a `file://` URI.
+
+__WebView note__: Cordova apps run by default on `https://localhost` (Android, since [cordova-android 10.0.0](https://cordova.apache.org/announcements/2021/07/20/cordova-android-10.0.0.html)) or `app://localhost` (iOS, since [cordova-ios 6.0.0](https://cordova.apache.org/announcements/2020/06/01/cordova-ios-release-6.0.0.html)), not on a `file://` origin. The WebView (Chromium on Android, WKWebView on iOS) blocks documents loaded from a non-`file://` origin from directly requesting `file://` subresources (e.g. `<img src="file://...">`), regardless of `Content-Security-Policy` settings; on Android this fails with `Not allowed to load local resource: file://...`. This is independent of your app's CSP `img-src`/`media-src` directives, which cannot override it. To display or otherwise use a returned `file://` URI, resolve it with the [Cordova File Plugin](https://github.com/apache/cordova-plugin-file) and read its contents (e.g. via `FileReader.readAsDataURL`) into a `data:` URL instead.
 
 __Supported Platforms__
 
@@ -402,7 +404,7 @@ Defines the output format of `Camera.getPicture` call.
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | DATA_URL | <code>number</code> | <code>0</code> | Return data uri. DATA_URL can be very memory intensive and cause app crashes or out of memory errors. Use FILE_URI if possible |
-| FILE_URI | <code>number</code> | <code>1</code> | Return file uri (content://media/external/images/media/2 for Android) |
+| FILE_URI | <code>number</code> | <code>1</code> | Return file uri. The scheme depends on platform and source (e.g. `file://` or `content://` on Android, `file://` on iOS), see [FILE_URI Usage](#file_uri-usage) |
 
 <a name="module_Camera.EncodingType"></a>
 
