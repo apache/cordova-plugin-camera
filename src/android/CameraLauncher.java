@@ -526,7 +526,11 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         }
         else {
             input = cordova.getActivity().getContentResolver().openInputStream(imageUri);
-            mimeType = FileHelper.getMimeType(imageUri.toString(), cordova);
+            // MediaStore.ACTION_IMAGE_CAPTURE always writes JPEG data into imageUri, regardless of
+            // its file extension (which reflects the requested encodingType, not the actual format).
+            // Relying on FileHelper.getMimeType(imageUri) here would misreport PNG-named captures as
+            // image/png, causing getScaledAndRotatedBitmap() to skip reading the EXIF orientation.
+            mimeType = JPEG_MIME_TYPE;
         }
 
         if (input == null) {
