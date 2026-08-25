@@ -327,6 +327,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                 this.cordova.getActivity().finishActivity((sourceType + 1) * 16 + returnType + 1);
             }
         }
+
+        cleanupPendingResultFiles();
     }
 
     public void takePicture(int returnType, int encodingType)
@@ -901,6 +903,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
             }// If cancelled
             else if (resultCode == Activity.RESULT_CANCELED) {
+                cleanupPendingResultFiles();
                 this.failPicture("No Image Selected");
             }
 
@@ -930,6 +933,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
             // If cancelled
             else if (resultCode == Activity.RESULT_CANCELED) {
+                cleanupPendingResultFiles();
                 this.failPicture("No Image Selected");
             }
 
@@ -949,6 +953,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     }
                 });
             } else if (resultCode == Activity.RESULT_CANCELED) {
+                cleanupPendingResultFiles();
                 this.failPicture("No Image Selected");
             } else {
                 this.failPicture("Selection did not complete!");
@@ -1212,6 +1217,37 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
         }
 
         System.gc();
+    }
+
+    /**
+     * Best-effort cleanup for temporary files when capture/selection is cancelled or stopped.
+     */
+    private void cleanupPendingResultFiles() {
+        deleteIfExists(this.imageUri);
+        deleteIfExists(this.croppedUri);
+
+        if (this.croppedFilePath != null) {
+            new File(this.croppedFilePath).delete();
+            this.croppedFilePath = null;
+        }
+
+        this.imageUri = null;
+        this.croppedUri = null;
+    }
+
+    private void deleteIfExists(Uri uri) {
+        if (uri == null) {
+            return;
+        }
+
+        try {
+            String filePath = FileHelper.stripFileProtocol(uri.toString());
+            if (filePath != null) {
+                new File(filePath).delete();
+            }
+        } catch (Exception ignored) {
+            // Best-effort cleanup only.
+        }
     }
 
     /**
