@@ -350,7 +350,7 @@ Callback function that provides the image data.
 ```js
 // Show image captured with FILE_URI
 function cameraCallback(imageData) {
-    window.resolveLocalFileSystemURL(uri, (entry) => {
+    window.resolveLocalFileSystemURL(imageData, (entry) => {
         let image = document.getElementById('myImage');
         image.src = entry.toURL();
     }, onError);
