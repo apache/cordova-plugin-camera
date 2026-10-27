@@ -349,7 +349,7 @@ Callback function that provides the image data.
 **Example**
 ```js
 // Show image captured with FILE_URI
-function cameraCallback(imageData) {
+function cameraCallback(uri) {
     window.resolveLocalFileSystemURL(uri, (entry) => {
         let image = document.getElementById('myImage');
         image.src = entry.toURL();
